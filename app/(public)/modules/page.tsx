@@ -4,6 +4,17 @@ import ModuleCard from '@/components/public/ModuleCard'
 import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
 import type { Metadata } from 'next'
 
+interface ModuleWithTopics {
+  id: number
+  name: string
+  slug: string
+  icon: string | null
+  color: string | null
+  description: string | null
+  _count: { topics: number }
+  topics: { _count: { topicArticles: number } }[]
+}
+
 export const metadata: Metadata = {
   title: 'Learning Modules',
   description: 'Explore all 8 structured learning modules covering AI agents, LLMs, tools, memory, multi-agent systems, and more.',
@@ -12,7 +23,7 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function ModulesPage() {
-  let modules: any[] = []
+  let modules: ModuleWithTopics[] = []
   try {
     modules = await prisma.module.findMany({
       where: { isPublished: true },
@@ -48,7 +59,7 @@ export default async function ModulesPage() {
 
       <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {modules.map((mod, i) => {
-          const articleCount = mod.topics.reduce((sum: number, t: { _count: { topicArticles: number } }) => sum + (t._count.topicArticles ?? 0), 0)
+          const articleCount = mod.topics.reduce((sum: number, t) => sum + (t._count.topicArticles ?? 0), 0)
           return (
             <ModuleCard
               key={mod.id}
