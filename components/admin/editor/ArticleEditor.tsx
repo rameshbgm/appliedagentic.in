@@ -1,12 +1,13 @@
 'use client'
 // components/admin/editor/ArticleEditor.tsx
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
 import Color from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
+import FontFamily from '@tiptap/extension-font-family'
 import Highlight from '@tiptap/extension-highlight'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
@@ -36,6 +37,8 @@ interface ArticleEditorProps {
 }
 
 export default function ArticleEditor({ content, onChange, articleId, onAudioGenerated }: ArticleEditorProps) {
+  const [isHtmlMode, setIsHtmlMode] = useState(false)
+  const [htmlContent, setHtmlContent] = useState(content)
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -44,6 +47,7 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
       }),
       Underline,
       TextStyle,
+      FontFamily,
       Color,
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -67,7 +71,9 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      const html = editor.getHTML()
+      onChange(html)
+      if (!isHtmlMode) setHtmlContent(html)
     },
     editorProps: {
       attributes: {
@@ -82,6 +88,10 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
       editor.commands.setContent(content, false)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!isHtmlMode) setHtmlContent(content)
+  }, [content, isHtmlMode])
 
   const insertContent = useCallback(
     (html: string) => {
@@ -105,12 +115,37 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
   return (
     <div className="flex flex-col gap-0 rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--bg-border)' }}>
       {/* Toolbar */}
-      <EditorToolbar editor={editor} articleId={articleId} />
+      <EditorToolbar
+        editor={editor}
+        articleId={articleId}
+        isHtmlMode={isHtmlMode}
+        onToggleHtmlMode={() => {
+          if (isHtmlMode) {
+            editor.commands.setContent(htmlContent, false)
+            onChange(editor.getHTML())
+          } else {
+            setHtmlContent(editor.getHTML())
+          }
+          setIsHtmlMode((prev) => !prev)
+        }}
+      />
 
       {/* Content area with AI panel */}
       <div className="relative flex" style={{ background: 'var(--bg-surface)' }}>
         <div className="flex-1 overflow-y-auto max-h-[calc(100vh-280px)]">
-          <EditorContent editor={editor} />
+          {isHtmlMode ? (
+            <textarea
+              value={htmlContent}
+              onChange={(e) => {
+                setHtmlContent(e.target.value)
+                onChange(e.target.value)
+              }}
+              className="w-full min-h-[500px] p-6 font-mono text-sm outline-none resize-none"
+              style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+            />
+          ) : (
+            <EditorContent editor={editor} />
+          )}
         </div>
         {/* AI Assist Panel floats to the right */}
         <AIAssistPanel
