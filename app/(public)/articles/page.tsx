@@ -1,0 +1,156 @@
+// app/(public)/articles/page.tsx
+import { prisma } from '@/lib/prisma'
+import ArticleCard from '@/components/public/ArticleCard'
+import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'All Articles',
+  description: 'Browse all published articles on AI agents, LLMs, and agentic systems.',
+}
+
+export const revalidate = 60
+
+const PAGE_SIZE = 12
+
+interface Props {
+  searchParams: { page?: string; module?: string; tag?: string }
+}
+
+export default async function ArticlesPage({ searchParams }: Props) {
+  const page = Math.max(1, parseInt(searchParams.page ?? '1'))
+  const moduleSlug = searchParams.module
+  const tagName = searchParams.tag
+
+  const [modules, totalCount, articles] = await Promise.all([
+    prisma.module.findMany({ where: { isPublished: true }, orderBy: { order: 'asc' }, select: { id: true, name: true, slug: true, color: true } }),
+    prisma.article.count({
+      where: {
+        status: 'PUBLISHED',
+        ...(moduleSlug ? { module: { slug: moduleSlug } } : {}),
+        ...(tagName ? { tags: { some: { tag: { name: tagName } } } } : {}),
+      },
+    }),
+    prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED',
+        ...(moduleSlug ? { module: { slug: moduleSlug } } : {}),
+        ...(tagName ? { tags: { some: { tag: { name: tagName } } } } : {}),
+      },
+      orderBy: { publishedAt: 'desc' },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: {
+        module: { select: { name: true, color: true } },
+        tags: { include: { tag: true } },
+      },
+    }),
+  ])
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+  const activeModule = modules.find((m) => m.slug === moduleSlug)
+
+  const buildUrl = (p: number, mod?: string) => {
+    const params = new URLSearchParams()
+    if (p > 1) params.set('page', String(p))
+    if (mod) params.set('module', mod)
+    if (tagName) params.set('tag', tagName)
+    return `/articles${params.toString() ? '?' + params.toString() : ''}`
+  }
+
+  return (
+    <div className="min-h-screen py-16 px-4 md:px-8 max-w-7xl mx-auto">
+      <FadeIn>
+        <div className="mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+            {activeModule ? activeModule.name : tagName ? `#${tagName}` : 'All'}{' '}
+            <span className="gradient-text">Articles</span>
+          </h1>
+          <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+            {totalCount} article{totalCount !== 1 ? 's' : ''} found
+          </p>
+        </div>
+
+        {/* Module filter chips */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          <Link
+            href="/articles"
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!moduleSlug ? 'text-white' : 'hover:bg-white/10'}`}
+            style={!moduleSlug
+              ? { background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }
+              : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
+            }
+          >
+            All
+          </Link>
+          {modules.map((m) => (
+            <Link
+              key={m.id}
+              href={buildUrl(1, m.slug)}
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
+              style={moduleSlug === m.slug
+                ? { background: m.color + '25', color: m.color, border: `1px solid ${m.color}40` }
+                : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
+              }
+            >
+              {m.name}
+            </Link>
+          ))}
+        </div>
+      </FadeIn>
+
+      {articles.length > 0 ? (
+        <>
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.map((a) => (
+              <ArticleCard
+                key={a.id}
+                article={{ ...a, tags: a.tags.map((t) => ({ id: t.tag.id, name: t.tag.name })) }}
+              />
+            ))}
+          </StaggerContainer>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-12">
+              {page > 1 && (
+                <Link href={buildUrl(page - 1, moduleSlug)} className="px-4 py-2 rounded-xl text-sm border transition-all hover:bg-white/5"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
+                  ← Prev
+                </Link>
+              )}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Link
+                  key={p}
+                  href={buildUrl(p, moduleSlug)}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all"
+                  style={p === page
+                    ? { background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)', color: '#fff' }
+                    : { color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
+                  }
+                >
+                  {p}
+                </Link>
+              ))}
+              {page < totalPages && (
+                <Link href={buildUrl(page + 1, moduleSlug)} className="px-4 py-2 rounded-xl text-sm border transition-all hover:bg-white/5"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
+                  Next →
+                </Link>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-5xl mb-4">📭</p>
+          <p className="text-lg">No articles yet in this category</p>
+          <Link href="/articles" className="mt-4 inline-block text-sm font-medium" style={{ color: '#6C3DFF' }}>
+            View all articles →
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+}

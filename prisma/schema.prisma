@@ -1,0 +1,231 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  SUPERADMIN
+}
+
+enum ArticleStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+  OTHER
+}
+
+enum AILogType {
+  TEXT_GENERATION
+  IMAGE_GENERATION
+  AUDIO_GENERATION
+}
+
+// ─────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  passwordHash String
+  name         String
+  role         Role         @default(ADMIN)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  articles     Article[]    @relation("ArticleAuthor")
+  mediaAssets  MediaAsset[] @relation("MediaCreator")
+  aiLogs       AIUsageLog[]
+}
+
+model Module {
+  id               Int      @id @default(autoincrement())
+  title            String
+  slug             String   @unique
+  orderIndex       Int      @default(0)
+  shortDescription String?  @db.Text
+  icon             String?
+  color            String?
+  coverImage       String?
+  isPublished      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdBy        Int?
+  updatedBy        Int?
+  topics           Topic[]
+
+  @@index([slug])
+  @@index([orderIndex])
+}
+
+model Topic {
+  id               Int            @id @default(autoincrement())
+  moduleId         Int
+  module           Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title            String
+  slug             String         @unique
+  orderIndex       Int            @default(0)
+  shortDescription String?        @db.Text
+  icon             String?
+  color            String?
+  coverImage       String?
+  isPublished      Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  createdBy        Int?
+  updatedBy        Int?
+  topicArticles    TopicArticle[]
+
+  @@index([slug])
+  @@index([moduleId])
+  @@index([orderIndex])
+}
+
+model Article {
+  id                 Int            @id @default(autoincrement())
+  title              String
+  slug               String         @unique
+  summary            String?        @db.Text
+  content            String         @db.LongText
+  status             ArticleStatus  @default(DRAFT)
+  publishedAt        DateTime?
+  scheduledAt        DateTime?
+  isFeatured         Boolean        @default(false)
+  coverImageId       Int?
+  coverImage         MediaAsset?    @relation("ArticleCoverImage", fields: [coverImageId], references: [id])
+  audioUrl           String?
+  readingTimeMinutes Int?
+  viewCount          Int            @default(0)
+  seoTitle           String?
+  seoDescription     String?        @db.Text
+  seoCanonicalUrl    String?
+  ogImageUrl         String?
+  authorId           Int
+  author             User           @relation("ArticleAuthor", fields: [authorId], references: [id])
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  createdBy          Int?
+  updatedBy          Int?
+  topicArticles      TopicArticle[]
+  articleTags        ArticleTag[]
+  aiLogs             AIUsageLog[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@index([isFeatured])
+}
+
+model TopicArticle {
+  id         Int     @id @default(autoincrement())
+  topicId    Int
+  articleId  Int
+  orderIndex Int     @default(0)
+  topic      Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  article    Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, articleId])
+  @@index([topicId])
+  @@index([articleId])
+}
+
+model Tag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  slug        String       @unique
+  articleTags ArticleTag[]
+
+  @@index([slug])
+}
+
+model ArticleTag {
+  id        Int     @id @default(autoincrement())
+  articleId Int
+  tagId     Int
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, tagId])
+}
+
+model MediaAsset {
+  id              Int        @id @default(autoincrement())
+  filename        String
+  url             String
+  type            MediaType
+  mimeType        String?
+  altText         String?
+  caption         String?
+  width           Int?
+  height          Int?
+  sizeBytes       Int?
+  aiPrompt        String?    @db.Text
+  createdByUserId Int?
+  createdBy       User?      @relation("MediaCreator", fields: [createdByUserId], references: [id])
+  createdAt       DateTime   @default(now())
+  articles        Article[]  @relation("ArticleCoverImage")
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model AIUsageLog {
+  id            Int        @id @default(autoincrement())
+  userId        Int?
+  articleId     Int?
+  type          AILogType
+  model         String
+  inputTokens   Int?
+  outputTokens  Int?
+  promptSnippet String?    @db.Text
+  status        String     @default("success")
+  createdAt     DateTime   @default(now())
+  user          User?      @relation(fields: [userId], references: [id])
+  article       Article?   @relation(fields: [articleId], references: [id])
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model SiteSettings {
+  id                  Int      @id @default(1)
+  siteName            String   @default("Applied Agentic AI")
+  tagline             String?
+  logoUrl             String?
+  faviconUrl          String?
+  metaDescription     String?  @db.Text
+  footerText          String?
+  socialTwitter       String?
+  socialLinkedin      String?
+  socialYoutube       String?
+  defaultOgImage      String?
+  analyticsId         String?
+  openaiTextModel     String   @default("gpt-4o")
+  openaiImageModel    String   @default("dall-e-3")
+  openaiAudioModel    String   @default("tts-1")
+  openaiTemperature   Float    @default(0.7)
+  openaiMaxTokens     Int      @default(2000)
+  openaiImageSize     String   @default("1024x1024")
+  openaiImageQuality  String   @default("standard")
+  openaiTtsVoice      String   @default("nova")
+  updatedAt           DateTime @updatedAt
+}
