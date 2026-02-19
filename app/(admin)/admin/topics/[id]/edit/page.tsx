@@ -1,4 +1,6 @@
 // app/(admin)/topics/[id]/edit/page.tsx
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'

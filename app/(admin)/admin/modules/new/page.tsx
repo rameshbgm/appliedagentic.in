@@ -1,4 +1,6 @@
 // app/(admin)/modules/new/page.tsx
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import ModuleForm from '@/components/admin/ModuleForm'
 

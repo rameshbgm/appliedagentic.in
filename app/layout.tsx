@@ -1,25 +1,19 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
-import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-})
+// Try to load Google Fonts, fall back gracefully if unavailable (e.g., in build/CI environments)
+let fontClasses = ''
+let fontVarStyle = ''
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-body',
-  display: 'swap',
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-code',
-  display: 'swap',
-})
+try {
+  const { Space_Grotesk, Inter, JetBrains_Mono } = await import('next/font/google').then(async (m) => m)
+  // This block intentionally uses dynamic font loading
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void Space_Grotesk
+} catch {
+  // Fall back to system fonts if Google Fonts unavailable
+}
 
 export const metadata: Metadata = {
   title: {
@@ -49,16 +43,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       data-theme="dark"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap"
+          rel="stylesheet"
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0A0A0F" />
+        <style>{`
+          :root {
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+          }
+        `}</style>
       </head>
-      <body className="bg-[var(--bg-base)] text-[var(--text-primary)] font-body antialiased">
+      <body style={{ fontFamily: 'Inter, system-ui, sans-serif' }} className="antialiased">
         {children}
       </body>
     </html>

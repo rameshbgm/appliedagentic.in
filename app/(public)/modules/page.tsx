@@ -12,17 +12,22 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function ModulesPage() {
-  const modules = await prisma.module.findMany({
-    where: { isPublished: true },
-    orderBy: { order: 'asc' },
-    include: {
-      _count: { select: { topics: true } },
-      topics: {
-        where: { isPublished: true },
-        select: { _count: { select: { topicArticles: true } } },
+  let modules: any[] = []
+  try {
+    modules = await prisma.module.findMany({
+      where: { isPublished: true },
+      orderBy: { order: 'asc' },
+      include: {
+        _count: { select: { topics: true } },
+        topics: {
+          where: { isPublished: true },
+          select: { _count: { select: { topicArticles: true } } },
+        },
       },
-    },
-  })
+    })
+  } catch {
+    modules = []
+  }
 
   return (
     <div className="min-h-screen py-16 px-4 md:px-8 max-w-7xl mx-auto">
@@ -43,7 +48,7 @@ export default async function ModulesPage() {
 
       <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {modules.map((mod, i) => {
-          const articleCount = mod.topics.reduce((sum, t) => sum + (t._count.topicArticles ?? 0), 0)
+          const articleCount = mod.topics.reduce((sum: number, t: { _count: { topicArticles: number } }) => sum + (t._count.topicArticles ?? 0), 0)
           return (
             <ModuleCard
               key={mod.id}

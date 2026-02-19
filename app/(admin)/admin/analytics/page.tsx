@@ -1,4 +1,6 @@
 // app/(admin)/analytics/page.tsx
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import { FileText, Eye, Layers, BookOpen, Image as ImageIcon, Cpu } from 'lucide-react'
 import StatsCard from '@/components/admin/StatsCard'

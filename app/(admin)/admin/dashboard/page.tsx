@@ -1,4 +1,6 @@
 // app/(admin)/dashboard/page.tsx
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { FileText, Layers, BookOpen, Eye, TrendingUp, Users } from 'lucide-react'
