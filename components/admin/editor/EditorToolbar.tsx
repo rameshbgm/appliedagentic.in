@@ -34,38 +34,51 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
   const colors = ['#6C3DFF','#00D4FF','#FF6B6B','#FFA502','#2ED573','#FF69B4','#fff','#666']
   const fontFamilies = ['Inter', 'Space Grotesk', 'JetBrains Mono']
 
-  const normalizeEmbedUrl = (raw: string) => {
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
+  const normalizeEmbedUrl = (raw: string): URL | null => {
     try {
       const parsed = new URL(raw)
       if (!['http:', 'https:'].includes(parsed.protocol)) return null
-      return parsed.toString()
+      return parsed
     } catch {
       return null
     }
   }
 
+  const matchesHost = (hostname: string, allowedHosts: string[]) =>
+    allowedHosts.some((host) => hostname === host || hostname.endsWith(`.${host}`))
+
   const insertEmbed = (raw: string) => {
-    const url = normalizeEmbedUrl(raw)
-    if (!url) return
+    const parsed = normalizeEmbedUrl(raw)
+    if (!parsed) return
+    const hostname = parsed.hostname.toLowerCase()
+    const safeUrl = escapeHtml(parsed.toString())
 
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      editor.chain().focus().setYoutubeVideo({ src: url }).run()
+    if (matchesHost(hostname, ['youtube.com', 'youtu.be'])) {
+      editor.chain().focus().setYoutubeVideo({ src: parsed.toString() }).run()
       return
     }
 
-    if (url.includes('x.com') || url.includes('twitter.com')) {
-      editor.chain().focus().insertContent(`<p><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></p>`).run()
+    if (matchesHost(hostname, ['x.com', 'twitter.com'])) {
+      editor.chain().focus().insertContent(`<p><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a></p>`).run()
       return
     }
 
-    if (url.includes('loom.com') || url.includes('codesandbox.io')) {
+    if (matchesHost(hostname, ['loom.com', 'codesandbox.io'])) {
       editor.chain().focus().insertContent(
-        `<div><iframe src="${url}" style="width:100%;height:420px;border:0;border-radius:12px;" loading="lazy" allowfullscreen></iframe></div>`
+        `<div><iframe src="${safeUrl}" style="width:100%;height:420px;border:0;border-radius:12px;" loading="lazy" allowfullscreen></iframe></div>`
       ).run()
       return
     }
 
-    editor.chain().focus().insertContent(`<p><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></p>`).run()
+    editor.chain().focus().insertContent(`<p><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a></p>`).run()
   }
 
   const rows: ToolBtn[][] = [

@@ -24,6 +24,7 @@ import Superscript from '@tiptap/extension-superscript'
 import CharacterCount from '@tiptap/extension-character-count'
 import Placeholder from '@tiptap/extension-placeholder'
 import { all, createLowlight } from 'lowlight'
+import DOMPurify from 'dompurify'
 import EditorToolbar from './EditorToolbar'
 import AIAssistPanel from './AIAssistPanel'
 
@@ -39,6 +40,12 @@ interface ArticleEditorProps {
 export default function ArticleEditor({ content, onChange, articleId, onAudioGenerated }: ArticleEditorProps) {
   const [isHtmlMode, setIsHtmlMode] = useState(false)
   const [htmlContent, setHtmlContent] = useState(content)
+  const sanitizeHtml = (html: string) =>
+    DOMPurify.sanitize(html, {
+      ADD_TAGS: ['iframe'],
+      ADD_ATTR: ['allowfullscreen', 'loading', 'style', 'target', 'rel'],
+    })
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -71,7 +78,7 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
     ],
     content,
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML()
+      const html = sanitizeHtml(editor.getHTML())
       onChange(html)
       if (!isHtmlMode) setHtmlContent(html)
     },
@@ -121,8 +128,10 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
         isHtmlMode={isHtmlMode}
         onToggleHtmlMode={() => {
           if (isHtmlMode) {
-            editor.commands.setContent(htmlContent, false)
-            onChange(editor.getHTML())
+            const sanitizedHtml = sanitizeHtml(htmlContent)
+            editor.commands.setContent(sanitizedHtml, false)
+            onChange(sanitizedHtml)
+            setHtmlContent(sanitizedHtml)
           } else {
             setHtmlContent(editor.getHTML())
           }
@@ -137,8 +146,9 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
             <textarea
               value={htmlContent}
               onChange={(e) => {
-                setHtmlContent(e.target.value)
-                onChange(e.target.value)
+                const nextHtml = e.target.value
+                setHtmlContent(nextHtml)
+                onChange(sanitizeHtml(nextHtml))
               }}
               className="w-full min-h-[500px] p-6 font-mono text-sm outline-none resize-none"
               style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
