@@ -24,7 +24,7 @@ export default async function AnalyticsPage() {
     prisma.topic.count(),
     prisma.article.aggregate({ _sum: { viewCount: true } }),
     prisma.mediaAsset.count(),
-    prisma.aIUsageLog.aggregate({ _count: true, _sum: { tokensUsed: true } }),
+    prisma.aIUsageLog.aggregate({ _count: true, _sum: { inputTokens: true, outputTokens: true } }),
     prisma.article.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { viewCount: 'desc' },
@@ -41,7 +41,7 @@ export default async function AnalyticsPage() {
     { label: 'Total Views', value: totalViews._sum.viewCount ?? 0, icon: Eye, color: '#FF6B6B' },
     { label: 'Media Files', value: totalMedia, icon: ImageIcon, color: '#FF69B4' },
     { label: 'AI Requests', value: aiLogs._count, icon: Cpu, color: '#A29BFE' },
-    { label: 'AI Tokens Used', value: aiLogs._sum.tokensUsed ?? 0, icon: Cpu, color: '#55EFC4' },
+    { label: 'AI Tokens Used', value: (aiLogs._sum.inputTokens ?? 0) + (aiLogs._sum.outputTokens ?? 0), icon: Cpu, color: '#55EFC4' },
   ]
 
   return (

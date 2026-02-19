@@ -29,12 +29,17 @@ export default async function TopicDetailPage({ params }: Props) {
       module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
       topicArticles: {
         where: { article: { status: 'PUBLISHED' } },
-        orderBy: { order: 'asc' },
+        orderBy: { orderIndex: 'asc' },
         include: {
           article: {
             include: {
-              module: { select: { name: true, color: true } },
-              tags: { include: { tag: true } },
+              articleTags: { include: { tag: { select: { name: true } } } },
+              topicArticles: {
+                take: 1,
+                include: {
+                  topic: { select: { module: { select: { name: true, color: true } } } },
+                },
+              },
             },
           },
         },
@@ -104,7 +109,15 @@ export default async function TopicDetailPage({ params }: Props) {
             {articles.map((a) => (
               <ArticleCard
                 key={a.id}
-                article={{ ...a, tags: a.tags.map((t) => ({ id: t.tag.id, name: t.tag.name })) }}
+                title={a.title}
+                slug={a.slug}
+                summary={a.summary}
+                readingTime={a.readingTimeMinutes}
+                viewCount={a.viewCount}
+                createdAt={a.createdAt}
+                tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
+                moduleName={a.topicArticles[0]?.topic?.module?.name}
+                moduleColor={a.topicArticles[0]?.topic?.module?.color}
               />
             ))}
           </StaggerContainer>

@@ -6,8 +6,8 @@ import type { Article, Topic, Module, User, MediaAsset, Tag, ArticleStatus } fro
 export type ArticleWithRelations = Article & {
   author: Pick<User, 'id' | 'name' | 'email'>
   topicArticles: Array<{
-    topic: Pick<Topic, 'id' | 'title' | 'slug' | 'color' | 'moduleId'> & {
-      module: Pick<Module, 'id' | 'title' | 'slug' | 'color' | 'orderIndex'>
+    topic: Pick<Topic, 'id' | 'name' | 'slug' | 'color' | 'moduleId'> & {
+      module: Pick<Module, 'id' | 'name' | 'slug' | 'color' | 'order'>
     }
   }>
   articleTags: Array<{ tag: Pick<Tag, 'id' | 'name' | 'slug'> }>
@@ -15,7 +15,7 @@ export type ArticleWithRelations = Article & {
 }
 
 export type TopicWithRelations = Topic & {
-  module: Pick<Module, 'id' | 'title' | 'slug' | 'color' | 'orderIndex' | 'icon'>
+  module: Pick<Module, 'id' | 'name' | 'slug' | 'color' | 'order' | 'icon'>
   topicArticles: Array<{
     orderIndex: number
     article: Pick<Article, 'id' | 'title' | 'slug' | 'summary' | 'status' | 'publishedAt' | 'readingTimeMinutes' | 'viewCount'>

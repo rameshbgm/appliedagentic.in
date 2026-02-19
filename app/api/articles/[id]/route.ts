@@ -34,7 +34,7 @@ const articleInclude = {
     include: {
       topic: {
         include: {
-          module: { select: { id: true, title: true, slug: true, color: true, orderIndex: true, icon: true } },
+          module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
         },
       },
     },

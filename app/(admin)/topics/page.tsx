@@ -69,8 +69,8 @@ export default async function TopicsPage() {
                   {topic._count.topicArticles}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`badge ${topic.published ? 'badge-success' : 'badge-warning'}`}>
-                    {topic.published ? 'Published' : 'Draft'}
+                  <span className={`badge ${topic.isPublished ? 'badge-success' : 'badge-warning'}`}>
+                    {topic.isPublished ? 'Published' : 'Draft'}
                   </span>
                 </td>
                 <td className="px-4 py-3">

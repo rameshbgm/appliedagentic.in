@@ -45,8 +45,8 @@ export default async function ModulesPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-display font-semibold" style={{ color: 'var(--text-primary)' }}>{mod.name}</h3>
-                <span className={`badge ${mod.published ? 'badge-success' : 'badge-warning'}`}>
-                  {mod.published ? 'Published' : 'Draft'}
+                <span className={`badge ${mod.isPublished ? 'badge-success' : 'badge-warning'}`}>
+                  {mod.isPublished ? 'Published' : 'Draft'}
                 </span>
               </div>
               <p className="text-sm mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{mod.description}</p>

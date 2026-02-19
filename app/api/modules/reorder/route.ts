@@ -9,9 +9,9 @@ export async function PATCH(req: NextRequest) {
   if (!session) return apiError('Unauthorized', 401)
   try {
     const { items } = await req.json()
-    // items: Array<{ id: number, orderIndex: number }>
-    const updates = items.map(({ id, orderIndex }: { id: number; orderIndex: number }) =>
-      prisma.module.update({ where: { id }, data: { orderIndex } })
+    // items: Array<{ id: number, order: number }>
+    const updates = items.map(({ id, order }: { id: number; order: number }) =>
+      prisma.module.update({ where: { id }, data: { order } })
     )
     await prisma.$transaction(updates)
     return apiSuccess({ reordered: true })

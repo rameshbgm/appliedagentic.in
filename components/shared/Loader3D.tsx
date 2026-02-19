@@ -1,6 +1,7 @@
 'use client'
 // components/shared/Loader3D.tsx
 import { useEffect, useRef, useState } from 'react'
+import type * as THREE from 'three'
 
 export default function Loader3D() {
   const canvasRef = useRef<HTMLDivElement>(null)

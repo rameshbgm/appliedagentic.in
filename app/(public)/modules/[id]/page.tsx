@@ -43,12 +43,20 @@ export default async function ModuleDetailPage({ params }: Props) {
   if (!mod) notFound()
 
   const featuredArticles = await prisma.article.findMany({
-    where: { moduleId: mod.id, status: 'PUBLISHED' },
+    where: {
+      status: 'PUBLISHED',
+      topicArticles: { some: { topic: { moduleId: mod.id } } },
+    },
     orderBy: { viewCount: 'desc' },
     take: 6,
     include: {
-      module: { select: { name: true, color: true } },
-      tags: { include: { tag: true } },
+      articleTags: { include: { tag: { select: { name: true } } } },
+      topicArticles: {
+        take: 1,
+        include: {
+          topic: { select: { module: { select: { name: true, color: true } } } },
+        },
+      },
     },
   })
 
@@ -108,8 +116,11 @@ export default async function ModuleDetailPage({ params }: Props) {
                 <TopicCard
                   key={topic.id}
                   topic={{
-                    ...topic,
-                    module: { name: mod.name, color: mod.color },
+                    id: topic.id,
+                    name: topic.name,
+                    slug: topic.slug,
+                    description: topic.description,
+                    module: { name: mod.name, color: mod.color ?? '#6C3DFF' },
                     articleCount: topic._count.topicArticles,
                   }}
                 />
@@ -125,7 +136,7 @@ export default async function ModuleDetailPage({ params }: Props) {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Popular Articles</h2>
                 <Link href={`/articles?module=${mod.slug}`} className="text-sm font-medium hover:underline"
-                  style={{ color: mod.color }}>
+                  style={{ color: mod.color ?? undefined }}>
                   View all →
                 </Link>
               </div>
@@ -134,7 +145,15 @@ export default async function ModuleDetailPage({ params }: Props) {
               {featuredArticles.map((a) => (
                 <ArticleCard
                   key={a.id}
-                  article={{ ...a, tags: a.tags.map((t) => ({ id: t.tag.id, name: t.tag.name })) }}
+                  title={a.title}
+                  slug={a.slug}
+                  summary={a.summary}
+                  readingTime={a.readingTimeMinutes}
+                  viewCount={a.viewCount}
+                  createdAt={a.createdAt}
+                  tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
+                  moduleName={a.topicArticles[0]?.topic?.module?.name}
+                  moduleColor={a.topicArticles[0]?.topic?.module?.color}
                 />
               ))}
             </StaggerContainer>

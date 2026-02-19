@@ -166,16 +166,16 @@ async function main() {
       where: { slug: moduleData.slug },
       update: {},
       create: {
-        title: moduleData.title,
+        name: moduleData.title,
         slug: moduleData.slug,
-        orderIndex: moduleData.orderIndex,
+        order: moduleData.orderIndex,
         icon: moduleData.icon,
         color: moduleData.color,
-        shortDescription: moduleData.shortDescription,
+        description: moduleData.shortDescription,
         isPublished: true,
       },
     })
-    console.log(`📦 Module created: ${module.title}`)
+    console.log(`📦 Module created: ${module.name}`)
 
     for (let i = 0; i < moduleData.topics.length; i++) {
       const topicTitle = moduleData.topics[i]
@@ -186,15 +186,15 @@ async function main() {
         update: {},
         create: {
           moduleId: module.id,
-          title: topicTitle,
+          name: topicTitle,
           slug: topicSlug,
-          orderIndex: i + 1,
+          order: i + 1,
           color: moduleData.color,
           isPublished: true,
-          shortDescription: `An in-depth exploration of ${topicTitle} within the context of ${moduleData.title}.`,
+          description: `An in-depth exploration of ${topicTitle} within the context of ${moduleData.title}.`,
         },
       })
-      console.log(`  📚 Topic created: ${topic.title}`)
+      console.log(`  📚 Topic created: ${topic.name}`)
 
       // Create a draft article for each topic
       const articleSlug = slugify(topicTitle)

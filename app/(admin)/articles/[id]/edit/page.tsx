@@ -13,6 +13,7 @@ export default async function EditArticlePage({ params }: { params: { id: string
       include: {
         topicArticles: { include: { topic: true } },
         articleTags: { include: { tag: true } },
+        coverImage: { select: { url: true } },
       },
     }),
     prisma.module.findMany({ orderBy: { order: 'asc' }, select: { id: true, name: true } }),
@@ -35,7 +36,7 @@ export default async function EditArticlePage({ params }: { params: { id: string
         content: article.content,
         status: article.status,
         scheduledAt: article.scheduledAt?.toISOString().slice(0, 16),
-        coverImageUrl: article.coverImageUrl ?? '',
+        coverImageUrl: article.coverImage?.url ?? '',
         seoTitle: article.seoTitle ?? '',
         seoDescription: article.seoDescription ?? '',
         audioUrl: article.audioUrl ?? undefined,

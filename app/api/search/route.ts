@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
           topicArticles: {
             take: 1,
             include: {
-              topic: { select: { title: true, slug: true, color: true } },
+              topic: { select: { name: true, slug: true, color: true } },
             },
           },
         },

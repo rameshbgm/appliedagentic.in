@@ -22,18 +22,14 @@ export async function GET() {
       prisma.article.findMany({
         orderBy: { updatedAt: 'desc' },
         take: 10,
-        include: {
-          topicArticles: {
-            take: 1,
-            include: { topic: { select: { title: true, slug: true, color: true } } },
-          },
-        },
         select: {
           id: true, title: true, slug: true, status: true,
           updatedAt: true, viewCount: true,
           topicArticles: {
             take: 1,
-            include: { topic: { select: { title: true, slug: true, color: true } } },
+            select: {
+              topic: { select: { name: true, slug: true, color: true } },
+            },
           },
         },
       }),

@@ -32,11 +32,16 @@ async function getData() {
     }),
     prisma.article.findMany({
       where: { status: 'PUBLISHED' },
-      orderBy: [{ featuredOrder: 'asc' }, { viewCount: 'desc' }],
+      orderBy: { viewCount: 'desc' },
       take: 6,
       include: {
-        module: { select: { name: true, color: true } },
-        tags: { include: { tag: true } },
+        articleTags: { include: { tag: { select: { name: true } } } },
+        topicArticles: {
+          take: 1,
+          include: {
+            topic: { select: { module: { select: { name: true, color: true } } } },
+          },
+        },
       },
     }),
   ])
@@ -85,11 +90,14 @@ export default async function HomePage() {
             return (
               <ModuleCard
                 key={mod.id}
-                module={{
-                  ...mod,
-                  topicCount: mod._count.topics,
-                  articleCount,
-                }}
+                id={mod.id}
+                name={mod.name}
+                slug={mod.slug}
+                icon={mod.icon}
+                color={mod.color}
+                description={mod.description}
+                topicCount={mod._count.topics}
+                articleCount={articleCount}
                 index={i}
               />
             )
@@ -128,10 +136,15 @@ export default async function HomePage() {
             {featuredArticles.map((article) => (
               <ArticleCard
                 key={article.id}
-                article={{
-                  ...article,
-                  tags: article.tags.map((t) => ({ id: t.tag.id, name: t.tag.name })),
-                }}
+                title={article.title}
+                slug={article.slug}
+                summary={article.summary}
+                readingTime={article.readingTimeMinutes}
+                viewCount={article.viewCount}
+                createdAt={article.createdAt}
+                tags={article.articleTags.map((at) => ({ name: at.tag.name }))}
+                moduleName={article.topicArticles[0]?.topic?.module?.name}
+                moduleColor={article.topicArticles[0]?.topic?.module?.color}
               />
             ))}
           </StaggerContainer>

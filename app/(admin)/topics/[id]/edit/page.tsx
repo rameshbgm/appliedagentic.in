@@ -28,7 +28,7 @@ export default async function EditTopicPage({ params }: { params: { id: string }
           description: topic.description ?? '',
           moduleId: topic.moduleId,
           order: topic.order,
-          published: topic.published,
+          published: topic.isPublished,
         }}
       />
     </div>

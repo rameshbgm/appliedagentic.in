@@ -56,46 +56,46 @@ model User {
 }
 
 model Module {
-  id               Int      @id @default(autoincrement())
-  title            String
-  slug             String   @unique
-  orderIndex       Int      @default(0)
-  shortDescription String?  @db.Text
-  icon             String?
-  color            String?
-  coverImage       String?
-  isPublished      Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  createdBy        Int?
-  updatedBy        Int?
-  topics           Topic[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  order       Int      @default(0)
+  description String?  @db.Text
+  icon        String?
+  color       String?
+  coverImage  String?
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+  topics      Topic[]
 
   @@index([slug])
-  @@index([orderIndex])
+  @@index([order])
 }
 
 model Topic {
-  id               Int            @id @default(autoincrement())
-  moduleId         Int
-  module           Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  title            String
-  slug             String         @unique
-  orderIndex       Int            @default(0)
-  shortDescription String?        @db.Text
-  icon             String?
-  color            String?
-  coverImage       String?
-  isPublished      Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  createdBy        Int?
-  updatedBy        Int?
-  topicArticles    TopicArticle[]
+  id          Int            @id @default(autoincrement())
+  moduleId    Int
+  module      Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String         @unique
+  order       Int            @default(0)
+  description String?        @db.Text
+  icon        String?
+  color       String?
+  coverImage  String?
+  isPublished Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  createdBy   Int?
+  updatedBy   Int?
+  topicArticles TopicArticle[]
 
   @@index([slug])
   @@index([moduleId])
-  @@index([orderIndex])
+  @@index([order])
 }
 
 model Article {

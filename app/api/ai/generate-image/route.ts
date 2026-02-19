@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
       n: 1,
     })
 
-    const imageUrl = response.data[0]?.url
-    const revisedPrompt = response.data[0]?.revised_prompt
+    const imageUrl = response.data?.[0]?.url
+    const revisedPrompt = response.data?.[0]?.revised_prompt
 
     if (!imageUrl) return apiError('No image was generated', 500)
 

@@ -27,7 +27,7 @@ export default async function SearchPage({ searchParams }: Props) {
       OR: [
         { title: { contains: q } },
         { summary: { contains: q } },
-        { tags: { some: { tag: { name: { contains: q } } } } },
+        { articleTags: { some: { tag: { name: { contains: q } } } } },
       ],
     }
     ;[articles, totalCount] = await Promise.all([
@@ -36,8 +36,13 @@ export default async function SearchPage({ searchParams }: Props) {
         orderBy: { viewCount: 'desc' },
         take: 24,
         include: {
-          module: { select: { name: true, color: true } },
-          tags: { include: { tag: true } },
+          articleTags: { include: { tag: { select: { name: true } } } },
+          topicArticles: {
+            take: 1,
+            include: {
+              topic: { select: { module: { select: { name: true, color: true } } } },
+            },
+          },
         },
       }),
       prisma.article.count({ where }),
@@ -75,7 +80,15 @@ export default async function SearchPage({ searchParams }: Props) {
           {articles.map((a) => (
             <ArticleCard
               key={a.id}
-              article={{ ...a, tags: a.tags.map((t: any) => ({ id: t.tag.id, name: t.tag.name })) }}
+              title={a.title}
+              slug={a.slug}
+              summary={a.summary}
+              readingTime={a.readingTimeMinutes}
+              viewCount={a.viewCount}
+              createdAt={a.createdAt}
+              tags={a.articleTags.map((at: { tag: { name: string } }) => ({ name: at.tag.name }))}
+              moduleName={a.topicArticles[0]?.topic?.module?.name}
+              moduleColor={a.topicArticles[0]?.topic?.module?.color}
             />
           ))}
         </StaggerContainer>

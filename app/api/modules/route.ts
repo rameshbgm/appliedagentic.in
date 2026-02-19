@@ -7,13 +7,13 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 
 const ModuleSchema = z.object({
-  title: z.string().min(1).max(200),
+  name: z.string().min(1).max(200),
   slug: z.string().optional(),
-  shortDescription: z.string().optional(),
+  description: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
   coverImage: z.string().optional(),
-  orderIndex: z.number().int().optional(),
+  order: z.number().int().optional(),
   isPublished: z.boolean().optional(),
 })
 
@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
 
     const modules = await prisma.module.findMany({
       where: publishedOnly ? { isPublished: true } : {},
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { order: 'asc' },
       include: includeTopics
         ? {
             topics: {
               where: publishedOnly ? { isPublished: true } : {},
-              orderBy: { orderIndex: 'asc' },
+              orderBy: { order: 'asc' },
               include: { _count: { select: { topicArticles: true } } },
             },
             _count: { select: { topics: true } },
@@ -51,16 +51,16 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const data = ModuleSchema.parse(body)
-    const slug = data.slug || slugify(data.title)
+    const slug = data.slug || slugify(data.name)
 
     const existing = await prisma.module.findUnique({ where: { slug } })
     if (existing) return apiError('Slug already in use', 409)
 
-    const lastModule = await prisma.module.findFirst({ orderBy: { orderIndex: 'desc' } })
-    const orderIndex = data.orderIndex ?? (lastModule?.orderIndex ?? 0) + 1
+    const lastModule = await prisma.module.findFirst({ orderBy: { order: 'desc' } })
+    const order = data.order ?? (lastModule?.order ?? 0) + 1
 
     const module = await prisma.module.create({
-      data: { ...data, slug, orderIndex },
+      data: { ...data, slug, order },
     })
     return apiSuccess(module, 201)
   } catch (err) {

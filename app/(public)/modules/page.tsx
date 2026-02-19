@@ -47,7 +47,14 @@ export default async function ModulesPage() {
           return (
             <ModuleCard
               key={mod.id}
-              module={{ ...mod, topicCount: mod._count.topics, articleCount }}
+              id={mod.id}
+              name={mod.name}
+              slug={mod.slug}
+              icon={mod.icon}
+              color={mod.color}
+              description={mod.description}
+              topicCount={mod._count.topics}
+              articleCount={articleCount}
               index={i}
             />
           )

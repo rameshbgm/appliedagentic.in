@@ -4,11 +4,11 @@ import { BookOpen, FileText, ArrowRight } from 'lucide-react'
 
 interface Props {
   topic: {
-    id: string
+    id: number | string
     name: string
     slug: string
     description?: string | null
-    module?: { name: string; color: string } | null
+    module?: { name: string; color: string | null } | null
     _count?: { articles?: number }
     articleCount?: number
   }

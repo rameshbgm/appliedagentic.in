@@ -1,6 +1,6 @@
 'use client'
 // components/public/ScrollAnimations.tsx
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, type Variants } from 'framer-motion'
 import { useRef } from 'react'
 
 interface AnimProps {
@@ -50,7 +50,7 @@ function AnimWrapper({
   children,
   className,
   delay = 0,
-}: AnimProps & { variants: typeof fadeUpVariants }) {
+}: AnimProps & { variants: Variants }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 

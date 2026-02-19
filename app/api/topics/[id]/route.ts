@@ -7,14 +7,14 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 
 const UpdateSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
+  name: z.string().min(1).max(200).optional(),
   slug: z.string().optional(),
   moduleId: z.number().int().optional(),
-  shortDescription: z.string().optional(),
+  description: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
   coverImage: z.string().optional(),
-  orderIndex: z.number().int().optional(),
+  order: z.number().int().optional(),
   isPublished: z.boolean().optional(),
 })
 
@@ -23,7 +23,7 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
     const topic = await prisma.topic.findUnique({
       where: { id: parseInt(params.id) },
       include: {
-        module: { select: { id: true, title: true, slug: true, color: true, orderIndex: true, icon: true } },
+        module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
         topicArticles: {
           orderBy: { orderIndex: 'asc' },
           include: {
@@ -51,12 +51,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   try {
     const body = await req.json()
     const data = UpdateSchema.parse(body)
-    if (data.title && !data.slug) data.slug = slugify(data.title)
+    if (data.name && !data.slug) data.slug = slugify(data.name)
 
     const topic = await prisma.topic.update({
       where: { id: parseInt(params.id) },
       data,
-      include: { module: { select: { id: true, title: true, slug: true, color: true, orderIndex: true, icon: true } } },
+      include: { module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } } },
     })
     return apiSuccess(topic)
   } catch (err) {

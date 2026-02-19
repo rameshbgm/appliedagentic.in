@@ -29,13 +29,18 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await prisma.article.findUnique({
     where: { slug: params.id },
-    select: { title: true, summary: true, seoTitle: true, seoDescription: true, coverImage: true },
+    select: {
+      title: true, summary: true, seoTitle: true, seoDescription: true,
+      coverImage: { select: { url: true, width: true, height: true } },
+    },
   })
   if (!article) return {}
   return {
     title: article.seoTitle ?? article.title,
     description: article.seoDescription ?? article.summary ?? undefined,
-    openGraph: article.coverImage ? { images: [article.coverImage] } : undefined,
+    openGraph: article.coverImage
+      ? { images: [{ url: article.coverImage.url, width: article.coverImage.width ?? undefined, height: article.coverImage.height ?? undefined }] }
+      : undefined,
   }
 }
 
@@ -43,21 +48,27 @@ export default async function ArticleDetailPage({ params }: Props) {
   const article = await prisma.article.findUnique({
     where: { slug: params.id, status: 'PUBLISHED' },
     include: {
-      module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
-      tags: { include: { tag: { select: { id: true, name: true } } } },
+      coverImage: { select: { url: true } },
+      articleTags: { include: { tag: { select: { id: true, name: true } } } },
       topicArticles: {
         include: {
           topic: {
             select: {
               id: true, name: true, slug: true,
+              module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
               topicArticles: {
                 where: { article: { status: 'PUBLISHED' } },
                 take: 4,
                 include: {
                   article: {
                     include: {
-                      module: { select: { name: true, color: true } },
-                      tags: { include: { tag: true } },
+                      articleTags: { include: { tag: { select: { name: true } } } },
+                      topicArticles: {
+                        take: 1,
+                        include: {
+                          topic: { select: { module: { select: { name: true, color: true } } } },
+                        },
+                      },
                     },
                   },
                 },
@@ -74,16 +85,17 @@ export default async function ArticleDetailPage({ params }: Props) {
   // Increment view count (best-effort, noncritical)
   prisma.article.update({ where: { id: article.id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
 
-  const color = article.module?.color ?? '#6C3DFF'
-  const tags = article.tags.map((t) => t.tag)
+  const articleModule = article.topicArticles[0]?.topic?.module ?? null
+  const color = articleModule?.color ?? '#6C3DFF'
+  const tags = article.articleTags.map((t) => t.tag)
   const topics = article.topicArticles.map((ta) => ta.topic)
 
   // Collect related articles from same topics (exclude self)
-  const relatedMap = new Map<string, typeof article>()
+  const relatedMap = new Map<number, (typeof article.topicArticles[0]['topic']['topicArticles'][0]['article'])>()
   for (const topic of topics) {
     for (const ta of topic.topicArticles) {
       if (ta.article.id !== article.id) {
-        relatedMap.set(ta.article.id, ta.article as any)
+        relatedMap.set(ta.article.id, ta.article)
       }
     }
   }
@@ -98,7 +110,7 @@ export default async function ArticleDetailPage({ params }: Props) {
         {article.coverImage && (
           <div className="relative w-full h-64 md:h-96 overflow-hidden">
             <Image
-              src={article.coverImage}
+              src={article.coverImage.url}
               alt={article.title}
               fill
               className="object-cover"
@@ -116,11 +128,11 @@ export default async function ArticleDetailPage({ params }: Props) {
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap" style={{ color: 'var(--text-muted)' }}>
                   <Link href="/" className="hover:opacity-80">Home</Link>
-                  {article.module && (
+                  {articleModule && (
                     <>
                       <span>/</span>
-                      <Link href={`/modules/${article.module.slug}`} className="hover:opacity-80">
-                        {article.module.name}
+                      <Link href={`/modules/${articleModule.slug}`} className="hover:opacity-80">
+                        {articleModule.name}
                       </Link>
                     </>
                   )}
@@ -129,13 +141,13 @@ export default async function ArticleDetailPage({ params }: Props) {
                 </nav>
 
                 {/* Module badge */}
-                {article.module && (
+                {articleModule && (
                   <Link
-                    href={`/modules/${article.module.slug}`}
+                    href={`/modules/${articleModule.slug}`}
                     className="inline-flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full mb-4"
                     style={{ background: color + '25', color }}
                   >
-                    {article.module.icon} {article.module.name}
+                    {articleModule.icon} {articleModule.name}
                   </Link>
                 )}
 
@@ -161,10 +173,10 @@ export default async function ArticleDetailPage({ params }: Props) {
                       {formatDate(article.publishedAt.toString())}
                     </span>
                   )}
-                  {article.readingTime && (
+                  {article.readingTimeMinutes && (
                     <span className="flex items-center gap-1.5">
                       <Clock size={14} />
-                      {article.readingTime} min read
+                      {article.readingTimeMinutes} min read
                     </span>
                   )}
                   <span className="flex items-center gap-1.5">
@@ -197,8 +209,16 @@ export default async function ArticleDetailPage({ params }: Props) {
               {related.length > 0 && (
                 <RelatedArticles
                   articles={related.map((a) => ({
-                    ...a,
-                    tags: (a as any).tags?.map((t: any) => ({ id: t.tag.id, name: t.tag.name })) ?? [],
+                    id: String(a.id),
+                    title: a.title,
+                    slug: a.slug,
+                    summary: a.summary,
+                    readingTime: a.readingTimeMinutes,
+                    viewCount: a.viewCount,
+                    publishedAt: a.publishedAt,
+                    module: a.topicArticles[0]?.topic?.module
+                      ? { name: a.topicArticles[0].topic.module.name, color: a.topicArticles[0].topic.module.color ?? '#6C3DFF' }
+                      : null,
                   }))}
                 />
               )}

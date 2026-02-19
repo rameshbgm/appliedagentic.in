@@ -28,22 +28,27 @@ export default async function ArticlesPage({ searchParams }: Props) {
     prisma.article.count({
       where: {
         status: 'PUBLISHED',
-        ...(moduleSlug ? { module: { slug: moduleSlug } } : {}),
-        ...(tagName ? { tags: { some: { tag: { name: tagName } } } } : {}),
+        ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
+        ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
       },
     }),
     prisma.article.findMany({
       where: {
         status: 'PUBLISHED',
-        ...(moduleSlug ? { module: { slug: moduleSlug } } : {}),
-        ...(tagName ? { tags: { some: { tag: { name: tagName } } } } : {}),
+        ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
+        ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
       },
       orderBy: { publishedAt: 'desc' },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
-        module: { select: { name: true, color: true } },
-        tags: { include: { tag: true } },
+        articleTags: { include: { tag: { select: { name: true } } } },
+        topicArticles: {
+          take: 1,
+          include: {
+            topic: { select: { module: { select: { name: true, color: true } } } },
+          },
+        },
       },
     }),
   ])
@@ -90,7 +95,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
               href={buildUrl(1, m.slug)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
               style={moduleSlug === m.slug
-                ? { background: m.color + '25', color: m.color, border: `1px solid ${m.color}40` }
+                ? { background: (m.color ?? '#6C3DFF') + '25', color: m.color ?? '#6C3DFF', border: `1px solid ${(m.color ?? '#6C3DFF')}40` }
                 : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
               }
             >
@@ -106,7 +111,15 @@ export default async function ArticlesPage({ searchParams }: Props) {
             {articles.map((a) => (
               <ArticleCard
                 key={a.id}
-                article={{ ...a, tags: a.tags.map((t) => ({ id: t.tag.id, name: t.tag.name })) }}
+                title={a.title}
+                slug={a.slug}
+                summary={a.summary}
+                readingTime={a.readingTimeMinutes}
+                viewCount={a.viewCount}
+                createdAt={a.createdAt}
+                tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
+                moduleName={a.topicArticles[0]?.topic?.module?.name}
+                moduleColor={a.topicArticles[0]?.topic?.module?.color}
               />
             ))}
           </StaggerContainer>

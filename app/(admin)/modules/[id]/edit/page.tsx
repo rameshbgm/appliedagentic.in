@@ -24,7 +24,7 @@ export default async function EditModulePage({ params }: { params: { id: string 
           description: module.description ?? '',
           icon: module.icon ?? '📚',
           color: module.color ?? '#6C3DFF',
-          published: module.published,
+          published: module.isPublished,
         }}
       />
     </div>

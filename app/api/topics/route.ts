@@ -7,14 +7,14 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 
 const TopicSchema = z.object({
-  title: z.string().min(1).max(200),
+  name: z.string().min(1).max(200),
   slug: z.string().optional(),
   moduleId: z.number().int(),
-  shortDescription: z.string().optional(),
+  description: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
   coverImage: z.string().optional(),
-  orderIndex: z.number().int().optional(),
+  order: z.number().int().optional(),
   isPublished: z.boolean().optional(),
 })
 
@@ -29,9 +29,9 @@ export async function GET(req: NextRequest) {
         ...(publishedOnly ? { isPublished: true } : {}),
         ...(moduleId ? { moduleId: parseInt(moduleId) } : {}),
       },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { order: 'asc' },
       include: {
-        module: { select: { id: true, title: true, slug: true, color: true, orderIndex: true, icon: true } },
+        module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
         _count: { select: { topicArticles: true } },
       },
     })
@@ -47,20 +47,20 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const data = TopicSchema.parse(body)
-    const slug = data.slug || slugify(data.title)
+    const slug = data.slug || slugify(data.name)
 
     const existing = await prisma.topic.findUnique({ where: { slug } })
     if (existing) return apiError('Slug already in use', 409)
 
     const lastTopic = await prisma.topic.findFirst({
       where: { moduleId: data.moduleId },
-      orderBy: { orderIndex: 'desc' },
+      orderBy: { order: 'desc' },
     })
-    const orderIndex = data.orderIndex ?? (lastTopic?.orderIndex ?? 0) + 1
+    const order = data.order ?? (lastTopic?.order ?? 0) + 1
 
     const topic = await prisma.topic.create({
-      data: { ...data, slug, orderIndex },
-      include: { module: { select: { id: true, title: true, slug: true, color: true, orderIndex: true, icon: true } } },
+      data: { ...data, slug, order },
+      include: { module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } } },
     })
     return apiSuccess(topic, 201)
   } catch (err) {
