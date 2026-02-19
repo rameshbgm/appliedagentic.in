@@ -15,7 +15,7 @@ export default function NewsletterSection() {
     // Placeholder — replace with actual newsletter API integration
     await new Promise((r) => setTimeout(r, 800))
     setStatus('success')
-    setMessage('You\'re on the list! We\'ll notify you of new content.')
+    setMessage("You're on the list! We'll notify you of new content.")
     setEmail('')
   }
 
