@@ -8,7 +8,7 @@ import {
   Heading1, Heading2, Heading3, List, ListOrdered,
   CheckSquare, Quote, Code, Minus, Link2, Unlink,
   Image as ImageIcon, Youtube as YoutubeIcon,
-  Table as TableIcon, Undo, Redo,
+  Table as TableIcon, Undo, Redo, Code2,
   Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
   Highlighter, Palette, ChevronDown,
 } from 'lucide-react'
@@ -16,17 +16,57 @@ import ImageUploadModal from './ImageUploadModal'
 import EmbedModal from './EmbedModal'
 import LinkModal from './LinkModal'
 
-interface Props { editor: Editor; articleId?: number }
+interface Props {
+  editor: Editor
+  articleId?: number
+  isHtmlMode?: boolean
+  onToggleHtmlMode?: () => void
+}
 
 type ToolBtn = { icon: React.ElementType; action: () => void; active?: boolean; title: string }
 
-export default function EditorToolbar({ editor, articleId }: Props) {
+export default function EditorToolbar({ editor, articleId, isHtmlMode = false, onToggleHtmlMode }: Props) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [showEmbedModal, setShowEmbedModal] = useState(false)
   const [showLinkModal, setShowLinkModal] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
 
   const colors = ['#6C3DFF','#00D4FF','#FF6B6B','#FFA502','#2ED573','#FF69B4','#fff','#666']
+  const fontFamilies = ['Inter', 'Space Grotesk', 'JetBrains Mono']
+
+  const normalizeEmbedUrl = (raw: string) => {
+    try {
+      const parsed = new URL(raw)
+      if (!['http:', 'https:'].includes(parsed.protocol)) return null
+      return parsed.toString()
+    } catch {
+      return null
+    }
+  }
+
+  const insertEmbed = (raw: string) => {
+    const url = normalizeEmbedUrl(raw)
+    if (!url) return
+
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run()
+      return
+    }
+
+    if (url.includes('x.com') || url.includes('twitter.com')) {
+      editor.chain().focus().insertContent(`<p><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></p>`).run()
+      return
+    }
+
+    if (url.includes('loom.com') || url.includes('codesandbox.io')) {
+      editor.chain().focus().insertContent(
+        `<div><iframe src="${url}" style="width:100%;height:420px;border:0;border-radius:12px;" loading="lazy" allowfullscreen></iframe></div>`
+      ).run()
+      return
+    }
+
+    editor.chain().focus().insertContent(`<p><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></p>`).run()
+  }
 
   const rows: ToolBtn[][] = [
     [
@@ -76,6 +116,23 @@ export default function EditorToolbar({ editor, articleId }: Props) {
         className="flex flex-wrap items-center gap-1 p-3 border-b sticky top-0 z-10"
         style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
       >
+        <select
+          value={(editor.getAttributes('textStyle').fontFamily || '').replace(/['"]/g, '')}
+          onChange={(e) => {
+            const value = e.target.value
+            if (value) editor.chain().focus().setFontFamily(value).run()
+            else editor.chain().focus().unsetFontFamily().run()
+          }}
+          className="px-2 py-1 rounded-lg border text-xs mr-1 outline-none"
+          style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+          title="Font Family"
+        >
+          <option value="">Default font</option>
+          {fontFamilies.map((font) => (
+            <option key={font} value={font}>{font}</option>
+          ))}
+        </select>
+
         {rows.flat().map(({ icon: Icon, action, active, title }) => (
           <button
             key={title}
@@ -136,6 +193,16 @@ export default function EditorToolbar({ editor, articleId }: Props) {
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          title="HTML Mode"
+          onClick={onToggleHtmlMode}
+          className={`p-2 rounded-lg transition-all text-sm ${isHtmlMode ? 'bg-violet-500/20 text-violet-400' : 'hover:bg-white/10'}`}
+          style={{ color: isHtmlMode ? '#A29BFE' : 'var(--text-secondary)' }}
+        >
+          <Code2 size={15} />
+        </button>
       </div>
 
       {showImageModal && (
@@ -150,7 +217,7 @@ export default function EditorToolbar({ editor, articleId }: Props) {
       {showEmbedModal && (
         <EmbedModal
           onInsert={(url) => {
-            editor.chain().focus().setYoutubeVideo({ src: url }).run()
+            insertEmbed(url)
             setShowEmbedModal(false)
           }}
           onClose={() => setShowEmbedModal(false)}

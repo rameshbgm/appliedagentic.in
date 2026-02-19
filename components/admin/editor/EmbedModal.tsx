@@ -11,7 +11,7 @@ interface Props {
 export default function EmbedModal({ onInsert, onClose }: Props) {
   const [url, setUrl] = useState('')
 
-  const isValid = url.includes('youtube.com') || url.includes('youtu.be') || url.startsWith('http')
+  const isValid = /^https?:\/\//.test(url.trim())
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -32,18 +32,18 @@ export default function EmbedModal({ onInsert, onClose }: Props) {
 
         <div className="p-5 space-y-4">
           <div>
-            <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>YouTube or Video URL</label>
+            <label className="text-xs mb-1 block" style={{ color: 'var(--text-muted)' }}>Embed URL</label>
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder="https://youtube.com/watch?v=... or https://loom.com/..."
               className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
               style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
               autoFocus
             />
           </div>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Supports YouTube, Vimeo, and direct video URLs.
+            Supports YouTube, Loom, X/Twitter, CodeSandbox, and standard HTTPS links.
           </p>
           <div className="flex gap-3">
             <button
