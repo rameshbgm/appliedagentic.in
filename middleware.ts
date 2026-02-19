@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
-  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/dashboard')
+  const isAdminRoute = pathname.startsWith('/admin')
   const isLoginPage = pathname === '/login'
   const isAuthenticated = !!req.auth
 
@@ -20,5 +20,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*', '/login'],
+  matcher: ['/admin/:path*', '/login'],
 }

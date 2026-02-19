@@ -5,13 +5,22 @@ import { prisma } from '@/lib/prisma'
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
 
 export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [modules, topics, articles] = await Promise.all([
-    prisma.module.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-    prisma.topic.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-    prisma.article.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, publishedAt: true, updatedAt: true } }),
-  ])
+  let modules: { slug: string; updatedAt: Date }[] = []
+  let topics: { slug: string; updatedAt: Date }[] = []
+  let articles: { slug: string; publishedAt: Date | null; updatedAt: Date }[] = []
+
+  try {
+    ;[modules, topics, articles] = await Promise.all([
+      prisma.module.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
+      prisma.topic.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
+      prisma.article.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, publishedAt: true, updatedAt: true } }),
+    ])
+  } catch {
+    // Return static routes only if database is unavailable
+  }
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },

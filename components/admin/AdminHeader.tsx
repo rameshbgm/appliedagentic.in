@@ -2,7 +2,7 @@
 // components/admin/AdminHeader.tsx
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Bell, Sun, Moon, Plus } from 'lucide-react'
+import { Bell, Sun, Moon, Plus, Menu } from 'lucide-react'
 import { useTheme } from '@/components/shared/ThemeProvider'
 
 const breadcrumbMap: Record<string, string[]> = {
@@ -24,7 +24,11 @@ const quickActions: Record<string, { label: string; href: string }> = {
   '/admin/articles': { label: 'New Article', href: '/admin/articles/new' },
 }
 
-export default function AdminHeader() {
+interface Props {
+  onMobileMenuToggle?: () => void
+}
+
+export default function AdminHeader({ onMobileMenuToggle }: Props) {
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
 
@@ -34,37 +38,50 @@ export default function AdminHeader() {
 
   return (
     <header
-      className="flex items-center justify-between px-6 py-4 sticky top-0 z-20 border-b"
+      className="flex items-center justify-between px-4 sm:px-6 py-4 sticky top-0 z-20 border-b"
       style={{ background: 'var(--bg-primary)', borderColor: 'var(--bg-border)' }}
     >
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm" aria-label="breadcrumb">
-        <Link href="/admin/dashboard" className="font-display font-semibold" style={{ color: 'var(--color-violet)' }}>
-          Admin
-        </Link>
-        {crumbs.map((crumb, i) => (
-          <span key={i} className="flex items-center gap-2">
-            <span style={{ color: 'var(--text-muted)' }}>/</span>
-            <span
-              className={i === crumbs.length - 1 ? 'font-semibold' : ''}
-              style={{ color: i === crumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-            >
-              {crumb}
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        <button
+          onClick={onMobileMenuToggle}
+          className="p-2 rounded-xl border transition-colors hover:bg-white/5 lg:hidden"
+          style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+          aria-label="Open menu"
+        >
+          <Menu size={18} />
+        </button>
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm" aria-label="breadcrumb">
+          <Link href="/admin/dashboard" className="font-display font-semibold hidden sm:block" style={{ color: 'var(--color-violet)' }}>
+            Admin
+          </Link>
+          {crumbs.map((crumb, i) => (
+            <span key={i} className="flex items-center gap-2">
+              <span className="hidden sm:block" style={{ color: 'var(--text-muted)' }}>/</span>
+              <span
+                className={i === crumbs.length - 1 ? 'font-semibold' : 'hidden sm:block'}
+                style={{ color: i === crumbs.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+              >
+                {crumb}
+              </span>
             </span>
-          </span>
-        ))}
-      </nav>
+          ))}
+        </nav>
+      </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {action && (
           <Link
             href={action.href}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white transition-transform hover:scale-105"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-white transition-transform hover:scale-105"
             style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
           >
-            <Plus size={16} />
-            {action.label}
+            <Plus size={14} />
+            <span className="hidden sm:inline">{action.label}</span>
+            <span className="sm:hidden">New</span>
           </Link>
         )}
         <button

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import HeroSection from '@/components/public/HeroSection'
 import ModuleCard from '@/components/public/ModuleCard'
 import ArticleCard from '@/components/public/ArticleCard'
+import NewsletterSection from '@/components/public/NewsletterSection'
 import { StaggerContainer, FadeIn, SlideInLeft } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
 import { ArrowRight, Sparkles } from 'lucide-react'
@@ -16,36 +17,40 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 async function getData() {
-  const [modules, featuredArticles] = await Promise.all([
-    prisma.module.findMany({
-      where: { isPublished: true },
-      orderBy: { order: 'asc' },
-      include: {
-        _count: { select: { topics: true } },
-        topics: {
-          where: { isPublished: true },
-          select: {
-            _count: { select: { topicArticles: true } },
+  try {
+    const [modules, featuredArticles] = await Promise.all([
+      prisma.module.findMany({
+        where: { isPublished: true },
+        orderBy: { order: 'asc' },
+        include: {
+          _count: { select: { topics: true } },
+          topics: {
+            where: { isPublished: true },
+            select: {
+              _count: { select: { topicArticles: true } },
+            },
           },
         },
-      },
-    }),
-    prisma.article.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { viewCount: 'desc' },
-      take: 6,
-      include: {
-        articleTags: { include: { tag: { select: { name: true } } } },
-        topicArticles: {
-          take: 1,
-          include: {
-            topic: { select: { module: { select: { name: true, color: true } } } },
+      }),
+      prisma.article.findMany({
+        where: { status: 'PUBLISHED' },
+        orderBy: { viewCount: 'desc' },
+        take: 6,
+        include: {
+          articleTags: { include: { tag: { select: { name: true } } } },
+          topicArticles: {
+            take: 1,
+            include: {
+              topic: { select: { module: { select: { name: true, color: true } } } },
+            },
           },
         },
-      },
-    }),
-  ])
-  return { modules, featuredArticles }
+      }),
+    ])
+    return { modules, featuredArticles }
+  } catch {
+    return { modules: [], featuredArticles: [] }
+  }
 }
 
 export default async function HomePage() {
@@ -193,6 +198,9 @@ export default async function HomePage() {
           </div>
         </FadeIn>
       </section>
+
+      {/* Newsletter Section */}
+      <NewsletterSection />
     </>
   )
 }

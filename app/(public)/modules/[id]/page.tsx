@@ -13,8 +13,12 @@ interface Props { params: { id: string } }
 export const revalidate = 60
 
 export async function generateStaticParams() {
-  const modules = await prisma.module.findMany({ where: { isPublished: true }, select: { slug: true } })
-  return modules.map((m) => ({ id: m.slug }))
+  try {
+    const modules = await prisma.module.findMany({ where: { isPublished: true }, select: { slug: true } })
+    return modules.map((m) => ({ id: m.slug }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

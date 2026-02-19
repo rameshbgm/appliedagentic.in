@@ -5,6 +5,8 @@ import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'All Articles',
   description: 'Browse all published articles on AI agents, LLMs, and agentic systems.',

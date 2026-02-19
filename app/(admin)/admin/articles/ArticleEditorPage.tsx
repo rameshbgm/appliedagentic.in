@@ -188,8 +188,8 @@ export default function ArticleEditorPage({ initialArticle, modules, topics, all
       </div>
 
       {/* Editor + Sidebar */}
-      <div className="flex gap-6 items-start">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex-1 min-w-0 w-full">
           <ArticleEditor
             content={content}
             onChange={setContent}

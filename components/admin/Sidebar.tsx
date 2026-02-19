@@ -16,6 +16,7 @@ import {
   ChevronRight,
   LogOut,
   Zap,
+  X,
 } from 'lucide-react'
 
 const navItems = [
@@ -28,14 +29,23 @@ const navItems = [
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
 ]
 
-export default function Sidebar() {
+interface Props {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const [collapsed, setCollapsed] = useState(false)
 
-  return (
+  const handleLinkClick = () => {
+    onMobileClose?.()
+  }
+
+  const SidebarInner = () => (
     <aside
-      className={`flex flex-col h-screen sticky top-0 border-r transition-all duration-300 ${
+      className={`flex flex-col h-full border-r transition-all duration-300 ${
         collapsed ? 'w-[68px]' : 'w-[240px]'
       }`}
       style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
@@ -51,6 +61,15 @@ export default function Sidebar() {
             Applied<br />Agentic
           </span>
         )}
+        {onMobileClose && !collapsed && (
+          <button
+            onClick={onMobileClose}
+            className="ml-auto p-1 rounded-lg hover:bg-white/10 lg:hidden"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -61,6 +80,7 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={handleLinkClick}
               className={`admin-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 active ? 'active' : ''
               }`}
@@ -102,14 +122,36 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Collapse toggle */}
+      {/* Collapse toggle — desktop only */}
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="absolute top-1/2 -right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-lg"
+        className="absolute top-1/2 -right-3 z-10 w-6 h-6 rounded-full hidden lg:flex items-center justify-center shadow-lg"
         style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>
     </aside>
+  )
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden lg:flex relative h-screen sticky top-0">
+        <SidebarInner />
+      </div>
+
+      {/* Mobile sidebar drawer */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+            onClick={onMobileClose}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 flex lg:hidden">
+            <SidebarInner />
+          </div>
+        </>
+      )}
+    </>
   )
 }
