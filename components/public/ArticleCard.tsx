@@ -1,6 +1,6 @@
 // components/public/ArticleCard.tsx
 import Link from 'next/link'
-import { Clock, Eye, Tag } from 'lucide-react'
+import { Clock, Eye } from 'lucide-react'
 
 interface Props {
   title: string
@@ -16,19 +16,32 @@ interface Props {
 }
 
 export default function ArticleCard({
-  title, slug, summary, coverImageUrl, readingTime, viewCount = 0, createdAt, tags = [], moduleColor, moduleName,
+  title, slug, summary, coverImageUrl, readingTime, viewCount = 0,
+  createdAt, tags = [], moduleColor, moduleName,
 }: Props) {
-  const c = moduleColor ?? '#6C3DFF'
+  const c = moduleColor ?? '#7C3AED'
 
   return (
-    <Link href={`/articles/${slug}`} className="block group">
+    <Link href={`/articles/${slug}`} className="block group h-full">
       <article
-        className="card overflow-hidden h-full flex flex-col transition-transform duration-200 group-hover:scale-[1.02] group-hover:shadow-2xl"
-        style={{ borderLeft: `3px solid ${c}` }}
+        className="h-full flex flex-col overflow-hidden rounded-2xl transition-all duration-200 group-hover:-translate-y-1"
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--bg-border)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+        onMouseEnter={(e) => {
+          ;(e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card-hover)'
+          ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--bg-border-hover)'
+        }}
+        onMouseLeave={(e) => {
+          ;(e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card)'
+          ;(e.currentTarget as HTMLElement).style.borderColor = 'var(--bg-border)'
+        }}
       >
-        {/* Cover */}
+        {/* Cover image */}
         {coverImageUrl && (
-          <div className="aspect-video overflow-hidden">
+          <div className="aspect-video overflow-hidden flex-shrink-0">
             <img
               src={coverImageUrl}
               alt={title}
@@ -37,20 +50,26 @@ export default function ArticleCard({
           </div>
         )}
 
+        {/* Accent bar */}
+        <div className="h-[2px] flex-shrink-0" style={{ background: `linear-gradient(90deg, ${c}, transparent)` }} />
+
         <div className="p-5 flex flex-col flex-1">
-          {/* Module badge */}
+          {/* Module label */}
           {moduleName && (
-            <span className="text-xs font-semibold mb-2 inline-block" style={{ color: c }}>
+            <span className="text-[11px] font-semibold mb-2 uppercase tracking-wide" style={{ color: c }}>
               {moduleName}
             </span>
           )}
 
-          <h3 className="font-display font-bold text-lg leading-snug mb-2 line-clamp-2 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
+          {/* Title */}
+          <h3 className="font-semibold text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-violet-400 transition-colors"
+            style={{ color: 'var(--text-primary)', fontFamily: "'DM Sans',sans-serif" }}>
             {title}
           </h3>
 
+          {/* Summary */}
           {summary && (
-            <p className="text-sm line-clamp-2 flex-1 mb-4" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[13px] line-clamp-2 flex-1 mb-4" style={{ color: 'var(--text-muted)' }}>
               {summary}
             </p>
           )}
@@ -59,23 +78,20 @@ export default function ArticleCard({
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {tags.slice(0, 3).map((tag) => (
-                <span key={tag.name} className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-border)', color: 'var(--text-muted)' }}>
+                <span key={tag.name} className="text-[11px] px-2 py-0.5 rounded-full"
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--bg-border)' }}>
                   {tag.name}
                 </span>
               ))}
             </div>
           )}
 
-          {/* Meta */}
-          <div className="flex items-center gap-4 text-xs mt-auto" style={{ color: 'var(--text-muted)' }}>
+          {/* Meta row */}
+          <div className="flex items-center gap-4 text-[11px] mt-auto" style={{ color: 'var(--text-muted)' }}>
             {readingTime && (
-              <span className="flex items-center gap-1">
-                <Clock size={11} />{readingTime} min
-              </span>
+              <span className="flex items-center gap-1"><Clock size={11} />{readingTime} min</span>
             )}
-            <span className="flex items-center gap-1">
-              <Eye size={11} />{viewCount.toLocaleString()}
-            </span>
+            <span className="flex items-center gap-1"><Eye size={11} />{viewCount.toLocaleString()}</span>
             <span className="ml-auto">
               {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>

@@ -14,64 +14,71 @@ interface Props {
   index?: number
 }
 
-export default function ModuleCard({ name, slug, icon, color, description, topicCount = 0, articleCount = 0, index = 0 }: Props) {
-  const c = color ?? '#6C3DFF'
+export default function ModuleCard({
+  name, slug, icon, color, description, topicCount = 0, articleCount = 0, index = 0,
+}: Props) {
+  const c = color ?? '#7C3AED'
 
   return (
-    <Link href={`/modules/${slug}`} className="block group">
+    <Link href={`/modules/${slug}`} className="block group h-full">
       <div
-        className="relative rounded-3xl p-6 h-full transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-2xl overflow-hidden"
+        className="relative h-full rounded-2xl p-5 overflow-hidden transition-all duration-200 group-hover:-translate-y-1"
         style={{
-          background: 'var(--bg-elevated)',
-          border: `1px solid ${c}30`,
+          background: 'var(--bg-surface)',
+          border: `1px solid ${c}28`,
+          boxShadow: 'var(--shadow-card)',
+        }}
+        onMouseEnter={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.boxShadow =
+            `var(--shadow-card-hover), 0 0 0 1px ${c}30`
+        }}
+        onMouseLeave={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'
         }}
       >
-        {/* Glow on hover */}
+        {/* Subtle hover glow */}
         <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"
-          style={{ background: `radial-gradient(circle at center, ${c}10, transparent 70%)` }}
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none"
+          style={{ background: `radial-gradient(circle at 50% 0%, ${c}12, transparent 65%)` }}
         />
+
+        {/* Module number */}
+        <div
+          className="absolute top-4 right-4 text-[10px] font-bold opacity-20 group-hover:opacity-40 transition-opacity"
+          style={{ color: c }}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </div>
 
         {/* Icon */}
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 transition-transform group-hover:scale-110 relative z-10"
+          className="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-4 relative z-10"
           style={{ background: `${c}20` }}
         >
           {icon ?? '📚'}
         </div>
 
-        {/* Content */}
-        <h3
-          className="font-display font-bold text-lg mb-2 relative z-10 group-hover:text-current transition-colors"
-          style={{ color: 'var(--text-primary)' }}
-        >
+        {/* Title */}
+        <h3 className="font-semibold text-[15px] mb-1.5 leading-snug relative z-10" style={{ color: 'var(--text-primary)' }}>
           {name}
         </h3>
+
+        {/* Description */}
         {description && (
-          <p className="text-sm line-clamp-2 mb-4 relative z-10" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-[13px] line-clamp-2 mb-4 relative z-10" style={{ color: 'var(--text-muted)' }}>
             {description}
           </p>
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <span className="text-xs px-2 py-1 rounded-lg font-medium" style={{ background: `${c}20`, color: c }}>
-              {topicCount} topic{topicCount !== 1 ? 's' : ''}
+        {/* Footer meta */}
+        <div className="flex items-center justify-between relative z-10 mt-auto pt-3" style={{ borderTop: `1px solid ${c}18` }}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ background: `${c}18`, color: c }}>
+              {topicCount} {topicCount === 1 ? 'topic' : 'topics'}
             </span>
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              {articleCount} articles
-            </span>
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{articleCount} articles</span>
           </div>
-          <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" style={{ color: c }} />
-        </div>
-
-        {/* Module number badge */}
-        <div
-          className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold opacity-20 group-hover:opacity-40 transition-opacity"
-          style={{ background: c, color: '#fff' }}
-        >
-          {String(index + 1).padStart(2, '0')}
+          <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" style={{ color: c }} />
         </div>
       </div>
     </Link>

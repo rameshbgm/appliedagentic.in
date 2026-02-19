@@ -3,42 +3,36 @@ import Link from 'next/link'
 import { Zap, Twitter, Linkedin, Github } from 'lucide-react'
 
 interface Module { name: string; slug: string }
-interface Props { modules?: Module[] }
+interface Props  { modules?: Module[] }
 
 export default function Footer({ modules = [] }: Props) {
   return (
-    <footer
-      className="border-t mt-20 py-12"
-      style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
-    >
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+    <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>
-                <Zap size={18} className="text-white" />
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)' }}>
+                <Zap size={15} className="text-white" />
               </div>
-              <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Applied Agentic AI</span>
+              <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>Applied Agentic AI</span>
             </Link>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              Master the AI era, one concept at a time. Practical deep-dives into agentic AI, LLMs, and modern AI systems.
+            <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
+              Master the AI era, one concept at a time. Practical deep-dives into agentic AI, LLMs,
+              and modern AI systems.
             </p>
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-2">
               {[
-                { Icon: Twitter, href: 'https://twitter.com/appliedagentic', label: 'Twitter' },
+                { Icon: Twitter, href: 'https://twitter.com/appliedagentic',           label: 'Twitter'  },
                 { Icon: Linkedin, href: 'https://linkedin.com/company/appliedagentic', label: 'LinkedIn' },
-                { Icon: Github, href: 'https://github.com/appliedagentic', label: 'GitHub' },
+                { Icon: Github,   href: 'https://github.com/appliedagentic',           label: 'GitHub'   },
               ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                  style={{ color: 'var(--text-muted)' }}
-                  aria-label={label}
-                >
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
+                  className="p-2 rounded-lg transition-colors hover:bg-white/8"
+                  style={{ color: 'var(--text-muted)' }}>
                   <Icon size={15} />
                 </a>
               ))}
@@ -47,11 +41,15 @@ export default function Footer({ modules = [] }: Props) {
 
           {/* Modules */}
           <div>
-            <h4 className="font-display font-semibold text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Modules</h4>
-            <ul className="space-y-2">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+              Modules
+            </h4>
+            <ul className="space-y-2.5">
               {modules.slice(0, 6).map((m) => (
                 <li key={m.slug}>
-                  <Link href={`/modules/${m.slug}`} className="text-xs hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }}>
+                  <Link href={`/modules/${m.slug}`}
+                    className="text-[13px] transition-colors hover:text-violet-400"
+                    style={{ color: 'var(--text-secondary)' }}>
                     {m.name}
                   </Link>
                 </li>
@@ -59,17 +57,19 @@ export default function Footer({ modules = [] }: Props) {
             </ul>
           </div>
 
-          {/* Quick links */}
+          {/* Explore */}
           <div>
-            <h4 className="font-display font-semibold text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Explore</h4>
-            <ul className="space-y-2">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+              Explore
+            </h4>
+            <ul className="space-y-2.5">
               {[
                 { href: '/articles', label: 'All Articles' },
-                { href: '/search', label: 'Search' },
-                { href: '/modules', label: 'All Modules' },
+                { href: '/modules',  label: 'All Modules'  },
+                { href: '/search',   label: 'Search'       },
               ].map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-xs hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }}>
+                  <Link href={href} className="text-[13px] transition-colors hover:text-violet-400" style={{ color: 'var(--text-secondary)' }}>
                     {label}
                   </Link>
                 </li>
@@ -77,20 +77,22 @@ export default function Footer({ modules = [] }: Props) {
             </ul>
           </div>
 
-          {/* Newsletter placeholder */}
+          {/* Newsletter */}
           <div>
-            <h4 className="font-display font-semibold text-sm mb-3" style={{ color: 'var(--text-primary)' }}>Stay Updated</h4>
-            <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Get the latest AI concepts in your inbox.</p>
+            <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+              Stay Updated
+            </h4>
+            <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>Get the latest AI concepts in your inbox.</p>
             <div className="flex gap-2">
               <input
                 type="email"
                 placeholder="you@example.com"
-                className="flex-1 px-3 py-2 rounded-xl border text-xs outline-none"
-                style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                className="flex-1 px-3 py-2 rounded-xl border text-[13px] outline-none transition-colors focus:border-violet-500"
+                style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
               />
               <button
-                className="px-3 py-2 rounded-xl text-xs font-medium text-white"
-                style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-white flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)' }}
               >
                 →
               </button>
@@ -98,14 +100,15 @@ export default function Footer({ modules = [] }: Props) {
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderColor: 'var(--bg-border)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6"
+          style={{ borderTop: '1px solid var(--bg-border)' }}>
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
             © {new Date().getFullYear()} Applied Agentic AI. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-xs hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }}>Privacy</Link>
-            <Link href="/terms" className="text-xs hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }}>Terms</Link>
+            <Link href="/privacy" className="text-[12px] transition-colors hover:text-violet-400" style={{ color: 'var(--text-muted)' }}>Privacy</Link>
+            <Link href="/terms"   className="text-[12px] transition-colors hover:text-violet-400" style={{ color: 'var(--text-muted)' }}>Terms</Link>
           </div>
         </div>
       </div>

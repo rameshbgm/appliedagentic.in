@@ -2,165 +2,119 @@
 // components/public/HeroSection.tsx
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Zap, Star } from 'lucide-react'
+import { ArrowRight, Zap, Sparkles } from 'lucide-react'
 
 const WORDS = ['AI Agents', 'LLM Systems', 'RAG Pipelines', 'Agentic AI', 'MCP Servers', 'Multi-Agent']
 
 export default function HeroSection() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [wordIdx, setWordIdx] = useState(0)
+  const [wordIdx, setWordIdx]         = useState(0)
   const [displayWord, setDisplayWord] = useState('')
-  const [typing, setTyping] = useState(true)
+  const [phase, setPhase]             = useState<'typing' | 'pause' | 'erasing'>('typing')
+  const charRef                       = useRef(0)
 
-  // Typewriter
+  // Stale-closure-free typewriter
   useEffect(() => {
     const word = WORDS[wordIdx]
-    let i = 0
     let timer: ReturnType<typeof setTimeout>
-    if (typing) {
+
+    if (phase === 'typing') {
+      charRef.current = 0
       const tick = () => {
-        setDisplayWord(word.slice(0, i + 1))
-        i++
-        if (i < word.length) timer = setTimeout(tick, 80)
-        else setTimeout(() => setTyping(false), 1800)
+        charRef.current++
+        setDisplayWord(word.slice(0, charRef.current))
+        if (charRef.current < word.length) timer = setTimeout(tick, 80)
+        else timer = setTimeout(() => setPhase('pause'), 1800)
       }
       tick()
+    } else if (phase === 'pause') {
+      setPhase('erasing')
     } else {
       const erase = () => {
-        setDisplayWord((d) => d.slice(0, -1))
-        if (displayWord.length > 1) timer = setTimeout(erase, 40)
-        else {
-          setWordIdx((n) => (n + 1) % WORDS.length)
-          setTyping(true)
-        }
+        setDisplayWord((cur) => {
+          if (cur.length <= 1) {
+            timer = setTimeout(() => { setWordIdx((n) => (n + 1) % WORDS.length); setPhase('typing') }, 120)
+            return ''
+          }
+          timer = setTimeout(erase, 40)
+          return cur.slice(0, -1)
+        })
       }
       timer = setTimeout(erase, 40)
     }
     return () => clearTimeout(timer)
-  }, [wordIdx, typing]) // eslint-disable-line
+  }, [wordIdx, phase])
 
-  // Particle canvas
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    let animFrame: number
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-    }
-    resize()
-    window.addEventListener('resize', resize)
-
-    const particles = Array.from({ length: 60 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      r: Math.random() * 2 + 0.5,
-      alpha: Math.random() * 0.5 + 0.1,
-    }))
-
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach((p) => {
-        p.x += p.vx
-        p.y += p.vy
-        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
-        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
-
-        // Draw connections
-        particles.forEach((q) => {
-          const d = Math.hypot(p.x - q.x, p.y - q.y)
-          if (d < 100) {
-            ctx.beginPath()
-            ctx.strokeStyle = `rgba(108,61,255,${0.15 * (1 - d / 100)})`
-            ctx.lineWidth = 0.5
-            ctx.moveTo(p.x, p.y)
-            ctx.lineTo(q.x, q.y)
-            ctx.stroke()
-          }
-        })
-
-        ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(108,61,255,${p.alpha})`
-        ctx.fill()
-      })
-      animFrame = requestAnimationFrame(draw)
-    }
-    draw()
-
-    return () => {
-      cancelAnimationFrame(animFrame)
-      window.removeEventListener('resize', resize)
-    }
-  }, [])
+  const stats = [
+    { value: '8',    label: 'Learning Modules'  },
+    { value: '50+',  label: 'In-depth Articles' },
+    { value: '100%', label: 'Free to Read'       },
+    { value: 'Live', label: 'AI Content'         },
+  ]
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Particle canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-[var(--nav-h)]">
 
-      {/* Gradient orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #6C3DFF, transparent)' }} />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #00D4FF, transparent)' }} />
+      {/* CSS-only animated background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0" style={{ background: 'var(--bg-page)' }} />
+        <div className="absolute" style={{
+          top: '10%', left: '15%', width: '40vw', height: '40vw', maxWidth: 640, maxHeight: 640,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle,rgba(124,58,237,0.22) 0%,transparent 68%)',
+          filter: 'blur(56px)',
+        }} />
+        <div className="absolute" style={{
+          bottom: '12%', right: '12%', width: '32vw', height: '32vw', maxWidth: 520, maxHeight: 520,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle,rgba(6,182,212,0.17) 0%,transparent 68%)',
+          filter: 'blur(48px)',
+        }} />
+        <div className="absolute inset-0 opacity-[0.025]" style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px)',
+          backgroundSize: '48px 48px',
+        }} />
+      </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+      <div className="relative z-10 text-center max-w-4xl mx-auto px-5">
+
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-8 text-sm font-medium"
-          style={{ borderColor: 'rgba(108,61,255,0.4)', background: 'rgba(108,61,255,0.1)', color: '#A29BFE' }}>
-          <Star size={14} className="text-yellow-400" fill="currentColor" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-semibold mb-8"
+          style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', color: '#A78BFA' }}>
+          <Sparkles size={12} />
           The Applied AI Knowledge Hub
         </div>
 
-        <h1 className="font-display font-black text-5xl md:text-7xl lg:text-8xl leading-none mb-6">
-          <span className="gradient-text">Master</span>
-          <br />
-          <span style={{ color: 'var(--text-primary)' }}>
-            <span className="gradient-text">{displayWord}</span>
-            <span className="animate-pulse">|</span>
+        {/* Headline */}
+        <h1 className="font-bold mb-5 leading-[1.1] tracking-tight" style={{ fontFamily: "'DM Sans',sans-serif" }}>
+          <span className="block" style={{ color: 'var(--text-primary)' }}>Master</span>
+          <span className="block g-text" style={{ minHeight: '1.1em' }}>
+            {displayWord || '\u00A0'}
+            <span className="animate-pulse" style={{ color: 'var(--violet-light)' }}>|</span>
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          Deep-dive into AI agents, LLM architectures, RAG pipelines, prompt engineering and modern AI systems — with practical, production-grade content.
+        {/* Sub-headline */}
+        <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          Deep-dive into AI agents, LLMs, RAG pipelines, prompt engineering and
+          modern agentic systems — with practical, production-grade content.
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/modules"
-            className="inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl font-semibold text-white transition-transform hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
-          >
-            <Zap size={18} />
-            Explore Modules
-            <ArrowRight size={16} />
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link href="/modules" className="btn-primary">
+            <Zap size={16} />Explore Modules<ArrowRight size={15} />
           </Link>
-          <Link
-            href="/articles"
-            className="inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl font-semibold border transition-all hover:bg-white/5"
-            style={{ borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-          >
-            Browse Articles
-          </Link>
+          <Link href="/articles" className="btn-ghost">Browse Articles</Link>
         </div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap items-center justify-center gap-8 mt-14 pt-8 border-t" style={{ borderColor: 'var(--bg-border)' }}>
-          {[
-            { value: '8', label: 'Learning Modules' },
-            { value: '50+', label: 'In-depth Articles' },
-            { value: '100%', label: 'Free to Read' },
-            { value: 'AI', label: 'Powered Content' },
-          ].map(({ value, label }) => (
+        {/* Stats row */}
+        <div className="flex flex-wrap items-center justify-center gap-8 mt-16 pt-8"
+          style={{ borderTop: '1px solid var(--bg-border)' }}>
+          {stats.map(({ value, label }) => (
             <div key={label} className="text-center">
-              <p className="font-display font-black text-3xl gradient-text">{value}</p>
+              <p className="font-bold text-3xl g-text" style={{ fontFamily: "'DM Sans',sans-serif" }}>{value}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
             </div>
           ))}
