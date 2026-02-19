@@ -8,17 +8,17 @@ import Link from 'next/link'
 import { ArrowLeft, BookOpen, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 
-interface Props { params: { moduleSlug: string } }
+interface Props { params: { id: string } }
 
 export const revalidate = 60
 
 export async function generateStaticParams() {
   const modules = await prisma.module.findMany({ where: { isPublished: true }, select: { slug: true } })
-  return modules.map((m) => ({ moduleSlug: m.slug }))
+  return modules.map((m) => ({ id: m.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const mod = await prisma.module.findUnique({ where: { slug: params.moduleSlug } })
+  const mod = await prisma.module.findUnique({ where: { slug: params.id } })
   if (!mod) return {}
   return {
     title: mod.name,
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ModuleDetailPage({ params }: Props) {
   const mod = await prisma.module.findUnique({
-    where: { slug: params.moduleSlug, isPublished: true },
+    where: { slug: params.id, isPublished: true },
     include: {
       topics: {
         where: { isPublished: true },

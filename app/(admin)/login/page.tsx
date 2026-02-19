@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Zap, Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
+const DEMO_EMAIL = 'admin@appliedagentic.com'
+const DEMO_PASSWORD = 'Admin@123'
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -13,15 +16,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const doSignIn = async (em: string, pw: string) => {
     setLoading(true)
     try {
-      const res = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
+      const res = await signIn('credentials', { email: em, password: pw, redirect: false })
       if (res?.ok) {
         toast.success('Welcome back!')
         router.push('/admin/dashboard')
@@ -31,6 +29,17 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await doSignIn(email, password)
+  }
+
+  const handleQuickLogin = () => {
+    setEmail(DEMO_EMAIL)
+    setPassword(DEMO_PASSWORD)
+    doSignIn(DEMO_EMAIL, DEMO_PASSWORD)
   }
 
   return (
@@ -133,6 +142,37 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px" style={{ background: 'var(--bg-border)' }} />
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>or</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--bg-border)' }} />
+          </div>
+
+          {/* Quick Login */}
+          <button
+            type="button"
+            onClick={handleQuickLogin}
+            disabled={loading}
+            className="w-full py-3 rounded-xl font-semibold transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+            style={{
+              background: 'rgba(108,61,255,0.1)',
+              border: '1px solid rgba(108,61,255,0.35)',
+              color: '#a78bfa',
+            }}
+          >
+            {loading ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Zap size={15} />
+            )}
+            Quick Login (Demo Admin)
+          </button>
+
+          <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
+            {DEMO_EMAIL} · Admin@123
+          </p>
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>

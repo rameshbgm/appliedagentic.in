@@ -14,7 +14,7 @@ import { formatDate } from '@/lib/utils'
 import { Clock, Eye, Calendar, ArrowLeft, Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 
-interface Props { params: { articleSlug: string } }
+interface Props { params: { id: string } }
 
 export const revalidate = 300
 
@@ -23,12 +23,12 @@ export async function generateStaticParams() {
     where: { status: 'PUBLISHED' },
     select: { slug: true },
   })
-  return articles.map((a) => ({ articleSlug: a.slug }))
+  return articles.map((a) => ({ id: a.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await prisma.article.findUnique({
-    where: { slug: params.articleSlug },
+    where: { slug: params.id },
     select: { title: true, summary: true, seoTitle: true, seoDescription: true, coverImage: true },
   })
   if (!article) return {}
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticleDetailPage({ params }: Props) {
   const article = await prisma.article.findUnique({
-    where: { slug: params.articleSlug, status: 'PUBLISHED' },
+    where: { slug: params.id, status: 'PUBLISHED' },
     include: {
       module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
       tags: { include: { tag: { select: { id: true, name: true } } } },

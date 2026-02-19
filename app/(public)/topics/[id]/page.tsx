@@ -7,24 +7,24 @@ import Link from 'next/link'
 import { ArrowLeft, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 
-interface Props { params: { topicSlug: string } }
+interface Props { params: { id: string } }
 
 export const revalidate = 60
 
 export async function generateStaticParams() {
   const topics = await prisma.topic.findMany({ where: { isPublished: true }, select: { slug: true } })
-  return topics.map((t) => ({ topicSlug: t.slug }))
+  return topics.map((t) => ({ id: t.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const topic = await prisma.topic.findUnique({ where: { slug: params.topicSlug } })
+  const topic = await prisma.topic.findUnique({ where: { slug: params.id } })
   if (!topic) return {}
   return { title: topic.name, description: topic.description ?? undefined }
 }
 
 export default async function TopicDetailPage({ params }: Props) {
   const topic = await prisma.topic.findUnique({
-    where: { slug: params.topicSlug, isPublished: true },
+    where: { slug: params.id, isPublished: true },
     include: {
       module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
       topicArticles: {
