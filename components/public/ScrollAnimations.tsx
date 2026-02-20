@@ -9,12 +9,15 @@ interface AnimProps {
   delay?: number
 }
 
+// framer-motion v12 requires a typed 4-tuple for cubic-bezier ease values
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
+
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: (delay: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, delay, ease: EASE },
   }),
 }
 
@@ -23,7 +26,7 @@ const slideLeftVariants = {
   visible: (delay: number = 0) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, delay, ease: EASE },
   }),
 }
 
@@ -32,7 +35,7 @@ const slideRightVariants = {
   visible: (delay: number = 0) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.6, delay, ease: EASE },
   }),
 }
 
@@ -41,7 +44,7 @@ const scaleVariants = {
   visible: (delay: number = 0) => ({
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.5, delay, ease: EASE },
   }),
 }
 
