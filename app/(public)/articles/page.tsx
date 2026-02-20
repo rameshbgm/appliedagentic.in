@@ -66,7 +66,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen py-16 px-4 md:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen py-12 px-[3%]">
       <FadeIn>
         <div className="mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
@@ -82,9 +82,9 @@ export default async function ArticlesPage({ searchParams }: Props) {
         <div className="flex flex-wrap gap-2 mb-8">
           <Link
             href="/articles"
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!moduleSlug ? 'text-white' : 'hover:bg-white/10'}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!moduleSlug ? 'text-black' : 'hover:bg-white/10'}`}
             style={!moduleSlug
-              ? { background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }
+              ? { background: 'var(--green)', color: 'var(--bg-page)' }
               : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
             }
           >
@@ -96,7 +96,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
               href={buildUrl(1, m.slug)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
               style={moduleSlug === m.slug
-                ? { background: (m.color ?? '#6C3DFF') + '25', color: m.color ?? '#6C3DFF', border: `1px solid ${(m.color ?? '#6C3DFF')}40` }
+                ? { background: (m.color ?? '#AAFF00') + '25', color: m.color ?? '#AAFF00', border: `1px solid ${(m.color ?? '#AAFF00')}40` }
                 : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
               }
             >
@@ -140,7 +140,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
                   href={buildUrl(p, moduleSlug)}
                   className="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all"
                   style={p === page
-                    ? { background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)', color: '#fff' }
+                    ? { background: 'var(--green)', color: 'var(--bg-page)' }
                     : { color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
                   }
                 >
@@ -160,7 +160,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
         <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
           <p className="text-5xl mb-4">📭</p>
           <p className="text-lg">No articles yet in this category</p>
-          <Link href="/articles" className="mt-4 inline-block text-sm font-medium" style={{ color: '#6C3DFF' }}>
+          <Link href="/articles" className="mt-4 inline-block text-sm font-medium" style={{ color: 'var(--green)' }}>
             View all articles →
           </Link>
         </div>

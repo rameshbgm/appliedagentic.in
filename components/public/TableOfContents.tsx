@@ -1,12 +1,14 @@
 'use client'
 // components/public/TableOfContents.tsx
 import { useEffect, useState } from 'react'
-import { List, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, Zap } from 'lucide-react'
 
 interface Heading {
   id: string
   text: string
   level: number
+  num: string // e.g. "1", "1.1", "2"
 }
 
 interface Props {
@@ -22,11 +24,29 @@ export default function TableOfContents({ content }: Props) {
     const parser = new DOMParser()
     const doc = parser.parseFromString(content, 'text/html')
     const els = doc.querySelectorAll('h2, h3')
-    const parsed: Heading[] = Array.from(els).map((el) => ({
-      id: el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? '',
-      text: el.textContent ?? '',
-      level: Number(el.tagName[1]),
-    }))
+    let h2Counter = 0
+    let h3Counter = 0
+    const parsed: Heading[] = Array.from(els).map((el) => {
+      const lvl = Number(el.tagName[1])
+      if (lvl === 2) {
+        h2Counter++
+        h3Counter = 0
+        return {
+          id: el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? '',
+          text: el.textContent ?? '',
+          level: 2,
+          num: String(h2Counter),
+        }
+      } else {
+        h3Counter++
+        return {
+          id: el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? '',
+          text: el.textContent ?? '',
+          level: 3,
+          num: `${h2Counter}.${h3Counter}`,
+        }
+      }
+    })
     setHeadings(parsed)
   }, [content])
 
@@ -37,7 +57,7 @@ export default function TableOfContents({ content }: Props) {
           if (e.isIntersecting) setActiveId(e.target.id)
         })
       },
-      { rootMargin: '-80px 0px -70% 0px' }
+      { rootMargin: '-80px 0px -65% 0px' }
     )
     headings.forEach((h) => {
       const el = document.getElementById(h.id)
@@ -49,20 +69,27 @@ export default function TableOfContents({ content }: Props) {
   if (headings.length === 0) return null
 
   const TocList = () => (
-    <ul className="space-y-1">
+    <ul className="space-y-0.5">
       {headings.map((h) => (
         <li key={h.id}>
           <a
             href={`#${h.id}`}
             onClick={() => setMobileOpen(false)}
-            className={`block text-xs py-1 transition-colors border-l-2 pl-3 ${
-              activeId === h.id ? 'border-violet-500' : 'border-transparent'
-            } ${h.level === 3 ? 'pl-6' : ''}`}
+            className={`flex items-start gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
+              activeId === h.id ? 'font-semibold' : 'hover:bg-white/5'
+            } ${h.level === 3 ? 'ml-4' : ''}`}
             style={{
-              color: activeId === h.id ? '#A29BFE' : 'var(--text-muted)',
+              color: activeId === h.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+              background: activeId === h.id ? 'var(--bg-elevated)' : undefined,
             }}
           >
-            {h.text}
+            <span
+              className="shrink-0 mt-0.5 text-[11px] font-mono w-6 text-right leading-5"
+              style={{ color: activeId === h.id ? 'var(--green)' : 'var(--text-muted)' }}
+            >
+              {h.num}
+            </span>
+            <span className="leading-5">{h.text}</span>
           </a>
         </li>
       ))}
@@ -71,32 +98,56 @@ export default function TableOfContents({ content }: Props) {
 
   return (
     <>
-      {/* Desktop: Sidebar */}
-      <div className="hidden lg:block">
-        <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-          On this page
-        </p>
-        <TocList />
+      {/* Desktop: Card sidebar */}
+      <div
+        className="hidden lg:flex flex-col rounded-2xl overflow-hidden"
+        style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
+      >
+        <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            Table of Contents
+          </p>
+        </div>
+        <div className="py-3 px-1">
+          <TocList />
+        </div>
+        {/* CTA button */}
+        <div className="px-4 pb-4 pt-2">
+          <Link
+            href="/modules"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+            style={{ background: 'var(--green)', color: '#000' }}
+          >
+            <Zap size={13} />
+            Explore all Modules
+          </Link>
+        </div>
       </div>
 
-      {/* Mobile: Collapsible panel */}
-      <div className="lg:hidden mb-6 rounded-2xl overflow-hidden" style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}>
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold"
-          style={{ color: 'var(--text-primary)' }}
+      {/* Mobile: sticky collapsible TOC */}
+      <div className="lg:hidden mb-6">
+        <div
+          className="sticky top-16 z-30 rounded-2xl overflow-hidden"
+          style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
         >
-          <span className="flex items-center gap-2">
-            <List size={14} style={{ color: 'var(--text-muted)' }} />
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            className="flex items-center justify-between w-full px-4 py-3 text-sm font-bold"
+            style={{ color: 'var(--text-primary)' }}
+          >
             Table of Contents
-          </span>
-          <ChevronDown size={14} className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-muted)' }} />
-        </button>
-        {mobileOpen && (
-          <div className="px-4 pb-4 pt-1" style={{ borderTop: '1px solid var(--bg-border)' }}>
-            <TocList />
-          </div>
-        )}
+            <ChevronDown
+              size={14}
+              className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+              style={{ color: 'var(--text-muted)' }}
+            />
+          </button>
+          {mobileOpen && (
+            <div className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+              <TocList />
+            </div>
+          )}
+        </div>
       </div>
     </>
   )

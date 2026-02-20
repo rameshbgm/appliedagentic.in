@@ -360,6 +360,65 @@ async function main() {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Seed Nav Menus & Sub-Menus
+  // ─────────────────────────────────────────────────────────────────────────
+  console.log('\n📋 Seeding nav menus …')
+
+  const navMenusData = [
+    {
+      title: 'AI Foundations',
+      slug: 'ai-foundations',
+      description: 'Core concepts and fundamentals of artificial intelligence and generative AI.',
+      order: 1,
+      subMenus: [
+        { title: 'Generative AI Basics', slug: 'generative-ai-basics', description: 'Introduction to generative AI models and capabilities.', order: 1 },
+        { title: 'Large Language Models', slug: 'large-language-models', description: 'Understanding LLMs, transformers, and prompt engineering.', order: 2 },
+        { title: 'AI Tools & Platforms', slug: 'ai-tools-platforms', description: 'Overview of popular AI tools and development platforms.', order: 3 },
+      ],
+    },
+    {
+      title: 'Agentic AI',
+      slug: 'agentic-ai',
+      description: 'Explore autonomous AI agents, multi-agent systems, and real-world applications.',
+      order: 2,
+      subMenus: [
+        { title: 'What Are AI Agents', slug: 'what-are-ai-agents', description: 'Defining AI agents and their architecture patterns.', order: 1 },
+        { title: 'Multi-Agent Systems', slug: 'multi-agent-systems', description: 'Designing systems where multiple agents collaborate.', order: 2 },
+        { title: 'Agent Frameworks', slug: 'agent-frameworks', description: 'LangChain, CrewAI, AutoGen, and other agentic frameworks.', order: 3 },
+        { title: 'Real-World Use Cases', slug: 'real-world-use-cases', description: 'Production deployments and case studies of AI agents.', order: 4 },
+      ],
+    },
+    {
+      title: 'Resources',
+      slug: 'resources',
+      description: 'Curated learning resources, tutorials, and community guides.',
+      order: 3,
+      subMenus: [
+        { title: 'Tutorials', slug: 'tutorials', description: 'Step-by-step guides for building AI applications.', order: 1 },
+        { title: 'Research Papers', slug: 'research-papers', description: 'Key academic papers and industry reports.', order: 2 },
+      ],
+    },
+  ]
+
+  for (const menuData of navMenusData) {
+    const menu = await prisma.navMenu.upsert({
+      where: { slug: menuData.slug },
+      update: { title: menuData.title, description: menuData.description, order: menuData.order },
+      create: { title: menuData.title, slug: menuData.slug, description: menuData.description, order: menuData.order, isVisible: true },
+    })
+    console.log(`  📂 Menu: ${menu.title}`)
+
+    for (const subData of menuData.subMenus) {
+      const sub = await prisma.navSubMenu.upsert({
+        where: { slug: subData.slug },
+        update: { title: subData.title, description: subData.description, order: subData.order, menuId: menu.id },
+        create: { title: subData.title, slug: subData.slug, description: subData.description, order: subData.order, menuId: menu.id, isVisible: true },
+      })
+      console.log(`    └─ SubMenu: ${sub.title}`)
+    }
+  }
+
   console.log('\n✨ Seed completed successfully!')
   console.log('\n🔐 Admin credentials (CHANGE BEFORE PRODUCTION):')
   console.log('   Email: admin@appliedagentic.com')

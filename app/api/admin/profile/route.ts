@@ -13,6 +13,23 @@ const ProfileSchema = z.object({
   newPassword: z.string().min(8).optional(),
 })
 
+export async function GET() {
+  const session = await auth()
+  if (!session) return apiError('Unauthorized', 401)
+
+  try {
+    const userId = parseInt((session.user as { id: string }).id)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, role: true },
+    })
+    if (!user) return apiError('User not found', 404)
+    return apiSuccess(user)
+  } catch {
+    return apiError('Failed to fetch profile', 500)
+  }
+}
+
 export async function PUT(req: NextRequest) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)

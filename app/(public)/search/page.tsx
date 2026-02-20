@@ -99,7 +99,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <p className="text-5xl mb-4">🔍</p>
           <p className="text-lg mb-2">No articles found for "{q}"</p>
           <p className="text-sm mb-6">Try a different keyword or browse by module</p>
-          <Link href="/modules" className="text-sm font-medium underline" style={{ color: '#6C3DFF' }}>
+          <Link href="/modules" className="text-sm font-medium underline" style={{ color: 'var(--green)' }}>
             Browse learning modules →
           </Link>
         </div>

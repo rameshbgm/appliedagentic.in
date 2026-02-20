@@ -1,3 +1,4 @@
+'use client'
 // components/public/ArticleCard.tsx
 import Link from 'next/link'
 import { Clock, Eye } from 'lucide-react'
@@ -19,7 +20,7 @@ export default function ArticleCard({
   title, slug, summary, coverImageUrl, readingTime, viewCount = 0,
   createdAt, tags = [], moduleColor, moduleName,
 }: Props) {
-  const c = moduleColor ?? '#7C3AED'
+  const c = moduleColor ?? '#AAFF00'
 
   return (
     <Link href={`/articles/${slug}`} className="block group h-full">
@@ -62,8 +63,8 @@ export default function ArticleCard({
           )}
 
           {/* Title */}
-          <h3 className="font-semibold text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-violet-400 transition-colors"
-            style={{ color: 'var(--text-primary)', fontFamily: "'DM Sans',sans-serif" }}>
+          <h3 className="font-semibold text-[15px] leading-snug mb-2 line-clamp-2 group-hover:text-[var(--green)] transition-colors"
+            style={{ color: 'var(--text-primary)', fontFamily: "'Inter',sans-serif" }}>
             {title}
           </h3>
 

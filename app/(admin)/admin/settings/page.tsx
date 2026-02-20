@@ -133,10 +133,10 @@ export default function SettingsPage() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${tab === t.id ? 'text-white shadow-lg' : ''}`}
+            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${tab === t.id ? 'text-black shadow-sm' : ''}`}
             style={{
-              background: tab === t.id ? 'linear-gradient(135deg,#6C3DFF,#00D4FF)' : 'transparent',
-              color: tab === t.id ? 'white' : 'var(--text-muted)',
+              background: tab === t.id ? '#AAFF00' : 'transparent',
+              color: tab === t.id ? '#000' : 'var(--text-muted)',
             }}
           >
             {t.label}
@@ -156,7 +156,7 @@ export default function SettingsPage() {
               <input value={settings.siteUrl} onChange={(e) => setSettings((s) => ({ ...s, siteUrl: e.target.value }))} placeholder="https://appliedagentic.in" className={inputClass} style={inputStyle} /></div>
             <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>SEO Description</label>
               <textarea value={settings.seoDescription} onChange={(e) => setSettings((s) => ({ ...s, seoDescription: e.target.value }))} rows={3} className={inputClass + ' resize-none'} style={inputStyle} /></div>
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>
+            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-black" style={{ background: '#AAFF00' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
             </button>
           </>
@@ -196,7 +196,7 @@ export default function SettingsPage() {
                 <input type="number" value={settings.openaiMaxTokens} onChange={(e) => setSettings((s) => ({ ...s, openaiMaxTokens: parseInt(e.target.value) }))} className={inputClass} style={inputStyle} />
               </div>
             </div>
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>
+            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-black" style={{ background: '#AAFF00' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save AI Config
             </button>
           </>
@@ -214,7 +214,7 @@ export default function SettingsPage() {
                 <input value={(settings as any)[key] ?? ''} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
               </div>
             ))}
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>
+            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-black" style={{ background: '#AAFF00' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
             </button>
           </>
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>
+            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-black" style={{ background: '#AAFF00' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Update Profile
             </button>
           </>

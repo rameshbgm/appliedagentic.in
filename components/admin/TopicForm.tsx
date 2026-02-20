@@ -163,8 +163,8 @@ export default function TopicForm({ initialData, modules }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2"
-          style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+          className="px-6 py-2.5 rounded-xl text-sm font-semibold text-black disabled:opacity-50 flex items-center gap-2"
+          style={{ background: '#AAFF00' }}
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           {initialData?.id ? 'Update Topic' : 'Create Topic'}

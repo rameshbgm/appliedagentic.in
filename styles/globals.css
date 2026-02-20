@@ -1,5 +1,5 @@
 /* ─── Google Fonts — must come BEFORE Tailwind directives ─────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap')
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap')
 layer(base);
 
 @import 'tailwindcss';
@@ -7,40 +7,48 @@ layer(base);
 
 /* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --violet:          #7C3AED;
-  --violet-light:    #A78BFA;
-  --violet-glow:     rgba(124, 58, 237, 0.35);
-  --cyan:            #06B6D4;
-  --cyan-light:      #67E8F9;
+  --green:           #AAFF00;
+  --green-light:     #CCFF66;
+  --green-glow:      rgba(170, 255, 0, 0.25);
+  /* legacy aliases for admin components */
+  --color-violet:    #AAFF00;
+  --color-cyan:      #CCFF66;
 
-  --bg-page:         #060614;
-  --bg-surface:      #0D0D1F;
-  --bg-elevated:     #13132A;
-  --bg-border:       rgba(255, 255, 255, 0.07);
-  --bg-border-hover: rgba(255, 255, 255, 0.14);
+  --bg-page:         #000000;
+  --bg-primary:      #000000;
+  --bg-surface:      #0A0A0A;
+  --bg-elevated:     #111111;
+  --bg-border:       rgba(255, 255, 255, 0.08);
+  --bg-border-hover: rgba(255, 255, 255, 0.18);
 
-  --text-primary:    #EEEEFF;
-  --text-secondary:  #9494B8;
-  --text-muted:      #4C4C6B;
+  --text-primary:    #FFFFFF;
+  --text-secondary:  #AAAAAA;
+  --text-muted:      #555555;
 
   --nav-h:           64px;
   --radius-card:     14px;
   --radius-btn:      10px;
-  --shadow-card:     0 1px 2px rgba(0,0,0,.6), 0 4px 18px rgba(0,0,0,.4);
-  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.5), 0 10px 36px rgba(0,0,0,.5), 0 0 0 1px rgba(124,58,237,.25);
+  --shadow-card:     0 1px 2px rgba(0,0,0,.8), 0 4px 18px rgba(0,0,0,.6);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.7), 0 10px 36px rgba(0,0,0,.6), 0 0 0 1px rgba(170,255,0,.2);
 }
 
 [data-theme="light"] {
-  --bg-page:         #F8F8FF;
+  --green:           #7acc00;
+  --green-light:     #5fa800;
+  --green-glow:      rgba(122, 204, 0, 0.2);
+  --color-violet:    #16a34a;
+  --color-cyan:      #15803d;
+  --bg-page:         #F5F5F5;
+  --bg-primary:      #F5F5F5;
   --bg-surface:      #FFFFFF;
-  --bg-elevated:     #F1F1FA;
-  --bg-border:       rgba(0, 0, 0, 0.07);
-  --bg-border-hover: rgba(0, 0, 0, 0.14);
-  --text-primary:    #11112A;
-  --text-secondary:  #4A4A6A;
-  --text-muted:      #9898AE;
+  --bg-elevated:     #F3F4F6;
+  --bg-border:       rgba(0, 0, 0, 0.10);
+  --bg-border-hover: rgba(0, 0, 0, 0.20);
+  --text-primary:    #111827;
+  --text-secondary:  #374151;
+  --text-muted:      #6b7280;
   --shadow-card:     0 1px 1px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.08);
-  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.08), 0 10px 36px rgba(0,0,0,.12), 0 0 0 1px rgba(124,58,237,.2);
+  --shadow-card-hover: 0 2px 4px rgba(0,0,0,.08), 0 10px 36px rgba(0,0,0,.12), 0 0 0 1px rgba(122,204,0,.2);
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────────── */
@@ -58,13 +66,14 @@ body {
   color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 15px;
+  font-weight: 400;
   line-height: 1.65;
   min-height: 100vh;
 }
 
 /* ─── Typography ─────────────────────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
   line-height: 1.18;
   letter-spacing: -0.025em;
@@ -78,22 +87,22 @@ h4 { font-size: clamp(1rem,   2vw,   1.25rem); }
 p { color: var(--text-secondary); line-height: 1.75; }
 
 /* Links — NO global min-height override */
-a { color: var(--violet-light); text-decoration: none; transition: color .15s ease; }
-a:hover { color: var(--cyan-light); }
+a { color: var(--green-light); text-decoration: none; transition: color .15s ease; }
+a:hover { color: var(--green); }
 
 code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 
 /* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: rgba(124,58,237,.4); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+::-webkit-scrollbar-thumb  { background: rgba(170,255,0,.35); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green); }
 
 /* ─── Selection & Focus ──────────────────────────────────────────────────────── */
-::selection { background: rgba(124,58,237,.3); color: var(--text-primary); }
+::selection { background: rgba(170,255,0,.25); color: var(--text-primary); }
 
 :focus-visible {
-  outline: 2px solid var(--violet);
+  outline: 2px solid var(--green);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -101,16 +110,24 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 /* ─── Gradient text ──────────────────────────────────────────────────────────── */
 .g-text,
 .gradient-text {
-  background: linear-gradient(120deg, var(--violet-light) 0%, var(--cyan-light) 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #38BDF8 45%, #A78BFA 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  color: var(--violet-light);
+  color: #38BDF8;
+}
+[data-theme="light"] .g-text,
+[data-theme="light"] .gradient-text {
+  background: linear-gradient(90deg, #1e1e2e 0%, #0ea5e9 45%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #0ea5e9;
 }
 
 /* ─── Glass surface ──────────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(13, 13, 31, 0.85);
+  background: rgba(10, 10, 10, 0.88);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border: 1px solid var(--bg-border);
@@ -132,6 +149,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-color: var(--bg-border-hover);
   transform: translateY(-2px);
 }
+[data-theme="light"] .card {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+}
+[data-theme="light"] .card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.06);
+  border-color: #d1d5db;
+}
 
 /* ─── Badge ──────────────────────────────────────────────────────────────────── */
 .badge {
@@ -146,6 +172,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .badge-success { background: rgba(52,211,153,.12);  color: #34D399; border-color: rgba(52,211,153,.2); }
 .badge-warning { background: rgba(251,191,36,.12);  color: #FBBF24; border-color: rgba(251,191,36,.2); }
 .badge-danger  { background: rgba(248,113,113,.12); color: #F87171; border-color: rgba(248,113,113,.2); }
+.badge-default { background: rgba(107,114,128,.1);  color: #6b7280; border-color: rgba(107,114,128,.2); }
+[data-theme="light"] .badge { background: #f3f4f6; border-color: #e5e7eb; color: #374151; }
 
 /* ─── Buttons ────────────────────────────────────────────────────────────────── */
 .btn-primary {
@@ -153,8 +181,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   padding: 11px 22px;
   border-radius: var(--radius-btn);
   font-size: 14px; font-weight: 600;
-  color: #fff !important;
-  background: linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%);
+  color: #000 !important;
+  background: var(--green);
   border: none; cursor: pointer;
   transition: opacity .2s, transform .2s, box-shadow .2s;
   text-decoration: none !important;
@@ -162,7 +190,11 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .btn-primary:hover {
   opacity: .9;
   transform: translateY(-1px);
-  box-shadow: 0 0 28px var(--violet-glow);
+  box-shadow: 0 0 28px var(--green-glow);
+}
+[data-theme="light"] .btn-primary {
+  color: #fff !important;
+  background: var(--green);
 }
 
 .btn-ghost {
@@ -186,7 +218,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 /* ─── Section label ──────────────────────────────────────────────────────────── */
 .section-label {
   font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--violet-light);
+  color: var(--green);
 }
 
 /* ─── Dividers ───────────────────────────────────────────────────────────────── */
@@ -238,10 +270,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content p  { margin-bottom: 1.3em; color: var(--text-primary); }
-.article-content a  { color: var(--violet-light); text-decoration: underline; text-underline-offset: 3px; }
+.article-content a  { color: var(--green-light); text-decoration: underline; text-underline-offset: 3px; }
 .article-content img { border-radius: 10px; width: 100%; height: auto; margin: 1.5em 0; }
 .article-content blockquote {
-  border-left: 3px solid var(--violet);
+  border-left: 3px solid var(--green);
   padding: .9em 1.25em;
   margin: 1.5em 0;
   background: var(--bg-elevated);
@@ -259,7 +291,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .article-content code {
   background: var(--bg-elevated);
-  color: var(--cyan-light);
+  color: var(--green-light);
   padding: 2px 6px; border-radius: 5px; font-size: .865em;
   word-break: break-word;
 }
@@ -282,7 +314,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   cursor: pointer; opacity: .7; transition: opacity .15s, background .15s;
   font-family: 'Inter', sans-serif;
 }
-.copy-code-btn:hover { opacity: 1; background: var(--violet); color: #fff; }
+.copy-code-btn:hover { opacity: 1; background: var(--green); color: #000; }
 
 /* ─── TipTap ─────────────────────────────────────────────────────────────────── */
 .ProseMirror { min-height: 500px; padding: 1.25rem; outline: none; color: var(--text-primary); }
@@ -293,19 +325,48 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .ProseMirror:focus { outline: none; }
 
+/* ─── Form input (used in admin forms) ──────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid var(--bg-border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+.input:focus {
+  border-color: #AAFF00;
+  box-shadow: 0 0 0 3px rgba(170,255,0,.15);
+}
+.input::placeholder { color: var(--text-muted); }
+[data-theme="light"] .input {
+  background: #fff;
+  border-color: #d1d5db;
+  color: #111827;
+}
+[data-theme="light"] .input::placeholder { color: #9ca3af; }
+[data-theme="light"] .input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.12);
+}
+
 /* ─── Admin sidebar link ─────────────────────────────────────────────────────── */
 .admin-sidebar-link {
   display: flex; align-items: center; gap: 9px;
   padding: 9px 12px; border-radius: 9px;
-  color: var(--text-secondary); font-size: 13.5px; font-weight: 500;
+  color: #4b5563; font-size: 13.5px; font-weight: 500;
   transition: background .15s, color .15s;
   text-decoration: none;
 }
-.admin-sidebar-link:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.admin-sidebar-link:hover { background: #f3f4f6; color: #111827; }
 .admin-sidebar-link.active {
-  background: rgba(124,58,237,.15);
-  color: var(--text-primary);
-  border: 1px solid rgba(124,58,237,.2);
+  background: rgba(170,255,0,.12);
+  color: #111827;
+  border: 1px solid rgba(170,255,0,.3);
 }
 
 /* ─── Loader overlay ─────────────────────────────────────────────────────────── */
@@ -324,7 +385,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   left: 0;
   height: 3px;
   z-index: 9999;
-  background: linear-gradient(90deg, var(--violet) 0%, var(--cyan) 100%);
+  background: var(--green);
   transition: width 0.1s linear;
   border-radius: 0 2px 2px 0;
 }

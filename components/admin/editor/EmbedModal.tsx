@@ -25,7 +25,7 @@ export default function EmbedModal({ onInsert, onClose }: Props) {
             <Youtube size={18} className="text-red-500" />
             Embed Video
           </h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
             <X size={16} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
@@ -57,7 +57,7 @@ export default function EmbedModal({ onInsert, onClose }: Props) {
               onClick={() => url && onInsert(url)}
               disabled={!isValid}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+              style={{ background: '#AAFF00' }}
             >
               Embed
             </button>

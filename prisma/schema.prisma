@@ -126,6 +126,7 @@ model Article {
   topicArticles      TopicArticle[]
   articleTags        ArticleTag[]
   aiLogs             AIUsageLog[]
+  subMenuArticles    SubMenuArticle[]
 
   @@index([slug])
   @@index([status])
@@ -228,4 +229,54 @@ model SiteSettings {
   openaiImageQuality  String   @default("standard")
   openaiTtsVoice      String   @default("nova")
   updatedAt           DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────
+// NAVIGATION MENUS
+// ─────────────────────────────────────────
+
+model NavMenu {
+  id          Int          @id @default(autoincrement())
+  title       String
+  slug        String       @unique
+  description String?      @db.Text
+  order       Int          @default(0)
+  isVisible   Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  subMenus    NavSubMenu[]
+
+  @@index([slug])
+  @@index([order])
+}
+
+model NavSubMenu {
+  id          Int      @id @default(autoincrement())
+  menuId      Int
+  menu        NavMenu  @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String   @unique
+  description String?  @db.Text
+  order       Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  articles    SubMenuArticle[]
+
+  @@index([slug])
+  @@index([menuId])
+  @@index([order])
+}
+
+model SubMenuArticle {
+  id          Int        @id @default(autoincrement())
+  subMenuId   Int
+  articleId   Int
+  orderIndex  Int        @default(0)
+  subMenu     NavSubMenu @relation(fields: [subMenuId], references: [id], onDelete: Cascade)
+  article     Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([subMenuId, articleId])
+  @@index([subMenuId])
+  @@index([articleId])
 }

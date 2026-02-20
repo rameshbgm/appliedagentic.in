@@ -132,7 +132,7 @@ export default function ArticleEditorPage({ initialArticle, modules, topics, all
               href={`/articles/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border hover:bg-gray-50 transition-colors"
               style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
             >
               <Eye size={14} />Preview
@@ -150,8 +150,8 @@ export default function ArticleEditorPage({ initialArticle, modules, topics, all
           <button
             onClick={() => save(true)}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-black disabled:opacity-50"
+            style={{ background: '#AAFF00' }}
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             Publish

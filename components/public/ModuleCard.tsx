@@ -18,7 +18,7 @@ interface Props {
 export default function ModuleCard({
   name, slug, icon, color, description, topicCount = 0, articleCount = 0, index = 0,
 }: Props) {
-  const c = color ?? '#7C3AED'
+  const c = color ?? '#AAFF00'
 
   return (
     <Link href={`/modules/${slug}`} className="block group h-full">
@@ -37,12 +37,6 @@ export default function ModuleCard({
           ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'
         }}
       >
-        {/* Subtle hover glow */}
-        <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none"
-          style={{ background: `radial-gradient(circle at 50% 0%, ${c}12, transparent 65%)` }}
-        />
-
         {/* Module number */}
         <div
           className="absolute top-4 right-4 text-[10px] font-bold opacity-20 group-hover:opacity-40 transition-opacity"

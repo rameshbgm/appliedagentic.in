@@ -130,8 +130,8 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
       {/* Toggle button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="absolute right-4 top-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-white shadow-lg transition-transform hover:scale-105"
-        style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+        className="absolute right-4 top-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-black shadow-lg transition-transform hover:scale-105"
+        style={{ background: 'var(--green)' }}
         title="AI Assistant"
       >
         <Sparkles size={13} />
@@ -151,7 +151,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
               <Sparkles size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="font-display font-bold text-sm" style={{ color: 'var(--text-primary)' }}>AI Assistant</span>
             </div>
-            <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-white/10">
+            <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-gray-100">
               <X size={14} style={{ color: 'var(--text-muted)' }} />
             </button>
           </div>
@@ -196,7 +196,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
                     onClick={() => generateText('insert')}
                     disabled={loading}
                     className="flex-1 py-2 rounded-xl text-xs font-medium text-white disabled:opacity-50 flex items-center justify-center gap-1"
-                    style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+                    style={{ background: '#AAFF00' }}
                   >
                     {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     Insert
@@ -232,7 +232,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
                   onClick={generateImage}
                   disabled={loading}
                   className="w-full py-2.5 rounded-xl text-xs font-medium text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+                  style={{ background: '#AAFF00' }}
                 >
                   {loading ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
                   Generate Image
@@ -315,7 +315,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
                   onClick={generateAudio}
                   disabled={loading}
                   className="w-full py-2.5 rounded-xl text-xs font-medium text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
-                  style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+                  style={{ background: '#AAFF00' }}
                 >
                   {loading ? <Loader2 size={12} className="animate-spin" /> : <Music size={12} />}
                   Generate Audio

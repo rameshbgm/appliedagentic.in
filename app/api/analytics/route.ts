@@ -11,7 +11,7 @@ export async function GET() {
   try {
     const [
       totalModules, totalTopics, publishedArticles, draftArticles, totalMedia,
-      aiUsage, recentArticles, aiLogs,
+      aiUsage, totalMenus, totalSubMenus, recentArticles, aiLogs,
     ] = await prisma.$transaction([
       prisma.module.count(),
       prisma.topic.count(),
@@ -19,6 +19,8 @@ export async function GET() {
       prisma.article.count({ where: { status: ArticleStatus.DRAFT } }),
       prisma.mediaAsset.count(),
       prisma.aIUsageLog.count(),
+      prisma.navMenu.count(),
+      prisma.navSubMenu.count(),
       prisma.article.findMany({
         orderBy: { updatedAt: 'desc' },
         take: 10,
@@ -48,6 +50,8 @@ export async function GET() {
         draftArticles,
         totalMedia,
         aiUsage,
+        totalMenus,
+        totalSubMenus,
       },
       recentArticles,
       aiLogs,

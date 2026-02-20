@@ -51,8 +51,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
         </div>
         <Link
           href="/admin/articles/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white"
-          style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
+          style={{ background: '#AAFF00' }}
         >
           <Plus size={16} />New Article
         </Link>
@@ -65,12 +65,12 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
             key={s || 'all'}
             href={`/admin/articles${s ? `?status=${s}` : ''}`}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-              (s === '' && !statusFilter) || s === statusFilter ? 'text-white' : 'border'
+              (s === '' && !statusFilter) || s === statusFilter ? 'text-black' : 'border'
             }`}
             style={{
-              background: (s === '' && !statusFilter) || s === statusFilter ? 'linear-gradient(135deg,#6C3DFF,#00D4FF)' : 'transparent',
+              background: (s === '' && !statusFilter) || s === statusFilter ? '#AAFF00' : 'transparent',
               borderColor: 'var(--bg-border)',
-              color: (s === '' && !statusFilter) || s === statusFilter ? 'white' : 'var(--text-muted)',
+              color: (s === '' && !statusFilter) || s === statusFilter ? '#000' : 'var(--text-muted)',
             }}
           >
             {s || 'All'}
@@ -127,10 +127,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-white/10">
+                      <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100">
                         <Eye size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
-                      <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-white/10">
+                      <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100">
                         <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
                       <ArticleActions id={a.id} title={a.title} />
@@ -157,12 +157,12 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
               key={p}
               href={`/admin/articles?page=${p}${statusFilter ? `&status=${statusFilter}` : ''}`}
               className={`w-8 h-8 rounded-xl text-sm flex items-center justify-center transition-colors ${
-                p === page ? 'text-white' : 'border hover:bg-white/5'
+                p === page ? 'text-black font-semibold' : 'border hover:bg-gray-50'
               }`}
               style={{
-                background: p === page ? 'linear-gradient(135deg,#6C3DFF,#00D4FF)' : 'transparent',
+                background: p === page ? '#AAFF00' : 'transparent',
                 borderColor: 'var(--bg-border)',
-                color: p === page ? 'white' : 'var(--text-muted)',
+                color: p === page ? '#000' : 'var(--text-muted)',
               }}
             >
               {p}

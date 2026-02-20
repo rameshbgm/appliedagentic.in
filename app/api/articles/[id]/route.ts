@@ -16,7 +16,9 @@ const UpdateSchema = z.object({
   status: z.nativeEnum(ArticleStatus).optional(),
   topicIds: z.array(z.number().int()).optional(),
   tagIds: z.array(z.number().int()).optional(),
+  tagNames: z.array(z.string()).optional(),
   coverImageId: z.number().int().optional().nullable(),
+  coverImageUrl: z.string().optional(),
   readingTimeMinutes: z.number().int().optional().nullable(),
   isFeatured: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
@@ -96,6 +98,40 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       ? (data.readingTimeMinutes ?? calculateReadingTime(data.content))
       : data.readingTimeMinutes
 
+    // Resolve tagNames → tag IDs (upsert by slug)
+    let resolvedTagIds: number[] | undefined = data.tagIds
+    if (data.tagNames !== undefined) {
+      if (data.tagNames.length > 0) {
+        const tags = await Promise.all(
+          data.tagNames.map((name) =>
+            prisma.tag.upsert({
+              where: { slug: slugify(name) },
+              create: { name, slug: slugify(name) },
+              update: {},
+              select: { id: true },
+            })
+          )
+        )
+        resolvedTagIds = tags.map((t) => t.id)
+      } else {
+        resolvedTagIds = []
+      }
+    }
+
+    // Resolve coverImageUrl → MediaAsset ID
+    let resolvedCoverImageId: number | null | undefined = data.coverImageId
+    if (data.coverImageUrl !== undefined && data.coverImageId === undefined) {
+      if (data.coverImageUrl) {
+        const media = await prisma.mediaAsset.findFirst({
+          where: { url: data.coverImageUrl },
+          select: { id: true },
+        })
+        resolvedCoverImageId = media?.id ?? undefined
+      } else {
+        resolvedCoverImageId = null
+      }
+    }
+
     const article = await prisma.$transaction(async (tx) => {
       // Update topic relationships if provided
       if (data.topicIds !== undefined) {
@@ -106,11 +142,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
 
       // Update tag relationships if provided
-      if (data.tagIds !== undefined) {
+      if (resolvedTagIds !== undefined) {
         await tx.articleTag.deleteMany({ where: { articleId: id } })
-        if (data.tagIds.length > 0) {
+        if (resolvedTagIds.length > 0) {
           await tx.articleTag.createMany({
-            data: data.tagIds.map((tagId) => ({ articleId: id, tagId })),
+            data: resolvedTagIds.map((tagId) => ({ articleId: id, tagId })),
           })
         }
       }
@@ -124,10 +160,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           ...(data.content !== undefined && { content: data.content }),
           ...(data.status !== undefined && { status: data.status }),
           ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
-          ...(data.coverImageId !== undefined && { coverImageId: data.coverImageId }),
+          ...(resolvedCoverImageId !== undefined && { coverImageId: resolvedCoverImageId }),
           ...(data.audioUrl !== undefined && { audioUrl: data.audioUrl }),
           ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
-          ...(data.publishedAt !== undefined && { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }),
+          ...(data.publishedAt !== undefined
+            ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }
+            : (data.status === ArticleStatus.PUBLISHED
+              ? { publishedAt: new Date() }
+              : {})
+          ),
           ...(data.scheduledAt !== undefined && { scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null }),
           ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
           ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),

@@ -17,7 +17,7 @@ interface Props {
 
 export default function TopicCard({ topic }: Props) {
   const count = topic._count?.articles ?? topic.articleCount ?? 0
-  const color = topic.module?.color ?? '#7C3AED'
+  const color = topic.module?.color ?? '#AAFF00'
 
   return (
     <Link href={`/topics/${topic.slug}`} className="group block h-full">
@@ -52,7 +52,7 @@ export default function TopicCard({ topic }: Props) {
 
             {/* Name */}
             <h3
-              className="font-semibold text-[14px] leading-snug mb-1.5 line-clamp-2 transition-colors group-hover:text-violet-400"
+              className="font-semibold text-[14px] leading-snug mb-1.5 line-clamp-2 transition-colors group-hover:text-[var(--green)]"
               style={{ color: 'var(--text-primary)' }}
             >
               {topic.name}

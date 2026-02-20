@@ -165,7 +165,7 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
             <div className="px-4 py-2.5" style={{ borderTop: '1px solid var(--bg-border)' }}>
               <button
                 className="text-xs font-medium hover:underline"
-                style={{ color: '#6C3DFF' }}
+                style={{ color: 'var(--green)' }}
                 onClick={() => { setOpen(false); router.push(`/search?q=${encodeURIComponent(query)}`) }}
               >
                 View all results for "{query}" →

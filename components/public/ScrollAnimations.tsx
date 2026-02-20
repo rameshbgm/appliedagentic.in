@@ -1,6 +1,6 @@
 'use client'
 // components/public/ScrollAnimations.tsx
-import { motion, useInView, type Variants } from 'framer-motion'
+import { motion, useInView, useScroll, useTransform, type Variants } from 'framer-motion'
 import { useRef } from 'react'
 
 interface AnimProps {
@@ -101,5 +101,30 @@ export function StaggerContainer({ children, className }: { children: React.Reac
     >
       {children}
     </motion.div>
+  )
+}
+
+/**
+ * ParallaxSection — wraps children in a div that moves at a slower rate than scroll.
+ * @param speed  0 = no movement, 1 = full scroll speed. Default 0.3 = subtle depth.
+ * @param offset How far (in px) the section travels over its full viewport journey.
+ */
+export function ParallaxSection({
+  children,
+  className,
+  speed = 0.3,
+}: {
+  children: React.ReactNode
+  className?: string
+  speed?: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const y = useTransform(scrollYProgress, [0, 1], [`${speed * 80}px`, `-${speed * 80}px`])
+
+  return (
+    <div ref={ref} className={className} style={{ overflow: 'hidden' }}>
+      <motion.div style={{ y }}>{children}</motion.div>
+    </div>
   )
 }

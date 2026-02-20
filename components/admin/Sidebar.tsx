@@ -17,10 +17,14 @@ import {
   LogOut,
   Zap,
   X,
+  Menu,
+  ListTree,
 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/admin/menus', icon: Menu, label: 'Menus' },
+  { href: '/admin/submenus', icon: ListTree, label: 'Sub-Menus' },
   { href: '/admin/modules', icon: Layers, label: 'Modules' },
   { href: '/admin/topics', icon: BookOpen, label: 'Topics' },
   { href: '/admin/articles', icon: FileText, label: 'Articles' },
@@ -48,24 +52,23 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       className={`flex flex-col h-full border-r transition-all duration-300 ${
         collapsed ? 'w-[68px]' : 'w-[240px]'
       }`}
-      style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
+      style={{ background: '#fff', borderColor: '#e5e7eb' }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'var(--bg-border)' }}>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-200">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}>
+          style={{ background: '#AAFF00' }}>
           <Zap size={18} className="text-white" />
         </div>
         {!collapsed && (
-          <span className="font-display font-bold text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>
+          <span className="font-display font-bold text-sm leading-tight text-gray-900">
             Applied<br />Agentic
           </span>
         )}
         {onMobileClose && !collapsed && (
           <button
             onClick={onMobileClose}
-            className="ml-auto p-1 rounded-lg hover:bg-white/10 lg:hidden"
-            style={{ color: 'var(--text-muted)' }}
+            className="ml-auto p-1 rounded-lg hover:bg-gray-100 lg:hidden text-gray-400"
           >
             <X size={16} />
           </button>
@@ -94,18 +97,18 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       </nav>
 
       {/* User + Logout */}
-      <div className="p-3 border-t" style={{ borderColor: 'var(--bg-border)' }}>
+      <div className="p-3 border-t border-gray-200">
         {!collapsed && session?.user && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-              style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}>
+              style={{ background: '#AAFF00' }}>
               {session.user.name?.[0]?.toUpperCase() ?? 'A'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+              <p className="text-xs font-semibold truncate text-gray-900">
                 {session.user.name}
               </p>
-              <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-xs truncate text-gray-500">
                 {session.user.email}
               </p>
             </div>
@@ -115,7 +118,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
           onClick={() => signOut({ callbackUrl: '/admin/login' })}
           className="admin-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium w-full transition-all"
           title={collapsed ? 'Logout' : undefined}
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: '#6b7280' }}
         >
           <LogOut size={18} className="shrink-0" />
           {!collapsed && <span>Logout</span>}
@@ -126,7 +129,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       <button
         onClick={() => setCollapsed((c) => !c)}
         className="absolute top-1/2 -right-3 z-10 w-6 h-6 rounded-full hidden lg:flex items-center justify-center shadow-lg"
-        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+        style={{ background: '#fff', border: '1px solid #e5e7eb' }}
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
       </button>

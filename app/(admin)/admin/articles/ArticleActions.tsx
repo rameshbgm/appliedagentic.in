@@ -30,7 +30,7 @@ export default function ArticleActions({ id, title }: { id: number; title: strin
 
   return (
     <>
-      <button onClick={handleDuplicate} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title="Duplicate">
+      <button onClick={handleDuplicate} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Duplicate">
         <Copy size={14} style={{ color: 'var(--text-muted)' }} />
       </button>
       <button onClick={() => setDeleteOpen(true)} className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors" title="Delete">

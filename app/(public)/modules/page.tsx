@@ -45,7 +45,7 @@ export default async function ModulesPage() {
       <FadeIn>
         <div className="text-center mb-14">
           <span className="inline-block text-sm font-medium uppercase tracking-widest mb-3 px-3 py-1 rounded-full"
-            style={{ background: 'rgba(108,61,255,0.15)', color: '#6C3DFF' }}>
+            style={{ background: 'var(--bg-elevated)', color: 'var(--green)', border: '1px solid var(--bg-border)' }}>
             Curriculum
           </span>
           <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>

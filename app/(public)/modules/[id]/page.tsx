@@ -73,11 +73,8 @@ export default async function ModuleDetailPage({ params }: Props) {
       {/* Module Hero */}
       <div
         className="relative overflow-hidden py-20 px-4 md:px-8"
-        style={{ background: `linear-gradient(135deg, ${mod.color}20, ${mod.color}05)` }}
+        style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
       >
-        <div className="absolute inset-0 opacity-5" style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, ${mod.color} 0%, transparent 70%)`,
-        }} />
         <div className="relative max-w-7xl mx-auto">
           <Link href="/modules" className="inline-flex items-center gap-2 text-sm mb-8 hover:opacity-80 transition-opacity"
             style={{ color: 'var(--text-muted)' }}>
@@ -126,7 +123,7 @@ export default async function ModuleDetailPage({ params }: Props) {
                     name: topic.name,
                     slug: topic.slug,
                     description: topic.description,
-                    module: { name: mod.name, color: mod.color ?? '#6C3DFF' },
+                    module: { name: mod.name, color: mod.color ?? '#AAFF00' },
                     articleCount: topic._count.topicArticles,
                   }}
                 />

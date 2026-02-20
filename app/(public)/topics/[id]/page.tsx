@@ -56,14 +56,14 @@ export default async function TopicDetailPage({ params }: Props) {
   if (!topic) notFound()
 
   const articles = topic.topicArticles.map((ta) => ta.article)
-  const color = topic.module?.color ?? '#6C3DFF'
+  const color = topic.module?.color ?? '#AAFF00'
 
   return (
     <div className="min-h-screen">
       {/* Topic Hero */}
       <div
         className="py-16 px-4 md:px-8 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${color}18, ${color}05)` }}
+        style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
       >
         <div className="max-w-7xl mx-auto relative">
           <div className="flex items-center gap-2 mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>

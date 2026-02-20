@@ -6,6 +6,7 @@ import Footer from '@/components/public/Footer'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 import Loader3D from '@/components/shared/Loader3D'
+import RouteProgress from '@/components/shared/RouteProgress'
 
 export const metadata: Metadata = {
   title: { default: 'Applied Agentic AI', template: '%s | Applied Agentic AI' },
@@ -25,14 +26,36 @@ async function getModules() {
   }
 }
 
+async function getNavMenus() {
+  try {
+    return await prisma.navMenu.findMany({
+      where: { isVisible: true },
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        subMenus: {
+          where: { isVisible: true },
+          orderBy: { order: 'asc' },
+          select: { id: true, title: true, slug: true, description: true },
+        },
+      },
+    })
+  } catch {
+    return []
+  }
+}
+
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const modules = await getModules()
+  const [modules, navMenus] = await Promise.all([getModules(), getNavMenus()])
 
   return (
     <ThemeProvider>
       <ToastNotifier />
+      <RouteProgress />
       <Loader3D />
-      <Navbar modules={modules} />
+      <Navbar navMenus={navMenus} />
       <main className="min-h-screen pt-16">
         {children}
       </main>

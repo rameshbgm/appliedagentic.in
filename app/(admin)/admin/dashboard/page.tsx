@@ -27,6 +27,8 @@ export default async function DashboardPage() {
   const cards = [
     { label: 'Total Articles', value: stats?.totalArticles ?? 0, iconName: 'FileText', color: '#6C3DFF' },
     { label: 'Published', value: stats?.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
+    { label: 'Menus', value: stats?.totalMenus ?? 0, iconName: 'Menu', color: '#AAFF00' },
+    { label: 'Sub-Menus', value: stats?.totalSubMenus ?? 0, iconName: 'ListTree', color: '#88CC00' },
     { label: 'Modules', value: stats?.totalModules ?? 0, iconName: 'Layers', color: '#00D4FF' },
     { label: 'Topics', value: stats?.totalTopics ?? 0, iconName: 'BookOpen', color: '#FFA502' },
     { label: 'Total Views', value: stats?.totalViews ?? 0, iconName: 'Eye', color: '#FF6B6B', suffix: '' },

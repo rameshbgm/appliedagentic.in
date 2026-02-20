@@ -155,7 +155,7 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
             className={`p-2 rounded-lg transition-all text-sm ${
               active
                 ? 'bg-violet-500/20 text-violet-400'
-                : 'hover:bg-white/10'
+                : 'hover:bg-gray-100'
             }`}
             style={{ color: active ? '#A29BFE' : 'var(--text-secondary)' }}
           >
@@ -172,7 +172,7 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
             type="button"
             title="Text Color"
             onClick={() => setShowColorPicker((v) => !v)}
-            className="flex items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-all"
+            className="flex items-center gap-1 p-2 rounded-lg hover:bg-gray-100 transition-all"
             style={{ color: 'var(--text-secondary)' }}
           >
             <Palette size={15} />
@@ -198,7 +198,7 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
                 type="button"
                 title="Remove color"
                 onClick={() => { editor.chain().focus().unsetColor().run(); setShowColorPicker(false) }}
-                className="col-span-4 text-xs py-1 rounded-lg hover:bg-white/10 transition-all"
+                className="col-span-4 text-xs py-1 rounded-lg hover:bg-gray-100 transition-all"
                 style={{ color: 'var(--text-muted)' }}
               >
                 Remove color
@@ -211,7 +211,7 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
           type="button"
           title="HTML Mode"
           onClick={onToggleHtmlMode}
-          className={`p-2 rounded-lg transition-all text-sm ${isHtmlMode ? 'bg-violet-500/20 text-violet-400' : 'hover:bg-white/10'}`}
+          className={`p-2 rounded-lg transition-all text-sm ${isHtmlMode ? 'bg-violet-500/20 text-violet-400' : 'hover:bg-gray-100'}`}
           style={{ color: isHtmlMode ? '#A29BFE' : 'var(--text-secondary)' }}
         >
           <Code2 size={15} />

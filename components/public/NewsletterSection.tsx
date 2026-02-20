@@ -1,12 +1,15 @@
 'use client'
 // components/public/NewsletterSection.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function NewsletterSection() {
+  const [mounted, setMounted] = useState(false)
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+
+  useEffect(() => { setMounted(true) }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,19 +27,13 @@ export default function NewsletterSection() {
       <div
         className="max-w-3xl mx-auto rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08))',
-          border: '1px solid rgba(124,58,237,0.25)',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--bg-border)',
         }}
       >
-        {/* Background glows */}
-        <div className="absolute -top-16 -left-16 w-48 h-48 rounded-full blur-3xl opacity-30 pointer-events-none"
-          style={{ background: '#7C3AED' }} />
-        <div className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none"
-          style={{ background: '#06B6D4' }} />
-
         <div className="relative">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
-            style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', color: '#A78BFA' }}>
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', color: 'var(--green)' }}>
             <Sparkles size={11} />
             Stay in the loop
           </div>
@@ -48,7 +45,9 @@ export default function NewsletterSection() {
             New articles on AI agents, LLMs, and agentic systems — straight to your inbox. No spam.
           </p>
 
-          {status === 'success' ? (
+          {!mounted ? (
+            <div className="h-[48px]" />
+          ) : status === 'success' ? (
             <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-medium"
               style={{ background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)' }}>
               ✓ {message}
@@ -72,7 +71,7 @@ export default function NewsletterSection() {
                 type="submit"
                 disabled={status === 'loading'}
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white whitespace-nowrap transition-all hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-50 min-h-[48px]"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
+                style={{ background: 'var(--green)', color: '#000' }}
               >
                 {status === 'loading' ? 'Subscribing...' : (
                   <>Subscribe <ArrowRight size={14} /></>

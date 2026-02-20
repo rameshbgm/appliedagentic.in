@@ -58,7 +58,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
       >
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--bg-border)' }}>
           <h3 className="font-display font-bold" style={{ color: 'var(--text-primary)' }}>Insert Image</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
             <X size={16} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
@@ -85,7 +85,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
               <input ref={fileRef} type="file" accept="image/*" className="hidden"
                 onChange={(e) => { if (e.target.files?.[0]) handleUpload(e.target.files[0]) }} />
               <div
-                className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer hover:bg-white/5 transition-colors"
+                className="border-2 border-dashed rounded-xl p-10 text-center cursor-pointer hover:bg-gray-50 transition-colors"
                 style={{ borderColor: 'var(--bg-border)' }}
                 onClick={() => fileRef.current?.click()}
                 onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleUpload(f) }}
@@ -143,7 +143,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
                 onClick={() => url && onInsert(url, alt)}
                 disabled={!url}
                 className="w-full py-2.5 rounded-xl font-medium text-white text-sm disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+                style={{ background: '#AAFF00' }}
               >
                 Insert Image
               </button>

@@ -14,9 +14,11 @@ const ArticleSchema = z.object({
   summary: z.string().optional(),
   content: z.string().default(''),
   status: z.nativeEnum(ArticleStatus).optional(),
-  topicIds: z.array(z.number().int()).min(1),
+  topicIds: z.array(z.number().int()).default([]),
   tagIds: z.array(z.number().int()).optional(),
+  tagNames: z.array(z.string()).optional(),
   coverImageId: z.number().int().optional().nullable(),
+  coverImageUrl: z.string().optional(),
   readingTimeMinutes: z.number().int().optional().nullable(),
   isFeatured: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
@@ -134,6 +136,32 @@ export async function POST(req: NextRequest) {
     const readingTime = data.readingTimeMinutes ?? calculateReadingTime(data.content)
     const authorId = parseInt((session.user as { id: string }).id)
 
+    // Resolve tagNames → tag IDs (upsert by slug)
+    let resolvedTagIds: number[] = data.tagIds ?? []
+    if (data.tagNames?.length) {
+      const tags = await Promise.all(
+        data.tagNames.map((name) =>
+          prisma.tag.upsert({
+            where: { slug: slugify(name) },
+            create: { name, slug: slugify(name) },
+            update: {},
+            select: { id: true },
+          })
+        )
+      )
+      resolvedTagIds = tags.map((t) => t.id)
+    }
+
+    // Resolve coverImageUrl → MediaAsset ID
+    let resolvedCoverImageId: number | null = data.coverImageId ?? null
+    if (data.coverImageUrl && !resolvedCoverImageId) {
+      const media = await prisma.mediaAsset.findFirst({
+        where: { url: data.coverImageUrl },
+        select: { id: true },
+      })
+      if (media) resolvedCoverImageId = media.id
+    }
+
     const article = await prisma.article.create({
       data: {
         title: data.title,
@@ -142,10 +170,12 @@ export async function POST(req: NextRequest) {
         content: data.content,
         status: data.status ?? ArticleStatus.DRAFT,
         isFeatured: data.isFeatured ?? false,
-        coverImageId: data.coverImageId ?? undefined,
+        coverImageId: resolvedCoverImageId ?? undefined,
         audioUrl: data.audioUrl,
         readingTimeMinutes: readingTime,
-        publishedAt: data.publishedAt ? new Date(data.publishedAt) : undefined,
+        publishedAt: data.publishedAt
+          ? new Date(data.publishedAt)
+          : (data.status === ArticleStatus.PUBLISHED ? new Date() : undefined),
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         seoTitle: data.seoTitle,
         seoDescription: data.seoDescription,
@@ -155,8 +185,8 @@ export async function POST(req: NextRequest) {
         topicArticles: {
           create: data.topicIds.map((topicId, i) => ({ topicId, orderIndex: i })),
         },
-        articleTags: data.tagIds
-          ? { create: data.tagIds.map((tagId) => ({ tagId })) }
+        articleTags: resolvedTagIds.length > 0
+          ? { create: resolvedTagIds.map((tagId) => ({ tagId })) }
           : undefined,
       },
       include: articleInclude,

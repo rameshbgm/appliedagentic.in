@@ -28,8 +28,8 @@ export default async function TopicsPage() {
         </div>
         <Link
           href="/admin/topics/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white"
-          style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
+          style={{ background: '#AAFF00' }}
         >
           <Plus size={16} />New Topic
         </Link>
@@ -77,7 +77,7 @@ export default async function TopicsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/admin/topics/${topic.id}/edit`} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                    <Link href={`/admin/topics/${topic.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                       <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
                     </Link>
                     <ConfirmDeleteTopic id={topic.id} name={topic.name} />

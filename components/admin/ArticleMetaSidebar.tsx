@@ -44,7 +44,7 @@ export default function ArticleMetaSidebar({ meta, onChange, modules, topics, al
     <div className="border-b" style={{ borderColor: 'var(--bg-border)' }}>
       <button
         onClick={() => setSection(section === id ? section : id)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
         style={{ color: 'var(--text-primary)' }}
       >
         {label}
@@ -128,7 +128,7 @@ export default function ArticleMetaSidebar({ meta, onChange, modules, topics, al
           <label className={labelClass} style={labelStyle}>Topics</label>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {filteredTopics.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 cursor-pointer py-1 hover:bg-white/5 rounded-lg px-2">
+              <label key={t.id} className="flex items-center gap-2 cursor-pointer py-1 hover:bg-gray-50 rounded-lg px-2">
                 <input
                   type="checkbox"
                   checked={meta.topicIds.includes(t.id)}

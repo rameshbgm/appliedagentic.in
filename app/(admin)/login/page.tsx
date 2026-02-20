@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import { Zap, Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
-const DEMO_EMAIL = 'admin@appliedagentic.com'
-const DEMO_PASSWORD = 'Admin@123'
+const ADMIN_EMAIL = 'admin@appliedagentic.com'
+const ADMIN_PASSWORD = 'Admin@123'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -37,9 +37,9 @@ export default function LoginPage() {
   }
 
   const handleQuickLogin = () => {
-    setEmail(DEMO_EMAIL)
-    setPassword(DEMO_PASSWORD)
-    doSignIn(DEMO_EMAIL, DEMO_PASSWORD)
+    setEmail(ADMIN_EMAIL)
+    setPassword(ADMIN_PASSWORD)
+    doSignIn(ADMIN_EMAIL, ADMIN_PASSWORD)
   }
 
   return (
@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-2xl"
-            style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+            style={{ background: '#AAFF00' }}
           >
             <Zap size={28} className="text-white" />
           </div>
@@ -136,7 +136,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-xl font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+              style={{ background: '#AAFF00' }}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Signing in...' : 'Sign In'}
@@ -167,11 +167,11 @@ export default function LoginPage() {
             ) : (
               <Zap size={15} />
             )}
-            Quick Login (Demo Admin)
+            Quick Login as Admin
           </button>
 
           <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-            {DEMO_EMAIL} · Admin@123
+            {ADMIN_EMAIL} · Admin@123
           </p>
         </div>
 

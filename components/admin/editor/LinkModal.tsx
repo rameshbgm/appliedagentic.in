@@ -26,7 +26,7 @@ export default function LinkModal({ initialHref = '', initialText = '', onInsert
             <Link2 size={18} style={{ color: 'var(--color-violet)' }} />
             Insert Link
           </h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
             <X size={16} style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
@@ -76,8 +76,8 @@ export default function LinkModal({ initialHref = '', initialText = '', onInsert
             <button
               onClick={() => href && onInsert(href, text)}
               disabled={!href}
-              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-black disabled:opacity-50"
+              style={{ background: 'var(--green)' }}
             >
               Insert Link
             </button>

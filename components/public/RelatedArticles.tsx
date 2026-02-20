@@ -34,7 +34,7 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
       {/* Horizontal scroll on mobile, wrap on desktop */}
       <div className="flex gap-4 overflow-x-auto pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0 snap-x snap-mandatory">
         {articles.map((a) => {
-          const color = a.module?.color ?? '#6C3DFF'
+          const color = a.module?.color ?? '#AAFF00'
           return (
             <Link
               key={a.id}

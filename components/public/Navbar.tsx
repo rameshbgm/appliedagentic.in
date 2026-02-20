@@ -1,125 +1,280 @@
 'use client'
 // components/public/Navbar.tsx
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { Menu, X, Search, Zap, ChevronDown, Sun, Moon } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import { Menu as MenuIcon, X, Search, Zap, ChevronDown, ChevronRight } from 'lucide-react'
 import { useTheme } from '@/components/shared/ThemeProvider'
 
-interface Module {
+interface NavSubMenuData {
   id: number
-  name: string
+  title: string
   slug: string
-  icon?: string | null
-  color?: string | null
   description?: string | null
 }
 
-interface Props {
-  modules?: Module[]
+interface NavMenuData {
+  id: number
+  title: string
+  slug: string
+  subMenus?: NavSubMenuData[]
 }
 
-export default function Navbar({ modules = [] }: Props) {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [megaOpen, setMegaOpen]     = useState(false)
-  const [scrolled, setScrolled]     = useState(false)
-  const { theme, toggleTheme }      = useTheme()
+interface Props {
+  navMenus?: NavMenuData[]
+}
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+export default function Navbar({ navMenus = [] }: Props) {
+  const [mobileOpen, setMobileOpen]             = useState(false)
+  const [openMenuId, setOpenMenuId]             = useState<number | null>(null)
+  const [openMobileMenuId, setOpenMobileMenuId] = useState<number | null>(null)
+  const { theme }                               = useTheme()
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isDark = theme === 'dark'
+  const navBg        = isDark ? 'rgba(8, 14, 30, 0.96)'  : 'rgba(255, 255, 255, 0.95)'
+  const navBorder    = isDark ? 'rgba(255,255,255,0.07)'  : 'rgba(0,0,0,0.08)'
+  const textPrimary  = isDark ? 'rgba(255,255,255,0.92)'  : '#111827'
+  const textSecond   = isDark ? 'rgba(255,255,255,0.65)'  : '#374151'
+  const textMuted    = isDark ? 'rgba(255,255,255,0.35)'  : '#9CA3AF'
+  const hoverBg      = isDark ? 'hover:bg-white/8'        : 'hover:bg-black/5'
+  const dropdownBg   = isDark ? 'rgba(14, 22, 44, 0.98)'  : '#ffffff'
+  const dropdownBdr  = isDark ? 'rgba(255,255,255,0.09)'  : 'rgba(0,0,0,0.09)'
+
+  const handleMouseEnter = useCallback((id: number) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setOpenMenuId(id)
   }, [])
 
-  const closeMobile = () => setMobileOpen(false)
+  const handleMouseLeave = useCallback(() => {
+    closeTimer.current = setTimeout(() => setOpenMenuId(null), 120)
+  }, [])
+
+  const closeMobile = () => {
+    setMobileOpen(false)
+    setOpenMobileMenuId(null)
+  }
 
   return (
+    <>
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'py-2.5' : 'py-4'}`}
-      style={scrolled
-        ? { background: '#0B0B1E', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid var(--bg-border)' }
-        : { background: 'transparent' }
-      }
+      className="fixed top-0 left-0 right-0 z-40"
+      style={{ background: navBg, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: `1px solid ${navBorder}` }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
+      <div className="w-full px-[3%] h-16 flex items-center justify-between gap-4">
 
-        {/* Logo */}
+        {/* ── Logo ── */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)' }}>
-            <Zap size={15} className="text-white" />
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
+            style={{ background: 'var(--green)' }}
+          >
+            <Zap size={15} className="text-black" />
           </div>
-          <span className="hidden sm:block text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
-            Applied<br /><span style={{ color: 'var(--violet-light)' }}>Agentic</span>
+          <span className="font-bold text-sm tracking-tight" style={{ color: textPrimary }}>
+            Applied<span style={{ color: 'var(--green)' }}>Agentic</span>
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-5">
-          <div className="relative" onMouseEnter={() => setMegaOpen(true)} onMouseLeave={() => setMegaOpen(false)}>
-            <button className="flex items-center gap-1 text-[13px] font-medium transition-colors hover:text-white" style={{ color: 'var(--text-secondary)' }}>
-              Modules
-              <ChevronDown size={13} className={`transition-transform duration-200 ${megaOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {megaOpen && modules.length > 0 && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-[580px] rounded-2xl p-4 grid grid-cols-2 gap-2 shadow-2xl"
-                style={{ background: '#0F0F24', border: '1px solid var(--bg-border)' }}>
-                {modules.map((m) => (
-                  <Link key={m.id} href={`/modules/${m.slug}`}
-                    className="flex items-start gap-3 p-2.5 rounded-xl transition-colors hover:bg-white/5 group/item">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 mt-0.5"
-                      style={{ background: (m.color ?? '#7C3AED') + '25' }}>
-                      {m.icon ?? '📚'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-semibold group-hover/item:text-violet-400 transition-colors leading-snug" style={{ color: 'var(--text-primary)' }}>
-                        {m.name}
-                      </p>
-                      {m.description && (
-                        <p className="text-[11px] mt-0.5 line-clamp-1" style={{ color: 'var(--text-muted)' }}>{m.description}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+        {/* ── Desktop Nav ── */}
+        <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+          {navMenus.map((menu) => {
+            const hasChildren = menu.subMenus && menu.subMenus.length > 0
+            const isOpen = openMenuId === menu.id
+
+            if (!hasChildren) {
+              return (
+                <Link
+                  key={menu.id}
+                  href={`/${menu.slug}`}
+                  className={`flex items-center h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
+                  style={{ color: textSecond }}
+                >
+                  {menu.title}
+                </Link>
+              )
+            }
+
+            return (
+              <div
+                key={menu.id}
+                className="relative"
+                onMouseEnter={() => handleMouseEnter(menu.id)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <Link
+                  href={`/${menu.slug}`}
+                  className={`flex items-center gap-1 h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
+                  style={{ color: isOpen ? 'var(--green)' : textSecond }}
+                >
+                  {menu.title}
+                  <ChevronDown
+                    size={13}
+                    className={`ml-0.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  />
+                </Link>
+
+                {/* Dropdown — rendered always, toggle via opacity so mouse can travel into it */}
+                <div
+                  className={`absolute top-full left-0 w-72 rounded-2xl shadow-2xl overflow-hidden transition-all duration-150 origin-top ${
+                    isOpen
+                      ? 'opacity-100 scale-y-100 pointer-events-auto'
+                      : 'opacity-0 scale-y-95 pointer-events-none'
+                  }`}
+                  style={{ background: dropdownBg, border: `1px solid ${dropdownBdr}` }}
+                  onMouseEnter={() => handleMouseEnter(menu.id)}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${dropdownBdr}` }}>
+                    <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: textMuted }}>
+                      {menu.title}
+                    </p>
+                  </div>
+
+                  <div className="p-2">
+                    {menu.subMenus!.map((sub) => (
+                      <Link
+                        key={sub.id}
+                        href={`/${menu.slug}/${sub.slug}`}
+                        className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors ${hoverBg} group/item`}
+                        onClick={() => setOpenMenuId(null)}
+                      >
+                        <p
+                          className="text-[13px] font-semibold leading-snug group-hover/item:text-[var(--green)] transition-colors"
+                          style={{ color: textPrimary }}
+                        >
+                          {sub.title}
+                        </p>
+                        {sub.description && (
+                          <p className="text-[11px] line-clamp-1" style={{ color: textMuted }}>
+                            {sub.description}
+                          </p>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="px-2 pb-2 pt-1" style={{ borderTop: `1px solid ${dropdownBdr}` }}>
+                    <Link
+                      href={`/${menu.slug}`}
+                      className={`flex items-center justify-center w-full py-2 rounded-xl text-xs font-semibold transition-colors ${hoverBg}`}
+                      style={{ color: 'var(--green)' }}
+                      onClick={() => setOpenMenuId(null)}
+                    >
+                      View all →
+                    </Link>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
-          <Link href="/articles" className="text-[13px] font-medium transition-colors hover:text-white" style={{ color: 'var(--text-secondary)' }}>Articles</Link>
-          <Link href="/search"   className="text-[13px] font-medium transition-colors hover:text-white" style={{ color: 'var(--text-secondary)' }}>Search</Link>
+            )
+          })}
+
+          <Link
+            href="/search"
+            className={`flex items-center gap-1.5 h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
+            style={{ color: textSecond }}
+          >
+            <Search size={14} className="opacity-70" />
+            Search
+          </Link>
         </nav>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-1.5">
-          <Link href="/search" aria-label="Search" className="p-2 rounded-lg transition-colors hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
-            <Search size={16} />
+        {/* ── Right Actions ── */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Mobile search */}
+          <Link
+            href="/search"
+            aria-label="Search"
+            className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`}
+            style={{ color: textSecond }}
+          >
+            <Search size={20} />
           </Link>
-          <button onClick={toggleTheme} aria-label="Toggle theme" className="p-2 rounded-lg transition-colors hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button onClick={() => setMobileOpen((v) => !v)} aria-label="Toggle menu"
-            className="lg:hidden p-2 rounded-lg transition-colors hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Toggle menu"
+            className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`}
+            style={{ color: textSecond, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
+          >
+            {mobileOpen ? <X size={22} /> : <MenuIcon size={22} />}
           </button>
         </div>
       </div>
+    </header>
 
-      {/* Mobile drawer */}
+      {/* ── Mobile Drawer — OUTSIDE header to escape backdrop-filter stacking context ── */}
       {mobileOpen && (
-        <div className="lg:hidden border-t mt-1" style={{ background: '#0B0B1E', borderColor: 'var(--bg-border)' }}>
-          <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {modules.map((m) => (
-              <Link key={m.id} href={`/modules/${m.slug}`} onClick={closeMobile}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/5">
-                <span className="text-base">{m.icon ?? '📚'}</span>
-                <span className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>{m.name}</span>
+        <div
+          className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto overscroll-contain"
+          style={{ background: 'rgba(8, 14, 30, 0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid ${navBorder}` }}
+        >
+          <nav className="px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-0.5">
+            {navMenus.map((menu) => {
+              const hasSubs = menu.subMenus && menu.subMenus.length > 0
+              const isExpanded = openMobileMenuId === menu.id
+
+              return (
+                <div key={menu.id}>
+                  <div className="flex items-stretch rounded-xl overflow-hidden">
+                    <Link
+                      href={`/${menu.slug}`}
+                      onClick={closeMobile}
+                      className="flex-1 flex items-center px-4 py-3 text-sm font-semibold transition-colors hover:bg-white/8"
+                      style={{ color: 'rgba(255,255,255,0.92)' }}
+                    >
+                      {menu.title}
+                    </Link>
+                    {hasSubs && (
+                      <button
+                        onClick={() => setOpenMobileMenuId(isExpanded ? null : menu.id)}
+                        className="px-4 transition-colors hover:bg-white/8"
+                        style={{ color: 'rgba(255,255,255,0.35)' }}
+                        aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                      >
+                        <ChevronRight
+                          size={16}
+                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                        />
+                      </button>
+                    )}
+                  </div>
+
+                  {hasSubs && isExpanded && (
+                    <div
+                      className="ml-5 mt-1 mb-1 pl-4 space-y-0.5"
+                      style={{ borderLeft: '2px solid rgba(255,255,255,0.09)' }}
+                    >
+                      {menu.subMenus!.map((sub) => (
+                        <Link
+                          key={sub.id}
+                          href={`/${menu.slug}/${sub.slug}`}
+                          onClick={closeMobile}
+                          className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/8"
+                          style={{ color: 'rgba(255,255,255,0.65)' }}
+                        >
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            <div className="mt-4 pt-4 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <Link
+                href="/search"
+                onClick={closeMobile}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors hover:bg-white/8"
+                style={{ color: 'rgba(255,255,255,0.65)' }}
+              >
+                <Search size={16} /> Search
               </Link>
-            ))}
-            <div className="border-t pt-2 mt-2 space-y-0.5" style={{ borderColor: 'var(--bg-border)' }}>
-              <Link href="/articles" onClick={closeMobile} className="block px-3 py-2.5 text-[13px] rounded-xl transition-colors hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>Articles</Link>
-              <Link href="/search"   onClick={closeMobile} className="block px-3 py-2.5 text-[13px] rounded-xl transition-colors hover:bg-white/5" style={{ color: 'var(--text-secondary)' }}>Search</Link>
             </div>
           </nav>
         </div>
       )}
-    </header>
+    </>
   )
 }
+
