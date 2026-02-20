@@ -66,7 +66,7 @@ export default async function AnalyticsPage() {
           {topArticles.map((a, i) => (
             <div key={a.id} className="flex items-center gap-4">
               <span
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
                 style={{ background: 'rgba(108,61,255,0.2)', color: '#A29BFE' }}
               >
                 {i + 1}
@@ -79,7 +79,7 @@ export default async function AnalyticsPage() {
               >
                 {a.title}
               </a>
-              <span className="text-sm font-medium flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-sm font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>
                 {a.viewCount.toLocaleString()} views
               </span>
             </div>

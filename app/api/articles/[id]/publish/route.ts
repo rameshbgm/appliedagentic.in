@@ -11,14 +11,14 @@ const PublishSchema = z.object({
   scheduledAt: z.string().optional(),
 })
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
   try {
     const body = await req.json()
     const { action, scheduledAt } = PublishSchema.parse(body)
-    const id = parseInt(params.id)
+    const id = parseInt((await params).id)
 
     let updateData: Record<string, unknown> = {}
 
@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return apiSuccess(article)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update article status', 500)
   }
 }

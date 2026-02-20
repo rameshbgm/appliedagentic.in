@@ -43,7 +43,7 @@ export default function Navbar({ modules = [] }: Props) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)' }}>
             <Zap size={15} className="text-white" />
@@ -66,7 +66,7 @@ export default function Navbar({ modules = [] }: Props) {
                 {modules.map((m) => (
                   <Link key={m.id} href={`/modules/${m.slug}`}
                     className="flex items-start gap-3 p-2.5 rounded-xl transition-colors hover:bg-white/5 group/item">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0 mt-0.5"
                       style={{ background: (m.color ?? '#7C3AED') + '25' }}>
                       {m.icon ?? '📚'}
                     </div>

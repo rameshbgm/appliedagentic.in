@@ -8,9 +8,10 @@ import TopicForm from '@/components/admin/TopicForm'
 
 export const metadata: Metadata = { title: 'Edit Topic' }
 
-export default async function EditTopicPage({ params }: { params: { id: string } }) {
+export default async function EditTopicPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const [topic, modules] = await Promise.all([
-    prisma.topic.findUnique({ where: { id: Number(params.id) } }),
+    prisma.topic.findUnique({ where: { id: Number(id) } }),
     prisma.module.findMany({ orderBy: { order: 'asc' }, select: { id: true, name: true } }),
   ])
   if (!topic) notFound()

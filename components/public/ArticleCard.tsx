@@ -41,7 +41,7 @@ export default function ArticleCard({
       >
         {/* Cover image */}
         {coverImageUrl && (
-          <div className="aspect-video overflow-hidden flex-shrink-0">
+          <div className="aspect-video overflow-hidden shrink-0">
             <img
               src={coverImageUrl}
               alt={title}
@@ -51,7 +51,7 @@ export default function ArticleCard({
         )}
 
         {/* Accent bar */}
-        <div className="h-[2px] flex-shrink-0" style={{ background: `linear-gradient(90deg, ${c}, transparent)` }} />
+        <div className="h-[2px] shrink-0" style={{ background: `linear-gradient(90deg, ${c}, transparent)` }} />
 
         <div className="p-5 flex flex-col flex-1">
           {/* Module label */}

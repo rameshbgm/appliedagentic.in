@@ -39,7 +39,7 @@ export default async function ModulesPage() {
             className="card p-5 flex items-center gap-5 group"
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0"
               style={{ background: (mod.color ?? '#6C3DFF') + '20' }}
             >
               {mod.icon ?? '📚'}

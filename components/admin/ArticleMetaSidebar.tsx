@@ -61,7 +61,7 @@ export default function ArticleMetaSidebar({ meta, onChange, modules, topics, al
 
   return (
     <aside
-      className="w-full md:w-80 lg:w-72 flex-shrink-0 rounded-2xl overflow-hidden border"
+      className="w-full md:w-80 lg:w-72 shrink-0 rounded-2xl overflow-hidden border"
       style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
     >
       {/* Stats */}

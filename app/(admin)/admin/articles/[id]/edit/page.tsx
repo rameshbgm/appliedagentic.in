@@ -8,10 +8,11 @@ import ArticleEditorPage from '../../ArticleEditorPage'
 
 export const metadata: Metadata = { title: 'Edit Article' }
 
-export default async function EditArticlePage({ params }: { params: { id: string } }) {
+export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const [article, modules, topics, tags] = await Promise.all([
     prisma.article.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       include: {
         topicArticles: { include: { topic: true } },
         articleTags: { include: { tag: true } },

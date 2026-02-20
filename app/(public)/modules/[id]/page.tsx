@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, BookOpen, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 export const revalidate = 60
 
@@ -22,7 +22,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const mod = await prisma.module.findUnique({ where: { slug: params.id } })
+  const { id } = await params
+  const mod = await prisma.module.findUnique({ where: { slug: id } })
   if (!mod) return {}
   return {
     title: mod.name,
@@ -31,8 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ModuleDetailPage({ params }: Props) {
+  const { id } = await params
   const mod = await prisma.module.findUnique({
-    where: { slug: params.id, isPublished: true },
+    where: { slug: id, isPublished: true },
     include: {
       topics: {
         where: { isPublished: true },
@@ -84,7 +86,7 @@ export default async function ModuleDetailPage({ params }: Props) {
           <FadeIn>
             <div className="flex items-start gap-5">
               <div
-                className="text-4xl w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                className="text-4xl w-16 h-16 rounded-2xl flex items-center justify-center shrink-0"
                 style={{ background: mod.color + '25', border: `2px solid ${mod.color}40` }}
               >
                 {mod.icon}

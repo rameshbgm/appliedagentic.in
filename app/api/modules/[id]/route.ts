@@ -17,10 +17,10 @@ const UpdateSchema = z.object({
   isPublished: z.boolean().optional(),
 })
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const module = await prisma.module.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       include: {
         topics: {
           orderBy: { order: 'asc' },
@@ -36,7 +36,7 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
@@ -45,21 +45,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (data.name && !data.slug) data.slug = slugify(data.name)
 
     const module = await prisma.module.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       data,
     })
     return apiSuccess(module)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update module', 500)
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
-    await prisma.module.delete({ where: { id: parseInt(params.id) } })
+    await prisma.module.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
     return apiError('Failed to delete module', 500)

@@ -15,7 +15,7 @@ import { formatDate } from '@/lib/utils'
 import { Clock, Eye, Calendar, ArrowLeft, ArrowRight, Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 export const revalidate = 300
 
@@ -32,8 +32,9 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
   const article = await prisma.article.findUnique({
-    where: { slug: params.id },
+    where: { slug: id },
     select: {
       title: true, summary: true, seoTitle: true, seoDescription: true,
       coverImage: { select: { url: true, width: true, height: true } },
@@ -50,8 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticleDetailPage({ params }: Props) {
+  const { id } = await params
   const article = await prisma.article.findUnique({
-    where: { slug: params.id, status: 'PUBLISHED' },
+    where: { slug: id, status: 'PUBLISHED' },
     include: {
       coverImage: { select: { url: true } },
       articleTags: { include: { tag: { select: { id: true, name: true } } } },
@@ -255,7 +257,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                         className="group flex items-start gap-3 p-4 rounded-2xl transition-all hover:-translate-y-0.5"
                         style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
                       >
-                        <ArrowLeft size={16} className="mt-0.5 flex-shrink-0 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }} />
+                        <ArrowLeft size={16} className="mt-0.5 shrink-0 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }} />
                         <div className="min-w-0">
                           <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Previous</p>
                           <p className="text-sm font-semibold line-clamp-2 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-primary)' }}>
@@ -276,7 +278,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                             {nextArticle.title}
                           </p>
                         </div>
-                        <ArrowRight size={16} className="mt-0.5 flex-shrink-0 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }} />
+                        <ArrowRight size={16} className="mt-0.5 shrink-0 group-hover:text-violet-400 transition-colors" style={{ color: 'var(--text-muted)' }} />
                       </Link>
                     ) : <div />}
                   </nav>
@@ -304,7 +306,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
             {/* Sidebar TOC - desktop only */}
             {article.content && (
-              <aside className="hidden lg:block w-64 xl:w-72 flex-shrink-0">
+              <aside className="hidden lg:block w-64 xl:w-72 shrink-0">
                 <div className="sticky top-24">
                   <TableOfContents content={article.content} />
                 </div>

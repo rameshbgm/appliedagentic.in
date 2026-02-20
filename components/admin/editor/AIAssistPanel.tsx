@@ -142,7 +142,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
       {/* Panel */}
       {open && (
         <div
-          className="w-80 flex-shrink-0 border-l flex flex-col overflow-y-auto"
+          className="w-80 shrink-0 border-l flex flex-col overflow-y-auto"
           style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
         >
           {/* Panel header */}

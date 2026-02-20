@@ -6,12 +6,12 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { ArticleStatus } from '@prisma/client'
 import { nanoid } from 'nanoid'
 
-export async function POST(_: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const id = parseInt(params.id)
+    const id = parseInt((await params).id)
     const source = await prisma.article.findUnique({
       where: { id },
       include: {

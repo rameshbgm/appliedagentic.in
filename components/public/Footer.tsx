@@ -91,7 +91,7 @@ export default function Footer({ modules = [] }: Props) {
                 style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
               />
               <button
-                className="px-3 py-2 rounded-xl text-sm font-semibold text-white flex-shrink-0"
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-white shrink-0"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#06B6D4)' }}
               >
                 →

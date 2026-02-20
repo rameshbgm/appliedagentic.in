@@ -65,7 +65,7 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
         {/* Play/Pause */}
         <button
           onClick={toggle}
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white"
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white"
           style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}
         >
           {playing ? <Pause size={16} /> : <Play size={16} />}

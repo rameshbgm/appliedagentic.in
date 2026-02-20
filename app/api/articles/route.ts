@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess(article, 201)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     console.error('[POST /api/articles]', err)
     return apiError('Failed to create article', 500)
   }

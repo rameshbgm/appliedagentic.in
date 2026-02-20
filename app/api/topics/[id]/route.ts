@@ -18,10 +18,10 @@ const UpdateSchema = z.object({
   isPublished: z.boolean().optional(),
 })
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const topic = await prisma.topic.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       include: {
         module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
         topicArticles: {
@@ -45,7 +45,7 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
@@ -54,22 +54,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (data.name && !data.slug) data.slug = slugify(data.name)
 
     const topic = await prisma.topic.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       data,
       include: { module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } } },
     })
     return apiSuccess(topic)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update topic', 500)
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
-    await prisma.topic.delete({ where: { id: parseInt(params.id) } })
+    await prisma.topic.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
     return apiError('Failed to delete topic', 500)

@@ -44,9 +44,9 @@ const articleInclude = {
   coverImage: { select: { id: true, url: true, altText: true, width: true, height: true } },
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id)
+    const id = parseInt((await params).id)
     const session = await auth()
 
     const article = await prisma.article.findFirst({
@@ -73,12 +73,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const id = parseInt(params.id)
+    const id = parseInt((await params).id)
     const body = await req.json()
     const data = UpdateSchema.parse(body)
 
@@ -141,17 +141,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     return apiSuccess(article)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     console.error('[PUT /api/articles/[id]]', err)
     return apiError('Failed to update article', 500)
   }
 }
 
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
-    await prisma.article.delete({ where: { id: parseInt(params.id) } })
+    await prisma.article.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
     return apiError('Failed to delete article', 500)

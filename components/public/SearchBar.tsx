@@ -98,8 +98,8 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
           }}
         >
           {loading
-            ? <Loader2 size={16} className="animate-spin flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            : <Search size={16} className="flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+            ? <Loader2 size={16} className="animate-spin shrink-0" style={{ color: 'var(--text-muted)' }} />
+            : <Search size={16} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
           }
           <input
             ref={inputRef}
@@ -138,7 +138,7 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
               onClick={() => { setOpen(false); setQuery('') }}
               className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
             >
-              <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-sm mt-0.5 shrink-0" style={{ color: 'var(--text-muted)' }}>
                 {getIcon(r.type)}
               </span>
               <div className="flex-1 min-w-0">
@@ -153,7 +153,7 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
               </div>
               {r.module && (
                 <span
-                  className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                  className="text-xs px-2 py-0.5 rounded-full shrink-0"
                   style={{ background: r.module.color + '20', color: r.module.color }}
                 >
                   {r.module.name}

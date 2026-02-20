@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     })
     return apiSuccess(topic, 201)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to create topic', 500)
   }
 }

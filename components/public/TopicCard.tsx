@@ -67,7 +67,7 @@ export default function TopicCard({ topic }: Props) {
 
           <ArrowRight
             size={14}
-            className="flex-shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200"
+            className="shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200"
             style={{ color }}
           />
         </div>

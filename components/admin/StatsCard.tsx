@@ -48,7 +48,7 @@ export default function StatsCard({ label, value, icon: Icon, color, suffix = ''
         )}
       </div>
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform"
+        className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
         style={{ background: `${color}20` }}
       >
         <Icon size={22} style={{ color }} />

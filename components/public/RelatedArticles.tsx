@@ -39,7 +39,7 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
             <Link
               key={a.id}
               href={`/articles/${a.slug}`}
-              className="group flex-shrink-0 w-72 sm:w-auto rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg snap-start"
+              className="group shrink-0 w-72 sm:w-auto rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg snap-start"
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--bg-border)',

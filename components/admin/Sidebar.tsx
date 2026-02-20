@@ -52,7 +52,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'var(--bg-border)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}>
           <Zap size={18} className="text-white" />
         </div>
@@ -86,7 +86,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
               }`}
               title={collapsed ? label : undefined}
             >
-              <Icon size={18} className="flex-shrink-0" />
+              <Icon size={18} className="shrink-0" />
               {!collapsed && <span>{label}</span>}
             </Link>
           )
@@ -97,7 +97,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       <div className="p-3 border-t" style={{ borderColor: 'var(--bg-border)' }}>
         {!collapsed && session?.user && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
               style={{ background: 'linear-gradient(135deg, #6C3DFF, #00D4FF)' }}>
               {session.user.name?.[0]?.toUpperCase() ?? 'A'}
             </div>
@@ -117,7 +117,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
           title={collapsed ? 'Logout' : undefined}
           style={{ color: 'var(--text-muted)' }}
         >
-          <LogOut size={18} className="flex-shrink-0" />
+          <LogOut size={18} className="shrink-0" />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>

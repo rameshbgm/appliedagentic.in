@@ -134,7 +134,7 @@ export default function Loader3D() {
   return (
     <div
       id="loader-overlay"
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center transition-opacity duration-500 ${
+      className={`fixed inset-0 z-99999 flex flex-col items-center justify-center transition-opacity duration-500 ${
         fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       style={{ background: 'var(--bg-base)' }}

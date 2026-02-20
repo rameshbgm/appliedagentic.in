@@ -45,7 +45,7 @@ export async function PUT(req: NextRequest) {
 
     return apiSuccess(updatedUser)
   } catch (err) {
-    if (err instanceof z.ZodError) return apiError(err.errors[0].message, 422)
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update profile', 500)
   }
 }
