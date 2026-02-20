@@ -1,8 +1,130 @@
 // prisma/seed.ts
 import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import fs from 'fs'
+import path from 'path'
+import sanitizeHtml from 'sanitize-html'
 
 const prisma = new PrismaClient()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers: parse .mhtml files and extract plain text
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Decode MIME quoted-printable encoding. */
+function decodeQuotedPrintable(input: string): string {
+  return input
+    .replace(/=\r?\n/g, '')            // soft line breaks
+    .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+}
+
+/** Strip HTML tags using sanitize-html, returning clean readable text. */
+function stripHtml(html: string): string {
+  // Allow no tags — converts all content to plain text
+  const text = sanitizeHtml(html, {
+    allowedTags: [],
+    allowedAttributes: {},
+    // Preserve whitespace around block-level elements
+    textFilter: (text) => text,
+  })
+  return text
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
+const NAV_RE = /^(Skip to content|Home|Menu|Previous|Next|Resources|Help|Navigation|Close)$/
+
+/** Remove navigation chrome lines from extracted text. */
+function removeNavLines(text: string): string {
+  return text.split('\n').filter(l => !NAV_RE.test(l.trim())).join('\n')
+}
+
+/** Wrap each paragraph of plain text in <p> tags for storage as HTML. */
+function textToHtml(text: string): string {
+  return text
+    .split('\n')
+    .filter(l => l.trim())
+    .map(l => `<p>${l.trim().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`)
+    .join('\n')
+}
+
+/**
+ * Extract clean plain text from an .mhtml (MIME HTML) file.
+ * Handles multipart/related MIME with quoted-printable encoding.
+ */
+function extractMhtmlContent(filePath: string): string {
+  const raw = fs.readFileSync(filePath, 'utf-8')
+
+  // Find the first text/html part
+  const htmlPartMatch = raw.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]+?)(?:\r?\n------MultipartBoundary|$)/i)
+  if (!htmlPartMatch) return ''
+
+  let htmlContent = htmlPartMatch[1]
+
+  // Decode quoted-printable if needed
+  const headerBlock = raw.slice(0, htmlPartMatch.index! + 200)
+  if (/Content-Transfer-Encoding:\s*quoted-printable/i.test(headerBlock.slice(-500))) {
+    htmlContent = decodeQuotedPrintable(htmlContent)
+  }
+
+  const text = removeNavLines(stripHtml(htmlContent))
+
+  // Drop the repeated module-level header line if present
+  const lines = text.split('\n')
+  if (lines[0]?.includes('Module 1') && lines[0]?.includes('Foundations')) {
+    lines.shift()
+  }
+  return lines.join('\n')
+}
+
+// Map each Module 1 topic title to its .mhtml source file
+const MODULE1_DIR = path.join(__dirname, '..', 'docs', 'learningmoduls',
+  'Module 1 Foundations of Generative and Agentic AI')
+
+const module1ContentMap: Record<string, string> = {
+  'Generative AI Fundamentals':
+    '1. Generative AI Fundamentals.mhtml',
+  'AI Chatbots: Past, Present, and Future':
+    '2. AI Chatbots- Past, Present, and Future.mhtml',
+  'Cost-Optimized Models and Performance Trade-Offs':
+    '3. Cost-Optimized Models and Performance Trade-Offs.mhtml',
+  'Exploring Multimedia and Language Interaction Models':
+    '4. Exploring Multimedia and Language Interaction Models.mhtml',
+  'Advanced Applications of Generative AI Tools':
+    '5. Advanced Applications of Generative AI Tools.mhtml',
+}
+
+function getModule1ArticleContent(topicTitle: string): { content: string; summary: string; readingTimeMinutes: number } {
+  const fileName = module1ContentMap[topicTitle]
+  if (!fileName) {
+    return {
+      content: `<h1>${topicTitle}</h1><p>This article is currently being written. Check back soon for the complete content.</p>`,
+      summary: `Comprehensive guide to ${topicTitle}.`,
+      readingTimeMinutes: 5,
+    }
+  }
+
+  const filePath = path.join(MODULE1_DIR, fileName)
+  if (!fs.existsSync(filePath)) {
+    console.warn(`  ⚠️  Source file not found: ${filePath}`)
+    return {
+      content: `<h1>${topicTitle}</h1><p>Content source file not found.</p>`,
+      summary: `Comprehensive guide to ${topicTitle}.`,
+      readingTimeMinutes: 5,
+    }
+  }
+
+  const plainText = extractMhtmlContent(filePath)
+  const content   = textToHtml(plainText)
+  const wordCount = plainText.split(/\s+/).length
+  const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200))
+  const summaryText = plainText.slice(0, 300).replace(/\n/g, ' ').trim()
+  const summary = summaryText.length < plainText.length ? summaryText + '…' : summaryText
+
+  return { content, summary, readingTimeMinutes }
+}
 
 function slugify(str: string): string {
   return str
@@ -196,19 +318,29 @@ async function main() {
       })
       console.log(`  📚 Topic created: ${topic.name}`)
 
-      // Create a draft article for each topic
+      // Create an article for each topic; Module 1 topics use real extracted content
       const articleSlug = slugify(topicTitle)
       const existingArticle = await prisma.article.findUnique({ where: { slug: articleSlug } })
 
       if (!existingArticle) {
+        // Use real content extracted from .mhtml for Module 1; placeholder for others
+        const articleData = moduleData.orderIndex === 1
+          ? getModule1ArticleContent(topicTitle)
+          : {
+              content: `<h1>${topicTitle}</h1><p>This article is currently being written. Check back soon for the complete content.</p>`,
+              summary: `Comprehensive guide to ${topicTitle} — covering key concepts, practical applications, and strategic implications for organizations adopting agentic AI.`,
+              readingTimeMinutes: 5,
+            }
+
         const article = await prisma.article.create({
           data: {
             title: topicTitle,
             slug: articleSlug,
-            summary: `Comprehensive guide to ${topicTitle} — covering key concepts, practical applications, and strategic implications for organizations adopting agentic AI.`,
-            content: `<h1>${topicTitle}</h1><p>This article is currently being written. Check back soon for the complete content.</p>`,
-            status: 'DRAFT',
-            readingTimeMinutes: 5,
+            summary: articleData.summary,
+            content: articleData.content,
+            status: moduleData.orderIndex === 1 ? 'PUBLISHED' : 'DRAFT',
+            publishedAt: moduleData.orderIndex === 1 ? new Date() : null,
+            readingTimeMinutes: articleData.readingTimeMinutes,
             authorId: adminUser.id,
             seoTitle: `${topicTitle} | Applied Agentic AI`,
             seoDescription: `Learn about ${topicTitle} in the context of organizational AI transformation.`,
