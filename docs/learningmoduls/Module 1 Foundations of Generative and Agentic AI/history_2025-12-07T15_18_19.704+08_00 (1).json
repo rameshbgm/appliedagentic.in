@@ -1,0 +1,97 @@
+[
+  {
+    "createdAt": 1765091638759,
+    "modelName": "gpt-4",
+    "modelParams": {
+      "bestOf": 1,
+      "frequencyPenalty": 0,
+      "presencePenalty": 0,
+      "maxTokens": 8192,
+      "temperature": 1,
+      "topP": 1,
+      "seed": null,
+      "store": true,
+      "responseFormat": {
+        "type": "text"
+      }
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "I am travelling from Singapore and I am using Singtel postpaid. How do I activate international roaming on my mobile plan? Will I be charged upfront, or only when I start using data? What are the available roaming packages for Europe?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "To activate international roaming on your Singtel postpaid plan, you could follow these steps:\n\n1. Log into My Singtel app.\n2. Tap on 'Roaming'.\n3. Select 'Roaming Subscription'.\n4. Choose your preferred plan.\n\nIf you prefer to call, you can dial *100# on your Singtel mobile line and follow the prompts.\n\nSingtel Activates the roaming service for postpaid customers by default. However, do note that Singtel charges for the actual data usage, or when you start using the data.\n\nFor roaming in Europe, Singtel offers \"ReadyRoam\" plans:\n\n1. ReadyRoam 1GB 30 Days - Up to 56 Destinations - For $20. \n   \n2. ReadyRoam 1GB 30 Days - Up to 81 Destinations - For $25.\n\nPlease make sure to check the countries covered in every plan as per your requirement. \n\nDo note that Singtel also offers data-free messaging on popular apps like WhatsApp, Line, WeChat, and more, with selected ReadyRoam plans. \n\nLastly, charges may apply for receiving SMS notifications related to data roam usage or Network Lock, if you're roaming in non-ReadyRoam destinations.\n\nRemember, you should activate your roaming service and subscribe to a data roam plan before departing Singapore.\n\nHowever, the above information can change. So it's best to contact Singtel directly for the most accurate information.",
+            "item_id": "msg_09483218a6eda072006935292bbfa481a181eccad1481c60a3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "createdAt": 1765091638759,
+    "modelName": "gpt-4o-mini",
+    "modelParams": {
+      "bestOf": 1,
+      "frequencyPenalty": 0,
+      "presencePenalty": 0,
+      "maxTokens": 8192,
+      "temperature": 1,
+      "topP": 1,
+      "seed": null,
+      "store": true,
+      "responseFormat": {
+        "type": "text"
+      },
+      "webSearchUseNewTool": true
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "I am travelling from Singapore and I am using Singtel postpaid. How do I activate international roaming on my mobile plan? Will I be charged upfront, or only when I start using data? What are the available roaming packages for Europe?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "To activate international roaming on your Singtel postpaid plan, follow these steps:\n\n1. **Log in to mySingtel app**: Navigate to the \"Roaming\" section and look for the option to activate international roaming.\n2. **Call Customer Service**: You can also call Singtel customer service at 1688 to request activation.\n3. **Visit a Singtel Store**: Alternatively, visit any Singtel retail outlet for assistance.\n\n### Charges:\n- **Upfront Charges**: Generally, there are no upfront charges for activating roaming. You will typically be billed only when you start using data, making calls, or sending messages while roaming.\n\n### Roaming Packages for Europe:\nSingtel offers various roaming packages tailored for different needs. These may include:\n\n1. **Roaming Data Bundles**: Packages that provide a specific amount of data for a fixed fee.\n2. **Roaming Voice Plans**: Options that allow you to make outgoing calls at discounted rates.\n3. **Daily Roaming Rates**: Flat-rate charges per day for unlimited data or calls.\n\nTo see the latest and most accurate roaming plans for Europe, check the Singtel website or the mySingtel app, as these packages can change frequently based on promotions or regional availability.\n\n### Important Tips:\n- Ensure that your plan is eligible for international roaming.\n- Review your usage and charges to avoid unexpected bills after your trip.\n- Consider downloading the Singtel app to track your usage in real-time.\n\nIf there are specific countries in Europe you're visiting, you can also inquire if there are region-specific packages. Safe travels!",
+            "item_id": "msg_02d62400b6de8bcb006935292bb60081a18c1a28bf20f42598"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -183,7 +183,7 @@ export default function SettingsPage() {
             ].map(({ key, label: lbl, placeholder }) => (
               <div key={key}>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
-                <input value={(settings as any)[key]} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
+                <input value={(settings as any)[key] ?? ''} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
               </div>
             ))}
             <div className="grid grid-cols-2 gap-4">
@@ -211,7 +211,7 @@ export default function SettingsPage() {
             ].map(({ key, label: lbl, placeholder }) => (
               <div key={key}>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
-                <input value={(settings as any)[key]} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
+                <input value={(settings as any)[key] ?? ''} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
               </div>
             ))}
             <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg,#6C3DFF,#00D4FF)' }}>

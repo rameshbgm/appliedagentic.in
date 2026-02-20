@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belgaum.ai | Enterprise AI Orchestration</title>
+  <meta name="description" content="Belgaum.ai - Enterprise AI Orchestration, Gen AI, RAG, and Agentic AI Solutions.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Icons (Lucide) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* =========================================
+       CSS VARIABLES & RESET (style.css)
+       ========================================= */
+    :root {
+        /* Palette */
+        --bg-dark: #0A1628;
+        --bg-darker: #050C18;
+        --primary: #1E3A8A;
+        --accent-cyan: #00D9FF;
+        --accent-purple: #8B5CF6;
+        --accent-green: #10B981;
+        --text-white: #FFFFFF;
+        --text-dim: #94A3B8;
+
+        /* Gradients */
+        --gradient-main: linear-gradient(135deg, var(--accent-cyan) 0%, var(--primary) 100%);
+        --gradient-text: linear-gradient(90deg, #FFFFFF 0%, var(--accent-cyan) 50%, var(--accent-purple) 100%);
+        --gradient-glow: radial-gradient(circle at center, rgba(0, 217, 255, 0.15) 0%, transparent 70%);
+
+        /* Glassmorphism */
+        --glass-bg: rgba(255, 255, 255, 0.03);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-blur: blur(12px);
+
+        /* Spacing */
+        --container-width: 1280px;
+        --header-height: 80px;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-white);
+        overflow-x: hidden;
+        line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+    }
+
+    ul {
+        list-style: none;
+    }
+
+    section {
+        padding: 5rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* =========================================
+       UTILITIES
+       ========================================= */
+    .container {
+        max-width: var(--container-width);
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .gradient-text {
+        background: var(--gradient-text);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        display: inline-block;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.8rem 1.8rem;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        font-size: 1rem;
+        gap: 0.5rem;
+        transition: transform 0.2s;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: var(--gradient-main);
+        color: white;
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--accent-cyan);
+        color: var(--accent-cyan);
+    }
+
+    .btn-outline:hover {
+        background: rgba(0, 217, 255, 0.1);
+        box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .section-header p {
+        color: var(--text-dim);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* =========================================
+       HEADER & NAV
+       ========================================= */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        height: var(--header-height);
+        transition: background 0.3s ease, padding 0.3s ease;
+    }
+
+    header.scrolled {
+        background: rgba(10, 22, 40, 0.8);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 100%;
+        max-width: var(--container-width);
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-white);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Updated selector to target only the suffix span */
+    .logo .logo-suffix {
+        color: var(--accent-cyan);
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .nav-links a {
+        font-size: 0.95rem;
+        color: var(--text-dim);
+        font-weight: 500;
+    }
+
+    .nav-links a:hover {
+        color: var(--accent-cyan);
+    }
+
+    .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+
+    /* =========================================
+       HERO SECTION
+       ========================================= */
+    .hero {
+        height: 100vh;
+        min-height: 700px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        padding-top: var(--header-height);
+    }
+
+    #hero-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 3;
+        text-align: center;
+        max-width: 900px;
+        padding: 0 1.5rem;
+        opacity: 0; /* JS fade in */
+        transform: translateY(30px);
+        animation: fadeUp 1s ease forwards 0.5s;
+    }
+
+    .hero-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        color: var(--accent-purple);
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .hero h1 {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        color: var(--text-dim);
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-btns {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Hero Floating Elements (Background) */
+    .floating-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 1;
+        opacity: 0.4;
+    }
+
+    .orb-1 {
+        width: 400px;
+        height: 400px;
+        background: var(--primary);
+        top: -100px;
+        left: -100px;
+        animation: float 10s infinite ease-in-out;
+    }
+
+    .orb-2 {
+        width: 300px;
+        height: 300px;
+        background: var(--accent-purple);
+        bottom: 10%;
+        right: -50px;
+        animation: float 12s infinite ease-in-out reverse;
+    }
+
+    /* =========================================
+       SERVICES SECTION
+       ========================================= */
+    .services {
+        background: var(--bg-darker);
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .service-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: var(--glass-blur);
+    }
+
+    .service-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .service-card:hover::before {
+        opacity: 1;
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: rgba(30, 58, 138, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        color: var(--accent-cyan);
+    }
+
+    .service-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-white);
+    }
+
+    .service-card p {
+        color: var(--text-dim);
+        font-size: 0.95rem;
+    }
+
+    /* =========================================
+       FEATURES SECTION
+       ========================================= */
+    .features {
+        background: var(--bg-dark);
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        transition: 0.3s;
+    }
+
+    .feature-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: var(--accent-purple);
+    }
+
+    .feature-icon {
+        color: var(--accent-green);
+    }
+
+    .feature-text h4 {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .feature-text p {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+    }
+
+    /* =========================================
+       ABOUT SECTION
+       ========================================= */
+    .about {
+        background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+        text-align: center;
+    }
+
+    .about-content {
+        max-width: 800px;
+        margin: 0 auto;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 3rem;
+        border-radius: 24px;
+        position: relative;
+    }
+
+    .about-content::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        z-index: -1;
+        border-radius: 24px;
+        background: linear-gradient(45deg, var(--accent-cyan), transparent, var(--accent-purple));
+        opacity: 0.3;
+    }
+
+    .about p {
+        font-size: 1.1rem;
+        color: var(--text-dim);
+        margin-bottom: 1.5rem;
+    }
+
+    /* =========================================
+       FOOTER
+       ========================================= */
+    footer {
+        background: var(--bg-darker);
+        padding: 4rem 1.5rem 2rem;
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.2fr; /* Adjusted for longer phone numbers */
+        gap: 3rem;
+        max-width: var(--container-width);
+        margin: 0 auto;
+        margin-bottom: 4rem;
+    }
+
+    .footer-brand h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-white);
+    }
+
+    .footer-brand p {
+        color: var(--text-dim);
+        max-width: 300px;
+        margin-bottom: 1.5rem;
+    }
+
+    .footer-col h4 {
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .footer-col ul li {
+        margin-bottom: 0.8rem;
+    }
+
+    .footer-col a {
+        color: var(--text-dim);
+        font-size: 0.9rem;
+    }
+
+    .footer-col a:hover {
+        color: var(--accent-cyan);
+    }
+
+    /* Contact list specific styling */
+    .contact-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        color: var(--text-dim);
+        font-size: 0.9rem;
+    }
+
+    .contact-list li i {
+        margin-top: 3px;
+        color: var(--accent-cyan);
+        width: 16px;
+        height: 16px;
+    }
+
+    .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-dim);
+        font-size: 0.85rem;
+    }
+
+    /* =========================================
+       ANIMATIONS
+       ========================================= */
+    @keyframes fadeUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(20px, -20px); }
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease;
+    }
+
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* =========================================
+       RESPONSIVE
+       ========================================= */
+    @media (max-width: 768px) {
+        .nav-links {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 100%;
+            background: var(--bg-darker);
+            flex-direction: column;
+            padding: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            transform: translateY(-150%);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links.active {
+            transform: translateY(0);
+        }
+
+        .mobile-menu-btn {
+            display: block;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .footer-grid {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+
+        .footer-brand p {
+            margin: 0 auto 1.5rem;
+        }
+
+        .contact-list li {
+            justify-content: center;
+        }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header id="navbar">
+  <div class="nav-container">
+    <!-- Corrected Logo Structure: wrapper prevents flex gap between text parts -->
+    <a href="#" class="logo">
+      <i data-lucide="cpu"></i>
+      <span>Belgaum<span class="logo-suffix">.ai</span></span>
+    </a>
+    <nav>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#features">Capabilities</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#" class="btn btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.9rem;">Get Started</a></li>
+      </ul>
+    </nav>
+    <button class="mobile-menu-btn" id="menu-btn">
+      <i data-lucide="menu"></i>
+    </button>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="floating-orb orb-1"></div>
+  <div class="floating-orb orb-2"></div>
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="container hero-content">
+    <div class="hero-badge">Next-Gen Enterprise Intelligence</div>
+    <h1>
+      Enterprise AI Orchestration & <br>
+      <span class="gradient-text" id="typing-text">Development Solutions</span>
+    </h1>
+    <p>
+      We train and build on Gen AI, RAG, and Agentic AI for real-world business transformation. Empowering your data with autonomous systems.
+    </p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn btn-primary">
+        Talk to an Expert <i data-lucide="arrow-right" size="18"></i>
+      </a>
+      <a href="#services" class="btn btn-outline">
+        Explore Solutions
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="services">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Our <span class="gradient-text">Services</span></h2>
+      <p>Comprehensive AI strategies tailored for the modern enterprise ecosystem.</p>
+    </div>
+
+    <div class="services-grid">
+      <!-- Card 1 -->
+      <div class="service-card reveal">
+        <div class="card-icon"><i data-lucide="bot"></i></div>
+        <h3>AI Development</h3>
+        <p>Custom LLM fine-tuning, autonomous agents, and generative AI models designed for specific enterprise use cases.</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="service-card reveal">
+        <div class="card-icon"><i data-lucide="code-2"></i></div>
+        <h3>Web Development</h3>
+        <p>High-performance, scalable web applications built with modern frameworks to host your AI interfaces.</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="service-card reveal">
+        <div class="card-icon"><i data-lucide="cloud"></i></div>
+        <h3>Cloud Development</h3>
+        <p>Secure cloud infrastructure setup on AWS/Azure/GCP to ensure your AI models run efficiently at scale.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="service-card reveal">
+        <div class="card-icon"><i data-lucide="brain-circuit"></i></div>
+        <h3>Problem Solving</h3>
+        <p>Strategic consulting to identify bottlenecks and implement AI-driven automation for operational excellence.</p>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="service-card reveal">
+        <div class="card-icon"><i data-lucide="graduation-cap"></i></div>
+        <h3>Corporate Training</h3>
+        <p>Upskilling teams on the latest AI tools, prompt engineering, and ethical AI deployment practices.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Enterprise <span class="gradient-text">Capabilities</span></h2>
+      <p>Unlock the power of your data with our advanced technical stack.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="sparkles"></i></div>
+        <div class="feature-text">
+          <h4>Agentic AI</h4>
+          <p>Autonomous agents that plan and execute complex tasks.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="database"></i></div>
+        <div class="feature-text">
+          <h4>RAG Systems</h4>
+          <p>Retrieval-Augmented Generation for accurate data recall.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="network"></i></div>
+        <div class="feature-text">
+          <h4>Knowledge Graphs</h4>
+          <p>Structuring unstructured data for better AI context.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="workflow"></i></div>
+        <div class="feature-text">
+          <h4>Workflow Automation</h4>
+          <p>End-to-end process automation with human-in-the-loop.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="plug"></i></div>
+        <div class="feature-text">
+          <h4>API Connectivity</h4>
+          <p>Seamless integration with ERPs, CRMs, and legacy systems.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i data-lucide="users"></i></div>
+        <div class="feature-text">
+          <h4>Multi-agent Collab</h4>
+          <p>Swarms of agents working together to solve problems.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="about">
+  <div class="container">
+    <div class="about-content reveal">
+      <h2>Modern Tech Solutions for <span class="gradient-text">Enterprise Challenges</span></h2>
+      <br>
+      <p>
+        At Belgaum.ai, we bridge the gap between theoretical AI potential and practical business results. Our mission is to democratize access to advanced AI orchestration, enabling businesses in Belgaum and beyond to compete on a global scale.
+      </p>
+      <p>
+        We don't just build software; we architect intelligent ecosystems. By leveraging the latest in Vector Databases, LLMs, and Cloud Native technologies, we create solutions that are resilient, scalable, and tailored to your unique data landscape.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer id="contact">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <h3>Belgaum.ai</h3>
+      <p>Pioneering the future of enterprise intelligence through autonomous systems and expert education.</p>
+      <div style="display: flex; gap: 1rem;">
+        <!-- Social Placeholders -->
+        <a href="#"><i data-lucide="linkedin"></i></a>
+        <a href="#"><i data-lucide="twitter"></i></a>
+        <a href="#"><i data-lucide="github"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Solutions</h4>
+      <ul>
+        <li><a href="#">AI Consulting</a></li>
+        <li><a href="#">Custom Development</a></li>
+        <li><a href="#">Data Strategy</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <ul class="contact-list">
+        <li><i data-lucide="mail"></i> <a href="mailto:ask@belgaum.ai">ask@belgaum.ai</a></li>
+        <li><i data-lucide="phone"></i> <a href="tel:+919845507313">+91 9845507313</a></li>
+        <li><i data-lucide="phone"></i> <a href="tel:+6586024972">+65 86024972</a></li>
+        <li><i data-lucide="map-pin"></i> <span>Belgaum, India</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 Belgaum.ai. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- JavaScript (script.js) -->
+<script>
+  // Initialize Lucide Icons
+  lucide.createIcons();
+
+  // 1. Navbar Scroll Effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+          navbar.classList.add('scrolled');
+      } else {
+          navbar.classList.remove('scrolled');
+      }
+  });
+
+  // 2. Mobile Menu Toggle
+  const menuBtn = document.getElementById('menu-btn');
+  const navLinks = document.getElementById('nav-links');
+
+  menuBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      // Toggle icon between menu and x
+      const icon = navLinks.classList.contains('active') ? 'x' : 'menu';
+      // Note: simple text swap for reliability, or re-render lucide
+  });
+
+  // 3. Scroll Reveal Animation (Intersection Observer)
+  const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+          if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+          }
+      });
+  }, observerOptions);
+
+  document.querySelectorAll('.reveal').forEach(el => {
+      observer.observe(el);
+  });
+
+  // 4. Hero Typing Effect
+  const textToType = "Development Solutions";
+  const typingElement = document.getElementById('typing-text');
+  let charIndex = 0;
+
+  function typeText() {
+      if (charIndex < textToType.length) {
+          // Determine if we need to set text content cleanly first
+          if(charIndex === 0) typingElement.textContent = "";
+          typingElement.textContent += textToType.charAt(charIndex);
+          charIndex++;
+          setTimeout(typeText, 100);
+      }
+  }
+
+  // Start typing after a small delay
+  setTimeout(typeText, 1000);
+
+  // 5. Canvas Particle Network Animation
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let particles = [];
+
+  function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  class Particle {
+      constructor() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2 + 1;
+      }
+
+      update() {
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Bounce off edges
+          if (this.x < 0 || this.x > width) this.vx *= -1;
+          if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+
+      draw() {
+          ctx.fillStyle = 'rgba(0, 217, 255, 0.5)'; // Cyan
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+      }
+  }
+
+  function initParticles() {
+      particles = [];
+      const numberOfParticles = Math.min(window.innerWidth / 15, 80); // Responsive count
+      for (let i = 0; i < numberOfParticles; i++) {
+          particles.push(new Particle());
+      }
+  }
+
+  function animateParticles() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+
+          // Draw connections
+          for (let j = i; j < particles.length; j++) {
+              const dx = particles[i].x - particles[j].x;
+              const dy = particles[i].y - particles[j].y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < 150) {
+                  ctx.strokeStyle = `rgba(30, 58, 138, ${1 - distance / 150})`; // Blue fade
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(particles[i].x, particles[i].y);
+                  ctx.lineTo(particles[j].x, particles[j].y);
+                  ctx.stroke();
+              }
+          }
+      }
+      requestAnimationFrame(animateParticles);
+  }
+
+  initParticles();
+  animateParticles();
+
+</script>
+</body>
+</html>

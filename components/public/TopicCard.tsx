@@ -1,3 +1,4 @@
+'use client'
 // components/public/TopicCard.tsx
 import Link from 'next/link'
 import { BookOpen, FileText, ArrowRight } from 'lucide-react'

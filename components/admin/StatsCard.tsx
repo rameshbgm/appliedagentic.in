@@ -1,12 +1,23 @@
 'use client'
 // components/admin/StatsCard.tsx
-import { useEffect, useRef, useState } from 'react'
-import { LucideIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { FileText, Layers, BookOpen, Eye, TrendingUp, Users, Cpu, Image, LucideIcon } from 'lucide-react'
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  FileText,
+  Layers,
+  BookOpen,
+  Eye,
+  TrendingUp,
+  Users,
+  Cpu,
+  Image,
+}
 
 interface StatsCardProps {
   label: string
   value: number
-  icon: LucideIcon
+  iconName: string
   color: string
   suffix?: string
   change?: number
@@ -27,8 +38,9 @@ function useCountUp(target: number, duration = 1200) {
   return count
 }
 
-export default function StatsCard({ label, value, icon: Icon, color, suffix = '', change }: StatsCardProps) {
+export default function StatsCard({ label, value, iconName, color, suffix = '', change }: StatsCardProps) {
   const count = useCountUp(value)
+  const Icon = ICON_MAP[iconName] ?? FileText
 
   return (
     <div

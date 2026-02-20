@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { FileText, Layers, BookOpen, Eye, TrendingUp, Users } from 'lucide-react'
 import StatsCard from '@/components/admin/StatsCard'
 import DashboardCharts from './DashboardCharts'
 
@@ -26,12 +25,12 @@ export default async function DashboardPage() {
   const stats = await getStats()
 
   const cards = [
-    { label: 'Total Articles', value: stats?.totalArticles ?? 0, icon: FileText, color: '#6C3DFF' },
-    { label: 'Published', value: stats?.publishedArticles ?? 0, icon: TrendingUp, color: '#2ED573' },
-    { label: 'Modules', value: stats?.totalModules ?? 0, icon: Layers, color: '#00D4FF' },
-    { label: 'Topics', value: stats?.totalTopics ?? 0, icon: BookOpen, color: '#FFA502' },
-    { label: 'Total Views', value: stats?.totalViews ?? 0, icon: Eye, color: '#FF6B6B', suffix: '' },
-    { label: 'Media Assets', value: stats?.totalMedia ?? 0, icon: Users, color: '#FF69B4' },
+    { label: 'Total Articles', value: stats?.totalArticles ?? 0, iconName: 'FileText', color: '#6C3DFF' },
+    { label: 'Published', value: stats?.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
+    { label: 'Modules', value: stats?.totalModules ?? 0, iconName: 'Layers', color: '#00D4FF' },
+    { label: 'Topics', value: stats?.totalTopics ?? 0, iconName: 'BookOpen', color: '#FFA502' },
+    { label: 'Total Views', value: stats?.totalViews ?? 0, iconName: 'Eye', color: '#FF6B6B', suffix: '' },
+    { label: 'Media Assets', value: stats?.totalMedia ?? 0, iconName: 'Users', color: '#FF69B4' },
   ]
 
   return (

@@ -1,3 +1,4 @@
+'use client'
 // components/public/ModuleCard.tsx
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'

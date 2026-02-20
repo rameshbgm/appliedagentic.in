@@ -2,7 +2,6 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
-import { FileText, Eye, Layers, BookOpen, Image as ImageIcon, Cpu } from 'lucide-react'
 import StatsCard from '@/components/admin/StatsCard'
 import { prisma } from '@/lib/prisma'
 
@@ -36,14 +35,14 @@ export default async function AnalyticsPage() {
   ])
 
   const cards = [
-    { label: 'Total Articles', value: totalArticles, icon: FileText, color: '#6C3DFF' },
-    { label: 'Published', value: publishedArticles, icon: FileText, color: '#2ED573' },
-    { label: 'Modules', value: totalModules, icon: Layers, color: '#00D4FF' },
-    { label: 'Topics', value: totalTopics, icon: BookOpen, color: '#FFA502' },
-    { label: 'Total Views', value: totalViews._sum.viewCount ?? 0, icon: Eye, color: '#FF6B6B' },
-    { label: 'Media Files', value: totalMedia, icon: ImageIcon, color: '#FF69B4' },
-    { label: 'AI Requests', value: aiLogs._count, icon: Cpu, color: '#A29BFE' },
-    { label: 'AI Tokens Used', value: (aiLogs._sum.inputTokens ?? 0) + (aiLogs._sum.outputTokens ?? 0), icon: Cpu, color: '#55EFC4' },
+    { label: 'Total Articles', value: totalArticles, iconName: 'FileText', color: '#6C3DFF' },
+    { label: 'Published', value: publishedArticles, iconName: 'FileText', color: '#2ED573' },
+    { label: 'Modules', value: totalModules, iconName: 'Layers', color: '#00D4FF' },
+    { label: 'Topics', value: totalTopics, iconName: 'BookOpen', color: '#FFA502' },
+    { label: 'Total Views', value: totalViews._sum.viewCount ?? 0, iconName: 'Eye', color: '#FF6B6B' },
+    { label: 'Media Files', value: totalMedia, iconName: 'Image', color: '#FF69B4' },
+    { label: 'AI Requests', value: aiLogs._count, iconName: 'Cpu', color: '#A29BFE' },
+    { label: 'AI Tokens Used', value: (aiLogs._sum.inputTokens ?? 0) + (aiLogs._sum.outputTokens ?? 0), iconName: 'Cpu', color: '#55EFC4' },
   ]
 
   return (

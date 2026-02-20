@@ -17,13 +17,12 @@ export const revalidate = 60
 const PAGE_SIZE = 12
 
 interface Props {
-  searchParams: { page?: string; module?: string; tag?: string }
+  searchParams: Promise<{ page?: string; module?: string; tag?: string }>
 }
 
 export default async function ArticlesPage({ searchParams }: Props) {
-  const page = Math.max(1, parseInt(searchParams.page ?? '1'))
-  const moduleSlug = searchParams.module
-  const tagName = searchParams.tag
+  const { page: pageParam, module: moduleSlug, tag: tagName } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1'))
 
   const [modules, totalCount, articles] = await Promise.all([
     prisma.module.findMany({ where: { isPublished: true }, orderBy: { order: 'asc' }, select: { id: true, name: true, slug: true, color: true } }),

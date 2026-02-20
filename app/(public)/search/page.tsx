@@ -6,17 +6,19 @@ import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
-interface Props { searchParams: { q?: string } }
+interface Props { searchParams: Promise<{ q?: string }> }
 
-export function generateMetadata({ searchParams }: Props): Metadata {
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { q } = await searchParams
   return {
-    title: searchParams.q ? `Search: ${searchParams.q}` : 'Search',
+    title: q ? `Search: ${q}` : 'Search',
     description: 'Search articles, topics, and modules on Applied Agentic AI.',
   }
 }
 
 export default async function SearchPage({ searchParams }: Props) {
-  const q = searchParams.q?.trim() ?? ''
+  const { q: rawQ } = await searchParams
+  const q = rawQ?.trim() ?? ''
 
   let articles: any[] = []
   let totalCount = 0

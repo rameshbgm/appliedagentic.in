@@ -8,8 +8,9 @@ import ModuleForm from '@/components/admin/ModuleForm'
 
 export const metadata: Metadata = { title: 'Edit Module' }
 
-export default async function EditModulePage({ params }: { params: { id: string } }) {
-  const module = await prisma.module.findUnique({ where: { id: Number(params.id) } })
+export default async function EditModulePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const module = await prisma.module.findUnique({ where: { id: Number(id) } })
   if (!module) notFound()
 
   return (

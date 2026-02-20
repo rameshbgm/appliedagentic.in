@@ -87,6 +87,7 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
         class: 'ProseMirror outline-none min-h-[500px] p-6',
       },
     },
+    immediatelyRender: false,
   })
 
   // Sync external content changes (e.g., AI insert)

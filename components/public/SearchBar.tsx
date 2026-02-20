@@ -36,7 +36,7 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`)
       const data = await res.json()
-      if (data.success) setResults(data.data ?? [])
+      if (data.success) setResults(data.data?.items ?? [])
     } catch {
       setResults([])
     } finally {
