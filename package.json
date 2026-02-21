@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:prod": "dotenv -e .env.production -- next dev",
+    "dev:nodb": "DATABASE_URL='' next dev",
     "build": "next build",
     "start": "next start",
+    "start:prod": "dotenv -e .env.production -- next start",
+    "start:nodb": "DATABASE_URL='' next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate",
@@ -100,6 +104,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/sanitize-html": "^2.13.0",
     "@types/three": "^0.183.0",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9.27.0",
     "eslint-config-next": "^16.1.6",
     "ts-node": "^10.9.2"
