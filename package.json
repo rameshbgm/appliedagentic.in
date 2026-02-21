@@ -86,13 +86,13 @@
     "slugify": "^1.6.6",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
+    "@tailwindcss/postcss": "^4.2.0",
     "tailwindcss": "^4.2.0",
     "three": "^0.183.0",
     "typescript": "^5.9.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/dompurify": "^3.0.5",
     "@types/formidable": "^3.4.5",
