@@ -71,8 +71,7 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess({ url, mediaAssetId: asset.id })
   } catch (err: unknown) {
-    console.error('[POST /api/ai/generate-audio]', err)
     const message = err instanceof Error ? err.message : 'AI audio generation failed'
-    return apiError(message, 500)
+    return apiError(`[POST /api/ai/generate-audio] ${message}`, 500, err)
   }
 }

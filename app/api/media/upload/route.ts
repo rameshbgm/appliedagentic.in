@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess(asset, 201)
   } catch (err) {
-    console.error('[POST /api/media/upload]', err)
-    return apiError('Upload failed', 500)
+    return apiError('Upload failed', 500, err)
   }
 }

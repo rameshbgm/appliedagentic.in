@@ -28,7 +28,6 @@ export async function PUT(req: NextRequest) {
     return apiSuccess({ reordered: true })
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[PUT /api/submenus/reorder]', err)
-    return apiError('Failed to reorder sub-menus', 500)
+    return apiError('Failed to reorder sub-menus', 500, err)
   }
 }

@@ -36,8 +36,7 @@ export async function GET(req: NextRequest) {
     })
     return apiSuccess(menus)
   } catch (err) {
-    console.error('[GET /api/menus]', err)
-    return apiError('Failed to fetch menus', 500)
+    return apiError('Failed to fetch menus', 500, err)
   }
 }
 
@@ -63,7 +62,6 @@ export async function POST(req: NextRequest) {
     return apiSuccess(menu, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[POST /api/menus]', err)
-    return apiError('Failed to create menu', 500)
+    return apiError('Failed to create menu', 500, err)
   }
 }

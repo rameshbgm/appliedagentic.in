@@ -36,8 +36,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
     })
     return apiSuccess(items)
   } catch (err) {
-    console.error('[GET /api/submenus/:id/articles]', err)
-    return apiError('Failed to fetch articles', 500)
+    return apiError('Failed to fetch articles', 500, err)
   }
 }
 
@@ -69,8 +68,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return apiSuccess(link, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[POST /api/submenus/:id/articles]', err)
-    return apiError('Failed to link article', 500)
+    return apiError('Failed to link article', 500, err)
   }
 }
 
@@ -97,8 +95,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
     return apiSuccess({ updated: true })
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[PUT /api/submenus/:id/articles]', err)
-    return apiError('Failed to update articles', 500)
+    return apiError('Failed to update articles', 500, err)
   }
 }
 
@@ -123,7 +120,6 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    console.error('[DELETE /api/submenus/:id/articles]', err)
-    return apiError('Failed to unlink article', 500)
+    return apiError('Failed to unlink article', 500, err)
   }
 }

@@ -32,6 +32,6 @@ export async function GET(req: NextRequest) {
 
     return apiSuccess({ items: assets, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
-    return apiError('Failed to fetch media', 500)
+    return apiError('Failed to fetch media', 500, err)
   }
 }

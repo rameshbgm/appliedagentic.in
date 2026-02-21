@@ -13,7 +13,7 @@ export async function GET() {
     })
     return apiSuccess(tags)
   } catch (err) {
-    return apiError('Failed to fetch tags', 500)
+    return apiError('Failed to fetch tags', 500, err)
   }
 }
 
@@ -33,6 +33,6 @@ export async function POST(req: NextRequest) {
     })
     return apiSuccess(tag, 201)
   } catch (err) {
-    return apiError('Failed to create tag', 500)
+    return apiError('Failed to create tag', 500, err)
   }
 }

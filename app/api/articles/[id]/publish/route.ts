@@ -54,6 +54,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return apiSuccess(article)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    return apiError('Failed to update article status', 500)
+    return apiError('Failed to update article status', 500, err)
   }
 }

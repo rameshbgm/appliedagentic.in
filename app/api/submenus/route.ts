@@ -34,8 +34,7 @@ export async function GET(req: NextRequest) {
     })
     return apiSuccess(subMenus)
   } catch (err) {
-    console.error('[GET /api/submenus]', err)
-    return apiError('Failed to fetch sub-menus', 500)
+    return apiError('Failed to fetch sub-menus', 500, err)
   }
 }
 
@@ -67,7 +66,6 @@ export async function POST(req: NextRequest) {
     return apiSuccess(subMenu, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[POST /api/submenus]', err)
-    return apiError('Failed to create sub-menu', 500)
+    return apiError('Failed to create sub-menu', 500, err)
   }
 }

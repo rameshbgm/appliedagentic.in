@@ -25,8 +25,8 @@ export async function GET() {
     })
     if (!user) return apiError('User not found', 404)
     return apiSuccess(user)
-  } catch {
-    return apiError('Failed to fetch profile', 500)
+  } catch (err) {
+    return apiError('Failed to fetch profile', 500, err)
   }
 }
 
@@ -63,6 +63,6 @@ export async function PUT(req: NextRequest) {
     return apiSuccess(updatedUser)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    return apiError('Failed to update profile', 500)
+    return apiError('Failed to update profile', 500, err)
   }
 }

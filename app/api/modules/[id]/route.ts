@@ -32,7 +32,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     if (!module) return apiError('Module not found', 404)
     return apiSuccess(module)
   } catch (err) {
-    return apiError('Failed to fetch module', 500)
+    return apiError('Failed to fetch module', 500, err)
   }
 }
 
@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return apiSuccess(module)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    return apiError('Failed to update module', 500)
+    return apiError('Failed to update module', 500, err)
   }
 }
 
@@ -62,6 +62,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await prisma.module.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    return apiError('Failed to delete module', 500)
+    return apiError('Failed to delete module', 500, err)
   }
 }

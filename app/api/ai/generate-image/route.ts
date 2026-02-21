@@ -69,8 +69,7 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess({ url, revisedPrompt, mediaAssetId: asset.id })
   } catch (err: unknown) {
-    console.error('[POST /api/ai/generate-image]', err)
     const message = err instanceof Error ? err.message : 'AI image generation failed'
-    return apiError(message, 500)
+    return apiError(`[POST /api/ai/generate-image] ${message}`, 500, err)
   }
 }

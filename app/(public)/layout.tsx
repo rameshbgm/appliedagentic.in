@@ -1,6 +1,7 @@
 // app/(public)/layout.tsx
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import Navbar from '@/components/public/Navbar'
 import Footer from '@/components/public/Footer'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
@@ -21,7 +22,8 @@ async function getModules() {
       orderBy: { order: 'asc' },
       select: { id: true, name: true, slug: true, icon: true, color: true },
     })
-  } catch {
+  } catch (err) {
+    logger.error('[PublicLayout] DB error loading modules', err)
     return []
   }
 }
@@ -42,7 +44,8 @@ async function getNavMenus() {
         },
       },
     })
-  } catch {
+  } catch (err) {
+    logger.error('[PublicLayout] DB error loading nav menus', err)
     return []
   }
 }

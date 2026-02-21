@@ -32,8 +32,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
     if (!menu) return apiError('Menu not found', 404)
     return apiSuccess(menu)
   } catch (err) {
-    console.error('[GET /api/menus/:id]', err)
-    return apiError('Failed to fetch menu', 500)
+    return apiError('Failed to fetch menu', 500, err)
   }
 }
 
@@ -65,8 +64,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
     return apiSuccess(menu)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[PUT /api/menus/:id]', err)
-    return apiError('Failed to update menu', 500)
+    return apiError('Failed to update menu', 500, err)
   }
 }
 
@@ -79,7 +77,6 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext) {
     await prisma.navMenu.delete({ where: { id: parseInt(id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    console.error('[DELETE /api/menus/:id]', err)
-    return apiError('Failed to delete menu', 500)
+    return apiError('Failed to delete menu', 500, err)
   }
 }

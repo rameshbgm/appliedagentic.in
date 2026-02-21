@@ -1,5 +1,6 @@
 // app/(public)/articles/page.tsx
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import ArticleCard from '@/components/public/ArticleCard'
 import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
@@ -24,35 +25,47 @@ export default async function ArticlesPage({ searchParams }: Props) {
   const { page: pageParam, module: moduleSlug, tag: tagName } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1'))
 
-  const [modules, totalCount, articles] = await Promise.all([
-    prisma.module.findMany({ where: { isPublished: true }, orderBy: { order: 'asc' }, select: { id: true, name: true, slug: true, color: true } }),
-    prisma.article.count({
-      where: {
-        status: 'PUBLISHED',
-        ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
-        ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
-      },
-    }),
-    prisma.article.findMany({
-      where: {
-        status: 'PUBLISHED',
-        ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
-        ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
-      },
-      orderBy: { publishedAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        articleTags: { include: { tag: { select: { name: true } } } },
-        topicArticles: {
-          take: 1,
-          include: {
-            topic: { select: { module: { select: { name: true, color: true } } } },
+  let modules: { id: number; name: string; slug: string; color: string | null }[] = []
+  let totalCount = 0
+  // Type widened to any[] because the Prisma include-relations aren't expressed
+  // in the base findMany() return type – the actual shape is correct at runtime.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let articles: any[] = []
+
+  try {
+    ;[modules, totalCount, articles] = await Promise.all([
+      prisma.module.findMany({ where: { isPublished: true }, orderBy: { order: 'asc' }, select: { id: true, name: true, slug: true, color: true } }),
+      prisma.article.count({
+        where: {
+          status: 'PUBLISHED',
+          ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
+          ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
+        },
+      }),
+      prisma.article.findMany({
+        where: {
+          status: 'PUBLISHED',
+          ...(moduleSlug ? { topicArticles: { some: { topic: { module: { slug: moduleSlug } } } } } : {}),
+          ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
+        },
+        orderBy: { publishedAt: 'desc' },
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        include: {
+          articleTags: { include: { tag: { select: { name: true } } } },
+          topicArticles: {
+            take: 1,
+            include: {
+              topic: { select: { module: { select: { name: true, color: true } } } },
+            },
           },
         },
-      },
-    }),
-  ])
+      }),
+    ])
+  } catch (err) {
+    logger.error('[GET /articles] DB error loading articles list', err)
+    throw err
+  }
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const activeModule = modules.find((m) => m.slug === moduleSlug)
@@ -118,7 +131,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
                 readingTime={a.readingTimeMinutes}
                 viewCount={a.viewCount}
                 createdAt={a.createdAt}
-                tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
+                tags={a.articleTags.map((at: { tag: { name: string } }) => ({ name: at.tag.name }))}
                 moduleName={a.topicArticles[0]?.topic?.module?.name}
                 moduleColor={a.topicArticles[0]?.topic?.module?.color}
               />

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     })
     return apiSuccess(topics)
   } catch (err) {
-    return apiError('Failed to fetch topics', 500)
+    return apiError('Failed to fetch topics', 500, err)
   }
 }
 
@@ -65,6 +65,6 @@ export async function POST(req: NextRequest) {
     return apiSuccess(topic, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    return apiError('Failed to create topic', 500)
+    return apiError('Failed to create topic', 500, err)
   }
 }

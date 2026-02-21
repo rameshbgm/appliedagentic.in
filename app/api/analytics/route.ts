@@ -57,6 +57,6 @@ export async function GET() {
       aiLogs,
     })
   } catch (err) {
-    return apiError('Failed to fetch analytics', 500)
+    return apiError('Failed to fetch analytics', 500, err)
   }
 }

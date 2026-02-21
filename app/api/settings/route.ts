@@ -16,7 +16,7 @@ export async function GET() {
     }
     return apiSuccess(null)
   } catch (err) {
-    return apiError('Failed to fetch settings', 500)
+    return apiError('Failed to fetch settings', 500, err)
   }
 }
 
@@ -79,6 +79,6 @@ export async function PUT(req: NextRequest) {
 
     return apiSuccess(settings)
   } catch (err) {
-    return apiError('Failed to update settings', 500)
+    return apiError('Failed to update settings', 500, err)
   }
 }

@@ -47,6 +47,6 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
 
     return apiSuccess(duplicate, 201)
   } catch (err) {
-    return apiError('Failed to duplicate article', 500)
+    return apiError('Failed to duplicate article', 500, err)
   }
 }

@@ -41,7 +41,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     if (!topic) return apiError('Topic not found', 404)
     return apiSuccess(topic)
   } catch (err) {
-    return apiError('Failed to fetch topic', 500)
+    return apiError('Failed to fetch topic', 500, err)
   }
 }
 
@@ -61,7 +61,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return apiSuccess(topic)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    return apiError('Failed to update topic', 500)
+    return apiError('Failed to update topic', 500, err)
   }
 }
 
@@ -72,6 +72,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await prisma.topic.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    return apiError('Failed to delete topic', 500)
+    return apiError('Failed to delete topic', 500, err)
   }
 }

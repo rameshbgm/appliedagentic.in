@@ -1,5 +1,6 @@
 // app/(public)/page.tsx
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import HeroSection from '@/components/public/HeroSection'
 import ArticleCard from '@/components/public/ArticleCard'
 import NewsletterSection from '@/components/public/NewsletterSection'
@@ -55,7 +56,8 @@ async function getData() {
       }),
     ])
     return { navMenus, featuredArticles }
-  } catch {
+  } catch (err) {
+    logger.error('[GET /] DB error loading homepage data', err)
     return { navMenus: [], featuredArticles: [] }
   }
 }

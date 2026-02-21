@@ -16,6 +16,6 @@ export async function PATCH(req: NextRequest) {
     await prisma.$transaction(updates)
     return apiSuccess({ reordered: true })
   } catch (err) {
-    return apiError('Failed to reorder modules', 500)
+    return apiError('Failed to reorder modules', 500, err)
   }
 }

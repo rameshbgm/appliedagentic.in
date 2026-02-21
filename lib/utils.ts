@@ -2,6 +2,7 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, formatDistanceToNow } from 'date-fns'
+import { logger } from '@/lib/logger'
 
 /** Merge Tailwind classes safely */
 export function cn(...inputs: ClassValue[]) {
@@ -56,7 +57,18 @@ export function apiSuccess<T>(data: T, status = 200) {
   return Response.json({ success: true, data }, { status })
 }
 
-/** Standard API error response */
-export function apiError(message: string, status = 400) {
+/**
+ * Standard API error response.
+ * Optionally pass the caught `err` object so the full error (including stack
+ * trace in dev / verbose mode) is written to the server logs.
+ *
+ * @param message – client-facing error message
+ * @param status  – HTTP status code (default 400)
+ * @param err     – original caught error for server-side logging (never sent to client)
+ */
+export function apiError(message: string, status = 400, err?: unknown) {
+  if (err !== undefined) {
+    logger.error(message, err)
+  }
   return Response.json({ success: false, error: message }, { status })
 }

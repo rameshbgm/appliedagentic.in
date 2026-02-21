@@ -1,5 +1,6 @@
 // app/(public)/articles/[articleSlug]/page.tsx
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import Image from 'next/image'
@@ -32,48 +33,56 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
-  const article = await prisma.article.findUnique({
-    where: { slug: id },
-    select: {
-      title: true, summary: true, seoTitle: true, seoDescription: true,
-      coverImage: { select: { url: true, width: true, height: true } },
-    },
-  })
-  if (!article) return {}
-  return {
-    title: article.seoTitle ?? article.title,
-    description: article.seoDescription ?? article.summary ?? undefined,
-    openGraph: article.coverImage
-      ? { images: [{ url: article.coverImage.url, width: article.coverImage.width ?? undefined, height: article.coverImage.height ?? undefined }] }
-      : undefined,
+  try {
+    const { id } = await params
+    const article = await prisma.article.findUnique({
+      where: { slug: id },
+      select: {
+        title: true, summary: true, seoTitle: true, seoDescription: true,
+        coverImage: { select: { url: true, width: true, height: true } },
+      },
+    })
+    if (!article) return {}
+    return {
+      title: article.seoTitle ?? article.title,
+      description: article.seoDescription ?? article.summary ?? undefined,
+      openGraph: article.coverImage
+        ? { images: [{ url: article.coverImage.url, width: article.coverImage.width ?? undefined, height: article.coverImage.height ?? undefined }] }
+        : undefined,
+    }
+  } catch (err) {
+    logger.error('[generateMetadata /articles/[id]]', err)
+    return {}
   }
 }
 
 export default async function ArticleDetailPage({ params }: Props) {
   const { id } = await params
-  const article = await prisma.article.findUnique({
-    where: { slug: id },
-    include: {
-      coverImage: { select: { url: true } },
-      articleTags: { include: { tag: { select: { id: true, name: true } } } },
-      topicArticles: {
-        include: {
-          topic: {
-            select: {
-              id: true, name: true, slug: true,
-              module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
-              topicArticles: {
-                where: { article: { status: 'PUBLISHED' } },
-                take: 4,
-                include: {
-                  article: {
-                    include: {
-                      articleTags: { include: { tag: { select: { name: true } } } },
-                      topicArticles: {
-                        take: 1,
-                        include: {
-                          topic: { select: { module: { select: { name: true, color: true } } } },
+  let article
+  try {
+    article = await prisma.article.findUnique({
+      where: { slug: id },
+      include: {
+        coverImage: { select: { url: true } },
+        articleTags: { include: { tag: { select: { id: true, name: true } } } },
+        topicArticles: {
+          include: {
+            topic: {
+              select: {
+                id: true, name: true, slug: true,
+                module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
+                topicArticles: {
+                  where: { article: { status: 'PUBLISHED' } },
+                  take: 4,
+                  include: {
+                    article: {
+                      include: {
+                        articleTags: { include: { tag: { select: { name: true } } } },
+                        topicArticles: {
+                          take: 1,
+                          include: {
+                            topic: { select: { module: { select: { name: true, color: true } } } },
+                          },
                         },
                       },
                     },
@@ -84,8 +93,11 @@ export default async function ArticleDetailPage({ params }: Props) {
           },
         },
       },
-    },
-  })
+    })
+  } catch (err) {
+    logger.error(`[GET /articles/${id}] DB error loading article`, err)
+    throw err
+  }
 
   if (!article) notFound()
   const isDraft = article.status !== 'PUBLISHED'

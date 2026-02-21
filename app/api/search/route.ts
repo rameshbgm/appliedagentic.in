@@ -56,6 +56,6 @@ export async function GET(req: NextRequest) {
 
     return apiSuccess({ items: articles, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
-    return apiError('Search failed', 500)
+    return apiError('Search failed', 500, err)
   }
 }

@@ -41,8 +41,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
     if (!subMenu) return apiError('Sub-menu not found', 404)
     return apiSuccess(subMenu)
   } catch (err) {
-    console.error('[GET /api/submenus/:id]', err)
-    return apiError('Failed to fetch sub-menu', 500)
+    return apiError('Failed to fetch sub-menu', 500, err)
   }
 }
 
@@ -77,8 +76,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
     return apiSuccess(subMenu)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[PUT /api/submenus/:id]', err)
-    return apiError('Failed to update sub-menu', 500)
+    return apiError('Failed to update sub-menu', 500, err)
   }
 }
 
@@ -91,7 +89,6 @@ export async function DELETE(_req: NextRequest, ctx: RouteContext) {
     await prisma.navSubMenu.delete({ where: { id: parseInt(id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    console.error('[DELETE /api/submenus/:id]', err)
-    return apiError('Failed to delete sub-menu', 500)
+    return apiError('Failed to delete sub-menu', 500, err)
   }
 }

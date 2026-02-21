@@ -1,5 +1,6 @@
 // app/(public)/modules/[moduleSlug]/page.tsx
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import TopicCard from '@/components/public/TopicCard'
 import ArticleCard from '@/components/public/ArticleCard'
@@ -22,29 +23,40 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
-  const mod = await prisma.module.findUnique({ where: { slug: id } })
-  if (!mod) return {}
-  return {
-    title: mod.name,
-    description: mod.description ?? undefined,
+  try {
+    const { id } = await params
+    const mod = await prisma.module.findUnique({ where: { slug: id } })
+    if (!mod) return {}
+    return {
+      title: mod.name,
+      description: mod.description ?? undefined,
+    }
+  } catch (err) {
+    logger.error('[generateMetadata /modules/[id]]', err)
+    return {}
   }
 }
 
 export default async function ModuleDetailPage({ params }: Props) {
   const { id } = await params
-  const mod = await prisma.module.findUnique({
-    where: { slug: id, isPublished: true },
-    include: {
-      topics: {
-        where: { isPublished: true },
-        orderBy: { order: 'asc' },
-        include: {
-          _count: { select: { topicArticles: true } },
+  let mod
+  try {
+    mod = await prisma.module.findUnique({
+      where: { slug: id, isPublished: true },
+      include: {
+        topics: {
+          where: { isPublished: true },
+          orderBy: { order: 'asc' },
+          include: {
+            _count: { select: { topicArticles: true } },
+          },
         },
       },
-    },
-  })
+    })
+  } catch (err) {
+    logger.error(`[GET /modules/${id}] DB error loading module`, err)
+    throw err
+  }
 
   if (!mod) notFound()
 

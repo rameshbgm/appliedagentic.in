@@ -39,8 +39,7 @@ export async function GET(req: NextRequest) {
     })
     return apiSuccess(modules)
   } catch (err) {
-    console.error('[GET /api/modules]', err)
-    return apiError('Failed to fetch modules', 500)
+    return apiError('Failed to fetch modules', 500, err)
   }
 }
 
@@ -65,7 +64,6 @@ export async function POST(req: NextRequest) {
     return apiSuccess(module, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[POST /api/modules]', err)
-    return apiError('Failed to create module', 500)
+    return apiError('Failed to create module', 500, err)
   }
 }

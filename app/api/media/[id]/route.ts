@@ -14,7 +14,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     if (!asset) return apiError('Media not found', 404)
     return apiSuccess(asset)
   } catch (err) {
-    return apiError('Failed to fetch media', 500)
+    return apiError('Failed to fetch media', 500, err)
   }
 }
 
@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     })
     return apiSuccess(asset)
   } catch (err) {
-    return apiError('Failed to update media', 500)
+    return apiError('Failed to update media', 500, err)
   }
 }
 
@@ -50,6 +50,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
 
     return apiSuccess({ deleted: true })
   } catch (err) {
-    return apiError('Failed to delete media', 500)
+    return apiError('Failed to delete media', 500, err)
   }
 }

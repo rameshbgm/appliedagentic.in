@@ -1,5 +1,6 @@
 // app/(public)/topics/[topicSlug]/page.tsx
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import ArticleCard from '@/components/public/ArticleCard'
 import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
@@ -21,37 +22,48 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
-  const topic = await prisma.topic.findUnique({ where: { slug: id } })
-  if (!topic) return {}
-  return { title: topic.name, description: topic.description ?? undefined }
+  try {
+    const { id } = await params
+    const topic = await prisma.topic.findUnique({ where: { slug: id } })
+    if (!topic) return {}
+    return { title: topic.name, description: topic.description ?? undefined }
+  } catch (err) {
+    logger.error('[generateMetadata /topics/[id]]', err)
+    return {}
+  }
 }
 
 export default async function TopicDetailPage({ params }: Props) {
   const { id } = await params
-  const topic = await prisma.topic.findUnique({
-    where: { slug: id, isPublished: true },
-    include: {
-      module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
-      topicArticles: {
-        where: { article: { status: 'PUBLISHED' } },
-        orderBy: { orderIndex: 'asc' },
-        include: {
-          article: {
-            include: {
-              articleTags: { include: { tag: { select: { name: true } } } },
-              topicArticles: {
-                take: 1,
-                include: {
-                  topic: { select: { module: { select: { name: true, color: true } } } },
+  let topic
+  try {
+    topic = await prisma.topic.findUnique({
+      where: { slug: id, isPublished: true },
+      include: {
+        module: { select: { id: true, name: true, slug: true, color: true, icon: true } },
+        topicArticles: {
+          where: { article: { status: 'PUBLISHED' } },
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            article: {
+              include: {
+                articleTags: { include: { tag: { select: { name: true } } } },
+                topicArticles: {
+                  take: 1,
+                  include: {
+                    topic: { select: { module: { select: { name: true, color: true } } } },
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-  })
+    })
+  } catch (err) {
+    logger.error(`[GET /topics/${id}] DB error loading topic`, err)
+    throw err
+  }
 
   if (!topic) notFound()
 

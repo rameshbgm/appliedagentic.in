@@ -1,6 +1,7 @@
 // app/(public)/[menuSlug]/page.tsx
 // Public page for a top-level menu: lists its sub-menus
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, FileText } from 'lucide-react'
@@ -23,32 +24,43 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { menuSlug } = await params
-  const menu = await prisma.navMenu.findUnique({
-    where: { slug: menuSlug },
-    select: { title: true, description: true },
-  })
-  if (!menu) return {}
-  return {
-    title: menu.title,
-    description: menu.description ?? undefined,
+  try {
+    const { menuSlug } = await params
+    const menu = await prisma.navMenu.findUnique({
+      where: { slug: menuSlug },
+      select: { title: true, description: true },
+    })
+    if (!menu) return {}
+    return {
+      title: menu.title,
+      description: menu.description ?? undefined,
+    }
+  } catch (err) {
+    logger.error('[generateMetadata /[menuSlug]]', err)
+    return {}
   }
 }
 
 export default async function MenuPage({ params }: Props) {
   const { menuSlug } = await params
-  const menu = await prisma.navMenu.findUnique({
-    where: { slug: menuSlug, isVisible: true },
-    include: {
-      subMenus: {
-        where: { isVisible: true },
-        orderBy: { order: 'asc' },
-        include: {
-          _count: { select: { articles: true } },
+  let menu
+  try {
+    menu = await prisma.navMenu.findUnique({
+      where: { slug: menuSlug, isVisible: true },
+      include: {
+        subMenus: {
+          where: { isVisible: true },
+          orderBy: { order: 'asc' },
+          include: {
+            _count: { select: { articles: true } },
+          },
         },
       },
-    },
-  })
+    })
+  } catch (err) {
+    logger.error(`[GET /${menuSlug}] DB error loading menu`, err)
+    throw err // caught by error.tsx boundary
+  }
 
   if (!menu) notFound()
 

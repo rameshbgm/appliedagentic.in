@@ -71,7 +71,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return apiSuccess(article)
   } catch (err) {
-    return apiError('Failed to fetch article', 500)
+    return apiError('Failed to fetch article', 500, err)
   }
 }
 
@@ -183,8 +183,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return apiSuccess(article)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
-    console.error('[PUT /api/articles/[id]]', err)
-    return apiError('Failed to update article', 500)
+    return apiError('Failed to update article', 500, err)
   }
 }
 
@@ -195,6 +194,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await prisma.article.delete({ where: { id: parseInt((await params).id) } })
     return apiSuccess({ deleted: true })
   } catch (err) {
-    return apiError('Failed to delete article', 500)
+    return apiError('Failed to delete article', 500, err)
   }
 }

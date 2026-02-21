@@ -1,6 +1,7 @@
 // app/(public)/[menuSlug]/[subMenuSlug]/page.tsx
 // Public page for a sub-menu: lists its articles
 import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Clock, Eye, ArrowRight, Tag } from 'lucide-react'
@@ -27,38 +28,49 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { subMenuSlug } = await params
-  const subMenu = await prisma.navSubMenu.findUnique({
-    where: { slug: subMenuSlug },
-    select: { title: true, description: true, menu: { select: { title: true } } },
-  })
-  if (!subMenu) return {}
-  return {
-    title: `${subMenu.title} — ${subMenu.menu.title}`,
-    description: subMenu.description ?? undefined,
+  try {
+    const { subMenuSlug } = await params
+    const subMenu = await prisma.navSubMenu.findUnique({
+      where: { slug: subMenuSlug },
+      select: { title: true, description: true, menu: { select: { title: true } } },
+    })
+    if (!subMenu) return {}
+    return {
+      title: `${subMenu.title} — ${subMenu.menu.title}`,
+      description: subMenu.description ?? undefined,
+    }
+  } catch (err) {
+    logger.error('[generateMetadata /[menuSlug]/[subMenuSlug]]', err)
+    return {}
   }
 }
 
 export default async function SubMenuPage({ params }: Props) {
   const { menuSlug, subMenuSlug } = await params
 
-  const subMenu = await prisma.navSubMenu.findUnique({
-    where: { slug: subMenuSlug },
-    include: {
-      menu: { select: { id: true, title: true, slug: true, isVisible: true } },
-      articles: {
-        orderBy: { orderIndex: 'asc' },
-        include: {
-          article: {
-            include: {
-              articleTags: { include: { tag: { select: { id: true, name: true } } } },
-              coverImage: { select: { url: true } },
+  let subMenu
+  try {
+    subMenu = await prisma.navSubMenu.findUnique({
+      where: { slug: subMenuSlug },
+      include: {
+        menu: { select: { id: true, title: true, slug: true, isVisible: true } },
+        articles: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            article: {
+              include: {
+                articleTags: { include: { tag: { select: { id: true, name: true } } } },
+                coverImage: { select: { url: true } },
+              },
             },
           },
         },
       },
-    },
-  })
+    })
+  } catch (err) {
+    logger.error(`[GET /${menuSlug}/${subMenuSlug}] DB error loading sub-menu`, err)
+    throw err
+  }
 
   if (!subMenu || !subMenu.menu.isVisible || !subMenu.isVisible) notFound()
   if (subMenu.menu.slug !== menuSlug) notFound()
