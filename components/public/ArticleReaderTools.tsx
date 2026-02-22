@@ -11,13 +11,15 @@ import { toast } from 'sonner'
 interface Props {
   content: string
   mobile?: boolean
+  /** Render horizontally inline in the document flow (no fixed positioning) */
+  inline?: boolean
 }
 
 const DEFAULT_SIZE = 16
 const MIN_SIZE = 10
 const MAX_SIZE = 25
 
-export default function ArticleReaderTools({ content, mobile = false }: Props) {
+export default function ArticleReaderTools({ content, mobile = false, inline = false }: Props) {
   // ── Theme ─────────────────────────────────────────────────────────────────
   const [theme, setThemeState] = useState<'dark' | 'light'>('dark')
 
@@ -67,7 +69,7 @@ export default function ArticleReaderTools({ content, mobile = false }: Props) {
       const res = await fetch('/api/ai/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, type: 'article' }),
       })
       const data = await res.json()
       if (!res.ok || !data.data?.bullets) throw new Error(data.message ?? 'Summarization failed')
@@ -93,7 +95,7 @@ export default function ArticleReaderTools({ content, mobile = false }: Props) {
     return () => window.removeEventListener('keydown', h)
   }, [aiOpen])
 
-  const stripClass = `art-tools-strip${mobile ? ' mobile' : ''}`
+  const stripClass = `art-tools-strip${mobile ? ' mobile' : ''}${inline ? ' inline' : ''}`
 
   return (
     <>
@@ -163,7 +165,7 @@ export default function ArticleReaderTools({ content, mobile = false }: Props) {
             <div className="reader-overlay-header">
               <span className="reader-overlay-title">
                 <Bot size={14} style={{ display: 'inline', marginRight: 7, verticalAlign: 'middle', color: 'var(--green)' }} />
-                AI Summary — 10 key points
+                AI Summary — 12 key points
               </span>
               <button className="reader-overlay-close" onClick={() => setAiOpen(false)} aria-label="Close">
                 <X size={16} />

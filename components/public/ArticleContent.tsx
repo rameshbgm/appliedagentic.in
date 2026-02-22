@@ -1,7 +1,9 @@
 'use client'
 // components/public/ArticleContent.tsx
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+
+const BOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
 
 interface Props {
   content: string
@@ -16,6 +18,48 @@ interface Props {
 export default function ArticleContent({ content, sectionIndex, sectionTitle, standalone }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
+  // ── Section AI summary state ────────────────────────────────────────────────
+  type SecModalState = { title: string; state: 'loading' | 'done' | 'error'; bullets: string[] } | null
+  const [secModal, setSecModal] = useState<SecModalState>(null)
+
+  // ── Listen for section-summarize events (avoids stale closure in useEffect) ─
+  useEffect(() => {
+    const handler = async (e: Event) => {
+      const { title, content: sectionContent } = (e as CustomEvent<{ title: string; content: string }>).detail
+      setSecModal({ title, state: 'loading', bullets: [] })
+      // Lock scroll
+      document.body.style.overflow = 'hidden'
+      try {
+        const res = await fetch('/api/ai/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: sectionContent, maxPoints: 7, type: 'section' }),
+        })
+        const data = await res.json()
+        if (!res.ok || !data.data?.bullets) throw new Error(data.message ?? 'Failed')
+        setSecModal({ title, state: 'done', bullets: data.data.bullets })
+      } catch (err) {
+        setSecModal((prev) => prev ? { ...prev, state: 'error' } : null)
+        toast.error(err instanceof Error ? err.message : 'Section summary failed')
+      }
+    }
+    window.addEventListener('aa-section-summarize', handler)
+    return () => window.removeEventListener('aa-section-summarize', handler)
+  }, [])
+
+  // Restore scroll when modal closes
+  useEffect(() => {
+    if (!secModal) document.body.style.overflow = ''
+  }, [secModal])
+
+  // Keyboard: close on Escape
+  useEffect(() => {
+    if (!secModal) return
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSecModal(null); document.body.style.overflow = '' } }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [secModal])
+
   useEffect(() => {
     if (!ref.current) return
     const root = ref.current
@@ -25,6 +69,43 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
       if (!el.id) {
         el.id = el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? ''
       }
+    })
+
+    // ── Bot icon on h2/h3 for section summarize ───────────────────────────────
+    root.querySelectorAll('h2, h3').forEach((heading) => {
+      if (heading.querySelector('.section-ai-btn')) return
+      const btn = document.createElement('button')
+      btn.className = 'section-ai-btn'
+      btn.title = 'Summarize this section (7 key points)'
+      btn.innerHTML = BOT_SVG
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        // Collect section text: heading + siblings until the next h2/h3
+        const parts: string[] = [heading.textContent ?? '']
+        let node = heading.nextSibling
+        while (node) {
+          const el = node as Element
+          if (el.nodeType === 1 && /^H[12]$/.test(el.tagName ?? '')) break
+          if (el.textContent) parts.push(el.textContent.trim())
+          node = node.nextSibling
+        }
+        // Fallback: use parent section innerHTML
+        const sectionEl = heading.closest('.article-section')
+        const sectionContent = sectionEl ? (sectionEl as HTMLElement).innerText : parts.join('\n')
+        window.dispatchEvent(new CustomEvent('aa-section-summarize', {
+          detail: { title: heading.textContent?.trim() ?? 'Section', content: sectionContent },
+        }))
+      })
+      // Wrap existing text nodes so the heading can flex: [text] [icon-right]
+      if (!heading.querySelector('.section-heading-text')) {
+        const textNodes: Node[] = []
+        heading.childNodes.forEach((n) => { if (n !== btn) textNodes.push(n) })
+        const textWrap = document.createElement('span')
+        textWrap.className = 'section-heading-text'
+        textNodes.forEach((n) => textWrap.appendChild(n))
+        heading.insertBefore(textWrap, heading.firstChild)
+      }
+      heading.appendChild(btn)
     })
 
     // ── Copy buttons on code blocks ──────────────────────────────────────────
@@ -142,10 +223,78 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
   }, [content])
 
   return (
-    <div
-      ref={ref}
-      className="article-content"
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
+    <>
+      <div
+        ref={ref}
+        className="article-content"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+
+      {/* ── Section AI Summary Modal ──────────────────────────────────────── */}
+      {secModal && (
+        <div
+          className="reader-overlay ai-overlay"
+          role="dialog"
+          aria-modal
+          aria-label="Section AI Summary"
+          onClick={(e) => { if (e.target === e.currentTarget) { setSecModal(null); document.body.style.overflow = '' } }}
+        >
+          <div className="ai-summary-modal">
+            <div className="reader-overlay-header">
+              <span className="reader-overlay-title">
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  <span dangerouslySetInnerHTML={{ __html: BOT_SVG.replace('stroke="currentColor"', 'stroke="var(--green)"') }} />
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 400 }}>Section summary</span>
+                </span>
+                <span
+                  className="ml-2 truncate max-w-[260px] inline-block align-middle"
+                  style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}
+                  title={secModal.title}
+                >
+                  {secModal.title}
+                </span>
+              </span>
+              <button
+                className="reader-overlay-close"
+                onClick={() => { setSecModal(null); document.body.style.overflow = '' }}
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <div className="ai-summary-body">
+              {secModal.state === 'loading' && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 0', color: 'var(--text-muted)' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  <span style={{ fontSize: 13 }}>Summarizing section…</span>
+                </div>
+              )}
+              {secModal.state === 'error' && (
+                <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>Could not generate summary.</p>
+                  <button
+                    onClick={() => {
+                      const title = secModal.title
+                      setSecModal({ title, state: 'loading', bullets: [] })
+                    }}
+                    style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid var(--bg-border)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              {secModal.state === 'done' && secModal.bullets.map((b, i) => (
+                <div key={i} className="ai-bullet anim-fade-up" style={{ animationDelay: `${i * 55}ms` }}>
+                  <span className="ai-bullet-num">{i + 1}</span>
+                  <span className="ai-bullet-text">{b}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

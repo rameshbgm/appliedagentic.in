@@ -455,11 +455,21 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .section-optional-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.55rem 1rem;
   border-bottom: 1px solid var(--bg-border);
   background: var(--bg-surface);
   scroll-margin-top: calc(var(--nav-h) + 16px);
+}
+/* Always-visible bot button in section header */
+.section-ai-header-btn {
+  opacity: 0.45 !important;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.section-ai-header-btn:hover {
+  opacity: 1 !important;
 }
 .section-optional-badge {
   display: inline-flex;
@@ -490,6 +500,18 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 [data-theme="light"] .section-optional { background: #fff; }
 [data-theme="light"] .section-optional-header { background: #f9fafb; }
+
+/* ─── Mobile landscape: shrink sticky TOC/tools bar so article stays visible ─── */
+@media (max-height: 560px) and (orientation: landscape) {
+  .mobile-toc-tools-bar {
+    position: relative !important;
+    top: 0 !important;
+    z-index: auto;
+  }
+  .mobile-toc-scroll {
+    max-height: 28vh;
+  }
+}
 
 /* ─── Editor font select preview ─────────────────────────────────────────────── */
 .font-opt-inter          { font-family: 'Inter', sans-serif; }
@@ -875,6 +897,29 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   margin: 0 4px;
 }
 
+/* ─── Inline strip — horizontal row in document flow (mobile below TOC) ──────── */
+.art-tools-strip.inline {
+  flex-direction: row;
+  width: 100%;
+  border-radius: 12px;
+  padding: 6px 10px;
+  gap: 2px;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-height: 48px;
+  /* keep the border/shadow from the base class but override shape */
+}
+.art-tools-strip.inline .art-tools-divider {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+}
+.art-tools-strip.inline .tool-btn {
+  flex: 1;
+  max-width: 52px;
+}
+
 /* ─── Individual tool button ─────────────────────────────────────────────────── */
 .tool-btn {
   position: relative;
@@ -1034,6 +1079,47 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   background: #e11d48;
   border-color: #e11d48;
   transform: scale(0.94);
+}
+
+/* ─── Section AI summarize button (bot icon on h2/h3) ───────────────────────── */
+.section-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 3px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  vertical-align: middle;
+  line-height: 1;
+}
+.section-ai-btn:hover {
+  background: rgba(170, 255, 0, 0.12);
+  color: var(--green);
+  opacity: 1 !important;
+}
+.article-content h2:hover .section-ai-btn,
+.article-content h3:hover .section-ai-btn {
+  opacity: 0.55;
+}
+/* Flex layout so the bot icon sits at the far-right of each heading */
+.article-content h2:has(.section-ai-btn),
+.article-content h3:has(.section-ai-btn) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.article-content h2 .section-heading-text,
+.article-content h3 .section-heading-text {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ─── AI Summary modal ───────────────────────────────────────────────────────── */
