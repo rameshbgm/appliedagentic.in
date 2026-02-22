@@ -1,6 +1,6 @@
 'use client'
 // components/public/TableOfContents.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Zap } from 'lucide-react'
 
@@ -19,6 +19,22 @@ export default function TableOfContents({ content }: Props) {
   const [headings, setHeadings] = useState<Heading[]>([])
   const [activeId, setActiveId] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Refs for the scrollable TOC containers (desktop sidebar + mobile drawer)
+  const desktopScrollRef = useRef<HTMLDivElement>(null)
+  const mobileScrollRef  = useRef<HTMLDivElement>(null)
+
+  // When the active heading changes, scroll that item into view inside the TOC
+  useEffect(() => {
+    if (!activeId) return
+    const scrollIntoToc = (container: HTMLDivElement | null) => {
+      if (!container) return
+      const link = container.querySelector<HTMLElement>(`[href="#${CSS.escape(activeId)}"]`)
+      if (link) link.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    }
+    scrollIntoToc(desktopScrollRef.current)
+    scrollIntoToc(mobileScrollRef.current)
+  }, [activeId])
 
   useEffect(() => {
     const parser = new DOMParser()
@@ -108,7 +124,7 @@ export default function TableOfContents({ content }: Props) {
             Table of Contents
           </p>
         </div>
-        <div className="py-3 px-1">
+        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto max-h-[calc(100vh-14rem)]">
           <TocList />
         </div>
         {/* CTA button */}
@@ -143,7 +159,7 @@ export default function TableOfContents({ content }: Props) {
             />
           </button>
           {mobileOpen && (
-            <div className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+            <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
               <TocList />
             </div>
           )}
