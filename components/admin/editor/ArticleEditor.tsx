@@ -23,10 +23,13 @@ import Subscript from '@tiptap/extension-subscript'
 import Superscript from '@tiptap/extension-superscript'
 import CharacterCount from '@tiptap/extension-character-count'
 import Placeholder from '@tiptap/extension-placeholder'
+import FontSize from '@tiptap/extension-font-size'
 import { all, createLowlight } from 'lowlight'
 import DOMPurify from 'dompurify'
 import EditorToolbar from './EditorToolbar'
 import AIAssistPanel from './AIAssistPanel'
+import BubbleMenuBar from './BubbleMenuBar'
+import { LineHeight } from './LineHeight'
 
 const lowlight = createLowlight(all)
 
@@ -74,7 +77,9 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
       Subscript,
       Superscript,
       CharacterCount,
+      FontSize,
       Placeholder.configure({ placeholder: 'Start writing your article...' }),
+      LineHeight,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -121,7 +126,7 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
   const words = editor.storage.characterCount?.words?.() ?? 0
 
   return (
-    <div className="flex flex-col gap-0 rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--bg-border)' }}>
+    <div className="flex flex-col gap-0 rounded-2xl border" style={{ borderColor: 'var(--bg-border)' }}>
       {/* Toolbar */}
       <EditorToolbar
         editor={editor}
@@ -141,7 +146,7 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
       />
 
       {/* Content area with AI panel */}
-      <div className="relative flex" style={{ background: 'var(--bg-surface)' }}>
+      <div className="relative flex rounded-b-2xl overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
         <div className="flex-1 overflow-y-auto max-h-[calc(100vh-280px)]">
           {isHtmlMode ? (
             <textarea
@@ -151,11 +156,16 @@ export default function ArticleEditor({ content, onChange, articleId, onAudioGen
                 setHtmlContent(nextHtml)
                 onChange(sanitizeHtml(nextHtml))
               }}
-              className="w-full min-h-[500px] p-6 font-mono text-sm outline-none resize-none"
+              className="w-full min-h-125 p-6 font-mono text-sm outline-none resize-none"
+              title="HTML source editor"
+              placeholder="<!-- Paste or edit HTML here -->"
               style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
             />
           ) : (
-            <EditorContent editor={editor} />
+            <>
+              <BubbleMenuBar editor={editor} />
+              <EditorContent editor={editor} />
+            </>
           )}
         </div>
         {/* AI Assist Panel floats to the right */}
