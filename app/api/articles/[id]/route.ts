@@ -8,6 +8,13 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 import { ArticleStatus } from '@prisma/client'
 
+const SectionInput = z.object({
+  id: z.number().int().optional(),
+  title: z.string().default(''),
+  content: z.string().default(''),
+  order: z.number().int().default(0),
+})
+
 const UpdateSchema = z.object({
   title: z.string().min(1).max(300).optional(),
   slug: z.string().optional(),
@@ -29,6 +36,7 @@ const UpdateSchema = z.object({
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
   subMenuIds: z.array(z.number().int()).optional(),
+  sections: z.array(SectionInput).optional(),
 })
 
 const articleInclude = {
@@ -45,6 +53,7 @@ const articleInclude = {
   },
   articleTags: { include: { tag: true } },
   coverImage: { select: { id: true, url: true, altText: true, width: true, height: true } },
+  sections: { orderBy: { order: 'asc' as const } },
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -156,16 +165,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (data.subMenuIds !== undefined) {
         await tx.subMenuArticle.deleteMany({ where: { articleId: id } })
         if (data.subMenuIds.length > 0) {
-          const lastOrders = await Promise.all(
-            data.subMenuIds.map((subMenuId) =>
-              tx.subMenuArticle.findFirst({ where: { subMenuId }, orderBy: { order: 'desc' }, select: { order: true } })
-            )
-          )
           await tx.subMenuArticle.createMany({
             data: data.subMenuIds.map((subMenuId, i) => ({
               subMenuId,
               articleId: id,
-              order: (lastOrders[i]?.order ?? 0) + 1,
+              orderIndex: i + 1,
+            })),
+          })
+        }
+      }
+
+      // Sync sections if provided
+      if (data.sections !== undefined) {
+        await tx.articleSection.deleteMany({ where: { articleId: id } })
+        if (data.sections.length > 0) {
+          await tx.articleSection.createMany({
+            data: data.sections.map((s, i) => ({
+              articleId: id,
+              title: s.title,
+              content: s.content,
+              order: s.order ?? i,
             })),
           })
         }

@@ -33,6 +33,7 @@ export default async function NewArticlePage() {
         seoDescription: '',
         tagNames: [],
         subMenuIds: [],
+        sections: [],
       }}
       menus={menus}
       allTags={tags}

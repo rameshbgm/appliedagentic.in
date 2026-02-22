@@ -1,114 +1,191 @@
 'use client'
 // components/public/TableOfContents.tsx
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, Zap } from 'lucide-react'
 
 interface Heading {
   id: string
   text: string
+  /** 0 = section title (root), 1 = H1, 2 = H2, 3 = H3 */
   level: number
-  num: string // e.g. "1", "1.1", "2"
+  isSectionTitle?: boolean
+}
+
+interface SectionLike {
+  id: number
+  title: string
+  content: string
+  order: number
 }
 
 interface Props {
-  content: string
+  sections?: SectionLike[]
+  content?: string
 }
 
-export default function TableOfContents({ content }: Props) {
-  const [headings, setHeadings] = useState<Heading[]>([])
-  const [activeId, setActiveId] = useState('')
-  const [mobileOpen, setMobileOpen] = useState(false)
+// Shared slug logic — must match ArticleContent and SectionCard
+const toSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-  // Refs for the scrollable TOC containers (desktop sidebar + mobile drawer)
+function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
+  const effectiveSections: SectionLike[] =
+    sections && sections.length > 0
+      ? sections
+      : content
+      ? [{ id: 0, title: '', content, order: 0 }]
+      : []
+
+  const parsed: Heading[] = []
+  // DOMParser is only available in browsers; called only from useEffect
+  const parser = new DOMParser()
+
+  for (const section of effectiveSections) {
+    if (section.title?.trim()) {
+      parsed.push({ id: toSlug(section.title), text: section.title.trim(), level: 0, isSectionTitle: true })
+    }
+    const doc = parser.parseFromString(section.content ?? '', 'text/html')
+    doc.querySelectorAll('h1, h2, h3').forEach((el) => {
+      const text = el.textContent?.trim() ?? ''
+      if (!text) return
+      parsed.push({ id: toSlug(text), text, level: Number(el.tagName[1]), isSectionTitle: false })
+    })
+  }
+  return parsed
+}
+
+export default function TableOfContents({ sections, content }: Props) {
+  const [activeId, setActiveId]   = useState('')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  // Start empty on both server and client — populated in useEffect (client-only)
+  // This prevents the hydration mismatch caused by DOMParser being unavailable on the server.
+  const [headings, setHeadings] = useState<Heading[]>([])
+
   const desktopScrollRef = useRef<HTMLDivElement>(null)
   const mobileScrollRef  = useRef<HTMLDivElement>(null)
 
-  // When the active heading changes, scroll that item into view inside the TOC
+  // Populate headings on the client after mount
+  useEffect(() => {
+    setHeadings(parseHeadings(sections, content))
+  }, [sections, content])
+
+  // ── Scroll page to heading ─────────────────────────────────────────────────
+  const scrollTo = useCallback((id: string) => {
+    const el = document.getElementById(id)
+    if (!el) return
+
+    // Force-reveal the parent section card so its CSS transform is cleared
+    // before we measure position. Without this, getBoundingClientRect() returns
+    // the visually-displaced (transformed) position, causing the scroll to land ~28px off.
+    const card = el.closest('.section-optional')
+    if (card) card.classList.add('section-visible')
+
+    // Also clear any reveal-hidden on the element itself
+    el.classList.remove('reveal-hidden')
+    el.classList.add('reveal-visible')
+    el.style.transitionDelay = ''
+
+    // Double rAF: first frame schedules a layout recalc,
+    // second frame reads the updated getBoundingClientRect
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const navH = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
+        ) || 64
+        const top = el.getBoundingClientRect().top + window.scrollY - navH - 16
+        window.scrollTo({ top, behavior: 'smooth' })
+        setActiveId(id)
+        setMobileOpen(false)
+      })
+    })
+  }, [])
+
+  // ── Sync active TOC item into view when it changes ─────────────────────────
   useEffect(() => {
     if (!activeId) return
-    const scrollIntoToc = (container: HTMLDivElement | null) => {
+    const sync = (container: HTMLDivElement | null) => {
       if (!container) return
-      const link = container.querySelector<HTMLElement>(`[href="#${CSS.escape(activeId)}"]`)
-      if (link) link.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      const btn = container.querySelector<HTMLElement>(`[data-toc-id="${CSS.escape(activeId)}"]`)
+      btn?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     }
-    scrollIntoToc(desktopScrollRef.current)
-    scrollIntoToc(mobileScrollRef.current)
+    sync(desktopScrollRef.current)
+    sync(mobileScrollRef.current)
   }, [activeId])
 
+  // ── IntersectionObserver — wait for child useEffects to set heading IDs ───
   useEffect(() => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(content, 'text/html')
-    const els = doc.querySelectorAll('h2, h3')
-    let h2Counter = 0
-    let h3Counter = 0
-    const parsed: Heading[] = Array.from(els).map((el) => {
-      const lvl = Number(el.tagName[1])
-      if (lvl === 2) {
-        h2Counter++
-        h3Counter = 0
-        return {
-          id: el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? '',
-          text: el.textContent ?? '',
-          level: 2,
-          num: String(h2Counter),
-        }
-      } else {
-        h3Counter++
-        return {
-          id: el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? '',
-          text: el.textContent ?? '',
-          level: 3,
-          num: `${h2Counter}.${h3Counter}`,
-        }
-      }
-    })
-    setHeadings(parsed)
-  }, [content])
+    if (headings.length === 0) return
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActiveId(e.target.id)
-        })
-      },
-      { rootMargin: '-80px 0px -65% 0px' }
-    )
-    headings.forEach((h) => {
-      const el = document.getElementById(h.id)
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
+    let observer: IntersectionObserver | null = null
+
+    const setup = () => {
+      observer?.disconnect()
+      observer = new IntersectionObserver(
+        (entries) => {
+          // Pick topmost visible heading
+          const visible = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+          if (visible.length > 0) setActiveId(visible[0].target.id)
+        },
+        { rootMargin: '-72px 0px -60% 0px', threshold: 0 }
+      )
+      let found = 0
+      headings.forEach((h) => {
+        const el = document.getElementById(h.id)
+        if (el) { observer!.observe(el); found++ }
+      })
+      return found
+    }
+
+    // Retry at increasing intervals — heading IDs are set by ArticleContent useEffect
+    const found = setup()
+    const timers: ReturnType<typeof setTimeout>[] = []
+    if (found < headings.length) {
+      timers.push(setTimeout(setup, 150))
+      timers.push(setTimeout(setup, 500))
+      timers.push(setTimeout(setup, 1200))
+      timers.push(setTimeout(setup, 2500))
+    }
+    return () => { timers.forEach(clearTimeout); observer?.disconnect() }
   }, [headings])
 
   if (headings.length === 0) return null
 
-  const TocList = () => (
+  // ── TOC list (stable; not a nested component) ──────────────────────────────
+  const listEl = (
     <ul className="space-y-0.5">
-      {headings.map((h) => (
-        <li key={h.id}>
-          <a
-            href={`#${h.id}`}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-start gap-2.5 px-3 py-1.5 rounded-lg text-sm transition-all ${
-              activeId === h.id ? 'font-semibold' : 'hover:bg-white/5'
-            } ${h.level === 3 ? 'ml-4' : ''}`}
-            style={{
-              color: activeId === h.id ? 'var(--text-primary)' : 'var(--text-secondary)',
-              background: activeId === h.id ? 'var(--bg-elevated)' : undefined,
-            }}
-          >
-            <span
-              className="shrink-0 mt-0.5 text-[11px] font-mono w-6 text-right leading-5"
-              style={{ color: activeId === h.id ? 'var(--green)' : 'var(--text-muted)' }}
+      {headings.map((h, i) => {
+        const indent =
+          h.level === 0 ? '' :
+          h.level === 1 ? 'pl-4' :
+          h.level === 2 ? 'pl-8' : 'pl-11'
+        const isActive = activeId === h.id
+        return (
+          <li key={`${h.id}-${i}`}>
+            <button
+              type="button"
+              data-toc-id={h.id}
+              onClick={() => scrollTo(h.id)}
+              className={`w-full flex items-start gap-2 px-3 py-1.5 rounded-lg text-sm text-left transition-all ${indent} ${
+                isActive ? 'font-semibold' : 'hover:bg-white/5'
+              }`}
+              style={{
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive ? 'var(--bg-elevated)' : undefined,
+              }}
             >
-              {h.num}
-            </span>
-            <span className="leading-5">{h.text}</span>
-          </a>
-        </li>
-      ))}
+              {h.isSectionTitle && (
+                <span className="shrink-0 mt-0.5 text-[11px] font-bold leading-5" style={{ color: 'var(--color-violet, #7C3AED)' }}>
+                  §
+                </span>
+              )}
+              <span className={`leading-5 ${h.level === 0 ? 'font-semibold' : h.level === 1 ? 'font-medium' : 'text-xs'}`}>
+                {h.text}
+              </span>
+            </button>
+          </li>
+        )
+      })}
     </ul>
   )
 
@@ -120,14 +197,11 @@ export default function TableOfContents({ content }: Props) {
         style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
       >
         <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-            Table of Contents
-          </p>
+          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Table of Contents</p>
         </div>
         <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto max-h-[calc(100vh-14rem)]">
-          <TocList />
+          {listEl}
         </div>
-        {/* CTA button */}
         <div className="px-4 pb-4 pt-2">
           <Link
             href="/modules"
@@ -140,7 +214,7 @@ export default function TableOfContents({ content }: Props) {
         </div>
       </div>
 
-      {/* Mobile: sticky collapsible TOC */}
+      {/* Mobile: sticky collapsible */}
       <div className="lg:hidden mb-6">
         <div
           className="sticky top-16 z-30 rounded-2xl overflow-hidden"
@@ -160,7 +234,7 @@ export default function TableOfContents({ content }: Props) {
           </button>
           {mobileOpen && (
             <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
-              <TocList />
+              {listEl}
             </div>
           )}
         </div>

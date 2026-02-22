@@ -12,9 +12,12 @@ import ReadingProgressBar from '@/components/public/ReadingProgressBar'
 import TableOfContents from '@/components/public/TableOfContents'
 import ArticleReaderTools from '@/components/public/ArticleReaderTools'
 import ShareButtons from '@/components/public/ShareButtons'
+import SectionCard from '@/components/public/SectionCard'
 import { formatDate } from '@/lib/utils'
 import { Clock, Eye, Calendar, ArrowLeft, ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
+
+type ArticleSection = { id: number; articleId: number; title: string; content: string; order: number; createdAt: Date; updatedAt: Date }
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -66,6 +69,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       include: {
         coverImage: { select: { url: true } },
         articleTags: { include: { tag: { select: { id: true, name: true } } } },
+        sections: { orderBy: { order: 'asc' } },
         topicArticles: {
           include: {
             topic: {
@@ -101,6 +105,9 @@ export default async function ArticleDetailPage({ params }: Props) {
   }
 
   if (!article) notFound()
+  // Typed sections — workaround for TypeScript not narrowing `let` variable with try-catch
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sections: ArticleSection[] = (article as any).sections ?? []
   const isDraft = article.status !== 'PUBLISHED'
 
   // Increment view count (best-effort, noncritical)
@@ -243,25 +250,38 @@ export default async function ArticleDetailPage({ params }: Props) {
         <div className="px-[3%] py-6 sm:py-10">
 
           {/* Mobile TOC — sticky below navbar, capped height on portrait so article content remains visible */}
-          {article.content && (
+          {(sections.length > 0 || article.content) && (
             <div className="lg:hidden sticky top-16 z-40 pb-2 mb-3 max-h-[32vh] overflow-y-auto" style={{ background: 'var(--bg-page)' }}>
-              <TableOfContents content={article.content} />
+              <TableOfContents
+                sections={sections.length > 0
+                  ? sections
+                  : [{ id: 0, title: '', content: article.content, order: 0 }]}
+              />
             </div>
           )}
 
           {/* Mobile reader tools — fixed bottom bar (rendered here to mount the component) */}
-          {article.content && (
+          {(sections.length > 0 || article.content) && (
             <div className="lg:hidden">
-              <ArticleReaderTools content={article.content} mobile />
+              <ArticleReaderTools
+                content={sections.length > 0
+                  ? sections.map(s => s.content).join('\n')
+                  : article.content}
+                mobile
+              />
             </div>
           )}
 
           <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
 
             {/* Sidebar TOC — desktop left, fully sticky */}
-            {article.content && (
+            {(sections.length > 0 || article.content) && (
               <aside className="hidden lg:block w-64 xl:w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
-                <TableOfContents content={article.content} />
+                <TableOfContents
+                  sections={sections.length > 0
+                    ? sections
+                    : [{ id: 0, title: '', content: article.content, order: 0 }]}
+                />
               </aside>
             )}
 
@@ -281,8 +301,20 @@ export default async function ArticleDetailPage({ params }: Props) {
                 </div>
               )}
 
-              {/* Article body */}
-              {article.content && <ArticleContent content={article.content} />}
+              {/* Article body — multi-section or legacy single content */}
+              {sections.length > 0 ? (
+                <div className="article-sections-container">
+                  {sections.map((section, idx) => (
+                    <SectionCard
+                      key={section.id}
+                      section={section}
+                      index={idx}
+                    />
+                  ))}
+                </div>
+              ) : (
+                article.content && <ArticleContent content={article.content} />
+              )}
 
               {/* Audio player */}
               {article.audioUrl && (
@@ -350,9 +382,13 @@ export default async function ArticleDetailPage({ params }: Props) {
             </article>
 
             {/* Desktop reader tools — right side vertical strip */}
-            {article.content && (
+            {(sections.length > 0 || article.content) && (
               <div className="hidden lg:flex flex-col items-center sticky top-20 self-start shrink-0 ml-2">
-                <ArticleReaderTools content={article.content} />
+                <ArticleReaderTools
+                  content={sections.length > 0
+                    ? sections.map(s => s.content).join('\n')
+                    : article.content}
+                />
               </div>
             )}
           </div>

@@ -3,17 +3,12 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2 } from 'lucide-react'
-import dynamic from 'next/dynamic'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
 import { stripHtml } from '@/lib/utils'
-
-const ArticleEditor = dynamic(() => import('@/components/admin/editor/ArticleEditor'), {
-  ssr: false,
-  loading: () => <div className="h-96 rounded-2xl skeleton" />,
-})
+import ArticleSectionEditor, { type SectionData } from '@/components/admin/editor/ArticleSectionEditor'
 
 interface InitialArticle {
   id?: number
@@ -30,6 +25,7 @@ interface InitialArticle {
   tagNames: string[]
   navMenuId?: number
   subMenuIds: number[]
+  sections?: { id: number; title: string; content: string; order: number }[]
 }
 
 interface SubMenu {
@@ -67,8 +63,22 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [title, setTitle] = useState(initialArticle.title)
   const [slug, setSlug] = useState(initialArticle.slug)
   const [summary, setSummary] = useState(initialArticle.summary)
-  const [content, setContent] = useState(initialArticle.content)
   const [coverImageUrl, setCoverImageUrl] = useState(initialArticle.coverImageUrl)
+
+  // Multi-section state — default from DB sections or fall back to a single section from legacy content
+  const makeDefaultSections = (): SectionData[] => {
+    if (initialArticle.sections && initialArticle.sections.length > 0) {
+      return initialArticle.sections.map((s) => ({
+        tempId: `existing-${s.id}`,
+        id: s.id,
+        title: s.title,
+        content: s.content,
+        order: s.order,
+      }))
+    }
+    return [{ tempId: 'section-0', title: '', content: initialArticle.content, order: 0 }]
+  }
+  const [sections, setSections] = useState<SectionData[]>(makeDefaultSections)
   const [meta, setMeta] = useState({
     status: initialArticle.status,
     scheduledAt: initialArticle.scheduledAt,
@@ -80,8 +90,41 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     audioUrl: initialArticle.audioUrl,
   })
 
-  const wordCount = stripHtml(content).split(/\s+/).filter(Boolean).length
-  const readingTime = calculateReadingTime(content)
+  const wordCount = stripHtml(sections.map(s => s.content).join(' ')).split(/\s+/).filter(Boolean).length
+  const readingTime = calculateReadingTime(sections.map(s => s.content).join(' '))
+
+  // Section helpers
+  const updateSection = useCallback((tempId: string, updated: SectionData) => {
+    setSections((prev) => prev.map((s) => s.tempId === tempId ? updated : s))
+  }, [])
+
+  const deleteSection = useCallback((tempId: string) => {
+    setSections((prev) => {
+      const next = prev.filter((s) => s.tempId !== tempId)
+      return next.map((s, i) => ({ ...s, order: i }))
+    })
+  }, [])
+
+  const moveSection = useCallback((from: number, to: number) => {
+    setSections((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next.map((s, i) => ({ ...s, order: i }))
+    })
+  }, [])
+
+  const addSection = useCallback(() => {
+    setSections((prev) => [
+      ...prev,
+      {
+        tempId: `section-${Date.now()}`,
+        title: '',
+        content: '',
+        order: prev.length,
+      },
+    ])
+  }, [])
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -94,7 +137,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     title,
     slug: slug || autoSlug(title),
     summary,
-    content,
+    // legacy content field: combine all sections for backward compat / search indexing
+    content: sections.map(s => s.content).join('\n'),
     coverImageUrl,
     status: meta.status,
     scheduledAt: meta.scheduledAt,
@@ -103,6 +147,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     seoDescription: meta.seoDescription,
     audioUrl: meta.audioUrl,
     subMenuIds: meta.subMenuIds,
+    sections: sections.map((s, i) => ({
+      id: s.id,
+      title: s.title,
+      content: s.content,
+      order: i,
+    })),
   })
 
   const save = useCallback(async () => {
@@ -124,6 +174,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         if (!initialArticle.id) {
           router.push(`/admin/articles/${data.data.id}/edit`)
         } else {
+          // Sync saved section IDs back to state
+          if (data.data?.sections) {
+            setSections(data.data.sections.map((s: { id: number; title: string; content: string; order: number }) => ({
+              tempId: `existing-${s.id}`,
+              id: s.id,
+              title: s.title,
+              content: s.content,
+              order: s.order,
+            })))
+          }
           router.refresh()
         }
       } else {
@@ -132,7 +192,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     } finally {
       setSaving(false)
     }
-  }, [title, slug, summary, content, coverImageUrl, meta, initialArticle.id]) // eslint-disable-line
+  }, [title, slug, summary, sections, coverImageUrl, meta, initialArticle.id]) // eslint-disable-line
 
   // Auto-save every 60s
   useEffect(() => {
@@ -142,7 +202,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     }, 60000)
     setAutoSaveTimer(timer)
     return () => clearTimeout(timer)
-  }, [title, slug, summary, content, coverImageUrl, meta]) // eslint-disable-line
+  }, [title, slug, summary, sections, coverImageUrl, meta]) // eslint-disable-line
 
   const statusColor = STATUS_COLORS[meta.status] ?? STATUS_COLORS.DRAFT
 
@@ -163,30 +223,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         className="flex items-center justify-between flex-wrap gap-3 px-4 py-3 rounded-2xl border"
         style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
       >
-        {/* Left: title + stats */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="font-display font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-            {initialArticle.id ? 'Edit Article' : 'New Article'}
-          </h1>
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs"
-              style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)' }}
-            >
-              <BookOpen size={11} />
-              {wordCount.toLocaleString()} words
-            </span>
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs"
-              style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)' }}
-            >
-              <Clock size={11} />
-              {readingTime} min read
-            </span>
-          </div>
-        </div>
-
-        {/* Right: status + scheduled-date + preview + save */}
+        {/* Left: status + scheduled-date + preview + save */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Status select */}
           <select
@@ -249,6 +286,24 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               : 'Save Draft'}
           </button>
         </div>
+
+        {/* Right: stats */}
+        <div className="flex items-center gap-2 ml-auto">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs"
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)' }}
+          >
+            <BookOpen size={11} />
+            {wordCount.toLocaleString()} words
+          </span>
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs"
+            style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)' }}
+          >
+            <Clock size={11} />
+            {readingTime} min read
+          </span>
+        </div>
       </div>
 
       {/* ── Title / Slug / Summary ── */}
@@ -282,13 +337,35 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
 
       {/* ── Editor + Sections ── */}
       <div className="w-full space-y-4">
-          {/* WYSIWYG Editor */}
-          <ArticleEditor
-            content={content}
-            onChange={setContent}
-            articleId={initialArticle.id}
-            onAudioGenerated={(url) => setMeta((m) => ({ ...m, audioUrl: url }))}
-          />
+
+          {/* ── Content Sections ── */}
+          <div className="space-y-3">
+            {sections.map((section, idx) => (
+              <ArticleSectionEditor
+                key={section.tempId}
+                section={section}
+                index={idx}
+                total={sections.length}
+                articleId={initialArticle.id}
+                onChange={(updated) => updateSection(section.tempId, updated)}
+                onDelete={() => deleteSection(section.tempId)}
+                onMoveUp={() => moveSection(idx, idx - 1)}
+                onMoveDown={() => moveSection(idx, idx + 1)}
+                onAudioGenerated={(url) => setMeta((m) => ({ ...m, audioUrl: url }))}
+              />
+            ))}
+
+            {/* Add Section button */}
+            <button
+              type="button"
+              onClick={addSection}
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed text-sm font-medium hover:opacity-80 transition-all"
+              style={{ borderColor: 'var(--color-violet)', color: 'var(--color-violet)', background: 'transparent' }}
+            >
+              <PlusCircle size={16} />
+              Add Content Section
+            </button>
+          </div>
 
           {/* ── Cover Image Section ── */}
           <div
@@ -475,29 +552,31 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   return subs.length === 0 ? (
                     <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No sub-menus for this menu.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {subs.map((sm) => {
-                        const selected = meta.subMenuIds.includes(sm.id)
-                        return (
-                          <button
+                    <div>
+                      <select
+                        multiple
+                        size={Math.min(subs.length, 6)}
+                        value={meta.subMenuIds.map(String)}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions, (opt) => Number(opt.value))
+                          setMeta((m) => ({ ...m, subMenuIds: selected }))
+                        }}
+                        className="w-full rounded-xl border text-sm outline-none"
+                        style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                      >
+                        {subs.map((sm) => (
+                          <option
                             key={sm.id}
-                            type="button"
-                            onClick={() => {
-                              const updated = selected
-                                ? meta.subMenuIds.filter((x) => x !== sm.id)
-                                : [...meta.subMenuIds, sm.id]
-                              setMeta((m) => ({ ...m, subMenuIds: updated }))
-                            }}
-                            className="px-3 py-1.5 rounded-xl text-xs border font-medium transition-all"
-                            style={selected
-                              ? { background: 'var(--color-violet)', borderColor: 'var(--color-violet)', color: '#fff' }
-                              : { background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }
-                            }
+                            value={sm.id}
+                            style={{ padding: '6px 12px' }}
                           >
-                            {selected ? '✓ ' : ''}{sm.title}
-                          </button>
-                        )
-                      })}
+                            {sm.title}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                        Hold {typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl'} to select multiple
+                      </p>
                     </div>
                   )
                 })()}

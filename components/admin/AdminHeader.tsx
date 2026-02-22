@@ -2,25 +2,21 @@
 // components/admin/AdminHeader.tsx
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 
-const breadcrumbMap: Record<string, string[]> = {
-  '/admin/dashboard': ['Dashboard'],
-  '/admin/modules': ['Modules'],
-  '/admin/modules/new': ['Modules', 'New'],
-  '/admin/topics': ['Topics'],
-  '/admin/topics/new': ['Topics', 'New'],
-  '/admin/articles': ['Articles'],
-  '/admin/articles/new': ['Articles', 'New'],
-  '/admin/media': ['Media'],
-  '/admin/settings': ['Settings'],
-  '/admin/analytics': ['Analytics'],
-}
-
-const quickActions: Record<string, { label: string; href: string }> = {
-  '/admin/modules': { label: 'New Module', href: '/admin/modules/new' },
-  '/admin/topics': { label: 'New Topic', href: '/admin/topics/new' },
-  '/admin/articles': { label: 'New Article', href: '/admin/articles/new' },
+const breadcrumbMap: Record<string, string> = {
+  'dashboard':  'Dashboard',
+  'modules':    'Modules',
+  'topics':     'Topics',
+  'articles':   'Articles',
+  'media':      'Media',
+  'settings':   'Settings',
+  'analytics':  'Analytics',
+  'new':        'New',
+  'edit':       'Edit',
+  'login':      'Login',
+  'menus':      'Menus',
+  'submenus':   'Sub Menus',
 }
 
 interface Props {
@@ -30,9 +26,17 @@ interface Props {
 export default function AdminHeader({ onMobileMenuToggle }: Props) {
   const pathname = usePathname()
 
-  const crumbs = breadcrumbMap[pathname] ??
-    pathname.replace('/admin/', '').split('/').map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-  const action = quickActions[pathname]
+  // Build crumbs from path segments after /admin
+  const segments = pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean)
+  const crumbs = segments.map((seg, i) => {
+    const isNumeric = /^\d+$/.test(seg)
+    const label = isNumeric ? `#${seg}` : (breadcrumbMap[seg.toLowerCase()] ?? (seg.charAt(0).toUpperCase() + seg.slice(1)))
+    const href = '/admin/' + segments.slice(0, i + 1).join('/')
+    const isLast = i === segments.length - 1
+    // Don't link numeric IDs — those are intermediate paths that have no page
+    const isLinked = !isLast && !isNumeric
+    return { label, href, isLast, isLinked }
+  })
 
   return (
     <header
@@ -53,33 +57,24 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
           <Link href="/admin/dashboard" className="font-display font-semibold hidden sm:block text-violet-600">
             Admin
           </Link>
-          {crumbs.map((crumb, i) => (
-            <span key={i} className="flex items-center gap-2">
+          {crumbs.map((crumb) => (
+            <span key={crumb.href} className="flex items-center gap-2">
               <span className="hidden sm:block text-gray-400">/</span>
-              <span
-                className={i === crumbs.length - 1 ? 'font-semibold text-gray-900' : 'hidden sm:block text-gray-500'}
-              >
-                {crumb}
-              </span>
+              {crumb.isLast ? (
+                <span className="font-semibold text-gray-900">{crumb.label}</span>
+              ) : crumb.isLinked ? (
+                <Link
+                  href={crumb.href}
+                  className="hidden sm:block text-gray-500 hover:text-violet-600 transition-colors"
+                >
+                  {crumb.label}
+                </Link>
+              ) : (
+                <span className="hidden sm:block text-gray-400">{crumb.label}</span>
+              )}
             </span>
           ))}
         </nav>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        {action && (
-          <Link
-            href={action.href}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-black font-semibold transition-transform hover:scale-105"
-            style={{ background: '#AAFF00' }}
-          >
-            <Plus size={14} />
-            <span className="hidden sm:inline">{action.label}</span>
-            <span className="sm:hidden">New</span>
-          </Link>
-        )}
-
       </div>
     </header>
   )

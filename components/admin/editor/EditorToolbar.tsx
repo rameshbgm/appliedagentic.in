@@ -5,12 +5,13 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, CheckSquare, Quote, Code, Minus,
+  List, ListOrdered, CheckSquare, Quote, Code2, Minus,
   Link2, Unlink, Image as ImageIcon, Youtube as YoutubeIcon,
-  Table as TableIcon, Undo, Redo, Code2,
+  Table as TableIcon, Undo, Redo,
   Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
   Highlighter, ChevronDown, RemoveFormatting,
   IndentIncrease, IndentDecrease, Pilcrow, Type,
+  Rows3, Columns3, Trash2, SplitSquareHorizontal, Merge, Code,
 } from 'lucide-react'
 import ImageUploadModal from './ImageUploadModal'
 import EmbedModal from './EmbedModal'
@@ -184,10 +185,11 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
         isTask:         e.isActive('taskList'),
         isBlockquote:   e.isActive('blockquote'),
         isCodeBlock:    e.isActive('codeBlock'),
+        isInTable:      e.isActive('table'),
         canUndo:        e.can().undo(),
         canRedo:        e.can().redo(),
-        canIndent:      e.can().sinkListItem('listItem'),
-        canOutdent:     e.can().liftListItem('listItem'),
+        canIndent:      e.can().sinkListItem('listItem') || e.can().sinkListItem('taskItem'),
+        canOutdent:     e.can().liftListItem('listItem') || e.can().liftListItem('taskItem'),
         styleLabel,
         currentSize,
         currentFont,
@@ -456,19 +458,35 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
 
           <Divider />
 
-          <Btn icon={List}        action={() => editor.chain().focus().toggleBulletList().run()}  active={s.isBullet}  title="Bullet List" />
-          <Btn icon={ListOrdered} action={() => editor.chain().focus().toggleOrderedList().run()} active={s.isOrdered} title="Numbered List" />
-          <Btn icon={CheckSquare} action={() => editor.chain().focus().toggleTaskList().run()}    active={s.isTask}    title="Task List" />
+          <Btn icon={List}        action={() => editor.chain().focus().toggleBulletList().run()}  active={s.isBullet}  title="Bullet List (⌘⇧8)" />
+          <Btn icon={ListOrdered} action={() => editor.chain().focus().toggleOrderedList().run()} active={s.isOrdered} title="Numbered List (⌘⇧7)" />
+          <Btn icon={CheckSquare} action={() => editor.chain().focus().toggleTaskList().run()}    active={s.isTask}    title="Task / Checklist" />
 
           <Divider />
 
-          <Btn icon={IndentIncrease} action={() => editor.chain().focus().sinkListItem('listItem').run()} disabled={!s.canIndent}  title="Indent" />
-          <Btn icon={IndentDecrease} action={() => editor.chain().focus().liftListItem('listItem').run()} disabled={!s.canOutdent} title="Outdent" />
+          <Btn
+            icon={IndentIncrease}
+            action={() => {
+              if (editor.can().sinkListItem('listItem')) editor.chain().focus().sinkListItem('listItem').run()
+              else if (editor.can().sinkListItem('taskItem')) editor.chain().focus().sinkListItem('taskItem').run()
+            }}
+            disabled={!s.canIndent}
+            title="Indent"
+          />
+          <Btn
+            icon={IndentDecrease}
+            action={() => {
+              if (editor.can().liftListItem('listItem')) editor.chain().focus().liftListItem('listItem').run()
+              else if (editor.can().liftListItem('taskItem')) editor.chain().focus().liftListItem('taskItem').run()
+            }}
+            disabled={!s.canOutdent}
+            title="Outdent"
+          />
 
           <Divider />
 
           <Btn icon={Quote} action={() => editor.chain().focus().toggleBlockquote().run()}  active={s.isBlockquote} title="Blockquote" />
-          <Btn icon={Code}  action={() => editor.chain().focus().toggleCodeBlock().run()}   active={s.isCodeBlock}  title="Code Block" />
+          <Btn icon={Code2} action={() => editor.chain().focus().toggleCodeBlock().run()}   active={s.isCodeBlock}  title="Code Block" />
           <Btn icon={Minus} action={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule" />
 
           <Divider />
@@ -478,10 +496,151 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
 
           <Divider />
 
-          <Btn icon={ImageIcon}   action={() => setShowImageModal(true)}                                                               title="Insert Image" />
-          <Btn icon={YoutubeIcon} action={() => setShowEmbedModal(true)}                                                               title="Embed Video" />
-          <Btn icon={TableIcon}   action={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}    title="Insert Table" />
+          <Btn icon={ImageIcon}   action={() => setShowImageModal(true)}                                                                                                    title="Insert Image" />
+          <Btn icon={YoutubeIcon} action={() => setShowEmbedModal(true)}                                                                                                    title="Embed Video" />
+          <Btn icon={TableIcon}   action={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}                                         title="Insert Table (3×3)" />
+          <Btn icon={Code}        action={() => editor.chain().focus().toggleCodeBlock().run()}                                                                               active={s.isCodeBlock} title="Code Block" />
         </div>
+
+        {/* ══ ROW 3: Table management — only visible when cursor is inside a table ══ */}
+        {s.isInTable && (
+          <div
+            className="flex flex-wrap items-center gap-0.5 px-2 pb-2 pt-0 border-t"
+            style={{ borderColor: 'var(--bg-border)', borderTopStyle: 'dashed' }}
+          >
+            <span className="text-xs font-semibold px-1 mr-1" style={{ color: 'var(--color-violet)' }}>Table:</span>
+
+            {/* Add rows */}
+            <button
+              type="button"
+              title="Add Row Above"
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Rows3 size={12} />
+              Row ↑
+            </button>
+            <button
+              type="button"
+              title="Add Row Below"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Rows3 size={12} />
+              Row ↓
+            </button>
+
+            <Divider />
+
+            {/* Add columns */}
+            <button
+              type="button"
+              title="Add Column Left"
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Columns3 size={12} />
+              Col ←
+            </button>
+            <button
+              type="button"
+              title="Add Column Right"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Columns3 size={12} />
+              Col →
+            </button>
+
+            <Divider />
+
+            {/* Delete row/column */}
+            <button
+              type="button"
+              title="Delete Row"
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-red-50 transition-all cursor-pointer shrink-0"
+              style={{ color: '#ef4444' }}
+            >
+              <Trash2 size={11} />
+              Del Row
+            </button>
+            <button
+              type="button"
+              title="Delete Column"
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-red-50 transition-all cursor-pointer shrink-0"
+              style={{ color: '#ef4444' }}
+            >
+              <Trash2 size={11} />
+              Del Col
+            </button>
+
+            <Divider />
+
+            {/* Merge / Split */}
+            <button
+              type="button"
+              title="Merge Cells"
+              onClick={() => editor.chain().focus().mergeCells().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <Merge size={12} />
+              Merge
+            </button>
+            <button
+              type="button"
+              title="Split Cell"
+              onClick={() => editor.chain().focus().splitCell().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <SplitSquareHorizontal size={12} />
+              Split
+            </button>
+
+            <Divider />
+
+            {/* Header toggles */}
+            <button
+              type="button"
+              title="Toggle Header Row"
+              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Header Row
+            </button>
+            <button
+              type="button"
+              title="Toggle Header Column"
+              onClick={() => editor.chain().focus().toggleHeaderColumn().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-gray-100 transition-all cursor-pointer shrink-0"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Header Col
+            </button>
+
+            <Divider />
+
+            {/* Delete Table */}
+            <button
+              type="button"
+              title="Delete Table"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs hover:bg-red-50 transition-all cursor-pointer shrink-0"
+              style={{ color: '#ef4444' }}
+            >
+              <Trash2 size={11} />
+              Del Table
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modals */}

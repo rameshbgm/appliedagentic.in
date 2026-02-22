@@ -22,17 +22,24 @@ async function getStats() {
 }
 
 export default async function DashboardPage() {
-  const stats = await getStats()
+  const raw = await getStats()
+  // API response shape: { stats: { totalModules, totalTopics, publishedArticles, draftArticles,
+  //   totalMedia, aiUsage, totalMenus, totalSubMenus }, recentArticles, aiLogs }
+  const s = raw?.stats ?? {}
+  const recentArticles = raw?.recentArticles ?? []
+
+  const totalArticles = s.totalArticles ?? ((s.publishedArticles ?? 0) + (s.draftArticles ?? 0))
+  const totalViews = s.totalViews ?? 0
 
   const cards = [
-    { label: 'Total Articles', value: stats?.totalArticles ?? 0, iconName: 'FileText', color: '#6C3DFF' },
-    { label: 'Published', value: stats?.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
-    { label: 'Menus', value: stats?.totalMenus ?? 0, iconName: 'Menu', color: '#AAFF00' },
-    { label: 'Sub-Menus', value: stats?.totalSubMenus ?? 0, iconName: 'ListTree', color: '#88CC00' },
-    { label: 'Modules', value: stats?.totalModules ?? 0, iconName: 'Layers', color: '#00D4FF' },
-    { label: 'Topics', value: stats?.totalTopics ?? 0, iconName: 'BookOpen', color: '#FFA502' },
-    { label: 'Total Views', value: stats?.totalViews ?? 0, iconName: 'Eye', color: '#FF6B6B', suffix: '' },
-    { label: 'Media Assets', value: stats?.totalMedia ?? 0, iconName: 'Users', color: '#FF69B4' },
+    { label: 'Total Articles', value: totalArticles,             iconName: 'FileText',   color: '#6C3DFF' },
+    { label: 'Published',      value: s.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
+    { label: 'Menus',          value: s.totalMenus       ?? 0,  iconName: 'Menu',        color: '#AAFF00' },
+    { label: 'Sub-Menus',      value: s.totalSubMenus    ?? 0,  iconName: 'ListTree',    color: '#88CC00' },
+    { label: 'Modules',        value: s.totalModules     ?? 0,  iconName: 'Layers',      color: '#00D4FF' },
+    { label: 'Topics',         value: s.totalTopics      ?? 0,  iconName: 'BookOpen',    color: '#FFA502' },
+    { label: 'Total Views',    value: totalViews,               iconName: 'Eye',         color: '#FF6B6B', suffix: '' },
+    { label: 'Media Assets',   value: s.totalMedia       ?? 0,  iconName: 'Users',       color: '#FF69B4' },
   ]
 
   return (
@@ -51,11 +58,11 @@ export default async function DashboardPage() {
 
       {/* Charts */}
       <Suspense fallback={<div className="h-64 rounded-2xl skeleton" />}>
-        <DashboardCharts recentArticles={stats?.recentArticles ?? []} topArticles={stats?.topArticles ?? []} />
+        <DashboardCharts recentArticles={recentArticles} topArticles={recentArticles} />
       </Suspense>
 
       {/* Recent articles table */}
-      {stats?.recentArticles?.length > 0 && (
+      {recentArticles.length > 0 && (
         <div className="card p-6">
           <h2 className="font-display font-semibold text-lg mb-4" style={{ color: 'var(--text-primary)' }}>
             Recent Articles
@@ -71,7 +78,7 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {stats.recentArticles.slice(0, 8).map((a: any) => (
+                {recentArticles.slice(0, 8).map((a: any) => (
                   <tr key={a.id} className="border-t" style={{ borderColor: 'var(--bg-border)' }}>
                     <td className="py-3 pr-4 font-medium truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>
                       <a href={`/admin/articles/${a.id}/edit`} className="hover:text-violet-400 transition-colors">

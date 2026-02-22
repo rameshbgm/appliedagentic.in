@@ -8,6 +8,13 @@ import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 import { ArticleStatus } from '@prisma/client'
 
+const SectionInput = z.object({
+  id: z.number().int().optional(),
+  title: z.string().default(''),
+  content: z.string().default(''),
+  order: z.number().int().default(0),
+})
+
 const ArticleSchema = z.object({
   title: z.string().min(1).max(300),
   slug: z.string().optional(),
@@ -29,6 +36,7 @@ const ArticleSchema = z.object({
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
   subMenuIds: z.array(z.number().int()).optional(),
+  sections: z.array(SectionInput).optional(),
 })
 
 const articleInclude = {
@@ -47,6 +55,7 @@ const articleInclude = {
   coverImage: {
     select: { id: true, url: true, altText: true, width: true, height: true },
   },
+  sections: { orderBy: { order: 'asc' as const } },
 }
 
 export async function GET(req: NextRequest) {
@@ -195,12 +204,30 @@ export async function POST(req: NextRequest) {
     // Link to submenus if provided
     if (data.subMenuIds?.length) {
       await prisma.subMenuArticle.createMany({
-        data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: article.id, order: i + 1 })),
+        data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: article.id, orderIndex: i + 1 })),
         skipDuplicates: true,
       })
     }
 
-    return apiSuccess(article, 201)
+    // Create sections if provided
+    if (data.sections?.length) {
+      await prisma.articleSection.createMany({
+        data: data.sections.map((s, i) => ({
+          articleId: article.id,
+          title: s.title,
+          content: s.content,
+          order: s.order ?? i,
+        })),
+      })
+    }
+
+    // Re-fetch with sections included
+    const articleWithSections = await prisma.article.findUnique({
+      where: { id: article.id },
+      include: articleInclude,
+    })
+
+    return apiSuccess(articleWithSections, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to create article', 500, err)

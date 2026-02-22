@@ -99,40 +99,55 @@ model Topic {
 }
 
 model Article {
-  id                 Int            @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   title              String
-  slug               String         @unique
-  summary            String?        @db.Text
-  content            String         @db.LongText
-  status             ArticleStatus  @default(DRAFT)
+  slug               String           @unique
+  summary            String?          @db.Text
+  content            String           @db.LongText
+  status             ArticleStatus    @default(DRAFT)
   publishedAt        DateTime?
   scheduledAt        DateTime?
-  isFeatured         Boolean        @default(false)
+  isFeatured         Boolean          @default(false)
   coverImageId       Int?
-  coverImage         MediaAsset?    @relation("ArticleCoverImage", fields: [coverImageId], references: [id])
+  coverImage         MediaAsset?      @relation("ArticleCoverImage", fields: [coverImageId], references: [id])
   audioUrl           String?
   readingTimeMinutes Int?
-  viewCount          Int            @default(0)
+  viewCount          Int              @default(0)
   seoTitle           String?
-  seoDescription     String?        @db.Text
+  seoDescription     String?          @db.Text
   seoCanonicalUrl    String?
   ogImageUrl         String?
   authorId           Int
-  author             User           @relation("ArticleAuthor", fields: [authorId], references: [id])
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  author             User             @relation("ArticleAuthor", fields: [authorId], references: [id])
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   createdBy          Int?
   updatedBy          Int?
   topicArticles      TopicArticle[]
   articleTags        ArticleTag[]
   aiLogs             AIUsageLog[]
   subMenuArticles    SubMenuArticle[]
+  sections           ArticleSection[]
 
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
   @@index([authorId])
   @@index([isFeatured])
+}
+
+model ArticleSection {
+  id        Int      @id @default(autoincrement())
+  articleId Int
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  title     String   @default("")
+  content   String   @db.LongText
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId])
+  @@index([order])
 }
 
 model TopicArticle {

@@ -18,6 +18,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
       include: {
         articleTags: { include: { tag: true } },
         coverImage: { select: { url: true } },
+        sections: { orderBy: { order: 'asc' } },
       },
     }),
     prisma.navMenu.findMany({
@@ -57,6 +58,12 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         tagNames: article.articleTags.map((at) => at.tag.name),
         subMenuIds,
         navMenuId,
+        sections: article.sections.map((s) => ({
+          id: s.id,
+          title: s.title,
+          content: s.content,
+          order: s.order,
+        })),
       }}
       menus={menus}
       allTags={tags}

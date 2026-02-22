@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:prod": "dotenv -e .env.production -- next dev",
+    "dev": "next dev --webpack",
+    "dev:prod": "dotenv -e .env.production -- next dev --webpack",
     "dev:nodb": "DATABASE_URL='' next dev",
     "build": "rm -rf .next && next build",
     "start": "next start",
