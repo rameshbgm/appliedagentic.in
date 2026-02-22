@@ -237,26 +237,27 @@ export default async function ArticleDetailPage({ params }: Props) {
 
           {/* Mobile TOC — sticky below navbar, capped height on portrait so article content remains visible */}
           {(sections.length > 0 || article.content) && (
-            <div className="lg:hidden sticky top-16 z-40 pb-2 mb-3 max-h-[32vh] overflow-y-auto" style={{ background: 'var(--bg-page)' }}>
-              <TableOfContents
-                sections={sections.length > 0
-                  ? sections
-                  : [{ id: 0, title: '', content: article.content, order: 0 }]}
-              />
+            <div className="mobile-toc-tools-bar lg:hidden sticky top-16 z-40 pb-1 mb-2" style={{ background: 'var(--bg-page)' }}>
+              <div className="mobile-toc-scroll max-h-[32vh] overflow-y-auto">
+                <TableOfContents
+                  sections={sections.length > 0
+                    ? sections
+                    : [{ id: 0, title: '', content: article.content, order: 0 }]}
+                />
+              </div>
+              {/* Reader tools — inline row directly below TOC */}
+              <div className="pt-1">
+                <ArticleReaderTools
+                  content={sections.length > 0
+                    ? sections.map(s => s.content).join('\n')
+                    : article.content}
+                  inline
+                />
+              </div>
             </div>
           )}
 
-          {/* Mobile reader tools — fixed bottom bar (rendered here to mount the component) */}
-          {(sections.length > 0 || article.content) && (
-            <div className="lg:hidden">
-              <ArticleReaderTools
-                content={sections.length > 0
-                  ? sections.map(s => s.content).join('\n')
-                  : article.content}
-                mobile
-              />
-            </div>
-          )}
+          {/* Mobile reader tools — fixed bottom bar REMOVED; now inline above */}
 
           <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
 
@@ -272,7 +273,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0 pb-24 lg:pb-0">
+            <article className="flex-1 min-w-0 pb-8 lg:pb-0">
 
               {/* Cover image */}
               {article.coverImage && (

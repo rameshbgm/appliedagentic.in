@@ -1,7 +1,6 @@
 // lib/openai.ts
 // SERVER-SIDE ONLY — never import in client components
 import OpenAI from 'openai'
-import { prisma } from './prisma'
 
 let _openaiClient: OpenAI | null = null
 
@@ -27,23 +26,16 @@ export interface OpenAIConfig {
   ttsVoice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
 }
 
-/** Merge env vars + DB settings — env takes precedence except API key always from env */
+/** Read AI config purely from environment variables */
 export async function getAIConfig(): Promise<OpenAIConfig> {
-  let settings = null
-  try {
-    settings = await prisma.siteSettings.findFirst()
-  } catch {
-    // DB may not be ready yet
-  }
-
   return {
-    textModel: process.env.OPENAI_TEXT_MODEL ?? settings?.openaiTextModel ?? 'gpt-4o',
-    imageModel: process.env.OPENAI_IMAGE_MODEL ?? settings?.openaiImageModel ?? 'dall-e-3',
-    audioModel: process.env.OPENAI_AUDIO_MODEL ?? settings?.openaiAudioModel ?? 'tts-1',
-    temperature: parseFloat(process.env.OPENAI_TEMPERATURE ?? String(settings?.openaiTemperature ?? 0.7)),
-    maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS ?? String(settings?.openaiMaxTokens ?? 2000)),
-    imageSize: (process.env.OPENAI_IMAGE_SIZE ?? settings?.openaiImageSize ?? '1024x1024') as OpenAIConfig['imageSize'],
-    imageQuality: (process.env.OPENAI_IMAGE_QUALITY ?? settings?.openaiImageQuality ?? 'standard') as 'standard' | 'hd',
-    ttsVoice: (process.env.OPENAI_TTS_VOICE ?? settings?.openaiTtsVoice ?? 'nova') as OpenAIConfig['ttsVoice'],
+    textModel:    process.env.OPENAI_TEXT_MODEL    ?? 'gpt-4o',
+    imageModel:   process.env.OPENAI_IMAGE_MODEL   ?? 'dall-e-3',
+    audioModel:   process.env.OPENAI_AUDIO_MODEL   ?? 'tts-1',
+    temperature:  parseFloat(process.env.OPENAI_TEMPERATURE ?? '0.7'),
+    maxTokens:    parseInt(process.env.OPENAI_MAX_TOKENS    ?? '2000'),
+    imageSize:    (process.env.OPENAI_IMAGE_SIZE    ?? '1024x1024') as OpenAIConfig['imageSize'],
+    imageQuality: (process.env.OPENAI_IMAGE_QUALITY ?? 'standard') as 'standard' | 'hd',
+    ttsVoice:     (process.env.OPENAI_TTS_VOICE     ?? 'nova')      as OpenAIConfig['ttsVoice'],
   }
 }
