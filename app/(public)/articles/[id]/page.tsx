@@ -277,7 +277,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
               {/* Cover image */}
               {article.coverImage && (
-                <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6 sm:mb-10" style={{ maxHeight: '60vw' }}>
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6 sm:mb-10" style={{ maxHeight: 'min(60vw, 50vh)' }}>
                   <Image
                     src={article.coverImage.url}
                     alt={article.title}

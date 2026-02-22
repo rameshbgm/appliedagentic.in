@@ -209,7 +209,7 @@ export default function Navbar({ navMenus = [] }: Props) {
       {mobileOpen && (
         <div
           className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto overscroll-contain"
-          style={{ background: 'rgba(8, 14, 30, 0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid ${navBorder}` }}
+          style={{ background: 'var(--bg-page)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid ${navBorder}` }}
         >
           <nav className="px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-0.5">
             {navMenus.map((menu) => {

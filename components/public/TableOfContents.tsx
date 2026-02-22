@@ -199,7 +199,7 @@ export default function TableOfContents({ sections, content }: Props) {
         <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Table of Contents</p>
         </div>
-        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto max-h-[calc(100vh-14rem)]">
+        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto" style={{ maxHeight: 'calc(100dvh - 14rem)' }}>
           {listEl}
         </div>
         <div className="px-4 pb-4 pt-2">

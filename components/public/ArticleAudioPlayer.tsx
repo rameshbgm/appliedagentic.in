@@ -56,7 +56,7 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-full max-w-lg mx-4 rounded-2xl px-5 py-4 shadow-2xl"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-lg rounded-2xl px-5 py-4 shadow-2xl"
       style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(108,61,255,0.4)' }}
     >
       <audio ref={audioRef} src={audioUrl} />
@@ -75,16 +75,20 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
           <p className="text-xs font-medium truncate mb-1.5" style={{ color: 'var(--text-primary)' }}>
             🎧 {title}
           </p>
-          {/* Progress bar */}
+          {/* Progress bar — tall hit area, thin visible bar */}
           <div
-            className="h-1.5 rounded-full cursor-pointer relative"
-            style={{ background: 'var(--bg-border)' }}
+            className="h-6 flex items-center cursor-pointer relative"
             onClick={seek}
           >
             <div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${progress}%`, background: 'var(--green)' }}
-            />
+              className="h-1.5 rounded-full w-full relative"
+              style={{ background: 'var(--bg-border)' }}
+            >
+              <div
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ width: `${progress}%`, background: 'var(--green)' }}
+              />
+            </div>
           </div>
           <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
             <span>{audioRef.current ? fmt(audioRef.current.currentTime) : '0:00'}</span>
@@ -94,17 +98,17 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
 
         <button
           onClick={() => { setMuted((v) => !v); if (audioRef.current) audioRef.current.muted = !muted }}
-          className="p-1.5 rounded-lg hover:bg-white/10"
+          className="p-2.5 rounded-lg hover:bg-white/10"
           style={{ color: 'var(--text-muted)' }}
         >
-          {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
         <button
           onClick={() => { setVisible(false); if (audioRef.current) { audioRef.current.pause() } }}
-          className="p-1.5 rounded-lg hover:bg-white/10"
+          className="p-2.5 rounded-lg hover:bg-white/10"
           style={{ color: 'var(--text-muted)' }}
         >
-          <X size={15} />
+          <X size={16} />
         </button>
       </div>
     </div>

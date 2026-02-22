@@ -103,7 +103,7 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
   ]
 
   return (
-    <section className="bg-dark pattern-dots relative flex flex-col md:flex-row justify-between items-center px-10 md:px-32 gap-10 overflow-hidden pt-10 sm:pt-14 pb-16 sm:pb-20">
+    <section className="bg-dark pattern-dots relative flex flex-col md:flex-row justify-between items-center px-4 sm:px-8 md:px-16 lg:px-32 gap-10 overflow-hidden pt-10 sm:pt-14 pb-16 sm:pb-20">
 
       {/* ── animated dots ── */}
       <DotsLayer />
@@ -203,7 +203,7 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
         ══════════════════════════════════════════════════ */}
         <div className="flex flex-col items-center text-center order-1 md:order-2">
           <h1 className="font-sans font-black leading-none">
-            <span className="block text-7xl md:text-[10vw] text-outline">
+            <span className="block text-5xl sm:text-7xl md:text-[10vw] xl:text-[8vw] 2xl:text-[120px] text-outline">
               {headline.line1}
             </span>
 

@@ -926,8 +926,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 9px;
   background: transparent;
   border: none;
@@ -939,12 +939,11 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   user-select: none;
   touch-action: manipulation;
 }
-/* Shrink buttons on tiny phones to still fit in one row */
-@media (max-width: 380px) {
+/* Desktop: shrink back to 36px */
+@media (min-width: 1024px) {
   .tool-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 7px;
+    width: 36px;
+    height: 36px;
   }
 }
 .tool-btn:hover  { background: var(--bg-elevated); color: var(--text-primary); transform: scale(1.1); }
@@ -1108,6 +1107,12 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content h3:hover .section-ai-btn {
   opacity: 0.55;
 }
+/* Touch devices: always show section AI button at low opacity */
+@media (hover: none) {
+  .section-ai-btn {
+    opacity: 0.35;
+  }
+}
 /* Flex layout so the bot icon sits at the far-right of each heading */
 .article-content h2:has(.section-ai-btn),
 .article-content h3:has(.section-ai-btn) {
@@ -1185,6 +1190,13 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 @keyframes _slide-rgt { from { opacity:0; transform:translateX(36px);  } to { opacity:1; transform:none; } }
 @keyframes _zoom-in   { from { opacity:0; transform:scale(0.9); }        to { opacity:1; transform:none; } }
 @keyframes _flip-y    { from { opacity:0; transform:rotateY(20deg); }    to { opacity:1; transform:none; } }
+
+/* iOS: prevent zoom on input focus (requires font-size >= 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
 
 .anim-fade-up    { animation: _fade-up   0.5s cubic-bezier(0.22,1,0.36,1) both; }
 .anim-slide-left { animation: _slide-lft 0.5s cubic-bezier(0.22,1,0.36,1) both; }
