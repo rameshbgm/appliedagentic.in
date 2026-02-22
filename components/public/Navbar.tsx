@@ -65,12 +65,17 @@ export default function Navbar({ navMenus = [] }: Props) {
         <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-            style={{ background: 'var(--green)' }}
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)' }}
           >
-            <Zap size={15} className="text-black" />
+            <Zap size={15} className="text-white" />
           </div>
           <span className="font-bold text-sm tracking-tight" style={{ color: textPrimary }}>
-            Applied<span style={{ color: 'var(--green)' }}>Agentic</span>
+            Applied<span style={{
+              background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>Agentic</span>
           </span>
         </Link>
 
