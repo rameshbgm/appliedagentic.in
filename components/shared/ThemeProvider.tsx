@@ -18,9 +18,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('dark')
 
   useEffect(() => {
-    // Public site is always dark — force it and clear any stale preference
-    document.documentElement.setAttribute('data-theme', 'dark')
-    localStorage.removeItem('aa-theme')
+    // Respect stored user preference; fall back to dark
+    const stored = localStorage.getItem('aa-theme') as Theme | null
+    const initial: Theme = stored ?? 'dark'
+    setThemeState(initial)
+    document.documentElement.setAttribute('data-theme', initial)
   }, [])
 
   const setTheme = (t: Theme) => {

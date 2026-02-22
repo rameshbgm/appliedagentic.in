@@ -10,6 +10,7 @@ import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
 import RelatedArticles from '@/components/public/RelatedArticles'
 import ReadingProgressBar from '@/components/public/ReadingProgressBar'
 import TableOfContents from '@/components/public/TableOfContents'
+import ArticleReaderTools from '@/components/public/ArticleReaderTools'
 import ShareButtons from '@/components/public/ShareButtons'
 import { formatDate } from '@/lib/utils'
 import { Clock, Eye, Calendar, ArrowLeft, ArrowRight } from 'lucide-react'
@@ -154,7 +155,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
         {/* ─── Article Hero ──────────────────────────────────────── */}
         <div
-          className="w-full px-[3%] pt-10 pb-12"
+          className="w-full px-[3%] pt-6 sm:pt-10 pb-8 sm:pb-12"
           style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
         >
           <div>
@@ -239,12 +240,19 @@ export default async function ArticleDetailPage({ params }: Props) {
         </div>
 
         {/* ─── Body: TOC sidebar (left) + Article content (right) ── */}
-        <div className="px-[3%] py-10">
+        <div className="px-[3%] py-6 sm:py-10">
 
-          {/* Mobile TOC — sticky below navbar, above all article content */}
+          {/* Mobile TOC — sticky below navbar, capped height on portrait so article content remains visible */}
           {article.content && (
-            <div className="lg:hidden mb-6">
+            <div className="lg:hidden sticky top-16 z-40 pb-2 mb-3 max-h-[32vh] overflow-y-auto" style={{ background: 'var(--bg-page)' }}>
               <TableOfContents content={article.content} />
+            </div>
+          )}
+
+          {/* Mobile reader tools — fixed bottom bar (rendered here to mount the component) */}
+          {article.content && (
+            <div className="lg:hidden">
+              <ArticleReaderTools content={article.content} mobile />
             </div>
           )}
 
@@ -258,11 +266,11 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0">
+            <article className="flex-1 min-w-0 pb-24 lg:pb-0">
 
               {/* Cover image */}
               {article.coverImage && (
-                <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-10">
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6 sm:mb-10" style={{ maxHeight: '60vw' }}>
                   <Image
                     src={article.coverImage.url}
                     alt={article.title}
@@ -340,6 +348,13 @@ export default async function ArticleDetailPage({ params }: Props) {
                 />
               )}
             </article>
+
+            {/* Desktop reader tools — right side vertical strip */}
+            {article.content && (
+              <div className="hidden lg:flex flex-col items-center sticky top-20 self-start shrink-0 ml-2">
+                <ArticleReaderTools content={article.content} />
+              </div>
+            )}
           </div>
         </div>
       </div>
