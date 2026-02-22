@@ -170,22 +170,8 @@ export default async function ArticleDetailPage({ params }: Props) {
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm mb-8 flex-wrap" style={{ color: 'var(--text-muted)' }}>
               <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
-              {articleModule && (
-                <>
-                  <span className="opacity-40">&rsaquo;</span>
-                  <Link href={`/modules/${articleModule.slug}`} className="hover:text-(--green) transition-colors">
-                    {articleModule.name}
-                  </Link>
-                </>
-              )}
-              {topics[0] && (
-                <>
-                  <span className="opacity-40">&rsaquo;</span>
-                  <Link href={`/topics/${topics[0].slug}`} className="hover:text-(--green) transition-colors">
-                    {topics[0].name}
-                  </Link>
-                </>
-              )}
+              <span className="opacity-40">&rsaquo;</span>
+              <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
               <span className="opacity-40">&rsaquo;</span>
               <span className="line-clamp-1" style={{ color: 'var(--text-secondary)' }}>{article.title}</span>
             </nav>

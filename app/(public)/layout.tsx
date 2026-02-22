@@ -15,19 +15,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'),
 }
 
-async function getModules() {
-  try {
-    return await prisma.module.findMany({
-      where: { isPublished: true },
-      orderBy: { order: 'asc' },
-      select: { id: true, name: true, slug: true, icon: true, color: true },
-    })
-  } catch (err) {
-    logger.error('[PublicLayout] DB error loading modules', err)
-    return []
-  }
-}
-
 async function getNavMenus() {
   try {
     return await prisma.navMenu.findMany({
@@ -51,7 +38,7 @@ async function getNavMenus() {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [modules, navMenus] = await Promise.all([getModules(), getNavMenus()])
+  const navMenus = await getNavMenus()
 
   return (
     <ThemeProvider>
@@ -62,7 +49,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="min-h-screen pt-16">
         {children}
       </main>
-      <Footer modules={modules} />
+      <Footer menus={navMenus} />
     </ThemeProvider>
   )
 }

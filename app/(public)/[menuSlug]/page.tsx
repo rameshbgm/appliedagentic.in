@@ -72,6 +72,13 @@ export default async function MenuPage({ params }: Props) {
         style={{ borderBottom: '1px solid var(--bg-border)' }}
       >
         <div className="max-w-5xl mx-auto">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-colors hover:text-[var(--green)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ← Back to Home
+          </Link>
           <nav className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
             <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
             <span className="opacity-40">&rsaquo;</span>
