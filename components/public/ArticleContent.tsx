@@ -43,39 +43,83 @@ export default function ArticleContent({ content }: Props) {
       pre.appendChild(btn)
     })
 
-    // ── Scroll-reveal —— tag each element, then observe ──────────────────────
-    const targets = root.querySelectorAll(
-      'h1, h2, h3, h4, p, blockquote, pre, img, ul, ol, table, figure'
+    // ── Wrap H1 + following siblings into <section class="article-section"> ──
+    // Only run once (guard: section already exists)
+    if (!root.querySelector('.article-section')) {
+      type Group = { h1: Element | null; nodes: ChildNode[] }
+      const groups: Group[] = []
+      let current: Group = { h1: null, nodes: [] }
+
+      Array.from(root.childNodes).forEach((node) => {
+        const el = node as Element
+        if (el.tagName === 'H1') {
+          if (current.h1 || current.nodes.length > 0) groups.push(current)
+          current = { h1: el, nodes: [] }
+        } else {
+          current.nodes.push(node)
+        }
+      })
+      if (current.h1 || current.nodes.length > 0) groups.push(current)
+
+      groups.forEach(({ h1, nodes }) => {
+        if (!h1) return // preamble before first H1 — leave as-is
+        const section = document.createElement('section')
+        section.className = 'article-section article-section-slide'
+        root.insertBefore(section, h1)
+        section.appendChild(h1)
+        nodes.forEach((n) => section.appendChild(n))
+      })
+    }
+
+    // ── Observer 1: section slide (whole card) ───────────────────────────────
+    const sectionIo = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          entry.target.classList.add('section-visible')
+          sectionIo.unobserve(entry.target)
+        })
+      },
+      { threshold: 0.06, rootMargin: '0px 0px -60px 0px' }
     )
+    root.querySelectorAll('.article-section-slide').forEach((s) => sectionIo.observe(s))
 
-    let staggerIdx = 0
-    targets.forEach((el) => {
-      // skip already-revealed (hot-reload safety)
-      if (el.classList.contains('reveal-visible')) return
-      el.classList.add('reveal-hidden')
-      // Stagger: max 320 ms total, 55 ms per item  
-      ;(el as HTMLElement).style.transitionDelay = `${Math.min(staggerIdx * 55, 320)}ms`
-      staggerIdx++
-    })
-
-    const io = new IntersectionObserver(
+    // ── Observer 2: per-element fade-up inside each section ──────────────────
+    const innerIo = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return
           const el = entry.target as HTMLElement
           el.classList.remove('reveal-hidden')
           el.classList.add('reveal-visible')
-          // clear delay after transition so it doesn't affect re-entry
-          setTimeout(() => { el.style.transitionDelay = '' }, 700)
-          io.unobserve(el)
+          setTimeout(() => { el.style.transitionDelay = '' }, 750)
+          innerIo.unobserve(el)
         })
       },
-      { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     )
 
-    targets.forEach((el) => io.observe(el))
+    root.querySelectorAll('.article-section').forEach((section) => {
+      const items = section.querySelectorAll(
+        'h1, h2, h3, h4, p, blockquote, pre, img, ul, ol, table, figure'
+      )
+      items.forEach((el, i) => {
+        if (el.classList.contains('reveal-visible')) return
+        el.classList.add('reveal-hidden')
+        ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
+        innerIo.observe(el)
+      })
+    })
 
-    return () => io.disconnect()
+    // Also animate any preamble elements that weren't wrapped in a section
+    root.querySelectorAll(':scope > h2, :scope > h3, :scope > h4, :scope > p, :scope > blockquote, :scope > pre, :scope > img, :scope > ul, :scope > ol, :scope > figure').forEach((el, i) => {
+      if (el.classList.contains('reveal-visible')) return
+      el.classList.add('reveal-hidden')
+      ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
+      innerIo.observe(el)
+    })
+
+    return () => { sectionIo.disconnect(); innerIo.disconnect() }
   }, [content])
 
   return (

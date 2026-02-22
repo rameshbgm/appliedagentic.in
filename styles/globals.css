@@ -313,6 +313,65 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transform: translateY(22px) scale(0.97);
 }
 
+/* ─── Article H1 sections — card + slide ────────────────────────────────────── */
+.article-section {
+  position: relative;
+  border-radius: 18px;
+  padding: 2.25rem 2.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--bg-border);
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  .article-section { padding: 1.4rem 1.25rem; border-radius: 12px; }
+}
+
+/* Alternating background tones */
+.article-section:nth-child(odd)  { background: var(--bg-surface,  #13131a); }
+.article-section:nth-child(even) { background: var(--bg-elevated, #1a1a2a); }
+
+/* Accent left-edge glow bar */
+.article-section::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(180deg, var(--green, #2ED573) 0%, var(--neon, #06b6d4) 100%);
+  opacity: 0.7;
+}
+
+/* H1 inside each section */
+.article-section > h1,
+.article-section > h1:first-child {
+  font-size: clamp(1.4rem, 3vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid color-mix(in srgb, var(--green, #2ED573) 35%, transparent);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Section slide-in (before JS fires) ── */
+.article-section-slide {
+  opacity: 0;
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Odd sections slide in from the left */
+.article-section-slide:nth-child(odd)  { transform: translateX(-52px); }
+/* Even sections slide in from the right */
+.article-section-slide:nth-child(even) { transform: translateX(52px); }
+
+.article-section-slide.section-visible {
+  opacity: 1;
+  transform: none;
+}
+
 /* ─── Editor font select preview ─────────────────────────────────────────────── */
 .font-opt-inter          { font-family: 'Inter', sans-serif; }
 .font-opt-space-grotesk  { font-family: 'Space Grotesk', sans-serif; }
