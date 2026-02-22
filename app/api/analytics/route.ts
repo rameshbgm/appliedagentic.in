@@ -10,17 +10,19 @@ export async function GET() {
 
   try {
     const [
-      totalModules, totalTopics, publishedArticles, draftArticles, totalMedia,
-      aiUsage, totalMenus, totalSubMenus, recentArticles, aiLogs,
+      totalModules, totalTopics, publishedArticles, draftArticles, totalArticlesRaw, totalMedia,
+      aiUsage, totalMenus, totalSubMenus, viewsAgg, recentArticles, aiLogs,
     ] = await prisma.$transaction([
       prisma.module.count(),
       prisma.topic.count(),
       prisma.article.count({ where: { status: ArticleStatus.PUBLISHED } }),
       prisma.article.count({ where: { status: ArticleStatus.DRAFT } }),
+      prisma.article.count(),
       prisma.mediaAsset.count(),
       prisma.aIUsageLog.count(),
       prisma.navMenu.count(),
       prisma.navSubMenu.count(),
+      prisma.article.aggregate({ _sum: { viewCount: true } }),
       prisma.article.findMany({
         orderBy: { updatedAt: 'desc' },
         take: 10,
@@ -46,12 +48,14 @@ export async function GET() {
       stats: {
         totalModules,
         totalTopics,
+        totalArticles: totalArticlesRaw,
         publishedArticles,
         draftArticles,
         totalMedia,
         aiUsage,
         totalMenus,
         totalSubMenus,
+        totalViews: viewsAgg._sum.viewCount ?? 0,
       },
       recentArticles,
       aiLogs,

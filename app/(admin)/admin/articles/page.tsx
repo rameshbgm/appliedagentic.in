@@ -3,47 +3,116 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Plus, Pencil, Copy, Trash2, Eye } from 'lucide-react'
+import { Plus, Pencil, Eye, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import ArticleActions from './ArticleActions'
 
 export const metadata: Metadata = { title: 'Articles' }
 export const revalidate = 0
 
-interface SearchParams { status?: string; search?: string; page?: string }
+interface SearchParams {
+  status?: string
+  search?: string
+  page?: string
+  sortBy?: string
+  sortDir?: string
+}
 
-export default async function ArticlesPage({ searchParams }: { searchParams: SearchParams }) {
-  const page = Number(searchParams.page ?? 1)
+// Build a URL preserving current params, overriding specific keys
+function buildHref(base: string, current: SearchParams, overrides: Partial<SearchParams>): string {
+  const merged = { ...current, ...overrides }
+  const params = new URLSearchParams()
+  if (merged.status)  params.set('status',  merged.status)
+  if (merged.search)  params.set('search',  merged.search)
+  if (merged.page && merged.page !== '1') params.set('page', merged.page)
+  if (merged.sortBy)  params.set('sortBy',  merged.sortBy)
+  if (merged.sortDir) params.set('sortDir', merged.sortDir)
+  const qs = params.toString()
+  return qs ? `${base}?${qs}` : base
+}
+
+// Compact pagination page list: max 7 items with ellipsis
+function getPageList(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | '…')[] = []
+  const WING = 2
+  const showLeft  = current > WING + 2
+  const showRight = current < total - WING - 1
+  pages.push(1)
+  if (showLeft)  pages.push('…')
+  for (let p = Math.max(2, current - WING); p <= Math.min(total - 1, current + WING); p++) pages.push(p)
+  if (showRight) pages.push('…')
+  pages.push(total)
+  return pages
+}
+
+export default async function ArticlesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  // Next.js 15/16: searchParams is a Promise — must await before reading
+  const sp = await searchParams
+  const page     = Math.max(1, Number(sp.page ?? 1))
   const pageSize = 20
-  const statusFilter = searchParams.status as any
-  const search = searchParams.search
+  const statusFilter = sp.status as string | undefined
+  const search   = sp.search
+  const sortBy   = sp.sortBy  === 'title' ? 'title'     : 'updatedAt'
+  const sortDir  = sp.sortDir === 'asc'   ? ('asc' as const)  : ('desc' as const)
 
   const where = {
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(search ? {
       OR: [
-        { title: { contains: search } },
+        { title:   { contains: search } },
         { summary: { contains: search } },
       ],
     } : {}),
   }
 
-  const [articles, total] = await Promise.all([
+  const orderBy = sortBy === 'title'
+    ? { title: sortDir }
+    : { updatedAt: sortDir }
+
+  const [articles, total, statusCounts] = await Promise.all([
     prisma.article.findMany({
       where,
-      orderBy: { updatedAt: 'desc' },
+      orderBy,
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { topicArticles: { include: { topic: { include: { module: { select: { name: true, color: true } } } } } } },
+      include: {
+        topicArticles: {
+          include: { topic: { include: { module: { select: { name: true, color: true } } } } },
+        },
+      },
     }),
     prisma.article.count({ where }),
+    prisma.article.groupBy({ by: ['status'], _count: { id: true } }),
   ])
 
-  const statusOptions = ['', 'DRAFT', 'PUBLISHED', 'SCHEDULED', 'ARCHIVED']
+  const countMap = Object.fromEntries(statusCounts.map((r) => [r.status, r._count.id]))
+  const totalAll = Object.values(countMap).reduce((s, n) => s + n, 0)
+
+  const statusOptions = [
+    { value: '',          label: 'All',       count: totalAll },
+    { value: 'DRAFT',     label: 'Draft',     count: countMap['DRAFT']     ?? 0 },
+    { value: 'PUBLISHED', label: 'Published', count: countMap['PUBLISHED'] ?? 0 },
+    { value: 'SCHEDULED', label: 'Scheduled', count: countMap['SCHEDULED'] ?? 0 },
+    { value: 'ARCHIVED',  label: 'Archived',  count: countMap['ARCHIVED']  ?? 0 },
+  ]
+
   const totalPages = Math.ceil(total / pageSize)
 
+  // Sort column helpers
+  function SortIcon({ col }: { col: string }) {
+    if (sortBy !== col) return <ChevronsUpDown size={13} className="opacity-40" />
+    return sortDir === 'asc' ? <ChevronUp size={13} /> : <ChevronDown size={13} />
+  }
+
+  function sortHref(col: string) {
+    const newDir = sortBy === col && sortDir === 'desc' ? 'asc' : 'desc'
+    return buildHref('/admin/articles', sp, { sortBy: col, sortDir: newDir, page: '1' })
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>Articles</h1>
@@ -51,31 +120,44 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
         </div>
         <Link
           href="/admin/articles/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-black transition-transform hover:scale-105"
           style={{ background: '#AAFF00' }}
         >
-          <Plus size={16} />New Article
+          <Plus size={16} />
+          New Article
         </Link>
       </div>
 
-      {/* Filters */}
+      {/* Status filter tabs */}
       <div className="flex flex-wrap gap-2">
-        {statusOptions.map((s) => (
-          <Link
-            key={s || 'all'}
-            href={`/admin/articles${s ? `?status=${s}` : ''}`}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-              (s === '' && !statusFilter) || s === statusFilter ? 'text-black' : 'border'
-            }`}
-            style={{
-              background: (s === '' && !statusFilter) || s === statusFilter ? '#AAFF00' : 'transparent',
-              borderColor: 'var(--bg-border)',
-              color: (s === '' && !statusFilter) || s === statusFilter ? '#000' : 'var(--text-muted)',
-            }}
-          >
-            {s || 'All'}
-          </Link>
-        ))}
+        {statusOptions.map((opt) => {
+          const active = opt.value === '' ? !statusFilter : opt.value === statusFilter
+          return (
+            <Link
+              key={opt.value || 'all'}
+              href={buildHref('/admin/articles', sp, { status: opt.value || undefined, page: '1' })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                active ? 'text-black' : 'border hover:bg-gray-50'
+              }`}
+              style={{
+                background:  active ? '#AAFF00' : 'transparent',
+                borderColor: active ? 'transparent' : 'var(--bg-border)',
+                color:       active ? '#000' : 'var(--text-muted)',
+              }}
+            >
+              {opt.label}
+              <span
+                className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold"
+                style={{
+                  background: active ? 'rgba(0,0,0,0.15)' : 'var(--bg-elevated)',
+                  color:      active ? '#000' : 'var(--text-muted)',
+                }}
+              >
+                {opt.count}
+              </span>
+            </Link>
+          )
+        })}
       </div>
 
       {/* Table */}
@@ -83,11 +165,29 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--bg-border)', color: 'var(--text-muted)' }}>
-              <th className="text-left px-4 py-3 font-medium">Title</th>
-              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Module/Topic</th>
+              {/* Sortable: Title */}
+              <th className="text-left px-4 py-3 font-medium">
+                <Link
+                  href={sortHref('title')}
+                  className="inline-flex items-center gap-1 hover:text-gray-700 transition-colors"
+                >
+                  Title
+                  <SortIcon col="title" />
+                </Link>
+              </th>
+              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Module / Topic</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
               <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Views</th>
-              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Updated</th>
+              {/* Sortable: Updated */}
+              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
+                <Link
+                  href={sortHref('updatedAt')}
+                  className="inline-flex items-center gap-1 hover:text-gray-700 transition-colors"
+                >
+                  Updated
+                  <SortIcon col="updatedAt" />
+                </Link>
+              </th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -104,7 +204,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
                     {firstTopic && (
                       <span
                         className="inline-flex text-xs px-2 py-1 rounded-lg font-medium"
-                        style={{ background: (firstTopic.module.color ?? '#6C3DFF') + '25', color: firstTopic.module.color ?? '#6C3DFF' }}
+                        style={{
+                          background: (firstTopic.module.color ?? '#6C3DFF') + '25',
+                          color: firstTopic.module.color ?? '#6C3DFF',
+                        }}
                       >
                         {firstTopic.module.name}
                       </span>
@@ -113,8 +216,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
                   <td className="px-4 py-3">
                     <span className={`badge ${
                       a.status === 'PUBLISHED' ? 'badge-success' :
-                      a.status === 'DRAFT' ? 'badge-warning' :
-                      a.status === 'SCHEDULED' ? 'badge-info' : 'badge-default'
+                      a.status === 'DRAFT'     ? 'badge-warning' :
+                      a.status === 'SCHEDULED' ? 'badge-info'    : 'badge-default'
                     }`}>
                       {a.status}
                     </span>
@@ -141,6 +244,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
             })}
           </tbody>
         </table>
+
         {articles.length === 0 && (
           <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
             No articles found.{' '}
@@ -151,23 +255,69 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+        <div className="flex items-center justify-center gap-1.5">
+          {/* Prev */}
+          {page > 1 ? (
             <Link
-              key={p}
-              href={`/admin/articles?page=${p}${statusFilter ? `&status=${statusFilter}` : ''}`}
-              className={`w-8 h-8 rounded-xl text-sm flex items-center justify-center transition-colors ${
-                p === page ? 'text-black font-semibold' : 'border hover:bg-gray-50'
-              }`}
-              style={{
-                background: p === page ? '#AAFF00' : 'transparent',
-                borderColor: 'var(--bg-border)',
-                color: p === page ? '#000' : 'var(--text-muted)',
-              }}
+              href={buildHref('/admin/articles', sp, { page: String(page - 1) })}
+              className="w-8 h-8 rounded-xl border flex items-center justify-center hover:bg-gray-50 transition-colors"
+              style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
             >
-              {p}
+              <ChevronLeft size={14} />
             </Link>
-          ))}
+          ) : (
+            <span
+              className="w-8 h-8 rounded-xl border flex items-center justify-center opacity-30 cursor-default"
+              style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+            >
+              <ChevronLeft size={14} />
+            </span>
+          )}
+
+          {/* Page numbers */}
+          {getPageList(page, totalPages).map((p, i) =>
+            p === '…' ? (
+              <span
+                key={`ellipsis-${i}`}
+                className="w-8 h-8 flex items-center justify-center text-xs"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                …
+              </span>
+            ) : (
+              <Link
+                key={p}
+                href={buildHref('/admin/articles', sp, { page: String(p) })}
+                className="w-8 h-8 rounded-xl text-sm flex items-center justify-center font-medium transition-colors"
+                style={{
+                  background:  p === page ? '#AAFF00' : 'transparent',
+                  border:      p === page ? 'none' : '1px solid var(--bg-border)',
+                  borderColor: 'var(--bg-border)',
+                  color:       p === page ? '#000' : 'var(--text-muted)',
+                }}
+              >
+                {p}
+              </Link>
+            )
+          )}
+
+          {/* Next */}
+          {page < totalPages ? (
+            <Link
+              href={buildHref('/admin/articles', sp, { page: String(page + 1) })}
+              className="w-8 h-8 rounded-xl border flex items-center justify-center hover:bg-gray-50 transition-colors"
+              style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+            >
+              <ChevronRight size={14} />
+            </Link>
+          ) : (
+            <span
+              className="w-8 h-8 rounded-xl border flex items-center justify-center opacity-30 cursor-default"
+              style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+            >
+              <ChevronRight size={14} />
+            </span>
+          )}
         </div>
       )}
     </div>

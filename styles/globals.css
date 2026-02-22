@@ -418,6 +418,79 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transform: none;
 }
 
+/* ─── Public article section card (mirrors admin editor) ─────────────────────── */
+.section-optional {
+  position: relative;
+  border: 1px solid var(--bg-border);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+  background: var(--bg-elevated);
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity  0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.section-optional.section-visible {
+  opacity: 1;
+  transform: none;
+}
+/* Thin green accent left bar */
+.section-optional::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--green, #AAFF00)          0%,
+    rgba(170, 255, 0, 0.35)        55%,
+    transparent                    100%
+  );
+  z-index: 1;
+}
+/* Section header — only rendered when title exists */
+.section-optional-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--bg-border);
+  background: var(--bg-surface);
+  scroll-margin-top: calc(var(--nav-h) + 16px);
+}
+.section-optional-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #7C3AED;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.section-optional-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+/* Content body */
+.section-optional-body {
+  padding: 1.75rem 2rem;
+}
+@media (max-width: 640px) {
+  .section-optional { border-radius: 12px; margin-bottom: 1.25rem; }
+  .section-optional-body { padding: 1rem 1.1rem; }
+}
+[data-theme="light"] .section-optional { background: #fff; }
+[data-theme="light"] .section-optional-header { background: #f9fafb; }
+
 /* ─── Editor font select preview ─────────────────────────────────────────────── */
 .font-opt-inter          { font-family: 'Inter', sans-serif; }
 .font-opt-space-grotesk  { font-family: 'Space Grotesk', sans-serif; }
@@ -450,6 +523,67 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   pointer-events: none; float: left; height: 0;
 }
 .ProseMirror:focus { outline: none; }
+
+/* ─── TipTap table ───────────────────────────────────────────────────────────── */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1.25em 0;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--bg-border);
+}
+.ProseMirror table td,
+.ProseMirror table th {
+  min-width: 1em;
+  border: 1px solid var(--bg-border);
+  padding: 6px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.ProseMirror table th {
+  font-weight: 600;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-align: left;
+}
+.ProseMirror table td > *,
+.ProseMirror table th > * { margin-bottom: 0; }
+
+/* Selected cell highlight */
+.ProseMirror table .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(170, 255, 0, 0.12);
+  pointer-events: none;
+  z-index: 2;
+}
+/* Column resize handle */
+.ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(170, 255, 0, 0.5);
+  cursor: col-resize;
+  z-index: 20;
+}
+/* Resize cursor on the whole table while resizing */
+.ProseMirror.resize-cursor { cursor: col-resize; }
+
+/* Light theme */
+[data-theme="light"] .ProseMirror table { border-color: #e5e7eb; }
+[data-theme="light"] .ProseMirror table td,
+[data-theme="light"] .ProseMirror table th { border-color: #e5e7eb; color: #111827; }
+[data-theme="light"] .ProseMirror table th { background: #f3f4f6; }
+[data-theme="light"] .ProseMirror table .selectedCell::after { background: rgba(22,163,74,.1); }
 
 /* ─── Form input (used in admin forms) ──────────────────────────────────────── */
 .input {

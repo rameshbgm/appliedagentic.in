@@ -5,9 +5,15 @@ import { toast } from 'sonner'
 
 interface Props {
   content: string
+  sectionIndex?: number
+  /** When set, this component is inside a DB section card — skip H1-section
+   *  wrapping and animate content items directly. */
+  sectionTitle?: string
+  /** If true, skip H1-based section wrapping entirely (used inside section-optional cards). */
+  standalone?: boolean
 }
 
-export default function ArticleContent({ content }: Props) {
+export default function ArticleContent({ content, sectionIndex, sectionTitle, standalone }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -15,7 +21,7 @@ export default function ArticleContent({ content }: Props) {
     const root = ref.current
 
     // ── Heading IDs for TOC ──────────────────────────────────────────────────
-    root.querySelectorAll('h2, h3').forEach((el) => {
+    root.querySelectorAll('h1, h2, h3').forEach((el) => {
       if (!el.id) {
         el.id = el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? ''
       }
@@ -43,9 +49,9 @@ export default function ArticleContent({ content }: Props) {
       pre.appendChild(btn)
     })
 
-    // ── Wrap H1 + following siblings into <section class="article-section"> ──
-    // Only run once (guard: section already exists)
-    if (!root.querySelector('.article-section')) {
+    // ── Section mode: H1-wrapping (legacy single-content or standalone) ─────
+    // Skipped when `standalone` is true — sections are already delimited by DB.
+    if (!standalone && !root.querySelector('.article-section')) {
       type Group = { h1: Element | null; nodes: ChildNode[] }
       const groups: Group[] = []
       let current: Group = { h1: null, nodes: [] }
@@ -62,7 +68,7 @@ export default function ArticleContent({ content }: Props) {
       if (current.h1 || current.nodes.length > 0) groups.push(current)
 
       groups.forEach(({ h1, nodes }) => {
-        if (!h1) return // preamble before first H1 — leave as-is
+        if (!h1) return
         const section = document.createElement('section')
         section.className = 'article-section article-section-slide'
         root.insertBefore(section, h1)
@@ -71,7 +77,7 @@ export default function ArticleContent({ content }: Props) {
       })
     }
 
-    // ── Observer 1: section slide (whole card) ───────────────────────────────
+    // ── Observer 1: section slide (whole card) — legacy mode only ────────────
     const sectionIo = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -82,9 +88,11 @@ export default function ArticleContent({ content }: Props) {
       },
       { threshold: 0.06, rootMargin: '0px 0px -60px 0px' }
     )
-    root.querySelectorAll('.article-section-slide').forEach((s) => sectionIo.observe(s))
+    if (!standalone) {
+      root.querySelectorAll('.article-section-slide').forEach((s) => sectionIo.observe(s))
+    }
 
-    // ── Observer 2: per-element fade-up inside each section ──────────────────
+    // ── Observer 2: per-element fade-up ──────────────────────────────────────
     const innerIo = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -99,25 +107,36 @@ export default function ArticleContent({ content }: Props) {
       { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     )
 
-    root.querySelectorAll('.article-section').forEach((section) => {
-      const items = section.querySelectorAll(
-        'h1, h2, h3, h4, p, blockquote, pre, img, ul, ol, table, figure'
-      )
-      items.forEach((el, i) => {
+    if (standalone) {
+      // Animate non-anchor content elements (NOT headings — they are TOC anchors)
+      root.querySelectorAll(
+        'h4, p, blockquote, pre, img, ul, ol, table, figure'
+      ).forEach((el, i) => {
         if (el.classList.contains('reveal-visible')) return
         el.classList.add('reveal-hidden')
         ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
         innerIo.observe(el)
       })
-    })
-
-    // Also animate any preamble elements that weren't wrapped in a section
-    root.querySelectorAll(':scope > h2, :scope > h3, :scope > h4, :scope > p, :scope > blockquote, :scope > pre, :scope > img, :scope > ul, :scope > ol, :scope > figure').forEach((el, i) => {
-      if (el.classList.contains('reveal-visible')) return
-      el.classList.add('reveal-hidden')
-      ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
-      innerIo.observe(el)
-    })
+    } else {
+      root.querySelectorAll('.article-section').forEach((section) => {
+        const items = section.querySelectorAll(
+          'h4, p, blockquote, pre, img, ul, ol, table, figure'
+        )
+        items.forEach((el, i) => {
+          if (el.classList.contains('reveal-visible')) return
+          el.classList.add('reveal-hidden')
+          ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
+          innerIo.observe(el)
+        })
+      })
+      // Also animate preamble elements not inside a section card
+      root.querySelectorAll(':scope > h4, :scope > p, :scope > blockquote, :scope > pre, :scope > img, :scope > ul, :scope > ol, :scope > figure').forEach((el, i) => {
+        if (el.classList.contains('reveal-visible')) return
+        el.classList.add('reveal-hidden')
+        ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
+        innerIo.observe(el)
+      })
+    }
 
     return () => { sectionIo.disconnect(); innerIo.disconnect() }
   }, [content])
