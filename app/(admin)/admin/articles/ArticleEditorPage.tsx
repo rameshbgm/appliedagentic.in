@@ -59,6 +59,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
 export default function ArticleEditorPage({ initialArticle, menus, allTags }: Props) {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
@@ -144,6 +145,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   }, [title, slug, summary, content, coverImageUrl, meta]) // eslint-disable-line
 
   const statusColor = STATUS_COLORS[meta.status] ?? STATUS_COLORS.DRAFT
+
+  // Prevent hydration mismatch from browser extensions injecting attributes into form inputs
+  useEffect(() => { setMounted(true) }, [])
+  if (!mounted) return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-14 rounded-2xl" style={{ background: 'var(--bg-elevated)' }} />
+      <div className="h-32 rounded-2xl" style={{ background: 'var(--bg-elevated)' }} />
+      <div className="h-96 rounded-2xl" style={{ background: 'var(--bg-elevated)' }} />
+    </div>
+  )
 
   return (
     <div className="space-y-4">
