@@ -261,12 +261,39 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content a  { color: var(--green-light); text-decoration: underline; text-underline-offset: 3px; }
 .article-content img { border-radius: 10px; width: 100%; height: auto; margin: 1.5em 0; }
 .article-content blockquote {
-  border-left: 3px solid var(--green);
-  padding: .9em 1.25em;
+  position: relative;
+  padding: .9em 1.25em .9em 1.5em;
   margin: 1.5em 0;
   background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  border-left: none;
   border-radius: 0 10px 10px 0;
-  font-style: italic; color: var(--text-secondary);
+  font-style: italic;
+  color: var(--text-secondary);
+}
+/* Thin gradient left accent — fades from brand green at top to transparent at bottom */
+.article-content blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--green)   0%,
+    rgba(170,255,0,0.4) 50%,
+    transparent   100%
+  );
+}
+[data-theme="light"] .article-content blockquote::before {
+  background: linear-gradient(
+    to bottom,
+    var(--green)        0%,
+    rgba(122,204,0,0.3) 55%,
+    transparent         100%
+  );
 }
 .article-content pre {
   background: var(--bg-elevated);
@@ -344,15 +371,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-section:nth-child(odd)  { background: var(--bg-surface); }
 .article-section:nth-child(even) { background: var(--bg-elevated); }
 
-/* Accent left-edge glow bar */
+/* Accent left-edge gradient bar — thin green fade to transparent */
 .article-section::before {
   content: '';
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  width: 3px;
-  border-radius: 3px 0 0 3px;
-  background: linear-gradient(180deg, var(--green, #2ED573) 0%, var(--neon, #06b6d4) 100%);
-  opacity: 0.7;
+  width: 2px;
+  border-radius: 2px 0 0 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--green, #AAFF00)          0%,
+    rgba(170, 255, 0, 0.35)        55%,
+    transparent                    100%
+  );
+  opacity: 1;
 }
 
 /* H1 inside each section */
