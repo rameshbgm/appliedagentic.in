@@ -10,24 +10,35 @@ export const metadata: Metadata = { title: 'Edit Article' }
 
 export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [article, modules, topics, tags] = await Promise.all([
+  const articleId = Number(id)
+
+  const [article, menus, tags, subMenuLinks] = await Promise.all([
     prisma.article.findUnique({
-      where: { id: Number(id) },
+      where: { id: articleId },
       include: {
-        topicArticles: { include: { topic: true } },
         articleTags: { include: { tag: true } },
         coverImage: { select: { url: true } },
       },
     }),
-    prisma.module.findMany({ orderBy: { order: 'asc' }, select: { id: true, name: true } }),
-    prisma.topic.findMany({ orderBy: { order: 'asc' }, select: { id: true, name: true, moduleId: true } }),
+    prisma.navMenu.findMany({
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        title: true,
+        subMenus: { orderBy: { order: 'asc' }, select: { id: true, title: true, menuId: true } },
+      },
+    }),
     prisma.tag.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
+    prisma.subMenuArticle.findMany({
+      where: { articleId },
+      select: { subMenuId: true, subMenu: { select: { menuId: true } } },
+    }),
   ])
 
   if (!article) notFound()
 
-  const firstTopic = article.topicArticles[0]?.topic
-  const moduleId = firstTopic ? topics.find((t) => t.id === firstTopic.id)?.moduleId : undefined
+  const subMenuIds = subMenuLinks.map((s) => s.subMenuId)
+  const navMenuId = subMenuLinks[0]?.subMenu?.menuId
 
   return (
     <ArticleEditorPage
@@ -43,12 +54,11 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         seoTitle: article.seoTitle ?? '',
         seoDescription: article.seoDescription ?? '',
         audioUrl: article.audioUrl ?? undefined,
-        topicIds: article.topicArticles.map((ta) => ta.topicId),
         tagNames: article.articleTags.map((at) => at.tag.name),
-        moduleId,
+        subMenuIds,
+        navMenuId,
       }}
-      modules={modules}
-      topics={topics}
+      menus={menus}
       allTags={tags}
     />
   )

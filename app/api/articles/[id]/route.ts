@@ -28,6 +28,7 @@ const UpdateSchema = z.object({
   seoCanonicalUrl: z.string().optional(),
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
+  subMenuIds: z.array(z.number().int()).optional(),
 })
 
 const articleInclude = {
@@ -147,6 +148,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (resolvedTagIds.length > 0) {
           await tx.articleTag.createMany({
             data: resolvedTagIds.map((tagId) => ({ articleId: id, tagId })),
+          })
+        }
+      }
+
+      // Update SubMenu associations if provided
+      if (data.subMenuIds !== undefined) {
+        await tx.subMenuArticle.deleteMany({ where: { articleId: id } })
+        if (data.subMenuIds.length > 0) {
+          const lastOrders = await Promise.all(
+            data.subMenuIds.map((subMenuId) =>
+              tx.subMenuArticle.findFirst({ where: { subMenuId }, orderBy: { order: 'desc' }, select: { order: true } })
+            )
+          )
+          await tx.subMenuArticle.createMany({
+            data: data.subMenuIds.map((subMenuId, i) => ({
+              subMenuId,
+              articleId: id,
+              order: (lastOrders[i]?.order ?? 0) + 1,
+            })),
           })
         }
       }

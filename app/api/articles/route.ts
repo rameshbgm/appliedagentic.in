@@ -28,6 +28,7 @@ const ArticleSchema = z.object({
   seoCanonicalUrl: z.string().optional(),
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
+  subMenuIds: z.array(z.number().int()).optional(),
 })
 
 const articleInclude = {
@@ -190,6 +191,14 @@ export async function POST(req: NextRequest) {
       },
       include: articleInclude,
     })
+
+    // Link to submenus if provided
+    if (data.subMenuIds?.length) {
+      await prisma.subMenuArticle.createMany({
+        data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: article.id, order: i + 1 })),
+        skipDuplicates: true,
+      })
+    }
 
     return apiSuccess(article, 201)
   } catch (err) {

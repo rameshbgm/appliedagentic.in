@@ -1,62 +1,91 @@
 'use client'
 // components/admin/ArticleMetaSidebar.tsx
-import { useState, useEffect } from 'react'
-import { Globe, Clock, Tag, Image as ImageIcon, Volume2, BookOpen } from 'lucide-react'
+import { useState } from 'react'
+import { Clock, BookOpen, ChevronDown, ChevronRight } from 'lucide-react'
 import TagInput from '@/components/shared/TagInput'
 
 interface Meta {
   status: string
   scheduledAt?: string
-  moduleId?: number
-  topicIds: number[]
+  navMenuId?: number
+  subMenuIds: number[]
   tagNames: string[]
-  coverImageUrl: string
   seoTitle: string
   seoDescription: string
   audioUrl?: string
 }
 
+interface SubMenu {
+  id: number
+  title: string
+  menuId: number
+}
+
+interface NavMenu {
+  id: number
+  title: string
+  subMenus?: SubMenu[]
+}
+
 interface Props {
   meta: Meta
   onChange: (meta: Partial<Meta>) => void
-  modules: { id: number; name: string }[]
-  topics: { id: number; name: string; moduleId: number }[]
+  menus: NavMenu[]
   allTags: { id: number; name: string }[]
   wordCount?: number
   readingTime?: number
 }
 
-export default function ArticleMetaSidebar({ meta, onChange, modules, topics, allTags, wordCount = 0, readingTime = 0 }: Props) {
-  const [section, setSection] = useState<'publish' | 'taxonomy' | 'seo' | 'media'>('publish')
+export default function ArticleMetaSidebar({
+  meta,
+  onChange,
+  menus = [],
+  allTags = [],
+  wordCount = 0,
+  readingTime = 0,
+}: Props) {
+  const [openSection, setOpenSection] = useState<'publish' | 'navigation' | 'tags' | 'seo'>('publish')
 
-  const filteredTopics = meta.moduleId
-    ? topics.filter((t) => t.moduleId === meta.moduleId)
-    : topics
+  const filteredSubMenus = meta.navMenuId
+    ? (menus.find((m) => m.id === meta.navMenuId)?.subMenus ?? [])
+    : []
 
-  const toggleTopicId = (id: number) => {
-    const updated = meta.topicIds.includes(id)
-      ? meta.topicIds.filter((x) => x !== id)
-      : [...meta.topicIds, id]
-    onChange({ topicIds: updated })
+  const toggleSubMenu = (id: number) => {
+    const updated = meta.subMenuIds.includes(id)
+      ? meta.subMenuIds.filter((x) => x !== id)
+      : [...meta.subMenuIds, id]
+    onChange({ subMenuIds: updated })
   }
 
-  const Section = ({ id, label, children }: { id: typeof section; label: string; children: React.ReactNode }) => (
+  const Section = ({
+    id,
+    label,
+    children,
+  }: {
+    id: typeof openSection
+    label: string
+    children: React.ReactNode
+  }) => (
     <div className="border-b" style={{ borderColor: 'var(--bg-border)' }}>
       <button
-        onClick={() => setSection(section === id ? section : id)}
-        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
+        onClick={() => setOpenSection(id)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors hover:bg-black/5"
         style={{ color: 'var(--text-primary)' }}
       >
-        {label}
-        <span style={{ color: 'var(--text-muted)' }}>{section === id ? '−' : '+'}</span>
+        <span>{label}</span>
+        <span style={{ color: 'var(--text-muted)' }}>{openSection === id ? '−' : '+'}</span>
       </button>
-      {section === id && <div className="px-4 pb-4 space-y-3">{children}</div>}
+      {openSection === id && <div className="px-4 pb-4 space-y-3">{children}</div>}
     </div>
   )
 
-  const inputClass = "w-full px-3 py-2 rounded-xl border text-sm outline-none"
-  const inputStyle = { background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }
-  const labelClass = "text-xs mb-1 block"
+  const inputClass = 'w-full px-3 py-2 rounded-xl border text-sm outline-none'
+  const inputStyle = {
+    background: 'var(--bg-surface)',
+    borderColor: 'var(--bg-border)',
+    color: 'var(--text-primary)',
+  }
+  const labelClass = 'text-xs mb-1 block'
   const labelStyle = { color: 'var(--text-muted)' }
 
   return (
@@ -106,48 +135,70 @@ export default function ArticleMetaSidebar({ meta, onChange, modules, topics, al
             />
           </div>
         )}
+        {meta.audioUrl && (
+          <div>
+            <label className={labelClass} style={labelStyle}>Audio Preview</label>
+            <audio controls src={meta.audioUrl} className="w-full" />
+          </div>
+        )}
       </Section>
 
-      {/* Taxonomy */}
-      <Section id="taxonomy" label="Module & Topics">
+      {/* Navigation: Menu → Sub-menu */}
+      <Section id="navigation" label="Navigation">
         <div>
-          <label className={labelClass} style={labelStyle}>Module</label>
+          <label className={labelClass} style={labelStyle}>Menu</label>
           <select
-            value={meta.moduleId ?? ''}
-            onChange={(e) => onChange({ moduleId: e.target.value ? Number(e.target.value) : undefined })}
+            value={meta.navMenuId ?? ''}
+            onChange={(e) => {
+              const val = e.target.value ? Number(e.target.value) : undefined
+              onChange({ navMenuId: val, subMenuIds: [] })
+            }}
             className={inputClass}
             style={inputStyle}
           >
             <option value="">— None —</option>
-            {modules.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
+            {menus.map((m) => (
+              <option key={m.id} value={m.id}>{m.title}</option>
             ))}
           </select>
         </div>
-        <div>
-          <label className={labelClass} style={labelStyle}>Topics</label>
-          <div className="space-y-1 max-h-40 overflow-y-auto">
-            {filteredTopics.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 cursor-pointer py-1 hover:bg-gray-50 rounded-lg px-2">
-                <input
-                  type="checkbox"
-                  checked={meta.topicIds.includes(t.id)}
-                  onChange={() => toggleTopicId(t.id)}
-                  className="accent-violet-500"
-                />
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t.name}</span>
-              </label>
-            ))}
+
+        {meta.navMenuId != null && (
+          <div>
+            <label className={labelClass} style={labelStyle}>Sub-menu</label>
+            {filteredSubMenus.length === 0 ? (
+              <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
+                No sub-menus for this menu.
+              </p>
+            ) : (
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {filteredSubMenus.map((sm) => (
+                  <label
+                    key={sm.id}
+                    className="flex items-center gap-2 cursor-pointer py-1 px-2 rounded-lg hover:bg-black/5 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={meta.subMenuIds.includes(sm.id)}
+                      onChange={() => toggleSubMenu(sm.id)}
+                      className="accent-violet-500"
+                    />
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{sm.title}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-        <div>
-          <label className={labelClass} style={labelStyle}>Tags</label>
-          <TagInput
-            value={meta.tagNames.map((n) => ({ name: n }))}
-            onChange={(tags) => onChange({ tagNames: tags.map((t) => t.name) })}
-            suggestions={allTags}
-          />
-        </div>
+        )}
+      </Section>
+
+      {/* Tags */}
+      <Section id="tags" label="Tags">
+        <TagInput
+          value={meta.tagNames.map((n) => ({ name: n }))}
+          onChange={(tags) => onChange({ tagNames: tags.map((t) => t.name) })}
+          suggestions={allTags}
+        />
       </Section>
 
       {/* SEO */}
@@ -179,29 +230,6 @@ export default function ArticleMetaSidebar({ meta, onChange, modules, topics, al
             {meta.seoDescription.length}/160
           </span>
         </div>
-      </Section>
-
-      {/* Media */}
-      <Section id="media" label="Cover & Audio">
-        <div>
-          <label className={labelClass} style={labelStyle}>Cover Image URL</label>
-          <input
-            value={meta.coverImageUrl}
-            onChange={(e) => onChange({ coverImageUrl: e.target.value })}
-            placeholder="https://..."
-            className={inputClass}
-            style={inputStyle}
-          />
-          {meta.coverImageUrl && (
-            <img src={meta.coverImageUrl} alt="cover" className="w-full h-28 object-cover rounded-xl mt-2 border" style={{ borderColor: 'var(--bg-border)' }} />
-          )}
-        </div>
-        {meta.audioUrl && (
-          <div>
-            <label className={labelClass} style={labelStyle}>Audio</label>
-            <audio controls src={meta.audioUrl} className="w-full" />
-          </div>
-        )}
       </Section>
     </aside>
   )
