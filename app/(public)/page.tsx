@@ -6,7 +6,7 @@ import ArticleCard from '@/components/public/ArticleCard'
 import NewsletterSection from '@/components/public/NewsletterSection'
 import { StaggerContainer, FadeIn, ParallaxSection } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
-import { ArrowRight, Sparkles, ChevronRight } from 'lucide-react'
+import { ArrowRight, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { browseTopicsContent, featuredArticlesContent, ctaBannerContent } from '@/content/home'
 
@@ -71,13 +71,13 @@ export default async function HomePage() {
       <HeroSection />
 
       {/* ── Browse Topics ── */}
-      <section className="py-16 sm:py-20 px-4 md:px-8 max-w-7xl mx-auto">
+      <section id="topics" className="py-16 sm:py-20 px-4 md:px-8 max-w-7xl mx-auto">
         <ParallaxSection speed={0.25}>
           <FadeIn>
             <div className="flex items-start justify-between mb-10 sm:mb-12 flex-wrap gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles size={16} style={{ color: '#38BDF8' }} />
+                  <BookOpen size={16} style={{ color: '#38BDF8' }} />
                   <span className="text-sm font-medium uppercase tracking-widest" style={{ color: '#38BDF8' }}>
                     {browseTopicsContent.badge}
                   </span>

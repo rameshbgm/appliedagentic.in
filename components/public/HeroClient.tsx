@@ -10,7 +10,7 @@ import { ArrowRight, Zap } from 'lucide-react'
 import { heroContent } from '@/content/home'
 
 interface Props {
-  moduleCount:  number
+  menuCount:    number
   articleCount: number
 }
 
@@ -90,14 +90,14 @@ function DotsLayer() {
 }
 
 // ─── Hero Client ──────────────────────────────────────────────────────────────
-export default function HeroClient({ moduleCount, articleCount }: Props) {
+export default function HeroClient({ menuCount, articleCount }: Props) {
   const { headline, typewriterTopics, subheadline, ctas, staticStats, dynamicStatLabels, badge } =
     heroContent
 
   const typewritten = useTypewriter(typewriterTopics)
 
   const stats = [
-    { value: String(moduleCount  || '8'),   label: dynamicStatLabels.modules  },
+    { value: String(menuCount    || '8'),   label: dynamicStatLabels.modules  },
     { value: String(articleCount || '50+'), label: dynamicStatLabels.articles },
     ...staticStats,
   ]

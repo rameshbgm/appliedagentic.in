@@ -6,19 +6,19 @@ import { logger }  from '@/lib/logger'
 import HeroClient  from './HeroClient'
 
 export default async function HeroSection() {
-  let moduleCount  = 0
+  let menuCount    = 0
   let articleCount = 0
 
   try {
     const [mc, ac] = await Promise.all([
-      prisma.module.count({ where: { isPublished: true } }),
+      prisma.navMenu.count({ where: { isVisible: true } }),
       prisma.article.count({ where: { status: 'PUBLISHED' } }),
     ])
-    moduleCount  = mc
+    menuCount    = mc
     articleCount = ac
   } catch (err) {
     logger.error('[HeroSection] Failed to fetch hero stats', err)
   }
 
-  return <HeroClient moduleCount={moduleCount} articleCount={articleCount} />
+  return <HeroClient menuCount={menuCount} articleCount={articleCount} />
 }

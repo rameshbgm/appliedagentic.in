@@ -6,8 +6,6 @@ import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard,
-  BookOpen,
-  Layers,
   FileText,
   Image as ImageIcon,
   Settings,
@@ -25,8 +23,6 @@ const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/menus', icon: Menu, label: 'Menus' },
   { href: '/admin/submenus', icon: ListTree, label: 'Sub-Menus' },
-  { href: '/admin/modules', icon: Layers, label: 'Modules' },
-  { href: '/admin/topics', icon: BookOpen, label: 'Topics' },
   { href: '/admin/articles', icon: FileText, label: 'Articles' },
   { href: '/admin/media', icon: ImageIcon, label: 'Media' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },

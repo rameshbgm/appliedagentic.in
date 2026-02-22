@@ -24,8 +24,8 @@ export const heroContent = {
     'Deep-dive into AI agents, LLMs, RAG pipelines, prompt engineering and modern agentic systems — with practical, production-grade content.',
 
   ctas: {
-    primary:   { label: 'Explore Modules', href: '/modules' },
-    secondary: { label: 'Browse Articles', href: '/articles' },
+    primary:   { label: 'Explore Articles', href: '/articles' },
+    secondary: { label: 'Browse Topics',   href: '/#topics'   },
   },
 
   /** Stats whose values are always static */
@@ -42,7 +42,7 @@ export const heroContent = {
 
 // ─── Browse Topics Section ─────────────────────────────────────────────────────
 export const browseTopicsContent = {
-  badge:           'Browse Topics',
+  badge:           'Learning Modules',
   headline:        'Everything you need to master',
   headlineAccent:  'Agentic AI',
   subheadline:     'Six topic areas covering foundations, hands-on projects, tools and career paths.',

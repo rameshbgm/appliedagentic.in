@@ -5,10 +5,10 @@ import FooterNewsletterWrapper from './FooterNewsletterWrapper'
 import { footerContent } from '@/content/footer'
 import { siteConfig }   from '@/content/site'
 
-interface Module { name: string; slug: string }
-interface Props  { modules?: Module[] }
+interface Menu { name?: string; title?: string; slug: string }
+interface Props  { menus?: Menu[] }
 
-export default function Footer({ modules = [] }: Props) {
+export default function Footer({ menus = [] }: Props) {
   return (
     <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
@@ -41,18 +41,18 @@ export default function Footer({ modules = [] }: Props) {
             </div>
           </div>
 
-          {/* Modules */}
+          {/* Learning Modules */}
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-              {footerContent.sections.modules}
+              Learning Modules
             </h4>
             <ul className="space-y-2.5">
-              {modules.slice(0, 6).map((m) => (
+              {menus.slice(0, 6).map((m) => (
                 <li key={m.slug}>
-                  <Link href={`/modules/${m.slug}`}
+                  <Link href={`/${m.slug}`}
                     className="text-[13px] transition-colors hover:text-[var(--green)]"
                     style={{ color: 'var(--text-secondary)' }}>
-                    {m.name}
+                    {m.title ?? m.name}
                   </Link>
                 </li>
               ))}
