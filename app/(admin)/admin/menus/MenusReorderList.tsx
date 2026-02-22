@@ -182,7 +182,7 @@ export default function MenusReorderList({ initialMenus }: { initialMenus: MenuD
   return (
     <div className="space-y-3">
       {saving && (
-        <p className="text-xs text-gray-400 text-right animate-pulse">Saving order…</p>
+        <p className="text-xs text-gray-400 text-right">Saving order…</p>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} id="menus-dnd">
         <SortableContext items={menus.map((m) => m.id)} strategy={verticalListSortingStrategy}>

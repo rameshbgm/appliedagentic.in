@@ -2,6 +2,7 @@
 // components/public/NewsletterSection.tsx
 import { useState, useEffect } from 'react'
 import { Mail, ArrowRight, Sparkles } from 'lucide-react'
+import { newsletterContent } from '@/content/newsletter'
 
 export default function NewsletterSection() {
   const [mounted, setMounted] = useState(false)
@@ -18,7 +19,7 @@ export default function NewsletterSection() {
     // Placeholder — replace with actual newsletter API integration
     await new Promise((r) => setTimeout(r, 800))
     setStatus('success')
-    setMessage("You're on the list! We'll notify you of new content.")
+    setMessage(newsletterContent.successMsg)
     setEmail('')
   }
 
@@ -35,14 +36,14 @@ export default function NewsletterSection() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5"
             style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', color: 'var(--green)' }}>
             <Sparkles size={11} />
-            Stay in the loop
+            {newsletterContent.badge}
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
-            Get the latest AI insights
+            {newsletterContent.headline}
           </h2>
           <p className="text-sm sm:text-base mb-7 max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            New articles on AI agents, LLMs, and agentic systems — straight to your inbox. No spam.
+            {newsletterContent.subheadline}
           </p>
 
           {!mounted ? (
@@ -61,7 +62,7 @@ export default function NewsletterSection() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder={newsletterContent.placeholder}
                   required
                   className="flex-1 bg-transparent outline-none text-sm min-w-0"
                   style={{ color: 'var(--text-primary)' }}
@@ -73,8 +74,8 @@ export default function NewsletterSection() {
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white whitespace-nowrap transition-all hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-50 min-h-[48px]"
                 style={{ background: 'var(--green)', color: '#000' }}
               >
-                {status === 'loading' ? 'Subscribing...' : (
-                  <>Subscribe <ArrowRight size={14} /></>
+                {status === 'loading' ? newsletterContent.loadingLabel : (
+                  <>{newsletterContent.ctaLabel} <ArrowRight size={14} /></>
                 )}
               </button>
             </form>

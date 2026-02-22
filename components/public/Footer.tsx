@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { Zap, Twitter, Linkedin, Github } from 'lucide-react'
 import FooterNewsletterWrapper from './FooterNewsletterWrapper'
+import { footerContent } from '@/content/footer'
+import { siteConfig }   from '@/content/site'
 
 interface Module { name: string; slug: string }
 interface Props  { modules?: Module[] }
@@ -19,17 +21,16 @@ export default function Footer({ modules = [] }: Props) {
                 style={{ background: 'var(--green)' }}>
                 <Zap size={15} className="text-black" />
               </div>
-              <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>Applied Agentic AI</span>
+              <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>{siteConfig.name}</span>
             </Link>
             <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
-              Master the AI era, one concept at a time. Practical deep-dives into agentic AI, LLMs,
-              and modern AI systems.
+              {footerContent.brand.description}
             </p>
             <div className="flex items-center gap-2">
               {[
-                { Icon: Twitter, href: 'https://twitter.com/appliedagentic',           label: 'Twitter'  },
-                { Icon: Linkedin, href: 'https://linkedin.com/company/appliedagentic', label: 'LinkedIn' },
-                { Icon: Github,   href: 'https://github.com/appliedagentic',           label: 'GitHub'   },
+                { Icon: Twitter,  href: siteConfig.social.twitter,  label: 'Twitter'  },
+                { Icon: Linkedin, href: siteConfig.social.linkedin, label: 'LinkedIn' },
+                { Icon: Github,   href: siteConfig.social.github,   label: 'GitHub'   },
               ].map(({ Icon, href, label }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                   className="p-2 rounded-lg transition-colors hover:bg-white/8"
@@ -43,7 +44,7 @@ export default function Footer({ modules = [] }: Props) {
           {/* Modules */}
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-              Modules
+              {footerContent.sections.modules}
             </h4>
             <ul className="space-y-2.5">
               {modules.slice(0, 6).map((m) => (
@@ -61,14 +62,10 @@ export default function Footer({ modules = [] }: Props) {
           {/* Explore */}
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-              Explore
+              {footerContent.sections.explore}
             </h4>
             <ul className="space-y-2.5">
-              {[
-                { href: '/articles', label: 'All Articles' },
-                { href: '/modules',  label: 'All Modules'  },
-                { href: '/search',   label: 'Search'       },
-              ].map(({ href, label }) => (
+              {footerContent.exploreLinks.map(({ href, label }) => (
                 <li key={href}>
                   <Link href={href} className="text-[13px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-secondary)' }}>
                     {label}
@@ -81,9 +78,9 @@ export default function Footer({ modules = [] }: Props) {
           {/* Newsletter */}
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-              Stay Updated
+              {footerContent.sections.newsletter}
             </h4>
-            <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>Get the latest AI concepts in your inbox.</p>
+            <p className="text-[13px] mb-3" style={{ color: 'var(--text-muted)' }}>{footerContent.newsletterBlurb}</p>
             <FooterNewsletterWrapper />
           </div>
         </div>
@@ -92,11 +89,12 @@ export default function Footer({ modules = [] }: Props) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6"
           style={{ borderTop: '1px solid var(--bg-border)' }}>
           <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-            © 2025 Applied Agentic AI. All rights reserved.
+            {footerContent.copyright}
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-[12px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-muted)' }}>Privacy</Link>
-            <Link href="/terms"   className="text-[12px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-muted)' }}>Terms</Link>
+            {footerContent.legalLinks.map(({ href, label }) => (
+              <Link key={href} href={href} className="text-[12px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-muted)' }}>{label}</Link>
+            ))}
           </div>
         </div>
       </div>

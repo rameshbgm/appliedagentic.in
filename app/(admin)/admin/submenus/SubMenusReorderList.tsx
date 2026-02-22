@@ -181,7 +181,7 @@ export default function SubMenusReorderList({ initialSubMenus }: { initialSubMen
   return (
     <div className="space-y-3">
       {saving && (
-        <p className="text-xs text-gray-400 text-right animate-pulse">Saving order…</p>
+        <p className="text-xs text-gray-400 text-right">Saving order…</p>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} id="submenus-dnd">
         <SortableContext items={subMenus.map((s) => s.id)} strategy={verticalListSortingStrategy}>

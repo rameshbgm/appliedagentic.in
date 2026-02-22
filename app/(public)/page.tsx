@@ -8,6 +8,7 @@ import { StaggerContainer, FadeIn, ParallaxSection } from '@/components/public/S
 import Link from 'next/link'
 import { ArrowRight, Sparkles, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
+import { browseTopicsContent, featuredArticlesContent, ctaBannerContent } from '@/content/home'
 
 export const metadata: Metadata = {
   title: 'Applied Agentic AI — Master AI Agents & LLMs',
@@ -78,15 +79,15 @@ export default async function HomePage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles size={16} style={{ color: '#38BDF8' }} />
                   <span className="text-sm font-medium uppercase tracking-widest" style={{ color: '#38BDF8' }}>
-                    Browse Topics
+                    {browseTopicsContent.badge}
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                  Everything you need to master{' '}
-                  <span className="gradient-text">Agentic AI</span>
+                  {browseTopicsContent.headline}{' '}
+                  <span className="gradient-text">{browseTopicsContent.headlineAccent}</span>
                 </h2>
                 <p className="mt-2 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-                  Six topic areas covering foundations, hands-on projects, tools and career paths.
+                  {browseTopicsContent.subheadline}
                 </p>
               </div>
             </div>
@@ -168,20 +169,20 @@ export default async function HomePage() {
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles size={16} style={{ color: '#A78BFA' }} />
                     <span className="text-sm font-medium uppercase tracking-widest" style={{ color: '#A78BFA' }}>
-                      Featured Articles
+                      {featuredArticlesContent.badge}
                     </span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Start{' '}
-                    <span className="gradient-text">Learning</span>
+                    {featuredArticlesContent.headline}{' '}
+                    <span className="gradient-text">{featuredArticlesContent.headlineAccent}</span>
                   </h2>
                 </div>
                 <Link
-                  href="/articles"
+                  href={featuredArticlesContent.viewAllHref}
                   className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#38BDF8]"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  All articles <ArrowRight size={15} />
+                  {featuredArticlesContent.viewAllLabel} <ArrowRight size={15} />
                 </Link>
               </div>
             </FadeIn>
@@ -214,22 +215,22 @@ export default async function HomePage() {
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
           >
             <h2 className="relative text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-              Ready to master{' '}
-              <span className="gradient-text">Agentic AI?</span>
+              {ctaBannerContent.headline}{' '}
+              <span className="gradient-text">{ctaBannerContent.headlineAccent}</span>
             </h2>
             <p className="relative text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Structured learning paths, practical examples, and comprehensive coverage of modern AI agent systems.
+              {ctaBannerContent.subheadline}
             </p>
             <div className="relative flex flex-wrap gap-4 justify-center">
-              <Link href="/ai-foundations" className="btn-primary px-8 py-3.5 rounded-full">
-                Start Learning
+              <Link href={ctaBannerContent.primaryCta.href} className="btn-primary px-8 py-3.5 rounded-full">
+                {ctaBannerContent.primaryCta.label}
               </Link>
               <Link
-                href="/articles"
+                href={ctaBannerContent.secondaryCta.href}
                 className="px-8 py-3.5 rounded-full font-semibold transition-all border hover:bg-white/5"
                 style={{ color: 'var(--text-primary)', borderColor: 'var(--bg-border)' }}
               >
-                Browse Articles
+                {ctaBannerContent.secondaryCta.label}
               </Link>
             </div>
           </div>
