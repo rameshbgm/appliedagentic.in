@@ -33,9 +33,9 @@ export default function Footer({ menus = [] }: Props) {
                 { Icon: Github,   href: siteConfig.social.github,   label: 'GitHub'   },
               ].map(({ Icon, href, label }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-                  className="p-2 rounded-lg transition-colors hover:bg-white/8"
+                  className="p-2.5 rounded-lg transition-colors hover:bg-white/8"
                   style={{ color: 'var(--text-muted)' }}>
-                  <Icon size={15} />
+                  <Icon size={18} />
                 </a>
               ))}
             </div>

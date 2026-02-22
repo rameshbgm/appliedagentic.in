@@ -76,7 +76,7 @@ export default function ModuleForm({ initialData }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label className={labelClass} style={labelStyle}>Module Name *</label>
           <input
