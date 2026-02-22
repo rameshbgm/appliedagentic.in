@@ -28,9 +28,10 @@ interface Props {
   subMenuTitle: string
   menuTitle: string
   initialArticles: LinkedArticle[]
+  compact?: boolean
 }
 
-export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, initialArticles }: Props) {
+export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, initialArticles, compact }: Props) {
   const router = useRouter()
   const [articles, setArticles] = useState<LinkedArticle[]>(initialArticles)
   const [showSearch, setShowSearch] = useState(false)
@@ -115,21 +116,33 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div>
-        <Link
-          href="/admin/submenus"
-          className="text-sm hover:underline mb-2 inline-block"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          ← Back to Sub-Menus
-        </Link>
-        <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
-          Articles in &ldquo;{subMenuTitle}&rdquo;
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          Menu: {menuTitle} · {articles.length} article{articles.length !== 1 ? 's' : ''} linked
-        </p>
-      </div>
+      {!compact && (
+        <div>
+          <Link
+            href="/admin/submenus"
+            className="text-sm hover:underline mb-2 inline-block"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ← Back to Sub-Menus
+          </Link>
+          <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
+            Articles in &ldquo;{subMenuTitle}&rdquo;
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Menu: {menuTitle} · {articles.length} article{articles.length !== 1 ? 's' : ''} linked
+          </p>
+        </div>
+      )}
+      {compact && (
+        <div>
+          <h2 className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>
+            Linked Articles
+          </h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            {articles.length} article{articles.length !== 1 ? 's' : ''} linked to this sub-menu
+          </p>
+        </div>
+      )}
 
       {/* Add article search */}
       <div className="card p-4">

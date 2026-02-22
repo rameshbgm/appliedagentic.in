@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Plus, Pencil, Eye, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, Eye, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import type { ArticleStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import ArticleActions from './ArticleActions'
 
@@ -51,7 +52,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams
   const page     = Math.max(1, Number(sp.page ?? 1))
   const pageSize = 20
-  const statusFilter = sp.status as string | undefined
+  const statusFilter = sp.status as ArticleStatus | undefined
   const search   = sp.search
   const sortBy   = sp.sortBy  === 'title' ? 'title'     : 'updatedAt'
   const sortDir  = sp.sortDir === 'asc'   ? ('asc' as const)  : ('desc' as const)
@@ -162,7 +163,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
 
       {/* Table */}
       <div className="card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[700px]">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--bg-border)', color: 'var(--text-muted)' }}>
               {/* Sortable: Title */}
@@ -188,7 +190,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <SortIcon col="updatedAt" />
                 </Link>
               </th>
-              <th className="px-4 py-3" />
+              <th className="px-4 py-3 sticky right-0" style={{ background: 'var(--bg-card)' }} />
             </tr>
           </thead>
           <tbody>
@@ -197,8 +199,15 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
               return (
                 <tr key={a.id} className="group border-t" style={{ borderColor: 'var(--bg-border)' }}>
                   <td className="px-4 py-3">
-                    <p className="font-medium truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>{a.title}</p>
-                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>/{a.slug}</p>
+                    <div className="flex items-start gap-1.5">
+                      {a.isFeatured && (
+                        <Star size={12} fill="#f59e0b" style={{ color: '#f59e0b', marginTop: '3px', flexShrink: 0 }} />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>{a.title}</p>
+                        <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>/{a.slug}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     {firstTopic && (
@@ -228,7 +237,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <td className="px-4 py-3 hidden lg:table-cell text-xs" style={{ color: 'var(--text-muted)' }}>
                     {new Date(a.updatedAt).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 sticky right-0" style={{ background: 'var(--bg-card)' }}>
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100">
                         <Eye size={14} style={{ color: 'var(--text-muted)' }} />
@@ -236,7 +245,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100">
                         <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
-                      <ArticleActions id={a.id} title={a.title} />
+                      <ArticleActions id={a.id} title={a.title} status={a.status} />
                     </div>
                   </td>
                 </tr>
@@ -251,6 +260,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
             <Link href="/admin/articles/new" className="text-violet-400 hover:underline">Write one.</Link>
           </div>
         )}
+        </div>
       </div>
 
       {/* Pagination */}
@@ -290,10 +300,11 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 href={buildHref('/admin/articles', sp, { page: String(p) })}
                 className="w-8 h-8 rounded-xl text-sm flex items-center justify-center font-medium transition-colors"
                 style={{
-                  background:  p === page ? '#AAFF00' : 'transparent',
-                  border:      p === page ? 'none' : '1px solid var(--bg-border)',
-                  borderColor: 'var(--bg-border)',
-                  color:       p === page ? '#000' : 'var(--text-muted)',
+                  background:   p === page ? '#AAFF00' : 'transparent',
+                  borderWidth:  p === page ? '0' : '1px',
+                  borderStyle:  p === page ? 'none' : 'solid',
+                  borderColor:  'var(--bg-border)',
+                  color:        p === page ? '#000' : 'var(--text-muted)',
                 }}
               >
                 {p}

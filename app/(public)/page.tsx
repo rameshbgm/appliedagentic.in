@@ -42,7 +42,7 @@ async function getData() {
         },
       }),
       prisma.article.findMany({
-        where: { status: 'PUBLISHED' },
+        where: { status: 'PUBLISHED', isFeatured: true },
         orderBy: { viewCount: 'desc' },
         take: 6,
         include: {

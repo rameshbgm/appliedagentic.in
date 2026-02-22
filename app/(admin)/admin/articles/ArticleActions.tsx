@@ -1,21 +1,36 @@
 'use client'
 // app/(admin)/articles/ArticleActions.tsx
 import { useState } from 'react'
-import { Copy, Trash2 } from 'lucide-react'
+import { Copy, Trash2, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 
-export default function ArticleActions({ id, title }: { id: number; title: string }) {
+export default function ArticleActions({ id, title, status }: { id: number; title: string; status: string }) {
   const router = useRouter()
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [publishing, setPublishing] = useState(false)
 
   const handleDuplicate = async () => {
     const res = await fetch(`/api/articles/${id}/duplicate`, { method: 'POST' })
     const data = await res.json()
     if (data.success) { toast.success('Article duplicated as draft'); router.refresh() }
     else toast.error(data.error ?? 'Duplicate failed')
+  }
+
+  const handlePublish = async () => {
+    setPublishing(true)
+    try {
+      const res = await fetch(`/api/articles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'PUBLISHED', publishedAt: new Date().toISOString() }),
+      })
+      const data = await res.json()
+      if (data.success) { toast.success('Article published'); router.refresh() }
+      else toast.error(data.error ?? 'Publish failed')
+    } finally { setPublishing(false) }
   }
 
   const handleDelete = async () => {
@@ -30,6 +45,16 @@ export default function ArticleActions({ id, title }: { id: number; title: strin
 
   return (
     <>
+      {status !== 'PUBLISHED' && (
+        <button
+          onClick={handlePublish}
+          disabled={publishing}
+          className="p-1.5 rounded-lg hover:bg-lime-100 transition-colors disabled:opacity-50"
+          title="Quick Publish"
+        >
+          <Zap size={14} className="text-lime-600" fill="currentColor" />
+        </button>
+      )}
       <button onClick={handleDuplicate} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Duplicate">
         <Copy size={14} style={{ color: 'var(--text-muted)' }} />
       </button>

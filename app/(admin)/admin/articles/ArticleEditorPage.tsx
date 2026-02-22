@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
@@ -25,6 +25,7 @@ interface InitialArticle {
   tagNames: string[]
   navMenuId?: number
   subMenuIds: number[]
+  isFeatured?: boolean
   sections?: { id: number; title: string; content: string; order: number }[]
 }
 
@@ -88,6 +89,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     seoTitle: initialArticle.seoTitle,
     seoDescription: initialArticle.seoDescription,
     audioUrl: initialArticle.audioUrl,
+    isFeatured: initialArticle.isFeatured ?? false,
   })
 
   const wordCount = stripHtml(sections.map(s => s.content).join(' ')).split(/\s+/).filter(Boolean).length
@@ -146,6 +148,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     seoTitle: meta.seoTitle,
     seoDescription: meta.seoDescription,
     audioUrl: meta.audioUrl,
+    isFeatured: meta.isFeatured,
     subMenuIds: meta.subMenuIds,
     sections: sections.map((s, i) => ({
       id: s.id,
@@ -265,6 +268,22 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               Preview
             </a>
           )}
+
+          {/* Featured toggle */}
+          <button
+            type="button"
+            onClick={() => setMeta((m) => ({ ...m, isFeatured: !m.isFeatured }))}
+            title={meta.isFeatured ? 'Remove from Featured' : 'Mark as Featured'}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-colors"
+            style={{
+              borderColor: meta.isFeatured ? '#f59e0b' : 'var(--bg-border)',
+              background: meta.isFeatured ? '#fef3c722' : 'transparent',
+              color: meta.isFeatured ? '#d97706' : 'var(--text-muted)',
+            }}
+          >
+            <Star size={13} fill={meta.isFeatured ? '#f59e0b' : 'none'} strokeWidth={2} />
+            {meta.isFeatured ? 'Featured' : 'Feature'}
+          </button>
 
           {/* Single Save button */}
           <button

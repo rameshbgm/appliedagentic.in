@@ -11,39 +11,30 @@ export default function SubMenuFilter({ menus, currentMenuId }: Props) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const handleChange = (menuId: string) => {
+  const handleChange = (val: string) => {
     const params = new URLSearchParams()
-    if (menuId) params.set('menuId', menuId)
+    if (val) params.set('menuId', val)
     router.push(`${pathname}${params.toString() ? `?${params}` : ''}`)
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <button
-        onClick={() => handleChange('')}
-        className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+    <div className="flex items-center gap-3">
+      <label className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Filter by Menu:</label>
+      <select
+        value={currentMenuId ? String(currentMenuId) : ''}
+        onChange={(e) => handleChange(e.target.value)}
+        className="px-3 py-2 rounded-xl border text-sm outline-none cursor-pointer min-w-[200px]"
         style={{
-          background: !currentMenuId ? 'var(--green)' : 'var(--bg-elevated)',
-          color: !currentMenuId ? '#000' : 'var(--text-secondary)',
-          border: '1px solid var(--bg-border)',
+          background: 'var(--bg-elevated)',
+          borderColor: 'var(--bg-border)',
+          color: 'var(--text-primary)',
         }}
       >
-        All
-      </button>
-      {menus.map((m) => (
-        <button
-          key={m.id}
-          onClick={() => handleChange(String(m.id))}
-          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-          style={{
-            background: currentMenuId === m.id ? 'var(--green)' : 'var(--bg-elevated)',
-            color: currentMenuId === m.id ? '#000' : 'var(--text-secondary)',
-            border: '1px solid var(--bg-border)',
-          }}
-        >
-          {m.title}
-        </button>
-      ))}
+        <option value="">All Menus</option>
+        {menus.map((m) => (
+          <option key={m.id} value={String(m.id)}>{m.title}</option>
+        ))}
+      </select>
     </div>
   )
 }
