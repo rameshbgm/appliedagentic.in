@@ -1,10 +1,12 @@
 // app/(public)/articles/page.tsx
+// Server renders the first 25 articles; the client component handles
+// infinite-scroll loading (50 per batch) from /api/articles/public.
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import ArticleCard from '@/components/public/ArticleCard'
-import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
+import { FadeIn } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import ArticlesInfiniteLoader from './ArticlesInfiniteLoader'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,41 +15,40 @@ export const metadata: Metadata = {
   description: 'Browse all published articles on AI agents, LLMs, and agentic systems.',
 }
 
-export const revalidate = 60
-
-const PAGE_SIZE = 12
+const INITIAL_SIZE = 25
 
 interface Props {
-  searchParams: Promise<{ page?: string; tag?: string }>
+  searchParams: Promise<{ tag?: string }>
 }
 
 export default async function ArticlesPage({ searchParams }: Props) {
-  const { page: pageParam, tag: tagName } = await searchParams
-  const page = Math.max(1, parseInt(pageParam ?? '1'))
+  const { tag: tagName } = await searchParams
 
   let totalCount = 0
-  // Type widened to any[] because the Prisma include-relations aren't expressed
-  // in the base findMany() return type – the actual shape is correct at runtime.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let articles: any[] = []
 
+  const where = {
+    status: 'PUBLISHED' as const,
+    ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
+  }
+
   try {
     ;[totalCount, articles] = await Promise.all([
-      prisma.article.count({
-        where: {
-          status: 'PUBLISHED',
-          ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
-        },
-      }),
+      prisma.article.count({ where }),
       prisma.article.findMany({
-        where: {
-          status: 'PUBLISHED',
-          ...(tagName ? { articleTags: { some: { tag: { name: tagName } } } } : {}),
-        },
+        where,
         orderBy: { publishedAt: 'desc' },
-        skip: (page - 1) * PAGE_SIZE,
-        take: PAGE_SIZE,
-        include: {
+        take: INITIAL_SIZE,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          summary: true,
+          readingTimeMinutes: true,
+          viewCount: true,
+          createdAt: true,
+          publishedAt: true,
           articleTags: { include: { tag: { select: { name: true } } } },
           topicArticles: {
             take: 1,
@@ -61,15 +62,6 @@ export default async function ArticlesPage({ searchParams }: Props) {
   } catch (err) {
     logger.error('[GET /articles] DB error loading articles list', err)
     throw err
-  }
-
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
-
-  const buildUrl = (p: number) => {
-    const params = new URLSearchParams()
-    if (p > 1) params.set('page', String(p))
-    if (tagName) params.set('tag', tagName)
-    return `/articles${params.toString() ? '?' + params.toString() : ''}`
   }
 
   return (
@@ -94,55 +86,11 @@ export default async function ArticlesPage({ searchParams }: Props) {
       </FadeIn>
 
       {articles.length > 0 ? (
-        <>
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((a) => (
-              <ArticleCard
-                key={a.id}
-                title={a.title}
-                slug={a.slug}
-                summary={a.summary}
-                readingTime={a.readingTimeMinutes}
-                viewCount={a.viewCount}
-                createdAt={a.createdAt}
-                tags={a.articleTags.map((at: { tag: { name: string } }) => ({ name: at.tag.name }))}
-                moduleName={a.topicArticles[0]?.topic?.module?.name}
-                moduleColor={a.topicArticles[0]?.topic?.module?.color}
-              />
-            ))}
-          </StaggerContainer>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-12">
-              {page > 1 && (
-                <Link href={buildUrl(page - 1)} className="px-4 py-2 rounded-xl text-sm border transition-all hover:bg-white/5"
-                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
-                  ← Prev
-                </Link>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={buildUrl(p)}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all"
-                  style={p === page
-                    ? { background: 'var(--green)', color: 'var(--bg-page)' }
-                    : { color: 'var(--text-secondary)', border: '1px solid var(--bg-border)' }
-                  }
-                >
-                  {p}
-                </Link>
-              ))}
-              {page < totalPages && (
-                <Link href={buildUrl(page + 1)} className="px-4 py-2 rounded-xl text-sm border transition-all hover:bg-white/5"
-                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
-                  Next →
-                </Link>
-              )}
-            </div>
-          )}
-        </>
+        <ArticlesInfiniteLoader
+          initialArticles={articles}
+          totalCount={totalCount}
+          tag={tagName}
+        />
       ) : (
         <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
           <p className="text-5xl mb-4">📭</p>

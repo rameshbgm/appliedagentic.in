@@ -58,6 +58,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         tagNames: article.articleTags.map((at) => at.tag.name),
         subMenuIds,
         navMenuId,
+        isFeatured: article.isFeatured,
         sections: article.sections.map((s) => ({
           id: s.id,
           title: s.title,

@@ -55,7 +55,7 @@ export default async function SubMenusPage({ searchParams }: Props) {
       <SubMenuFilter menus={menus} currentMenuId={menuId} />
 
       {subMenus.length > 0 ? (
-        <SubMenusReorderList initialSubMenus={subMenus} />
+        <SubMenusReorderList key={String(menuId ?? 'all')} initialSubMenus={subMenus} />
       ) : (
         <div className="text-center py-20 text-gray-400">
           <p className="text-lg font-display mb-2 text-gray-600">No sub-menus yet</p>
