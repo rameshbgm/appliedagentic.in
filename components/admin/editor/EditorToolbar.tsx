@@ -32,7 +32,19 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
   const [showColorPicker, setShowColorPicker] = useState(false)
 
   const colors = ['#6C3DFF','#00D4FF','#FF6B6B','#FFA502','#2ED573','#FF69B4','#fff','#666']
-  const fontFamilies = ['Inter', 'Space Grotesk', 'JetBrains Mono']
+  const fontFamilies: { label: string; value: string; style: string }[] = [
+    { label: 'Inter (default)',       value: 'Inter',              style: "'Inter', sans-serif" },
+    { label: 'DM Sans',               value: 'DM Sans',            style: "'DM Sans', sans-serif" },
+    { label: 'Outfit',                value: 'Outfit',             style: "'Outfit', sans-serif" },
+    { label: 'Nunito',                value: 'Nunito',             style: "'Nunito', sans-serif" },
+    { label: 'Space Grotesk',         value: 'Space Grotesk',      style: "'Space Grotesk', sans-serif" },
+    { label: 'Merriweather',          value: 'Merriweather',       style: "'Merriweather', serif" },
+    { label: 'Lora',                  value: 'Lora',               style: "'Lora', serif" },
+    { label: 'Playfair Display',      value: 'Playfair Display',   style: "'Playfair Display', serif" },
+    { label: 'Libre Baskerville',     value: 'Libre Baskerville',  style: "'Libre Baskerville', serif" },
+    { label: 'Source Serif 4',        value: 'Source Serif 4',     style: "'Source Serif 4', serif" },
+    { label: 'JetBrains Mono (code)', value: 'JetBrains Mono',     style: "'JetBrains Mono', monospace" },
+  ]
 
   const escapeHtml = (value: string) =>
     value
@@ -141,8 +153,8 @@ export default function EditorToolbar({ editor, articleId, isHtmlMode = false, o
           title="Font Family"
         >
           <option value="">Default font</option>
-          {fontFamilies.map((font) => (
-            <option key={font} value={font}>{font}</option>
+          {fontFamilies.map(({ label, value, style }) => (
+            <option key={value} value={value} style={{ fontFamily: style }}>{label}</option>
           ))}
         </select>
 
