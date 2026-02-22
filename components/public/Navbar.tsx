@@ -2,7 +2,7 @@
 // components/public/Navbar.tsx
 import Link from 'next/link'
 import { useState, useRef, useCallback } from 'react'
-import { Menu as MenuIcon, X, Search, Zap, ChevronDown, ChevronRight } from 'lucide-react'
+import { Menu as MenuIcon, X, Search, Zap, ChevronDown } from 'lucide-react'
 import { useTheme } from '@/components/shared/ThemeProvider'
 
 interface NavSubMenuData {
@@ -123,32 +123,30 @@ export default function Navbar({ navMenus = [] }: Props) {
                   onMouseEnter={() => handleMouseEnter(menu.id)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <div className="px-4 py-3" style={{ borderBottom: `1px solid ${dropdownBdr}` }}>
-                    <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: textMuted }}>
-                      {menu.title}
-                    </p>
-                  </div>
-
                   <div className="p-2">
-                    {menu.subMenus!.map((sub) => (
-                      <Link
-                        key={sub.id}
-                        href={`/${menu.slug}/${sub.slug}`}
-                        className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors ${hoverBg} group/item`}
-                        onClick={() => setOpenMenuId(null)}
-                      >
-                        <p
-                          className="text-[13px] font-semibold leading-snug group-hover/item:text-[var(--green)] transition-colors"
-                          style={{ color: textPrimary }}
+                    {menu.subMenus!.map((sub, idx) => (
+                      <div key={sub.id}>
+                        <Link
+                          href={`/${menu.slug}/${sub.slug}`}
+                          className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors ${hoverBg} group/item`}
+                          onClick={() => setOpenMenuId(null)}
                         >
-                          {sub.title}
-                        </p>
-                        {sub.description && (
-                          <p className="text-[11px] line-clamp-1" style={{ color: textMuted }}>
-                            {sub.description}
+                          <p
+                            className="text-[13px] font-semibold leading-snug group-hover/item:text-[var(--green)] transition-colors"
+                            style={{ color: textPrimary }}
+                          >
+                            {sub.title}
                           </p>
+                          {sub.description && (
+                            <p className="text-[11px] line-clamp-1" style={{ color: textMuted }}>
+                              {sub.description}
+                            </p>
+                          )}
+                        </Link>
+                        {idx < menu.subMenus!.length - 1 && (
+                          <div style={{ height: '1px', background: dropdownBdr, margin: '2px 12px' }} />
                         )}
-                      </Link>
+                      </div>
                     ))}
                   </div>
 
@@ -227,14 +225,11 @@ export default function Navbar({ navMenus = [] }: Props) {
                     {hasSubs && (
                       <button
                         onClick={() => setOpenMobileMenuId(isExpanded ? null : menu.id)}
-                        className="px-4 transition-colors hover:bg-white/8"
-                        style={{ color: 'rgba(255,255,255,0.35)' }}
+                        className="px-4 transition-colors hover:bg-white/8 text-xl font-light leading-none select-none"
+                        style={{ color: 'rgba(255,255,255,0.55)', minWidth: '44px' }}
                         aria-label={isExpanded ? 'Collapse' : 'Expand'}
                       >
-                        <ChevronRight
-                          size={16}
-                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-                        />
+                        {isExpanded ? '−' : '+'}
                       </button>
                     )}
                   </div>
@@ -244,16 +239,26 @@ export default function Navbar({ navMenus = [] }: Props) {
                       className="ml-5 mt-1 mb-1 pl-4 space-y-0.5"
                       style={{ borderLeft: '2px solid rgba(255,255,255,0.09)' }}
                     >
-                      {menu.subMenus!.map((sub) => (
-                        <Link
-                          key={sub.id}
-                          href={`/${menu.slug}/${sub.slug}`}
-                          onClick={closeMobile}
-                          className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-white/8"
-                          style={{ color: 'rgba(255,255,255,0.65)' }}
-                        >
-                          {sub.title}
-                        </Link>
+                      {menu.subMenus!.map((sub, idx) => (
+                        <div key={sub.id}>
+                          <Link
+                            href={`/${menu.slug}/${sub.slug}`}
+                            onClick={closeMobile}
+                            className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/8"
+                          >
+                            <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.90)' }}>
+                              {sub.title}
+                            </span>
+                            {sub.description && (
+                              <span className="text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                                {sub.description}
+                              </span>
+                            )}
+                          </Link>
+                          {idx < menu.subMenus!.length - 1 && (
+                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '2px 12px' }} />
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}

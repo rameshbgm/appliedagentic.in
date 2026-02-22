@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import ModuleCard from '@/components/public/ModuleCard'
 import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
 import type { Metadata } from 'next'
+import { modulesPageContent } from '@/content/pages/modules'
 
 interface ModuleWithTopics {
   id: number
@@ -16,8 +17,8 @@ interface ModuleWithTopics {
 }
 
 export const metadata: Metadata = {
-  title: 'Learning Modules',
-  description: 'Explore all 8 structured learning modules covering AI agents, LLMs, tools, memory, multi-agent systems, and more.',
+  title: modulesPageContent.meta.title,
+  description: modulesPageContent.meta.description,
 }
 
 export const revalidate = 60
@@ -46,13 +47,13 @@ export default async function ModulesPage() {
         <div className="text-center mb-14">
           <span className="inline-block text-sm font-medium uppercase tracking-widest mb-3 px-3 py-1 rounded-full"
             style={{ background: 'var(--bg-elevated)', color: 'var(--green)', border: '1px solid var(--bg-border)' }}>
-            Curriculum
+            {modulesPageContent.header.badge}
           </span>
           <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Learning <span className="gradient-text">Modules</span>
+            {modulesPageContent.header.headline} <span className="gradient-text">{modulesPageContent.header.headlineAccent}</span>
           </h1>
           <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            {modules.length} comprehensive modules covering everything from AI fundamentals to production multi-agent deployment
+            {modules.length} {modulesPageContent.header.subheadlineSuffix}
           </p>
         </div>
       </FadeIn>
