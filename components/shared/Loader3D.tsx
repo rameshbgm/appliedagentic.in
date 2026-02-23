@@ -208,7 +208,7 @@ export default function Loader3D() {
         <div className="flex items-center gap-2">
           {DOTS.map((color, i) => (
             <div
-              key={i}
+              key={color}
               className="rounded-full animate-bounce"
               style={{
                 width: '9px',

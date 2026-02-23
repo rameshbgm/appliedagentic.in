@@ -155,7 +155,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
               {loadingLibrary ? (
                 <div className="grid grid-cols-3 gap-2">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="aspect-square rounded-xl skeleton" />
+                    <div key={`skeleton-${i}`} className="aspect-square rounded-xl skeleton" />
                   ))}
                 </div>
               ) : mediaItems.length === 0 ? (

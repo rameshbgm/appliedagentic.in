@@ -58,7 +58,7 @@ export default function DashboardCharts({ recentArticles, topArticles }: Props) 
                 nameKey="name"
               >
                 {topData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  <Cell key={topData[i].name} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
               <Legend formatter={(v) => <span style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{v}</span>} />
