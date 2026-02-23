@@ -4,6 +4,11 @@ import bcrypt from 'bcryptjs'
 import fs from 'fs'
 import path from 'path'
 import sanitizeHtml from 'sanitize-html'
+import { fileURLToPath } from 'url'
+
+// Provide __dirname in ES module environments
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const prisma = new PrismaClient()
 
