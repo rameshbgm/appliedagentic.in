@@ -60,7 +60,7 @@ const articleInclude = {
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url)
+    const { searchParams } = new URL(req.url, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost')
     const session = await auth()
     const isAdmin = !!session
 

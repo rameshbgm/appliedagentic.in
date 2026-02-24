@@ -19,7 +19,7 @@ const ModuleSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url)
+    const { searchParams } = new URL(req.url, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost')
     const includeTopics = searchParams.get('includeTopics') === 'true'
     const publishedOnly = searchParams.get('published') !== 'false'
 

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const { searchParams } = new URL(req.url)
+    const { searchParams } = new URL(req.url, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost')
     const type = searchParams.get('type') as MediaType | null
     const search = searchParams.get('search') || ''
     const page = parseInt(searchParams.get('page') || '1')
