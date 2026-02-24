@@ -118,7 +118,7 @@ export default function SettingsPage() {
   const inputStyle = { background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }
   const label = (text: string) => <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{text}</label>
 
-  if (loading) return <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-12 rounded-xl skeleton" />)}</div>
+  if (loading) return <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={`skeleton-${i}`} className="h-12 rounded-xl skeleton" />)}</div>
 
   return (
     <div className="space-y-6 max-w-3xl">

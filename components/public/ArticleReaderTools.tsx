@@ -197,7 +197,7 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
                 </div>
               )}
               {aiState === 'done' && bullets.map((b, i) => (
-                <div key={i} className="ai-bullet anim-fade-up" style={{ animationDelay: `${i * 55}ms` }}>
+                <div key={`${b}-${i}`} className="ai-bullet anim-fade-up" style={{ animationDelay: `${i * 55}ms` }}>
                   <span className="ai-bullet-num">{i + 1}</span>
                   <span className="ai-bullet-text">{b}</span>
                 </div>

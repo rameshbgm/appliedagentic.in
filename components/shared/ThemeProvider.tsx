@@ -40,4 +40,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const useTheme = () => useContext(ThemeContext)
+export const useTheme = () => {
+  // Avoid calling React hooks during server rendering or from non-client code.
+  // If we're on the server, return a safe default to prevent runtime errors
+  // when code accidentally calls this outside a client component.
+  if (typeof window === 'undefined') {
+    return {
+      theme: 'dark' as Theme,
+      setTheme: () => {},
+      toggleTheme: () => {},
+    }
+  }
+
+  return useContext(ThemeContext)
+}

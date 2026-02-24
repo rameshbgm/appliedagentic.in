@@ -119,7 +119,7 @@ export default function MediaPage() {
       {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-4 lg:grid-cols-5 gap-4">
-          {[...Array(10)].map((_, i) => <div key={i} className="aspect-square rounded-2xl skeleton" />)}
+          {[...Array(10)].map((_, i) => <div key={`skeleton-${i}`} className="aspect-square rounded-2xl skeleton" />)}
         </div>
       ) : (
         <MediaGrid items={items} onDeleted={(id) => setItems((prev) => prev.filter((i) => i.id !== id))} />

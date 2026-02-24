@@ -76,7 +76,7 @@ function DotsLayer() {
     <div className="dots-layer" aria-hidden>
       {DOTS.map(({ left, bottom, dur, delay }, i) => (
         <span
-          key={i}
+          key={`${left}-${bottom}-${dur}-${delay}`}
           style={{
             left,
             bottom,
