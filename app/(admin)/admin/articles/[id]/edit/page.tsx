@@ -38,7 +38,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
 
   if (!article) notFound()
 
-  const subMenuIds = subMenuLinks.map((s) => s.subMenuId)
+  const subMenuIds = subMenuLinks.map((s: any) => s.subMenuId)
   const navMenuId = subMenuLinks[0]?.subMenu?.menuId
 
   return (
@@ -55,11 +55,11 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         seoTitle: article.seoTitle ?? '',
         seoDescription: article.seoDescription ?? '',
         audioUrl: article.audioUrl ?? undefined,
-        tagNames: article.articleTags.map((at) => at.tag.name),
+        tagNames: article.articleTags.map((at: any) => at.tag.name),
         subMenuIds,
         navMenuId,
         isFeatured: article.isFeatured,
-        sections: article.sections.map((s) => ({
+        sections: article.sections.map((s: any) => ({
           id: s.id,
           title: s.title,
           content: s.content,

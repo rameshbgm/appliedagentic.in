@@ -87,7 +87,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
     prisma.article.groupBy({ by: ['status'], _count: { id: true } }),
   ])
 
-  const countMap = Object.fromEntries(statusCounts.map((r) => [r.status, r._count.id]))
+  const countMap = Object.fromEntries(statusCounts.map((r: any) => [r.status, r._count.id]))
   const totalAll = Object.values(countMap).reduce((s, n) => s + n, 0)
 
   const statusOptions = [
@@ -194,7 +194,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
             </tr>
           </thead>
           <tbody>
-            {articles.map((a) => {
+            {articles.map((a: any) => {
               const firstTopic = a.topicArticles[0]?.topic
               return (
                 <tr key={a.id} className="group border-t" style={{ borderColor: 'var(--bg-border)' }}>
