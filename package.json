@@ -7,7 +7,7 @@
     "dev:prod": "dotenv -e .env.production -- next dev --webpack",
     "dev:nodb": "DATABASE_URL='' next dev",
     "build": "rm -rf .next && next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "start:prod": "dotenv -e .env.production -- next start",
     "start:nodb": "DATABASE_URL='' next start",
     "lint": "next lint",
