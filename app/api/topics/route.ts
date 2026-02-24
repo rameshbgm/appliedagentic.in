@@ -20,7 +20,7 @@ const TopicSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost')
+    const { searchParams } = new URL(req.url)
     const moduleId = searchParams.get('moduleId')
     const publishedOnly = searchParams.get('published') !== 'false'
 

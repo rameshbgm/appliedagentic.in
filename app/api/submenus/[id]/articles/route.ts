@@ -106,7 +106,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
   try {
     const { id } = await ctx.params
-    const { searchParams } = new URL(req.url, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost')
+    const { searchParams } = new URL(req.url)
     const articleId = searchParams.get('articleId')
     if (!articleId) return apiError('articleId required', 400)
 
