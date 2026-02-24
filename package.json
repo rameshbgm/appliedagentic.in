@@ -22,6 +22,7 @@
     ,"deploy:hostinger": "bash scripts/deploy-hostinger.sh"
     ,"seed:hostinger": "node scripts/seed-hostinger.js"
   },
+  "packageManager": "npm@9.8.0",
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs"
