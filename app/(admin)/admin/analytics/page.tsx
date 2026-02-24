@@ -62,7 +62,7 @@ export default async function AnalyticsPage() {
           Top Articles by Views
         </h2>
         <div className="space-y-3">
-          {topArticles.map((a, i) => (
+          {topArticles.map((a: any, i: number) => (
             <div key={a.id} className="flex items-center gap-4">
               <span
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
