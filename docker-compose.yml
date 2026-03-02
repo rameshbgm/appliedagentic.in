@@ -33,6 +33,11 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      DB_USER: "aa_user"
+      DB_PASSWORD: "aa_password"
+      DB_HOST: "mysql"
+      DB_PORT: "3306"
+      DB_NAME: "appliedagentic"
       DATABASE_URL: "mysql://aa_user:aa_password@mysql:3306/appliedagentic"
       NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
       NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
