@@ -1,4 +1,5 @@
 // app/(admin)/admin/submenus/new/page.tsx
+export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import SubMenuForm from '../SubMenuForm'
