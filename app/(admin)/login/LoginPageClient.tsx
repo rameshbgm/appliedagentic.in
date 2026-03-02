@@ -2,12 +2,10 @@
 'use client'
 import { signIn } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Zap, Loader2, Eye, EyeOff, Brain, Shield, Rocket } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -22,7 +20,7 @@ export default function LoginPage() {
       const res = await signIn('credentials', { email: em, password: pw, redirect: false })
       if (res?.ok) {
         toast.success('Welcome back!')
-        router.push('/admin/dashboard')
+        window.location.href = '/admin/dashboard'
       } else {
         toast.error('Invalid email or password')
       }

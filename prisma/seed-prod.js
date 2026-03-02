@@ -11,7 +11,7 @@ async function main() {
     console.log('🌱 Running production JS seed...')
 
     const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@appliedagentic.com'
-    const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@123'
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@2026!'
 
     const passwordHash = await bcrypt.hash(adminPassword, 12)
 
