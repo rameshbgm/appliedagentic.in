@@ -13,9 +13,11 @@ interface ErrorProps {
 
 export default function PublicError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log to browser console in development; in production Next.js already
-    // logs the error server-side with the digest.
-    console.error('[PublicError boundary]', error.message, error.digest)
+    // Use console.warn — the error is already caught and rendered by this
+    // boundary. console.error would re-trigger Next.js error overlay on top
+    // of the error UI, causing duplicate/confusing error reports.
+    // In production, Next.js already logs the error server-side with the digest.
+    console.warn('[PublicError boundary]', error.message, error.digest)
   }, [error])
 
   return (

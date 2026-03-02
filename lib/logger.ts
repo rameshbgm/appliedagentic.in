@@ -34,22 +34,27 @@ function printError(label: string, err?: unknown, context?: Record<string, unkno
   const prismaDetail = err ? formatPrismaError(err) : ''
 
   if (isVerbose) {
-    console.error(`\n┌─ [ERROR] ${ts}`)
-    console.error(`│  Route  : ${label}`)
+    // Build the entire formatted block as one string so that a single
+    // console.error() call is made. Multiple calls would each trigger
+    // Next.js error detection separately, flooding the error overlay.
+    const lines: string[] = []
+    lines.push(`\n┌─ [ERROR] ${ts}`)
+    lines.push(`│  Route  : ${label}`)
     if (err instanceof Error) {
-      console.error(`│  Message: ${err.message}`)
-      if (prismaDetail) console.error(`│  Prisma : ${prismaDetail}`)
+      lines.push(`│  Message: ${err.message}`)
+      if (prismaDetail) lines.push(`│  Prisma : ${prismaDetail}`)
       if (err.stack) {
         const stackLines = err.stack.split('\n').slice(1, 6) // top 5 frames
-        stackLines.forEach((l) => console.error(`│  Stack  : ${l.trim()}`))
+        stackLines.forEach((l) => lines.push(`│  Stack  : ${l.trim()}`))
       }
     } else if (err !== undefined) {
-      console.error(`│  Cause  :`, err)
+      lines.push(`│  Cause  : ${JSON.stringify(err)}`)
     }
     if (context && Object.keys(context).length > 0) {
-      console.error(`│  Context:`, JSON.stringify(context, null, 2))
+      lines.push(`│  Context: ${JSON.stringify(context, null, 2)}`)
     }
-    console.error(`└${'─'.repeat(60)}`)
+    lines.push(`└${'─'.repeat(60)}`)
+    console.error(lines.join('\n'))
   } else {
     // Production: single-line, no stack traces exposed
     const cause =
