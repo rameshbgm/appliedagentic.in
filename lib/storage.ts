@@ -4,8 +4,12 @@ import fs from 'fs/promises'
 import path from 'path'
 import { nanoid } from 'nanoid'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads'
-const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB || '10')
+// Uploads are stored in ./public/uploads/ relative to cwd (app root).
+// Next.js standalone server serves ./public/ at the root URL, so files at
+// ./public/uploads/images/foo.jpg are reachable at /uploads/images/foo.jpg.
+// After each build, copy: cp -r public .next/standalone/public
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './public/uploads'
+const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? '10')
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 export const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm']
@@ -63,13 +67,14 @@ export async function saveFile(opts: SaveFileOptions): Promise<SaveFileResult> {
   const { buffer, mimeType, subDir = 'images' } = opts
   const ext = getExtension(mimeType)
   const filename = `${Date.now()}-${nanoid(8)}.${ext}`
-  const dirPath = path.join(process.cwd(), UPLOAD_DIR, subDir)
+  // path.resolve handles both relative (./public/uploads) and absolute paths correctly
+  const dirPath = path.resolve(process.cwd(), UPLOAD_DIR, subDir)
 
   await fs.mkdir(dirPath, { recursive: true })
   const filePath = path.join(dirPath, filename)
   await fs.writeFile(filePath, buffer)
 
-  // Return URL relative to public/
+  // URL is always relative to the public root
   const url = `/uploads/${subDir}/${filename}`
   return { url, filename, sizeBytes: buffer.length }
 }

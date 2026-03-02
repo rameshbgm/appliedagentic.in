@@ -8,8 +8,31 @@
 // Log levels (most → least verbose): debug → info → warn → error
 // When ENABLE_DEBUG_LOGS=true → all levels are shown
 // Default (unset / false)     → only warn + error are shown
+//
+// Log files (relative to process.cwd()):
+//   ./logs/app.log   – all log levels
+//   ./logs/error.log – errors only
+
+import fs from 'fs'
+import path from 'path'
 
 const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
+
+// ── File logging setup ────────────────────────────────────────────────────────
+const LOG_DIR = path.join(process.cwd(), 'logs')
+
+function ensureLogDir() {
+  try {
+    if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true })
+  } catch { /* not writable — fall back to console only */ }
+}
+
+function writeToFile(filename: string, line: string) {
+  try {
+    ensureLogDir()
+    fs.appendFileSync(path.join(LOG_DIR, filename), line + '\n', 'utf8')
+  } catch { /* fail silently — console output is always available */ }
+}
 
 function timestamp(): string {
   return new Date().toISOString()
@@ -31,9 +54,6 @@ function printError(label: string, err?: unknown, context?: Record<string, unkno
   const prismaDetail = err ? formatPrismaError(err) : ''
 
   if (isVerbose) {
-    // Build the entire formatted block as one string so that a single
-    // console.error() call is made. Multiple calls would each trigger
-    // Next.js error detection separately, flooding the error overlay.
     const lines: string[] = []
     lines.push(`\n┌─ [ERROR] ${ts}`)
     lines.push(`│  Route  : ${label}`)
@@ -41,7 +61,7 @@ function printError(label: string, err?: unknown, context?: Record<string, unkno
       lines.push(`│  Message: ${err.message}`)
       if (prismaDetail) lines.push(`│  Prisma : ${prismaDetail}`)
       if (err.stack) {
-        const stackLines = err.stack.split('\n').slice(1, 6) // top 5 frames
+        const stackLines = err.stack.split('\n').slice(1, 6)
         stackLines.forEach((l) => lines.push(`│  Stack  : ${l.trim()}`))
       }
     } else if (err !== undefined) {
@@ -51,31 +71,44 @@ function printError(label: string, err?: unknown, context?: Record<string, unkno
       lines.push(`│  Context: ${JSON.stringify(context, null, 2)}`)
     }
     lines.push(`└${'─'.repeat(60)}`)
-    console.error(lines.join('\n'))
+    const block = lines.join('\n')
+    console.error(block)
+    writeToFile('app.log', block)
+    writeToFile('error.log', block)
   } else {
-    // Production: single-line, no stack traces exposed
     const cause =
       err instanceof Error
         ? `${err.message}${prismaDetail ? ` | ${prismaDetail}` : ''}`
         : String(err ?? '')
-    console.error(`[ERROR] ${ts} ${label}${cause ? ` | ${cause}` : ''}`)
+    const line = `[ERROR] ${ts} ${label}${cause ? ` | ${cause}` : ''}`
+    console.error(line)
+    writeToFile('app.log', line)
+    writeToFile('error.log', line)
   }
 }
 
 export const logger = {
   /** Detailed debug information – only shown in verbose mode */
   debug(msg: string, ...args: unknown[]) {
-    if (isVerbose) console.debug(`[DEBUG] ${timestamp()} ${msg}`, ...args)
+    if (!isVerbose) return
+    const line = `[DEBUG] ${timestamp()} ${msg} ${args.length ? JSON.stringify(args) : ''}`.trimEnd()
+    console.debug(line)
+    writeToFile('app.log', line)
   },
 
   /** General informational messages */
   info(msg: string, ...args: unknown[]) {
-    if (isVerbose) console.info(`[INFO]  ${timestamp()} ${msg}`, ...args)
+    if (!isVerbose) return
+    const line = `[INFO]  ${timestamp()} ${msg} ${args.length ? JSON.stringify(args) : ''}`.trimEnd()
+    console.info(line)
+    writeToFile('app.log', line)
   },
 
   /** Warnings – potential issues that are not yet breaking */
   warn(msg: string, ...args: unknown[]) {
-    console.warn(`[WARN]  ${timestamp()} ${msg}`, ...args)
+    const line = `[WARN]  ${timestamp()} ${msg} ${args.length ? JSON.stringify(args) : ''}`.trimEnd()
+    console.warn(line)
+    writeToFile('app.log', line)
   },
 
   /**
