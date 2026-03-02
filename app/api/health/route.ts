@@ -6,9 +6,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-const isVerbose =
-  process.env.NODE_ENV === 'development' ||
-  process.env.ENABLE_DEBUG_LOGS === 'true'
+const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
 export async function GET() {
   const start = Date.now()
@@ -38,7 +36,6 @@ export async function GET() {
     ...(isVerbose
       ? {
           env: {
-            NODE_ENV: process.env.NODE_ENV,
             ENABLE_DEBUG_LOGS: process.env.ENABLE_DEBUG_LOGS ?? 'false',
             NEXTAUTH_URL: process.env.NEXTAUTH_URL,
             DATABASE_URL: (process.env.DATABASE_URL ?? '').replace(/:([^:@/]+)@/, ':***@'),
