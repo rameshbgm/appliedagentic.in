@@ -9,9 +9,9 @@
     "build:uat": "dotenv -e .env.uat -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:with-migrate": "dotenv -e .env.production -- sh -c 'prisma migrate deploy && prisma generate && rm -rf .next && next build'",
     "build:no-migrate": "dotenv -e .env.production -- sh -c 'prisma generate && rm -rf .next && next build'",
-    "start": "next start -p $PORT",
-    "start:prod": "dotenv -e .env.production -- next start -p $PORT",
-    "start:uat": "dotenv -e .env.uat -- next start -p $PORT",
+    "start": "next start -p ${PORT:-3000}",
+    "start:prod": "dotenv -e .env.production -- next start -p ${PORT:-3000}",
+    "start:uat": "dotenv -e .env.uat -- next start -p ${PORT:-3000}",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate"
