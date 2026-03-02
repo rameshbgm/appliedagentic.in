@@ -12,7 +12,10 @@ interface ErrorProps {
 
 export default function GlobalError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('[GlobalError boundary]', error.message, error.digest)
+    // Use console.warn — the error is already caught and rendered by this
+    // boundary. console.error would re-trigger Next.js error overlay on top
+    // of the error UI, causing duplicate/confusing error reports.
+    console.warn('[GlobalError boundary]', error.message, error.digest)
   }, [error])
 
   return (

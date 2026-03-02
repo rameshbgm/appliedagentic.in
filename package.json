@@ -5,22 +5,13 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:prod": "dotenv -e .env.production -- next dev --webpack",
-    "dev:nodb": "DATABASE_URL='' next dev",
     "build": "rm -rf .next && next build",
     "start": "next start -p $PORT",
     "start:prod": "dotenv -e .env.production -- next start",
-    "start:nodb": "DATABASE_URL='' next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "db:deploy": "prisma migrate deploy"
-    ,"backup:hostinger": "bash scripts/backup-hostinger.sh"
-    ,"deploy:hostinger": "bash scripts/deploy-hostinger.sh"
-    ,"seed:hostinger": "node scripts/seed-hostinger.js"
+    "db:generate": "prisma generate"
+
   },
   "packageManager": "npm@9.8.0",
   "ts-node": {

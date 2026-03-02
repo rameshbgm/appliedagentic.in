@@ -11,7 +11,10 @@ interface ErrorProps {
 
 export default function AdminError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('[AdminError boundary]', error.message, error.digest)
+    // Use console.warn — the error is already caught and rendered by this
+    // boundary. console.error would re-trigger Next.js error overlay on top
+    // of the error UI, causing duplicate/confusing error reports.
+    console.warn('[AdminError boundary]', error.message, error.digest)
   }, [error])
 
   return (
