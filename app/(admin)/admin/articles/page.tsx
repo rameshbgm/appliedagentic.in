@@ -87,7 +87,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
     prisma.article.groupBy({ by: ['status'], _count: { id: true } }),
   ])
 
-  const countMap = Object.fromEntries(statusCounts.map((r: any) => [r.status, r._count.id]))
+  const countMap: Record<string, number> = Object.fromEntries(statusCounts.map((r: any) => [r.status, r._count.id as number]))
   const totalAll = Object.values(countMap).reduce((s, n) => s + n, 0)
 
   const statusOptions = [
