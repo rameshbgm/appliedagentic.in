@@ -13,25 +13,24 @@
 //   ./logs/app.log   – all log levels
 //   ./logs/error.log – errors only
 
-import fs from 'fs'
-import path from 'path'
-
 const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
 // ── File logging setup ────────────────────────────────────────────────────────
-const LOG_DIR = path.join(process.cwd(), 'logs')
-
-function ensureLogDir() {
-  try {
-    if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true })
-  } catch { /* not writable — fall back to console only */ }
-}
+// fs/path are required lazily (not imported statically) so that the module can
+// be safely imported in client-side bundles without triggering a build error.
+// The guard `typeof window === 'undefined'` ensures writes only happen in Node.
 
 function writeToFile(filename: string, line: string) {
+  if (typeof window !== 'undefined') return          // browser — skip
   try {
-    ensureLogDir()
-    fs.appendFileSync(path.join(LOG_DIR, filename), line + '\n', 'utf8')
-  } catch { /* fail silently — console output is always available */ }
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs   = require('fs')   as typeof import('fs')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path')
+    const logDir = path.join(process.cwd(), 'logs')
+    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true })
+    fs.appendFileSync(path.join(logDir, filename), line + '\n', 'utf8')
+  } catch { /* not writable — console output is always available */ }
 }
 
 function timestamp(): string {
