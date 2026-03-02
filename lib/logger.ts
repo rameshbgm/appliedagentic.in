@@ -1,18 +1,15 @@
 // lib/logger.ts
 // Centralised logging utility.
 //
-// Behaviour is controlled by two environment variables:
-//   NODE_ENV          – set automatically by Next.js ('development' | 'production')
-//   ENABLE_DEBUG_LOGS – set to "true" to enable verbose debug logs even in production
-//                       Useful for diagnosing issues on the live Hostinger server.
+// Behaviour is controlled by one environment variable:
+//   ENABLE_DEBUG_LOGS – set to "true" to enable verbose debug/info logs.
+//                       Unset or "false" → only warn + error are shown.
 //
 // Log levels (most → least verbose): debug → info → warn → error
-// In development or when ENABLE_DEBUG_LOGS=true → all levels are shown
-// In production (without ENABLE_DEBUG_LOGS)      → only warn + error are shown
+// When ENABLE_DEBUG_LOGS=true → all levels are shown
+// Default (unset / false)     → only warn + error are shown
 
-const isVerbose =
-  process.env.NODE_ENV === 'development' ||
-  process.env.ENABLE_DEBUG_LOGS === 'true'
+const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
 function timestamp(): string {
   return new Date().toISOString()

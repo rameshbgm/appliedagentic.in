@@ -2,9 +2,7 @@
 import { PrismaClient } from '@prisma/client'
 import { logger } from '@/lib/logger'
 
-const isVerbose =
-  process.env.NODE_ENV === 'development' ||
-  process.env.ENABLE_DEBUG_LOGS === 'true'
+const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
 // If DATABASE_URL isn't set during build (common in CI or static exports),
 // export a lightweight stub that safely returns empty results for read
@@ -44,7 +42,7 @@ if (!process.env.DATABASE_URL) {
       log: isVerbose ? ['query', 'info', 'warn', 'error'] : ['error'],
     })
 
-  if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = _prisma
+  globalForPrisma.prisma = _prisma
 
   // ── Database connection health-check ──────────────────────────────────────────
   async function testDatabaseConnection() {
@@ -59,7 +57,7 @@ if (!process.env.DATABASE_URL) {
     }
   }
 
-  if (process.env.NODE_ENV !== 'test' && process.env.NEXT_PHASE !== 'phase-production-build') {
+  if (process.env.NEXT_PHASE !== 'phase-production-build') {
     testDatabaseConnection()
   }
 }
