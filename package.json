@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:prod": "dotenv -e .env.production -- next dev --webpack",
-    "build": "rm -rf .next && next build",
+    "build": "prisma generate && rm -rf .next && next build",
     "start": "next start -p $PORT",
     "start:prod": "dotenv -e .env.production -- next start",
     "lint": "next lint",

@@ -10,7 +10,13 @@ const isVerbose =
 // export a lightweight stub that safely returns empty results for read
 // operations. This prevents Prisma from throwing `Environment variable not
 // found` during prerendering while still allowing the app to build.
-let _prisma: any = null
+//
+// NOTE: _prisma is typed as PrismaClient (not `any`) so that TypeScript can
+// infer return types of all prisma.xxx.findMany() etc. calls throughout the
+// app. The stub is cast via `unknown` — it is never reached at runtime when
+// DATABASE_URL is set, and when it IS reached (build-time stub) the returned
+// empty arrays / nulls are acceptable no-ops.
+let _prisma: PrismaClient
 
 if (!process.env.DATABASE_URL) {
   const noopAsync = async () => null
@@ -25,7 +31,7 @@ if (!process.env.DATABASE_URL) {
   }
   // A minimal stub to satisfy imports during build when DATABASE_URL is not set.
   // Methods like `findMany`, `findFirst`, `$queryRaw` will return safe defaults.
-  _prisma = new Proxy({}, handler)
+  _prisma = new Proxy({}, handler) as unknown as PrismaClient
 } else {
   const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
@@ -58,6 +64,5 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
-// Export the resolved prisma (real client or stub)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const prisma: any = _prisma
+// Export the resolved prisma (real client or build-time stub)
+export const prisma: PrismaClient = _prisma
