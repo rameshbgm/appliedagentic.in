@@ -1,11 +1,11 @@
-// ecosystem.config.js — PM2 config for Hostinger VPS (standalone output)
+// ecosystem.config.js — PM2 config for Hostinger shared hosting
 module.exports = {
   apps: [
     {
       name: 'appliedagentic',
       script: 'node',
       args: '.next/standalone/server.js',
-      cwd: '/var/www/appliedagentic.in',
+      cwd: '/home/u915919430/domains/appliedagentic.in/public_html',
       instances: 'max',          // cluster mode — uses all CPU cores
       exec_mode: 'cluster',
       autorestart: true,
@@ -15,9 +15,9 @@ module.exports = {
         PORT: 3000,
         HOSTNAME: '0.0.0.0',
       },
-      // Log configuration
-      error_file: '/var/log/pm2/appliedagentic-error.log',
-      out_file: '/var/log/pm2/appliedagentic-out.log',
+      // Log configuration — stored outside public_html so they are not web-accessible
+      error_file: '/home/u915919430/domains/appliedagentic.in/logs/error.log',
+      out_file: '/home/u915919430/domains/appliedagentic.in/logs/out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
     },
