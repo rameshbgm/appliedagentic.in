@@ -9,7 +9,7 @@ interface MediaItem {
   filename: string
   url: string
   mimeType: string
-  fileSize: number
+  sizeBytes: number
   width?: number | null
   height?: number | null
   altText?: string | null
@@ -62,7 +62,7 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/media', { method: 'POST', body: formData })
+      const res = await fetch('/api/media/upload', { method: 'POST', body: formData })
       const data = await res.json()
       if (data.success) {
         setItems((prev) => [data.data, ...prev])
@@ -183,7 +183,7 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
                   <div className="absolute bottom-0 left-0 right-0 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
                     <p className="text-white text-xs truncate font-medium">{item.filename}</p>
-                    <p className="text-white/60 text-xs">{formatBytes(item.fileSize)}</p>
+                    <p className="text-white/60 text-xs">{formatBytes(item.sizeBytes)}</p>
                   </div>
                 </button>
               ))}
