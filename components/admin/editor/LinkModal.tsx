@@ -76,7 +76,7 @@ export default function LinkModal({ initialHref = '', initialText = '', onInsert
             <button
               onClick={() => href && onInsert(href, text)}
               disabled={!href}
-              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-black disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
               style={{ background: 'var(--green)' }}
             >
               Insert Link

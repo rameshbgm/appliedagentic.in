@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import {
-  SunMoon, Bot,
+  Bot,
   AArrowUp, AArrowDown, X, Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,22 +20,6 @@ const MIN_SIZE = 10
 const MAX_SIZE = 25
 
 export default function ArticleReaderTools({ content, mobile = false, inline = false }: Props) {
-  // ── Theme ─────────────────────────────────────────────────────────────────
-  const [theme, setThemeState] = useState<'dark' | 'light'>('dark')
-
-  useEffect(() => {
-    const stored = localStorage.getItem('aa-theme') as 'dark' | 'light' | null
-    const initial = stored ?? (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') ?? 'dark'
-    setThemeState(initial)
-  }, [])
-
-  const toggleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    setThemeState(next)
-    document.documentElement.setAttribute('data-theme', next)
-    localStorage.setItem('aa-theme', next)
-  }, [theme])
-
   // ── Font size ──────────────────────────────────────────────────────────────
   const [fontSize, setFontSizeState] = useState<number>(DEFAULT_SIZE)
 
@@ -101,18 +85,6 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
     <>
       {/* ── Tool strip ─────────────────────────────────────────────────────── */}
       <div className={stripClass} role="toolbar" aria-label="Article reader tools">
-
-        {/* Theme toggle */}
-        <button
-          className={`tool-btn${theme === 'light' ? ' active' : ''}`}
-          onClick={toggleTheme}
-          data-tip={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          aria-label="Toggle theme"
-        >
-          <SunMoon size={16} />
-        </button>
-
-        <div className="art-tools-divider" />
 
         {/* AI Summary */}
         <button

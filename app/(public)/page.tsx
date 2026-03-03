@@ -17,15 +17,17 @@ export const metadata: Metadata = {
 
 export const revalidate = 60
 
-// One accent color per menu slot (cycles if more than 6)
-const MENU_ACCENTS = [
-  '#AAFF00', // lime green
-  '#38BDF8', // sky blue
-  '#A78BFA', // violet
-  '#FB923C', // orange
-  '#34D399', // emerald
-  '#F472B6', // pink
+// Gradient border pairs per module slot
+const TILE_GRADIENTS = [
+  ['#3b82f6', '#06b6d4'],   // blue → cyan
+  ['#8b5cf6', '#ec4899'],   // violet → pink
+  ['#f59e0b', '#ef4444'],   // amber → red
+  ['#10b981', '#3b82f6'],   // emerald → blue
+  ['#f472b6', '#a78bfa'],   // pink → violet
+  ['#06b6d4', '#10b981'],   // cyan → emerald
 ]
+// Legacy accent for chips/arrows (first color of the gradient)
+const MENU_ACCENTS = TILE_GRADIENTS.map(([a]) => a)
 
 async function getData() {
   try {
@@ -71,88 +73,121 @@ export default async function HomePage() {
       <HeroSection />
 
       {/* ── Browse Topics ── */}
-      <section id="topics" className="py-16 sm:py-20 px-4 md:px-8 max-w-7xl mx-auto">
+      <section id="topics" className="py-16 sm:py-24 px-4 md:px-8 max-w-7xl mx-auto">
         <ParallaxSection speed={0.25}>
           <FadeIn>
-            <div className="flex items-start justify-between mb-10 sm:mb-12 flex-wrap gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen size={16} style={{ color: '#38BDF8' }} />
-                  <span className="text-sm font-medium uppercase tracking-widest" style={{ color: '#38BDF8' }}>
-                    {browseTopicsContent.badge}
-                  </span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {browseTopicsContent.headline}{' '}
-                  <span className="gradient-text">{browseTopicsContent.headlineAccent}</span>
-                </h2>
-                <p className="mt-2 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-                  {browseTopicsContent.subheadline}
-                </p>
+            <div className="mb-12 sm:mb-16">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen size={15} style={{ color: '#38BDF8' }} />
+                <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#38BDF8' }}>
+                  {browseTopicsContent.badge}
+                </span>
               </div>
+
+              {/* Redesigned heading */}
+              <h2
+                className="font-black leading-[1.08] tracking-tight mb-4"
+                style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
+              >
+                <span style={{ color: 'var(--text-primary)' }}>{browseTopicsContent.headline} </span>
+                <span
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    fontStyle: 'italic',
+                  }}
+                >
+                  {browseTopicsContent.headlineAccent}
+                </span>
+              </h2>
+
+              <p className="text-base sm:text-lg max-w-xl" style={{ color: 'var(--text-secondary)' }}>
+                {browseTopicsContent.subheadline}
+              </p>
             </div>
           </FadeIn>
         </ParallaxSection>
 
-        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {navMenus.map((menu, i) => {
+            const [colorA, colorB] = TILE_GRADIENTS[i % TILE_GRADIENTS.length]
             const accent = MENU_ACCENTS[i % MENU_ACCENTS.length]
             return (
+              /* Gradient border wrapper */
               <div
                 key={menu.id}
-                className="group relative rounded-2xl p-6 flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-xl"
+                className="p-[1.5px] rounded-2xl group transition-all hover:scale-[1.015] hover:shadow-2xl"
                 style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--bg-border)',
-                  borderTop: `3px solid ${accent}`,
+                  background: `linear-gradient(135deg, ${colorA}, ${colorB})`,
+                  boxShadow: `0 0 0 0 ${colorA}00`,
                 }}
               >
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <Link href={`/${menu.slug}`} className="group/title">
+                <div
+                  className="rounded-[calc(1rem-1.5px)] p-6 flex flex-col gap-4 h-full"
+                  style={{ background: 'var(--bg-surface)' }}
+                >
+                  {/* Colour pill + arrow */}
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="h-1.5 w-10 rounded-full"
+                      style={{ background: `linear-gradient(90deg, ${colorA}, ${colorB})` }}
+                    />
+                    <Link
+                      href={`/${menu.slug}`}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                      style={{
+                        background: `linear-gradient(135deg, ${colorA}22, ${colorB}22)`,
+                        border: `1px solid ${colorA}40`,
+                        color: colorA,
+                      }}
+                    >
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+
+                  {/* Title */}
+                  <Link href={`/${menu.slug}`}>
                     <h3
-                      className="text-lg font-bold leading-snug transition-colors group-hover/title:text-[var(--green)]"
+                      className="text-xl font-bold leading-snug transition-colors"
                       style={{ color: 'var(--text-primary)' }}
                     >
                       {menu.title}
                     </h3>
                   </Link>
-                  <Link
-                    href={`/${menu.slug}`}
-                    className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                    style={{ background: accent + '22', color: accent }}
-                  >
-                    <ArrowRight size={14} />
-                  </Link>
+
+                  {/* Description */}
+                  {menu.description && (
+                    <p className="text-sm leading-relaxed line-clamp-2 flex-1" style={{ color: 'var(--text-secondary)' }}>
+                      {menu.description}
+                    </p>
+                  )}
+
+                  {/* Sub-menu chips — fixed height, thin scrollbar */}
+                  {menu.subMenus.length > 0 && (
+                    <div
+                      className="tile-chips-scroll flex flex-wrap gap-2 pt-3 pr-1"
+                      style={{ borderTop: `1px solid ${colorA}18` }}
+                    >
+                      {menu.subMenus.map((sub) => (
+                        <Link
+                          key={sub.id}
+                          href={`/${menu.slug}/${sub.slug}`}
+                          className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105"
+                          style={{
+                            background: `linear-gradient(135deg, ${colorA}14, ${colorB}14)`,
+                            color: colorA,
+                            border: `1px solid ${colorA}28`,
+                          }}
+                        >
+                          <ChevronRight size={9} />
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                {/* Description */}
-                {menu.description && (
-                  <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
-                    {menu.description}
-                  </p>
-                )}
-
-                {/* Sub-menu chips */}
-                {menu.subMenus.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-auto pt-2" style={{ borderTop: '1px solid var(--bg-border)' }}>
-                    {menu.subMenus.map((sub) => (
-                      <Link
-                        key={sub.id}
-                        href={`/${menu.slug}/${sub.slug}`}
-                        className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105"
-                        style={{
-                          background: accent + '15',
-                          color: accent,
-                          border: `1px solid ${accent}30`,
-                        }}
-                      >
-                        <ChevronRight size={10} />
-                        {sub.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             )
           })}
@@ -164,34 +199,58 @@ export default async function HomePage() {
         <section className="py-16 sm:py-20 px-4 md:px-8 max-w-7xl mx-auto">
           <ParallaxSection speed={0.2}>
             <FadeIn>
-              <div className="flex items-start justify-between mb-8 sm:mb-10 flex-wrap gap-4">
+              <div className="flex items-end justify-between mb-10 sm:mb-12 flex-wrap gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles size={16} style={{ color: '#A78BFA' }} />
-                    <span className="text-sm font-medium uppercase tracking-widest" style={{ color: '#A78BFA' }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles size={14} style={{ color: '#A78BFA' }} />
+                    <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#A78BFA' }}>
                       {featuredArticlesContent.badge}
                     </span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                    {featuredArticlesContent.headline}{' '}
-                    <span className="gradient-text">{featuredArticlesContent.headlineAccent}</span>
+                  {/* Underline-highlight heading — different from modules italic style */}
+                  <h2
+                    className="font-black leading-[1.05] tracking-tight"
+                    style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    <span style={{ color: 'var(--text-primary)' }}>{featuredArticlesContent.headline}{' '}</span>
+                    <span className="relative inline-block">
+                      <span
+                        style={{
+                          background: 'linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                        }}
+                      >
+                        {featuredArticlesContent.headlineAccent}
+                      </span>
+                      <span
+                        className="absolute left-0 -bottom-1 w-full h-[3px] rounded-full"
+                        style={{ background: 'linear-gradient(90deg, #f59e0b, #ef4444, #ec4899)' }}
+                      />
+                    </span>
                   </h2>
                 </div>
                 <Link
                   href={featuredArticlesContent.viewAllHref}
-                  className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#38BDF8]"
-                  style={{ color: 'var(--text-secondary)' }}
+                  className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full transition-all hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b18, #ec489918)',
+                    color: '#ef4444',
+                    border: '1px solid #f59e0b30',
+                  }}
                 >
-                  {featuredArticlesContent.viewAllLabel} <ArrowRight size={15} />
+                  {featuredArticlesContent.viewAllLabel} <ArrowRight size={13} />
                 </Link>
               </div>
             </FadeIn>
           </ParallaxSection>
 
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredArticles.map((article) => (
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {featuredArticles.map((article, idx) => (
               <ArticleCard
                 key={article.id}
+                index={idx + 1}
                 title={article.title}
                 slug={article.slug}
                 summary={article.summary}

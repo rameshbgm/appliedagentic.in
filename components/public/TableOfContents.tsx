@@ -206,7 +206,7 @@ export default function TableOfContents({ sections, content }: Props) {
           <Link
             href="/modules"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-            style={{ background: 'var(--green)', color: '#000' }}
+            style={{ background: 'var(--green)', color: '#fff' }}
           >
             <Zap size={13} />
             Explore all Modules

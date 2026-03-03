@@ -57,7 +57,7 @@ export default function EmbedModal({ onInsert, onClose }: Props) {
               onClick={() => url && onInsert(url)}
               disabled={!isValid}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-              style={{ background: '#AAFF00' }}
+              style={{ background: '#1E293B' }}
             >
               Embed
             </button>

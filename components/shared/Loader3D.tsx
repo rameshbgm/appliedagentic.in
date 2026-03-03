@@ -5,7 +5,7 @@ import * as THREE from 'three'
 
 const DOTS = [
   '#FF6B6B', '#FF8E53', '#FFCC00', '#4ADE80', '#22D3EE',
-  '#818CF8', '#E879F9', '#F43F5E', '#AAFF00', '#00C2FF',
+  '#818CF8', '#E879F9', '#F43F5E', '#1E293B', '#00C2FF',
 ]
 
 const NODE_COUNT  = 90
@@ -193,14 +193,14 @@ export default function Loader3D() {
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'var(--green, #4ade80)', boxShadow: '0 0 24px #4ade8088' }}
+            style={{ background: 'var(--green, #1E293B)', boxShadow: '0 0 24px rgba(30,41,59,0.35)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
           <span className="font-bold text-2xl tracking-tight" style={{ color: 'rgba(255,255,255,0.95)' }}>
-            Applied<span style={{ color: 'var(--green, #4ade80)' }}>Agentic</span>
+            Applied<span style={{ color: 'var(--green, #1E293B)' }}>Agentic</span>
           </span>
         </div>
 

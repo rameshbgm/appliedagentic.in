@@ -9,20 +9,19 @@ const ThemeContext = createContext<{
   setTheme: (t: Theme) => void
   toggleTheme: () => void
 }>({
-  theme: 'dark',
+  theme: 'light',
   setTheme: () => {},
   toggleTheme: () => {},
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const [theme, setThemeState] = useState<Theme>('light')
 
   useEffect(() => {
-    // Respect stored user preference; fall back to dark
-    const stored = localStorage.getItem('aa-theme') as Theme | null
-    const initial: Theme = stored ?? 'dark'
-    setThemeState(initial)
-    document.documentElement.setAttribute('data-theme', initial)
+    // Always force light theme — clear any previously stored dark preference
+    localStorage.removeItem('aa-theme')
+    document.documentElement.setAttribute('data-theme', 'light')
+    setThemeState('light')
   }, [])
 
   const setTheme = (t: Theme) => {
@@ -46,7 +45,7 @@ export const useTheme = () => {
   // when code accidentally calls this outside a client component.
   if (typeof window === 'undefined') {
     return {
-      theme: 'dark' as Theme,
+      theme: 'light' as Theme,
       setTheme: () => {},
       toggleTheme: () => {},
     }

@@ -23,7 +23,7 @@ export default function PublicError({ error, reset }: ErrorProps) {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: 'var(--bg-primary, #0A0A0F)', color: 'var(--text-primary, #fff)' }}
+      style={{ background: 'var(--bg-primary, #FFFFFF)', color: 'var(--text-primary, #111827)' }}
     >
       <div className="max-w-lg w-full text-center space-y-6">
         <div className="text-6xl font-bold opacity-20">500</div>
@@ -49,7 +49,8 @@ export default function PublicError({ error, reset }: ErrorProps) {
           </button>
           <Link
             href="/"
-            className="px-5 py-2 rounded-lg text-sm font-medium bg-[#AAFF00] text-black hover:opacity-90 transition"
+            className="px-5 py-2 rounded-lg text-sm font-medium text-white hover:opacity-90 transition"
+            style={{ background: '#1E293B' }}
           >
             Go home
           </Link>

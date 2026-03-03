@@ -18,7 +18,7 @@ interface Props {
 export default function ModuleCard({
   name, slug, icon, color, description, topicCount = 0, articleCount = 0, index = 0,
 }: Props) {
-  const c = color ?? '#AAFF00'
+  const c = color ?? '#1E293B'
 
   return (
     <Link href={`/modules/${slug}`} className="block group h-full">

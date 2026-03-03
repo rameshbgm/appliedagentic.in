@@ -121,8 +121,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
         </div>
         <Link
           href="/admin/articles/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-black transition-transform hover:scale-105"
-          style={{ background: '#AAFF00' }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-transform hover:scale-105"
+          style={{ background: '#1E293B' }}
         >
           <Plus size={16} />
           New Article
@@ -138,20 +138,20 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
               key={opt.value || 'all'}
               href={buildHref('/admin/articles', sp, { status: opt.value || undefined, page: '1' })}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                active ? 'text-black' : 'border hover:bg-gray-50'
+                active ? 'text-white' : 'border hover:bg-gray-50'
               }`}
               style={{
-                background:  active ? '#AAFF00' : 'transparent',
+                background:  active ? '#1E293B' : 'transparent',
                 borderColor: active ? 'transparent' : 'var(--bg-border)',
-                color:       active ? '#000' : 'var(--text-muted)',
+                color:       active ? '#fff' : 'var(--text-muted)',
               }}
             >
               {opt.label}
               <span
                 className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold"
                 style={{
-                  background: active ? 'rgba(0,0,0,0.15)' : 'var(--bg-elevated)',
-                  color:      active ? '#000' : 'var(--text-muted)',
+                  background: active ? 'rgba(255,255,255,0.20)' : 'var(--bg-elevated)',
+                  color:      active ? '#fff' : 'var(--text-muted)',
                 }}
               >
                 {opt.count}
@@ -300,7 +300,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 href={buildHref('/admin/articles', sp, { page: String(p) })}
                 className="w-8 h-8 rounded-xl text-sm flex items-center justify-center font-medium transition-colors"
                 style={{
-                  background:   p === page ? '#AAFF00' : 'transparent',
+                  background:   p === page ? '#1E293B' : 'transparent',
                   borderWidth:  p === page ? '0' : '1px',
                   borderStyle:  p === page ? 'none' : 'solid',
                   borderColor:  'var(--bg-border)',

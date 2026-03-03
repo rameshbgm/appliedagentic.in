@@ -11,7 +11,7 @@ export default function FooterNewsletter() {
       />
       <button
         className="px-3 py-2 rounded-xl text-sm font-semibold shrink-0"
-        style={{ background: 'var(--green)', color: '#000' }}
+        style={{ background: 'var(--green)', color: '#fff' }}
       >
         →
       </button>

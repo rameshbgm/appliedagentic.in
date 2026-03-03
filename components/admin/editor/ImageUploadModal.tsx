@@ -143,7 +143,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
                 onClick={() => url && onInsert(url, alt)}
                 disabled={!url}
                 className="w-full py-2.5 rounded-xl font-medium text-white text-sm disabled:opacity-50"
-                style={{ background: '#AAFF00' }}
+                style={{ background: '#1E293B' }}
               >
                 Insert Image
               </button>

@@ -53,7 +53,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-200">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: '#AAFF00' }}>
+          style={{ background: '#1E293B' }}>
           <Zap size={18} className="text-white" />
         </div>
         {!collapsed && (
@@ -97,7 +97,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
         {!collapsed && session?.user && (
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-              style={{ background: '#AAFF00' }}>
+              style={{ background: '#1E293B' }}>
               {session.user.name?.[0]?.toUpperCase() ?? 'A'}
             </div>
             <div className="overflow-hidden">

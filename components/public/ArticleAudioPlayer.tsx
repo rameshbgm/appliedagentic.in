@@ -66,7 +66,7 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
         <button
           onClick={toggle}
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white"
-          style={{ background: 'var(--green)', color: '#000' }}
+          style={{ background: 'var(--green)', color: '#fff' }}
         >
           {playing ? <Pause size={16} /> : <Play size={16} />}
         </button>

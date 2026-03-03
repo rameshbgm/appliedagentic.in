@@ -19,7 +19,7 @@ interface Props {
 }
 
 const ICONS = ['🤖','⚡','🧠','🔮','🛠️','📊','🌐','🔐','💡','🚀','🎯','🔬']
-const COLORS = ['#AAFF00','#CCFF66','#FF6B6B','#FFA502','#2ED573','#FF69B4','#4ECDC4','#55EFC4']
+const COLORS = ['#1E293B','#334155','#FF6B6B','#FFA502','#2ED573','#FF69B4','#4ECDC4','#55EFC4']
 
 export default function ModuleForm({ initialData }: Props) {
   const router = useRouter()
@@ -29,7 +29,7 @@ export default function ModuleForm({ initialData }: Props) {
     slug: initialData?.slug ?? '',
     description: initialData?.description ?? '',
     icon: initialData?.icon ?? '🤖',
-    color: initialData?.color ?? '#AAFF00',
+    color: initialData?.color ?? '#1E293B',
     published: initialData?.published ?? true,
   })
 
@@ -121,7 +121,7 @@ export default function ModuleForm({ initialData }: Props) {
               type="button"
               onClick={() => set('icon', icon)}
               className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all border-2 ${
-                form.icon === icon ? 'border-[#AAFF00] scale-110' : 'border-transparent'
+                form.icon === icon ? 'border-[#1E293B] scale-110' : 'border-transparent'
               }`}
               style={{ background: 'var(--bg-surface)' }}
             >
@@ -169,7 +169,7 @@ export default function ModuleForm({ initialData }: Props) {
           type="checkbox"
           checked={form.published}
           onChange={(e) => set('published', e.target.checked)}
-          className="accent-[#AAFF00] w-4 h-4"
+          className="accent-[#1E293B] w-4 h-4"
         />
         <label htmlFor="published" className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Publish this module (visible on public site)
@@ -188,7 +188,7 @@ export default function ModuleForm({ initialData }: Props) {
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2.5 rounded-xl text-sm font-medium text-black disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50 flex items-center gap-2"
           style={{ background: 'var(--green)' }}
         >
           {loading && <Loader2 size={14} className="animate-spin" />}

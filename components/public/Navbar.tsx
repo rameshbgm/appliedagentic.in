@@ -69,13 +69,21 @@ export default function Navbar({ navMenus = [] }: Props) {
           >
             <Zap size={15} className="text-white" />
           </div>
-          <span className="font-bold text-sm tracking-tight" style={{ color: textPrimary }}>
-            Applied<span style={{
-              background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>Agentic</span>
+          <span
+            className="text-[15px] tracking-tight"
+            style={{ color: textPrimary, fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}
+          >
+            <span style={{ fontWeight: 400 }}>Applied</span>
+            <span
+              style={{
+                fontWeight: 800,
+                background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >Agentic</span>
+            <span style={{ fontWeight: 300, opacity: 0.55 }}> AI</span>
           </span>
         </Link>
 
@@ -90,8 +98,14 @@ export default function Navbar({ navMenus = [] }: Props) {
                 <Link
                   key={menu.id}
                   href={`/${menu.slug}`}
-                  className={`flex items-center h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
-                  style={{ color: textSecond }}
+                  className={`flex items-center h-9 px-4 rounded-lg transition-all ${hoverBg}`}
+                  style={{
+                    color: textSecond,
+                    fontSize: '13.5px',
+                    fontWeight: 500,
+                    letterSpacing: '0.01em',
+                    fontFamily: "'Inter', sans-serif",
+                  }}
                 >
                   {menu.title}
                 </Link>
@@ -107,17 +121,23 @@ export default function Navbar({ navMenus = [] }: Props) {
               >
                 <Link
                   href={`/${menu.slug}`}
-                  className={`flex items-center gap-1 h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
-                  style={{ color: isOpen ? 'var(--green)' : textSecond }}
+                  className={`flex items-center gap-1 h-9 px-4 rounded-lg transition-all ${hoverBg}`}
+                  style={{
+                    color: isOpen ? '#3b82f6' : textSecond,
+                    fontSize: '13.5px',
+                    fontWeight: isOpen ? 600 : 500,
+                    letterSpacing: '0.01em',
+                    fontFamily: "'Inter', sans-serif",
+                  }}
                 >
                   {menu.title}
                   <ChevronDown
-                    size={13}
+                    size={12}
                     className={`ml-0.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                   />
                 </Link>
 
-                {/* Dropdown — rendered always, toggle via opacity so mouse can travel into it */}
+                {/* Dropdown */}
                 <div
                   className={`absolute top-full left-0 w-72 rounded-2xl shadow-2xl overflow-hidden transition-all duration-150 origin-top ${
                     isOpen
@@ -137,8 +157,14 @@ export default function Navbar({ navMenus = [] }: Props) {
                           onClick={() => setOpenMenuId(null)}
                         >
                           <p
-                            className="text-[13px] font-semibold leading-snug group-hover/item:text-[var(--green)] transition-colors"
-                            style={{ color: textPrimary }}
+                            className="leading-snug group-hover/item:text-[#3b82f6] transition-colors"
+                            style={{
+                              color: textPrimary,
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              letterSpacing: '-0.01em',
+                              fontFamily: "'Inter', sans-serif",
+                            }}
                           >
                             {sub.title}
                           </p>
@@ -158,8 +184,15 @@ export default function Navbar({ navMenus = [] }: Props) {
                   <div className="px-2 pb-2 pt-1" style={{ borderTop: `1px solid ${dropdownBdr}` }}>
                     <Link
                       href={`/${menu.slug}`}
-                      className={`flex items-center justify-center w-full py-2 rounded-xl text-xs font-semibold transition-colors ${hoverBg}`}
-                      style={{ color: 'var(--green)' }}
+                      className={`flex items-center justify-center w-full py-2 rounded-xl transition-colors ${hoverBg}`}
+                      style={{
+                        color: '#3b82f6',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        fontFamily: "'Inter', sans-serif",
+                      }}
                       onClick={() => setOpenMenuId(null)}
                     >
                       View all →
@@ -172,10 +205,16 @@ export default function Navbar({ navMenus = [] }: Props) {
 
           <Link
             href="/search"
-            className={`flex items-center gap-1.5 h-9 px-4 rounded-lg text-[15px] font-medium transition-colors ${hoverBg}`}
-            style={{ color: textSecond }}
+            className={`flex items-center gap-1.5 h-9 px-4 rounded-lg transition-all ${hoverBg}`}
+            style={{
+              color: textSecond,
+              fontSize: '13.5px',
+              fontWeight: 500,
+              letterSpacing: '0.01em',
+              fontFamily: "'Inter', sans-serif",
+            }}
           >
-            <Search size={14} className="opacity-70" />
+            <Search size={13} className="opacity-60" />
             Search
           </Link>
         </nav>
@@ -222,16 +261,22 @@ export default function Navbar({ navMenus = [] }: Props) {
                     <Link
                       href={`/${menu.slug}`}
                       onClick={closeMobile}
-                      className="flex-1 flex items-center px-4 py-3 text-sm font-semibold transition-colors hover:bg-white/8"
-                      style={{ color: 'rgba(255,255,255,0.92)' }}
+                      className={`flex-1 flex items-center px-4 py-3 transition-colors ${hoverBg}`}
+                      style={{
+                        color: textPrimary,
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        letterSpacing: '-0.01em',
+                        fontFamily: "'Inter', sans-serif",
+                      }}
                     >
                       {menu.title}
                     </Link>
                     {hasSubs && (
                       <button
                         onClick={() => setOpenMobileMenuId(isExpanded ? null : menu.id)}
-                        className="px-4 transition-colors hover:bg-white/8 text-xl font-light leading-none select-none"
-                        style={{ color: 'rgba(255,255,255,0.55)', minWidth: '44px' }}
+                        className={`px-4 transition-colors ${hoverBg} text-xl font-light leading-none select-none`}
+                        style={{ color: textMuted, minWidth: '44px' }}
                         aria-label={isExpanded ? 'Collapse' : 'Expand'}
                       >
                         {isExpanded ? '−' : '+'}
@@ -242,26 +287,35 @@ export default function Navbar({ navMenus = [] }: Props) {
                   {hasSubs && isExpanded && (
                     <div
                       className="ml-5 mt-1 mb-1 pl-4 space-y-0.5"
-                      style={{ borderLeft: '2px solid rgba(255,255,255,0.09)' }}
+                      style={{ borderLeft: `2px solid ${dropdownBdr}` }}
                     >
                       {menu.subMenus!.map((sub, idx) => (
                         <div key={sub.id}>
                           <Link
                             href={`/${menu.slug}/${sub.slug}`}
                             onClick={closeMobile}
-                            className="flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors hover:bg-white/8"
+                            className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors ${hoverBg}`}
                           >
-                            <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.90)' }}>
+                            <span
+                              className="leading-snug"
+                              style={{
+                                color: textPrimary,
+                                fontSize: '13.5px',
+                                fontWeight: 600,
+                                letterSpacing: '-0.01em',
+                                fontFamily: "'Inter', sans-serif",
+                              }}
+                            >
                               {sub.title}
                             </span>
                             {sub.description && (
-                              <span className="text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                              <span className="text-xs leading-snug" style={{ color: textMuted }}>
                                 {sub.description}
                               </span>
                             )}
                           </Link>
                           {idx < menu.subMenus!.length - 1 && (
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '2px 12px' }} />
+                            <div style={{ height: '1px', background: dropdownBdr, margin: '2px 12px' }} />
                           )}
                         </div>
                       ))}
@@ -271,14 +325,20 @@ export default function Navbar({ navMenus = [] }: Props) {
               )
             })}
 
-            <div className="mt-4 pt-4 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="mt-4 pt-4 space-y-1" style={{ borderTop: `1px solid ${navBorder}` }}>
               <Link
                 href="/search"
                 onClick={closeMobile}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-colors hover:bg-white/8"
-                style={{ color: 'rgba(255,255,255,0.65)' }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${hoverBg}`}
+                style={{
+                  color: textSecond,
+                  fontSize: '13.5px',
+                  fontWeight: 500,
+                  letterSpacing: '0.01em',
+                  fontFamily: "'Inter', sans-serif",
+                }}
               >
-                <Search size={16} /> Search
+                <Search size={15} /> Search
               </Link>
             </div>
           </nav>

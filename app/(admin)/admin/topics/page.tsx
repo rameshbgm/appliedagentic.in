@@ -28,8 +28,8 @@ export default async function TopicsPage() {
         </div>
         <Link
           href="/admin/topics/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
-          style={{ background: '#AAFF00' }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white"
+          style={{ background: '#1E293B' }}
         >
           <Plus size={16} />New Topic
         </Link>

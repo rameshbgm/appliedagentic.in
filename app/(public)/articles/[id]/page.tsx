@@ -361,7 +361,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                     viewCount: a.viewCount,
                     publishedAt: a.publishedAt,
                     module: a.topicArticles[0]?.topic?.module
-                      ? { name: a.topicArticles[0].topic.module.name, color: a.topicArticles[0].topic.module.color ?? '#AAFF00' }
+                      ? { name: a.topicArticles[0].topic.module.name, color: a.topicArticles[0].topic.module.color ?? '#1E293B' }
                       : null,
                   }))}
                 />

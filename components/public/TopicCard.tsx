@@ -17,7 +17,7 @@ interface Props {
 
 export default function TopicCard({ topic }: Props) {
   const count = topic._count?.articles ?? topic.articleCount ?? 0
-  const color = topic.module?.color ?? '#AAFF00'
+  const color = topic.module?.color ?? '#1E293B'
 
   return (
     <Link href={`/topics/${topic.slug}`} className="group block h-full">

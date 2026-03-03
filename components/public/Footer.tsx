@@ -19,7 +19,7 @@ export default function Footer({ menus = [] }: Props) {
             <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: 'var(--green)' }}>
-                <Zap size={15} className="text-black" />
+                <Zap size={15} className="text-white" />
               </div>
               <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>{siteConfig.name}</span>
             </Link>

@@ -68,7 +68,7 @@ export default async function TopicDetailPage({ params }: Props) {
   if (!topic) notFound()
 
   const articles = topic.topicArticles.map((ta) => ta.article)
-  const color = topic.module?.color ?? '#AAFF00'
+  const color = topic.module?.color ?? '#1E293B'
 
   return (
     <div className="min-h-screen">

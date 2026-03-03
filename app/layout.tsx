@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      data-theme="dark"
+      data-theme="light"
       suppressHydrationWarning
     >
       <head>
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {`var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap';document.head.appendChild(l);`}
         </Script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#0A0A0F" />
+        <meta name="theme-color" content="#FFFFFF" />
       </head>
       <body style={{ fontFamily: "'Inter', system-ui, sans-serif" }} className="antialiased">
         {children}

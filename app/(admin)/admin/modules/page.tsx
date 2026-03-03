@@ -25,8 +25,8 @@ export default async function ModulesPage() {
         </div>
         <Link
           href="/admin/modules/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
-          style={{ background: '#AAFF00' }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white"
+          style={{ background: '#1E293B' }}
         >
           <Plus size={16} />New Module
         </Link>
@@ -82,7 +82,7 @@ export default async function ModulesPage() {
         <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
           <p className="text-lg font-display mb-2" style={{ color: 'var(--text-secondary)' }}>No modules yet</p>
           <p className="text-sm mb-4">Create your first module to get started.</p>
-          <Link href="/admin/modules/new" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-black" style={{ background: '#AAFF00' }}>
+          <Link href="/admin/modules/new" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
             <Plus size={14} /> Create Module
           </Link>
         </div>

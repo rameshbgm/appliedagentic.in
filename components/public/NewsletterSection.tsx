@@ -72,7 +72,7 @@ export default function NewsletterSection() {
                 type="submit"
                 disabled={status === 'loading'}
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white whitespace-nowrap transition-all hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-50 min-h-[48px]"
-                style={{ background: 'var(--green)', color: '#000' }}
+                style={{ background: 'var(--green)', color: '#fff' }}
               >
                 {status === 'loading' ? newsletterContent.loadingLabel : (
                   <>{newsletterContent.ctaLabel} <ArrowRight size={14} /></>

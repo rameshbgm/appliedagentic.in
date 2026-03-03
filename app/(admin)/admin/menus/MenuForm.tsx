@@ -140,7 +140,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           style={{
             borderColor: form.isVisible ? 'var(--green)' : 'var(--bg-border)',
             color: form.isVisible ? 'var(--green)' : 'var(--text-muted)',
-            background: form.isVisible ? 'rgba(170,255,0,0.08)' : 'transparent',
+            background: form.isVisible ? 'rgba(30,41,59,0.06)' : 'transparent',
           }}
         >
           {form.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -171,7 +171,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           type="submit"
           disabled={saving}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-opacity disabled:opacity-50"
-          style={{ background: 'var(--green)', color: '#000' }}
+          style={{ background: 'var(--green)', color: '#fff' }}
         >
           <Save size={14} />
           {saving ? 'Saving…' : isEdit ? 'Update Menu' : 'Create Menu'}

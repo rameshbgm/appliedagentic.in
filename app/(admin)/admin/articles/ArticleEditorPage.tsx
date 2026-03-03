@@ -292,7 +292,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             disabled={saving}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
             style={{
-              background: meta.status === 'PUBLISHED' ? '#AAFF00'
+              background: meta.status === 'PUBLISHED' ? '#1E293B'
                 : meta.status === 'SCHEDULED' ? '#fef3c7'
                 : 'var(--color-violet)',
               color: meta.status === 'PUBLISHED' ? '#000' : meta.status === 'SCHEDULED' ? '#d97706' : '#fff',

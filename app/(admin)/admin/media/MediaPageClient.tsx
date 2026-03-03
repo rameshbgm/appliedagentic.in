@@ -62,8 +62,8 @@ export default function MediaPage() {
             onChange={(e) => handleUpload(e.target.files)} />
           <button
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-black"
-            style={{ background: '#AAFF00' }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white"
+            style={{ background: '#1E293B' }}
           >
             <Upload size={16} />Upload
           </button>
