@@ -266,6 +266,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   font-size: var(--article-font-size, 17.5px);
   line-height: 1.92;
   letter-spacing: 0.009em;
+  text-align: justify;
+
   overflow-x: hidden;
   overflow-y: visible;
   scrollbar-width: none;
@@ -289,6 +291,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content h3,
 .article-content h4 {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  text-align: left;
+  hyphens: none;
   -webkit-font-smoothing: antialiased;
 }
 /* Headings — fixed absolute sizes, immune to editor inline font-size */
