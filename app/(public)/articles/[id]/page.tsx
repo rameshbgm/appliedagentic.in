@@ -264,19 +264,41 @@ export default async function ArticleDetailPage({ params }: Props) {
 
           <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
 
-            {/* Sidebar TOC — desktop left, fully sticky */}
+            {/* Sidebar — Reader Tools + TOC (desktop only) */}
             {(sections.length > 0 || article.content) && (
-              <aside className="hidden lg:block w-64 xl:w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto">
-                <TableOfContents
-                  sections={sections.length > 0
-                    ? sections
-                    : [{ id: 0, title: '', content: article.content, order: 0 }]}
-                />
+              <aside className="hidden lg:flex flex-col w-64 xl:w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] gap-4">
+                {/* Reader Tools — horizontal inline row at the top */}
+                <div
+                  className="shrink-0 rounded-xl overflow-hidden"
+                  style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
+                >
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-widest px-3 pt-2.5 pb-1"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Reader Tools
+                  </p>
+                  <ArticleReaderTools
+                    content={sections.length > 0
+                      ? sections.map(s => s.content).join('\n')
+                      : article.content}
+                    inline
+                  />
+                </div>
+
+                {/* Table of Contents */}
+                <div className="overflow-y-auto flex-1 min-h-0 no-scrollbar">
+                  <TableOfContents
+                    sections={sections.length > 0
+                      ? sections
+                      : [{ id: 0, title: '', content: article.content, order: 0 }]}
+                  />
+                </div>
               </aside>
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0 pb-8 lg:pb-0" style={{ maxWidth: '760px' }}>
+            <article className="flex-1 min-w-0 pb-8 lg:pb-0" style={{ maxWidth: '860px' }}>
 
               {/* Cover image */}
               {article.coverImage && (
@@ -371,16 +393,6 @@ export default async function ArticleDetailPage({ params }: Props) {
               )}
             </article>
 
-            {/* Desktop reader tools — right side vertical strip */}
-            {(sections.length > 0 || article.content) && (
-              <div className="hidden lg:flex flex-col items-center sticky top-20 self-start shrink-0 ml-2">
-                <ArticleReaderTools
-                  content={sections.length > 0
-                    ? sections.map(s => s.content).join('\n')
-                    : article.content}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>

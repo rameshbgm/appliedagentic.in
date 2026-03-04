@@ -63,7 +63,7 @@ export default function MobileArticlePanel({ sections, content }: Props) {
           }}
         >
           <AlignLeft size={17} />
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--text-muted)', writingMode: 'vertical-rl', textTransform: 'uppercase' }}>TOC</span>
+         
         </button>
       )}
 

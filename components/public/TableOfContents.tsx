@@ -202,7 +202,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
         <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
           <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Table of Contents</p>
         </div>
-        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto" style={{ maxHeight: 'calc(100dvh - 14rem)' }}>
+        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto no-scrollbar" style={{ maxHeight: 'calc(100dvh - 14rem)' }}>
           {listEl}
         </div>
         <div className="px-4 pb-4 pt-2">
@@ -240,7 +240,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
               />
             </button>
             {mobileOpen && (
-              <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+              <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto no-scrollbar" style={{ borderTop: '1px solid var(--bg-border)' }}>
                 {listEl}
               </div>
             )}

@@ -125,6 +125,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 ::-webkit-scrollbar-thumb  { background: rgba(30,41,59,.25); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--green); }
 
+/* Hide scrollbar completely (scrolling still works) */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ─── Tile chips — thin 3 × 3 px scrollbar ──────────────────────────────────── */
 .tile-chips-scroll {
   max-height: 96px;   /* ~3 rows of chips */
@@ -442,22 +446,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   letter-spacing: -0.01em;
 }
 
-/* ── Section slide-in (before JS fires) ── */
-.article-section-slide {
-  opacity: 0;
-  transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-/* Odd sections slide in from the left */
-.article-section-slide:nth-child(odd)  { transform: translateX(-52px); }
-/* Even sections slide in from the right */
-.article-section-slide:nth-child(even) { transform: translateX(52px); }
 
-.article-section-slide.section-visible {
-  opacity: 1;
-  transform: none;
-}
 
 /* ─── Public article section card ───────────────────────────────────────────── */
 .section-optional {
@@ -468,19 +457,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   overflow: visible;
   margin-bottom: 1.75rem;
   background: var(--bg-elevated);
-  opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity  0.65s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.section-optional.section-visible {
-  opacity: 1;
-  transform: none;
 }
 /* No ::before left bar */
 .section-optional::before { display: none; }
-/* Section header — only rendered when title exists */
+/* Section header — sticky within its section while reading */
 .section-optional-header {
   display: flex;
   align-items: center;
@@ -489,6 +469,9 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-bottom: 1px solid var(--bg-border);
   background: var(--bg-surface);
   scroll-margin-top: calc(var(--nav-h) + 16px);
+  position: sticky;
+  top: var(--nav-h, 64px);
+  z-index: 10;
 }
 /* Always-visible bot button in section header */
 .section-ai-header-btn {
@@ -915,18 +898,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   margin: 0 4px;
 }
 
-/* ─── Inline strip — horizontal row in document flow (mobile below TOC) ──────── */
+/* ─── Inline strip — horizontal row in document flow (sidebar / mobile below TOC) ── */
 .art-tools-strip.inline {
   flex-direction: row;
   width: 100%;
-  border-radius: 12px;
-  padding: 6px 10px;
+  border-radius: 0 0 12px 12px;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 4px 8px 8px;
   gap: 2px;
   justify-content: space-evenly;
   align-items: center;
   flex-wrap: nowrap;
-  min-height: 48px;
-  /* keep the border/shadow from the base class but override shape */
+  min-height: 44px;
 }
 .art-tools-strip.inline .art-tools-divider {
   width: 1px;
