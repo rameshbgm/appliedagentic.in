@@ -283,36 +283,36 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     line-height: 1.88;
   }
 }
-/* ── Headings — reset to clean sans-serif for contrast with serif body ── */
+/* ── Headings — fixed sizes with !important to override any inline editor styles ── */
 .article-content h1,
 .article-content h2,
 .article-content h3,
 .article-content h4 {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   -webkit-font-smoothing: antialiased;
 }
-/* Headings scale relative to --article-font-size */
+/* Headings — fixed absolute sizes, immune to editor inline font-size */
 .article-content h1 {
-  font-size: 1.95em; font-weight: 800; line-height: 1.18;
+  font-size: 34px !important; font-weight: 800; line-height: 1.18;
   margin-top: 1.75em; margin-bottom: 0.55em;
   color: var(--text-primary); letter-spacing: -0.025em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h2 {
-  font-size: 1.48em; font-weight: 700; line-height: 1.28;
-  margin-top: 2.1em; margin-bottom: 0.65em;
+  font-size: 26px !important; font-weight: 700; line-height: 1.28;
+  margin-top: 2em; margin-bottom: 0.65em;
   padding-bottom: 0.45em; border-bottom: 2px solid rgba(30,41,59,.10);
   color: var(--text-primary); letter-spacing: -0.02em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h3 {
-  font-size: 1.2em; font-weight: 700; line-height: 1.35;
+  font-size: 21px !important; font-weight: 700; line-height: 1.35;
   margin-top: 1.75em; margin-bottom: 0.5em;
   color: var(--text-primary); letter-spacing: -0.015em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h4 {
-  font-size: 1.05em; font-weight: 600; line-height: 1.4;
+  font-size: 18px !important; font-weight: 600; line-height: 1.4;
   margin-top: 1.35em; margin-bottom: 0.45em;
   color: var(--text-primary);
   scroll-margin-top: calc(var(--nav-h) + 24px);

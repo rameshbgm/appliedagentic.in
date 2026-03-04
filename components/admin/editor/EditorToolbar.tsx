@@ -163,8 +163,11 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
 
       // fontSize stored as "16px" — strip unit
       const currentSize = (ts.fontSize ?? '').replace(/px$/i, '')
-      // fontFamily may have surrounding quotes
-      const currentFont = (ts.fontFamily ?? '').replace(/^['"]|['"]$/g, '')
+      // fontFamily may have surrounding quotes and fallback stacks — take first name only
+      const currentFont = (ts.fontFamily ?? '')
+        .split(',')[0]
+        .trim()
+        .replace(/^['"\s]+|['"\s]+$/g, '')
 
       return {
         isBold:         e.isActive('bold'),
@@ -274,39 +277,6 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-
-          {/* Font size — number input with hidden native select for scrollable list */}
-          <div className="relative flex items-center shrink-0 ml-0.5">
-            <input
-              type="number"
-              min={6} max={200}
-              value={s.currentSize}
-              onChange={(e) => {
-                const v = e.target.value
-                if (v && Number(v) > 0) editor.chain().focus().setFontSize(`${v}px`).run()
-                else editor.chain().focus().unsetFontSize().run()
-              }}
-              className="px-2 pr-5 py-1.5 rounded-md border text-xs outline-none text-center"
-              style={{ background:'var(--bg-surface)', borderColor:'var(--bg-border)', color:'var(--text-secondary)', width:'58px' }}
-              placeholder="Size"
-              title="Font Size"
-            />
-            <select
-              tabIndex={-1}
-              value={s.currentSize}
-              onChange={(e) => {
-                const v = e.target.value
-                if (v) editor.chain().focus().setFontSize(`${v}px`).run()
-                else   editor.chain().focus().unsetFontSize().run()
-              }}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              aria-hidden="true"
-            >
-              <option value="">—</option>
-              {FONT_SIZES.map((sz) => <option key={sz} value={sz}>{sz}</option>)}
-            </select>
-            <ChevronDown size={10} className="absolute right-1.5 pointer-events-none" style={{ color:'var(--text-muted)' }} />
-          </div>
 
           {/* Line spacing */}
           <select
