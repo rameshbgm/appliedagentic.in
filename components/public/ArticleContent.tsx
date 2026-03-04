@@ -158,68 +158,7 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
       })
     }
 
-    // ── Observer 1: section slide (whole card) — legacy mode only ────────────
-    const sectionIo = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          entry.target.classList.add('section-visible')
-          sectionIo.unobserve(entry.target)
-        })
-      },
-      { threshold: 0.06, rootMargin: '0px 0px -60px 0px' }
-    )
-    if (!standalone) {
-      root.querySelectorAll('.article-section-slide').forEach((s) => sectionIo.observe(s))
-    }
-
-    // ── Observer 2: per-element fade-up ──────────────────────────────────────
-    const innerIo = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          const el = entry.target as HTMLElement
-          el.classList.remove('reveal-hidden')
-          el.classList.add('reveal-visible')
-          setTimeout(() => { el.style.transitionDelay = '' }, 750)
-          innerIo.unobserve(el)
-        })
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
-    )
-
-    if (standalone) {
-      // Animate non-anchor content elements (NOT headings — they are TOC anchors)
-      root.querySelectorAll(
-        'h4, p, blockquote, pre, img, ul, ol, table, figure'
-      ).forEach((el, i) => {
-        if (el.classList.contains('reveal-visible')) return
-        el.classList.add('reveal-hidden')
-        ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
-        innerIo.observe(el)
-      })
-    } else {
-      root.querySelectorAll('.article-section').forEach((section) => {
-        const items = section.querySelectorAll(
-          'h4, p, blockquote, pre, img, ul, ol, table, figure'
-        )
-        items.forEach((el, i) => {
-          if (el.classList.contains('reveal-visible')) return
-          el.classList.add('reveal-hidden')
-          ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
-          innerIo.observe(el)
-        })
-      })
-      // Also animate preamble elements not inside a section card
-      root.querySelectorAll(':scope > h4, :scope > p, :scope > blockquote, :scope > pre, :scope > img, :scope > ul, :scope > ol, :scope > figure').forEach((el, i) => {
-        if (el.classList.contains('reveal-visible')) return
-        el.classList.add('reveal-hidden')
-        ;(el as HTMLElement).style.transitionDelay = `${Math.min(i * 60, 300)}ms`
-        innerIo.observe(el)
-      })
-    }
-
-    return () => { sectionIo.disconnect(); innerIo.disconnect() }
+    return () => {}
   }, [content])
 
   return (

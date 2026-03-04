@@ -169,12 +169,10 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
               type="button"
               data-toc-id={h.id}
               onClick={() => scrollTo(h.id)}
-              className={`w-full flex items-start gap-2 px-3 py-1.5 rounded-lg text-sm text-left transition-all ${indent} ${
-                isActive ? 'font-semibold' : 'hover:bg-white/5'
-              }`}
+              className={`w-full flex items-start gap-2 px-3 py-1.5 text-sm text-left transition-colors ${indent}`}
               style={{
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: isActive ? 'var(--bg-elevated)' : undefined,
+                background: 'transparent',
               }}
             >
               {h.isSectionTitle && (
@@ -182,7 +180,16 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
                   §
                 </span>
               )}
-              <span className={`leading-5 ${h.level === 0 ? 'font-semibold' : h.level === 1 ? 'font-medium' : 'text-xs'}`}>
+              <span
+                className={`leading-5 ${h.level === 0 ? 'font-semibold' : h.level === 1 ? 'font-medium' : 'text-xs'}`}
+                style={isActive ? {
+                  textDecoration: 'underline',
+                  textDecorationColor: 'rgba(30,41,59,0.25)',
+                  textUnderlineOffset: '3px',
+                  textDecorationThickness: '1px',
+                  fontWeight: 600,
+                } : undefined}
+              >
                 {h.text}
               </span>
             </button>

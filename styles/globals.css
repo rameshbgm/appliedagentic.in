@@ -267,6 +267,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.92;
   letter-spacing: 0.009em;
   overflow-x: hidden;
+  overflow-y: visible;
+  scrollbar-width: none;
   word-break: break-word;
   overflow-wrap: anywhere;
   max-width: 100%;
@@ -274,6 +276,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.article-content::-webkit-scrollbar { display: none; }
 @media (max-width: 640px) {
   .article-content {
     font-size: var(--article-font-size, 16.5px);
