@@ -416,17 +416,19 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 /* ─── Article H1 sections ─────────────────────────────────────────────────── */
 .article-section {
   position: relative;
-  padding: 0;
-  margin-bottom: 1rem;
-  border: none;
-  background: transparent;
+  padding: 1.5rem 1.5rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--bg-border);
+  border-left: none;
+  border-right: none;
+  background: var(--bg-surface);
 }
 /* No alternating backgrounds, no ::before bar */
-.article-section:nth-child(odd)  { background: transparent; }
-.article-section:nth-child(even) { background: transparent; }
+.article-section:nth-child(odd)  { background: var(--bg-surface); }
+.article-section:nth-child(even) { background: var(--bg-elevated); }
 .article-section::before { display: none; }
 
-/* H1 inside each section — plain heading, no separator */
+/* H1 inside each section */
 .article-section > h1,
 .article-section > h1:first-child {
   font-size: clamp(1.4rem, 3vw, 2.1rem);
@@ -434,8 +436,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.2;
   margin-top: 0;
   margin-bottom: 0.65rem;
-  padding-bottom: 0;
-  border-bottom: none;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.12);
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -460,9 +462,12 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 /* ─── Public article section card ───────────────────────────────────────────── */
 .section-optional {
   position: relative;
-  border: none;
-  background: transparent;
-  margin-bottom: 2rem;
+  border: 1px solid var(--bg-border);
+  border-left: none;
+  border-right: none;
+  overflow: visible;
+  margin-bottom: 1.75rem;
+  background: var(--bg-elevated);
   opacity: 0;
   transform: translateY(28px);
   transition:
@@ -480,11 +485,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0 0 0.6rem 0;
-  border-bottom: none;
-  background: transparent;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--bg-border);
+  background: var(--bg-surface);
   scroll-margin-top: calc(var(--nav-h) + 16px);
-  margin-bottom: 0.75rem;
 }
 /* Always-visible bot button in section header */
 .section-ai-header-btn {
@@ -499,30 +503,29 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.4rem;
+  height: 1.4rem;
   border-radius: 50%;
-  background: var(--bg-elevated);
-  border: 1px solid var(--bg-border);
-  color: var(--text-muted);
+  background: #7C3AED;
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
 }
 .section-optional-title {
-  font-size: 1.35em;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--text-primary);
-  line-height: 1.25;
-  letter-spacing: -0.015em;
+  line-height: 1.3;
 }
 /* Content body */
 .section-optional-body {
-  padding: 0;
+  padding: 1.75rem 1.5rem;
 }
 @media (max-width: 640px) {
-  .section-optional { margin-bottom: 1.5rem; }
+  .section-optional { margin-bottom: 1.25rem; }
+  .section-optional-body { padding: 1rem 1rem; }
 }
 /* section-optional light — inherits :root */
 
