@@ -41,18 +41,18 @@ export default function SectionCard({ section, index }: Props) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
             <span className="section-optional-badge">{index + 1}</span>
             <span className="section-optional-title">{section.title}</span>
+            {/* AI summarize icon inline after title */}
+            <button
+              className="section-ai-btn section-ai-header-btn"
+              title="Summarize this section (7 key points)"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('aa-section-summarize', {
+                  detail: { title: section.title, content: section.content },
+                }))
+              }}
+              dangerouslySetInnerHTML={{ __html: BOT_SVG_HEADER }}
+            />
           </div>
-          {/* Right: AI summarize bot button */}
-          <button
-            className="section-ai-btn section-ai-header-btn"
-            title="Summarize this section (7 key points)"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('aa-section-summarize', {
-                detail: { title: section.title, content: section.content },
-              }))
-            }}
-            dangerouslySetInnerHTML={{ __html: BOT_SVG_HEADER }}
-          />
         </div>
       )}
 
