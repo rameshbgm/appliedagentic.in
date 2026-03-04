@@ -67,7 +67,7 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
     // ── Heading IDs for TOC ──────────────────────────────────────────────────
     root.querySelectorAll('h1, h2, h3').forEach((el) => {
       if (!el.id) {
-        el.id = el.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ?? ''
+        el.id = (el.textContent ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
       }
     })
 

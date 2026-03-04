@@ -76,30 +76,13 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     const el = document.getElementById(id)
     if (!el) return
 
-    // Force-reveal the parent section card so its CSS transform is cleared
-    // before we measure position. Without this, getBoundingClientRect() returns
-    // the visually-displaced (transformed) position, causing the scroll to land ~28px off.
-    const card = el.closest('.section-optional')
-    if (card) card.classList.add('section-visible')
-
-    // Also clear any reveal-hidden on the element itself
-    el.classList.remove('reveal-hidden')
-    el.classList.add('reveal-visible')
-    el.style.transitionDelay = ''
-
-    // Double rAF: first frame schedules a layout recalc,
-    // second frame reads the updated getBoundingClientRect
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const navH = parseFloat(
-          getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
-        ) || 64
-        const top = el.getBoundingClientRect().top + window.scrollY - navH - 16
-        window.scrollTo({ top, behavior: 'smooth' })
-        setActiveId(id)
-        setMobileOpen(false)
-      })
-    })
+    const navH = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
+    ) || 64
+    const top = el.getBoundingClientRect().top + window.scrollY - navH - 20
+    window.scrollTo({ top, behavior: 'smooth' })
+    setActiveId(id)
+    setMobileOpen(false)
   }, [])
 
   // ── Sync active TOC item into view when it changes ─────────────────────────

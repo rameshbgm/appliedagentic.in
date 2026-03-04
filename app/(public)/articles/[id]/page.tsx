@@ -248,7 +248,7 @@ export default async function ArticleDetailPage({ params }: Props) {
         </div>
 
         {/* ─── Body: TOC sidebar (left) + Article content (right) ── */}
-        <div className="px-[3%] py-8 sm:py-12">
+        <div className="px-0 lg:px-[3%] py-8 sm:py-12">
 
           {/* ── Mobile floating panel (icon → slide-in) ─────────────────── */}
           {(sections.length > 0 || article.content) && (
@@ -298,16 +298,18 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0 pb-8 lg:pb-0" style={{ maxWidth: '860px' }}>
+            <article className="flex-1 min-w-0 pb-8 lg:pb-0 px-3 sm:px-4 lg:px-0">
 
               {/* Cover image */}
               {article.coverImage && (
-                <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6 sm:mb-10" style={{ maxHeight: 'min(60vw, 50vh)' }}>
+                <div className="relative w-full rounded-2xl overflow-hidden mb-6 sm:mb-10">
                   <Image
                     src={article.coverImage.url}
                     alt={article.title}
-                    fill
-                    className="object-cover"
+                    width={1200}
+                    height={675}
+                    className="w-full h-auto rounded-2xl"
+                    style={{ display: 'block' }}
                     priority
                   />
                 </div>

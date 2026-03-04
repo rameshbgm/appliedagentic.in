@@ -45,19 +45,22 @@ const HIGHLIGHT_COLORS = [
 ]
 
 const FONT_FAMILIES: { label: string; value: string }[] = [
-  { label: 'Default',           value: '' },
-  { label: 'Inter',             value: 'Inter' },
-  { label: 'DM Sans',           value: 'DM Sans' },
-  { label: 'Outfit',            value: 'Outfit' },
-  { label: 'Nunito',            value: 'Nunito' },
-  { label: 'Space Grotesk',     value: 'Space Grotesk' },
-  { label: 'Merriweather',      value: 'Merriweather' },
-  { label: 'Lora',              value: 'Lora' },
-  { label: 'Playfair Display',  value: 'Playfair Display' },
-  { label: 'Georgia',           value: 'Georgia' },
-  { label: 'Times New Roman',   value: 'Times New Roman' },
-  { label: 'JetBrains Mono',    value: 'JetBrains Mono' },
-  { label: 'Courier New',       value: 'Courier New' },
+  { label: 'Lora (Default)',      value: '' },
+  { label: 'Lora',               value: 'Lora' },
+  { label: 'Merriweather',       value: 'Merriweather' },
+  { label: 'Georgia',            value: 'Georgia' },
+  { label: 'Playfair Display',   value: 'Playfair Display' },
+  { label: 'Source Serif 4',     value: 'Source Serif 4' },
+  { label: 'Libre Baskerville',  value: 'Libre Baskerville' },
+  { label: 'EB Garamond',        value: 'EB Garamond' },
+  { label: 'Crimson Pro',        value: 'Crimson Pro' },
+  { label: 'Literata',           value: 'Literata' },
+  { label: 'Newsreader',         value: 'Newsreader' },
+  { label: 'Inter',              value: 'Inter' },
+  { label: 'DM Sans',            value: 'DM Sans' },
+  { label: 'Open Sans',          value: 'Open Sans' },
+  { label: 'Source Sans 3',      value: 'Source Sans 3' },
+  { label: 'Nunito',             value: 'Nunito' },
 ]
 
 const FONT_SIZES = ['10','11','12','14','16','18','20','22','24','28','32','36','40','48','56','64','72','96']
