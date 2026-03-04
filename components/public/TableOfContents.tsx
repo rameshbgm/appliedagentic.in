@@ -2,7 +2,7 @@
 // components/public/TableOfContents.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, Zap } from 'lucide-react'
+import { ChevronDown, List, Zap } from 'lucide-react'
 
 interface Heading {
   id: string
@@ -22,6 +22,9 @@ interface SectionLike {
 interface Props {
   sections?: SectionLike[]
   content?: string
+  /** When true, the mobile version renders flat (no card, no outer margin, no sticky)
+   *  – use this when the parent controls the container/sticky */
+  mobileFlat?: boolean
 }
 
 // Shared slug logic — must match ArticleContent and SectionCard
@@ -53,7 +56,7 @@ function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
   return parsed
 }
 
-export default function TableOfContents({ sections, content }: Props) {
+export default function TableOfContents({ sections, content, mobileFlat = false }: Props) {
   const [activeId, setActiveId]   = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   // Start empty on both server and client — populated in useEffect (client-only)
@@ -214,18 +217,49 @@ export default function TableOfContents({ sections, content }: Props) {
         </div>
       </div>
 
-      {/* Mobile: sticky collapsible */}
-      <div className="lg:hidden mb-6">
-        <div
-          className="sticky top-16 z-30 rounded-2xl overflow-hidden"
-          style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
-        >
+      {/* Mobile: sticky collapsible — standard (with card + sticky) */}
+      {!mobileFlat && (
+        <div className="lg:hidden mb-6">
+          <div
+            className="sticky top-16 z-30 rounded-2xl overflow-hidden"
+            style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
+          >
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="flex items-center justify-between w-full px-4 py-3 text-sm font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <span className="flex items-center gap-2">
+                <List size={14} style={{ color: 'var(--text-muted)' }} />
+                Table of Contents
+              </span>
+              <ChevronDown
+                size={14}
+                className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+                style={{ color: 'var(--text-muted)' }}
+              />
+            </button>
+            {mobileOpen && (
+              <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+                {listEl}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile: flat mode — parent controls container / toggle */}
+      {mobileFlat && (
+        <div className="lg:hidden">
           <button
             onClick={() => setMobileOpen((v) => !v)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-bold"
             style={{ color: 'var(--text-primary)' }}
           >
-            Table of Contents
+            <span className="flex items-center gap-2">
+              <List size={14} style={{ color: 'var(--text-muted)' }} />
+              Table of Contents
+            </span>
             <ChevronDown
               size={14}
               className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
@@ -233,12 +267,12 @@ export default function TableOfContents({ sections, content }: Props) {
             />
           </button>
           {mobileOpen && (
-            <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+            <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[50vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
               {listEl}
             </div>
           )}
         </div>
-      </div>
+      )}
     </>
   )
 }

@@ -1,5 +1,5 @@
 /* ─── Google Fonts — must come BEFORE Tailwind directives ─────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap')
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap')
 layer(base);
 
 @import 'tailwindcss';
@@ -258,58 +258,83 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 /* ─── Article content ────────────────────────────────────────────────────────── */
 .article-content {
   color: var(--text-secondary);
-  font-size: var(--article-font-size, 17px);
-  line-height: 1.85;
+  font-family: 'Lora', Georgia, 'Times New Roman', serif;
+  font-size: var(--article-font-size, 17.5px);
+  line-height: 1.92;
+  letter-spacing: 0.009em;
   overflow-x: hidden;
   word-break: break-word;
   overflow-wrap: anywhere;
   max-width: 100%;
+  /* Smooth font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 @media (max-width: 640px) {
   .article-content {
-    font-size: var(--article-font-size, 16px);
-    line-height: 1.8;
+    font-size: var(--article-font-size, 16.5px);
+    line-height: 1.88;
   }
+}
+/* ── Headings — reset to clean sans-serif for contrast with serif body ── */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 /* Headings scale relative to --article-font-size */
 .article-content h1 {
-  font-size: 2em; font-weight: 800; line-height: 1.2;
-  margin-top: 1.6em; margin-bottom: 0.5em;
+  font-size: 1.95em; font-weight: 800; line-height: 1.18;
+  margin-top: 1.75em; margin-bottom: 0.55em;
   color: var(--text-primary); letter-spacing: -0.025em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h2 {
-  font-size: 1.5em; font-weight: 700; line-height: 1.3;
-  margin-top: 2em; margin-bottom: 0.6em;
-  padding-bottom: 0.4em; border-bottom: 2px solid rgba(30,41,59,.10);
+  font-size: 1.48em; font-weight: 700; line-height: 1.28;
+  margin-top: 2.1em; margin-bottom: 0.65em;
+  padding-bottom: 0.45em; border-bottom: 2px solid rgba(30,41,59,.10);
   color: var(--text-primary); letter-spacing: -0.02em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h3 {
   font-size: 1.2em; font-weight: 700; line-height: 1.35;
-  margin-top: 1.6em; margin-bottom: 0.5em;
+  margin-top: 1.75em; margin-bottom: 0.5em;
   color: var(--text-primary); letter-spacing: -0.015em;
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
 .article-content h4 {
   font-size: 1.05em; font-weight: 600; line-height: 1.4;
-  margin-top: 1.25em; margin-bottom: 0.4em;
+  margin-top: 1.35em; margin-bottom: 0.45em;
   color: var(--text-primary);
   scroll-margin-top: calc(var(--nav-h) + 24px);
 }
-.article-content p  { margin-bottom: 0.85em; color: var(--text-secondary); }
-.article-content a  { color: var(--green); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(30,41,59,0.35); }
+/* Comfortable paragraph spacing for long reading */
+.article-content p  { margin-bottom: 1.1em; color: var(--text-secondary); }
+/* Lead paragraph — first <p> gets a slightly larger size */
+.article-content > p:first-of-type,
+.article-content .article-lead {
+  font-size: 1.08em;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.82;
+  margin-bottom: 1.25em;
+}
+.article-content a  { color: var(--green); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(30,41,59,0.35); font-style: inherit; }
 .article-content a:hover { opacity: 0.75; }
 .article-content img { border-radius: 10px; width: 100%; height: auto; margin: 1.5em 0; }
 .article-content blockquote {
   position: relative;
-  padding: .9em 1.25em .9em 1.5em;
-  margin: 1.5em 0;
+  padding: 1.1em 1.4em 1.1em 1.65em;
+  margin: 1.75em 0;
   background: #F8FAFC;
   border: 1px solid rgba(30,41,59,.10);
   border-left: none;
-  border-radius: 0 10px 10px 0;
+  border-radius: 0 12px 12px 0;
   font-style: italic;
+  font-size: 1.04em;
+  line-height: 1.8;
   color: var(--text-secondary);
 }
 /* Thin gradient left accent — fades from slate at top to transparent at bottom */
@@ -352,8 +377,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content table  { width: 100%; border-collapse: collapse; margin: 1.5em 0; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .article-content th { background: var(--bg-elevated); padding: .65em 1em; text-align: left; font-weight: 600; border-bottom: 1px solid var(--bg-border); white-space: nowrap; }
 .article-content td { padding: .65em 1em; border-bottom: 1px solid var(--bg-border); }
-.article-content ul, .article-content ol { padding-left: 1.4em; margin-bottom: 0.75em; }
-.article-content li { margin-bottom: .25em; color: var(--text-secondary); }
+.article-content ul, .article-content ol { padding-left: 1.5em; margin-bottom: 1em; }
+.article-content li { margin-bottom: .4em; color: var(--text-secondary); line-height: 1.85; }
 .article-content hr { border: none; height: 1px; background: var(--bg-border); margin: 2em 0; }
 .article-content iframe,
 .article-content video { width: 100%; border-radius: 10px; margin: 1.5em 0; aspect-ratio: 16/9; }
@@ -388,40 +413,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transform: translateY(22px) scale(0.97);
 }
 
-/* ─── Article H1 sections — card + slide ────────────────────────────────────── */
+/* ─── Article H1 sections ─────────────────────────────────────────────────── */
 .article-section {
   position: relative;
-  border-radius: 18px;
-  padding: 1.5rem 2rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid var(--bg-border);
-  overflow: hidden;
+  padding: 0;
+  margin-bottom: 1rem;
+  border: none;
+  background: transparent;
 }
-@media (max-width: 640px) {
-  .article-section { padding: 1rem 1.1rem; border-radius: 12px; }
-}
+/* No alternating backgrounds, no ::before bar */
+.article-section:nth-child(odd)  { background: transparent; }
+.article-section:nth-child(even) { background: transparent; }
+.article-section::before { display: none; }
 
-/* Alternating background tones */
-.article-section:nth-child(odd)  { background: var(--bg-surface); }
-.article-section:nth-child(even) { background: var(--bg-elevated); }
-
-/* Accent left-edge gradient bar — thin slate fade to transparent */
-.article-section::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  border-radius: 2px 0 0 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--green, #1E293B)          0%,
-    rgba(30, 41, 59, 0.25)         55%,
-    transparent                    100%
-  );
-  opacity: 1;
-}
-
-/* H1 inside each section */
+/* H1 inside each section — plain heading, no separator */
 .article-section > h1,
 .article-section > h1:first-child {
   font-size: clamp(1.4rem, 3vw, 2.1rem);
@@ -429,8 +434,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.2;
   margin-top: 0;
   margin-bottom: 0.65rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(30, 41, 59, 0.15);
+  padding-bottom: 0;
+  border-bottom: none;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -452,14 +457,12 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transform: none;
 }
 
-/* ─── Public article section card (mirrors admin editor) ─────────────────────── */
+/* ─── Public article section card ───────────────────────────────────────────── */
 .section-optional {
   position: relative;
-  border: 1px solid var(--bg-border);
-  border-radius: 18px;
-  overflow: hidden;
-  margin-bottom: 1.75rem;
-  background: var(--bg-elevated);
+  border: none;
+  background: transparent;
+  margin-bottom: 2rem;
   opacity: 0;
   transform: translateY(28px);
   transition:
@@ -470,31 +473,18 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   opacity: 1;
   transform: none;
 }
-/* Thin slate accent left bar */
-.section-optional::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  border-radius: 2px 0 0 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--green, #1E293B)          0%,
-    rgba(30, 41, 59, 0.25)         55%,
-    transparent                    100%
-  );
-  z-index: 1;
-}
+/* No ::before left bar */
+.section-optional::before { display: none; }
 /* Section header — only rendered when title exists */
 .section-optional-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.55rem 1rem;
-  border-bottom: 1px solid var(--bg-border);
-  background: var(--bg-surface);
+  padding: 0 0 0.6rem 0;
+  border-bottom: none;
+  background: transparent;
   scroll-margin-top: calc(var(--nav-h) + 16px);
+  margin-bottom: 0.75rem;
 }
 /* Always-visible bot button in section header */
 .section-ai-header-btn {
@@ -509,28 +499,30 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: 50%;
-  background: #7C3AED;
-  color: #fff;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-border);
+  color: var(--text-muted);
   font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
 }
 .section-optional-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 1.35em;
+  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 /* Content body */
 .section-optional-body {
-  padding: 1.75rem 2rem;
+  padding: 0;
 }
 @media (max-width: 640px) {
-  .section-optional { border-radius: 12px; margin-bottom: 1.25rem; }
-  .section-optional-body { padding: 1rem 1.1rem; }
+  .section-optional { margin-bottom: 1.5rem; }
 }
 /* section-optional light — inherits :root */
 

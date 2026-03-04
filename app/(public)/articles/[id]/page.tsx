@@ -11,6 +11,7 @@ import RelatedArticles from '@/components/public/RelatedArticles'
 import ReadingProgressBar from '@/components/public/ReadingProgressBar'
 import TableOfContents from '@/components/public/TableOfContents'
 import ArticleReaderTools from '@/components/public/ArticleReaderTools'
+import MobileArticlePanel from '@/components/public/MobileArticlePanel'
 import ShareButtons from '@/components/public/ShareButtons'
 import SectionCard from '@/components/public/SectionCard'
 import { formatDate } from '@/lib/utils'
@@ -178,15 +179,29 @@ export default async function ArticleDetailPage({ params }: Props) {
 
             {/* Title */}
             <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.12] tracking-tight mb-4"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4"
+              style={{
+                color: 'var(--text-primary)',
+                fontFamily: "'Lora', Georgia, serif",
+                letterSpacing: '-0.01em',
+                lineHeight: '1.14',
+              }}
             >
               {article.title}
             </h1>
 
             {/* Summary */}
             {article.summary && (
-              <p className="text-sm leading-relaxed mb-5 max-w-2xl" style={{ color: 'var(--text-muted)' }}>
+              <p
+                className="leading-relaxed mb-5 max-w-2xl"
+                style={{
+                  color: 'var(--text-muted)',
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '1.05rem',
+                  fontStyle: 'italic',
+                  lineHeight: '1.75',
+                }}
+              >
                 {article.summary}
               </p>
             )}
@@ -233,31 +248,19 @@ export default async function ArticleDetailPage({ params }: Props) {
         </div>
 
         {/* ─── Body: TOC sidebar (left) + Article content (right) ── */}
-        <div className="px-[3%] py-6 sm:py-10">
+        <div className="px-[3%] py-8 sm:py-12">
 
-          {/* Mobile TOC — sticky below navbar, capped height on portrait so article content remains visible */}
+          {/* ── Mobile floating panel (icon → slide-in) ─────────────────── */}
           {(sections.length > 0 || article.content) && (
-            <div className="mobile-toc-tools-bar lg:hidden sticky top-16 z-40 pb-1 mb-2" style={{ background: 'var(--bg-page)' }}>
-              <div className="mobile-toc-scroll max-h-[32vh] overflow-y-auto">
-                <TableOfContents
-                  sections={sections.length > 0
-                    ? sections
-                    : [{ id: 0, title: '', content: article.content, order: 0 }]}
-                />
-              </div>
-              {/* Reader tools — inline row directly below TOC */}
-              <div className="pt-1">
-                <ArticleReaderTools
-                  content={sections.length > 0
-                    ? sections.map(s => s.content).join('\n')
-                    : article.content}
-                  inline
-                />
-              </div>
+            <div className="lg:hidden">
+              <MobileArticlePanel
+                sections={sections}
+                content={sections.length > 0
+                  ? sections.map(s => s.content).join('\n')
+                  : article.content}
+              />
             </div>
           )}
-
-          {/* Mobile reader tools — fixed bottom bar REMOVED; now inline above */}
 
           <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
 
@@ -273,7 +276,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0 pb-8 lg:pb-0">
+            <article className="flex-1 min-w-0 pb-8 lg:pb-0" style={{ maxWidth: '760px' }}>
 
               {/* Cover image */}
               {article.coverImage && (
