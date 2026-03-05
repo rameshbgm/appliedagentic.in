@@ -7,6 +7,7 @@ import { calculateReadingTime } from '@/lib/readingTime'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { z } from 'zod'
 import { ArticleStatus } from '@prisma/client'
+import { revalidatePath } from 'next/cache'
 
 const SectionInput = z.object({
   id: z.number().int().optional(),
@@ -219,6 +220,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       })
     })
 
+    // Revalidate cached pages affected by this update.
+    // Fetch the current submenu associations (after update) to get their paths.
+    const subMenuLinks = await prisma.subMenuArticle.findMany({
+      where: { articleId: id },
+      select: {
+        subMenu: {
+          select: {
+            slug: true,
+            menu: { select: { slug: true } },
+          },
+        },
+      },
+    })
+    revalidatePath(`/articles/${article.slug}`)
+    revalidatePath('/articles')
+    for (const { subMenu } of subMenuLinks) {
+      revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
+      revalidatePath(`/${subMenu.menu.slug}`)
+    }
+
     return apiSuccess(article)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
@@ -230,7 +251,39 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
   try {
-    await prisma.article.delete({ where: { id: parseInt((await params).id) } })
+    const id = parseInt((await params).id)
+
+    // Fetch the article slug and its submenu paths before deleting so we can
+    // revalidate the relevant statically-generated pages afterward.
+    const article = await prisma.article.findUnique({
+      where: { id },
+      select: {
+        slug: true,
+        subMenuArticles: {
+          select: {
+            subMenu: {
+              select: {
+                slug: true,
+                menu: { select: { slug: true } },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    await prisma.article.delete({ where: { id } })
+
+    // Revalidate cached pages that referenced this article
+    if (article) {
+      revalidatePath(`/articles/${article.slug}`)
+      revalidatePath('/articles')
+      for (const { subMenu } of article.subMenuArticles) {
+        revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
+        revalidatePath(`/${subMenu.menu.slug}`)
+      }
+    }
+
     return apiSuccess({ deleted: true })
   } catch (err) {
     return apiError('Failed to delete article', 500, err)
