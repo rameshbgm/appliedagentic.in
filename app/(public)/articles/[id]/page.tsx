@@ -2,7 +2,6 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
-import { headers } from 'next/headers'
 import Image from 'next/image'
 import Link from 'next/link'
 import ArticleContent from '@/components/public/ArticleContent'
@@ -15,7 +14,7 @@ import MobileArticlePanel from '@/components/public/MobileArticlePanel'
 import ShareButtons from '@/components/public/ShareButtons'
 import SectionCard from '@/components/public/SectionCard'
 import { formatDate } from '@/lib/utils'
-import { Clock, Eye, Calendar, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Clock, Eye, Calendar, ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
 type ArticleSection = { id: number; articleId: number; title: string; content: string; order: number; createdAt: Date; updatedAt: Date }
@@ -65,7 +64,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const twitterTitle        = article.twitterTitle    || ogTitle
     const twitterDesc         = article.twitterDescription || ogDesc
 
-    // Parse seoKeywords: comma-separated string → string[]
     const keywords = article.seoKeywords
       ? article.seoKeywords.split(',').map((k) => k.trim()).filter(Boolean)
       : undefined
@@ -89,7 +87,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: twitterDesc,
         ...(coverImages ? { images: coverImages.map((i) => i.url) } : {}),
       },
-      // Custom meta tags for AI/LLM crawlers
       other: {
         ...(article.aiContentDeclaration
           ? { 'ai-content-declaration': article.aiContentDeclaration }
@@ -160,7 +157,6 @@ export default async function ArticleDetailPage({ params }: Props) {
   }
 
   if (!article) notFound()
-  // Typed sections — workaround for TypeScript not narrowing `let` variable with try-catch
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sections: ArticleSection[] = (article as any).sections ?? []
   const isDraft = article.status !== 'PUBLISHED'
@@ -172,7 +168,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   const tags = article.articleTags.map((t) => t.tag)
   const topics = article.topicArticles.map((ta) => ta.topic)
 
-  // Navigation assignments: deduplicated list of { mainMenu, subMenu } pairs
+  // Navigation assignments
   const navAssignments = (article as any).subMenuArticles?.map((sma: any) => ({
     menuId: sma.subMenu.menu.id,
     menuTitle: sma.subMenu.menu.title,
@@ -211,64 +207,98 @@ export default async function ArticleDetailPage({ params }: Props) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
   const articleUrl = `${siteUrl}/articles/${article.slug}`
+  const fullContent = sections.length > 0
+    ? sections.map(s => s.content).join('\n')
+    : article.content
 
   return (
     <>
       <ReadingProgressBar />
 
-      <div className="min-h-screen">
+      <div className="min-h-screen article-page">
 
         {/* Draft banner */}
         {isDraft && (
-          <div className="w-full py-2.5 px-4 text-center text-sm font-semibold" style={{ background: '#7C3AED22', borderBottom: '1px solid #7C3AED55', color: '#A78BFA' }}>
-            ⚠️ Draft Preview — this article is not published
+          <div
+            className="w-full py-2.5 px-4 text-center text-sm font-semibold"
+            style={{ background: '#7C3AED22', borderBottom: '1px solid #7C3AED55', color: '#A78BFA' }}
+          >
+            Draft Preview — this article is not published
+          </div>
+        )}
+
+        {/* ─── Cover Image (full-bleed on mobile) ──────────────────── */}
+        {article.coverImage && (
+          <div className="article-cover-wrapper">
+            <Image
+              src={article.coverImage.url}
+              alt={article.title}
+              width={1200}
+              height={675}
+              className="article-cover-img"
+              priority
+            />
+            <div className="article-cover-gradient" />
           </div>
         )}
 
         {/* ─── Article Hero ──────────────────────────────────────── */}
-        <div
-          className="w-full px-[3%] pt-3 sm:pt-6 pb-8 sm:pb-12"
-          style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
-        >
-          <div>
+        <header className="article-hero">
+          <div className="article-hero-inner">
 
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm mb-5 flex-wrap" style={{ color: 'var(--text-muted)' }}>
+            <nav className="article-breadcrumb">
               <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
-              <span className="opacity-40">&rsaquo;</span>
+              <ChevronRight size={12} className="opacity-40" />
               <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
-              <span className="opacity-40">&rsaquo;</span>
-              <span className="line-clamp-1" style={{ color: 'var(--text-secondary)' }}>{article.title}</span>
+              <ChevronRight size={12} className="opacity-40" />
+              <span className="line-clamp-1 article-breadcrumb-current">{article.title}</span>
             </nav>
 
+            {/* Module badge */}
+            {articleModule && (
+              <div className="mb-3">
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ background: (articleModule.color ?? '#7C3AED') + '18', color: articleModule.color ?? '#7C3AED' }}
+                >
+                  {articleModule.icon && <span>{articleModule.icon}</span>}
+                  {articleModule.name}
+                </span>
+              </div>
+            )}
+
             {/* Title */}
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4"
-              style={{
-                color: 'var(--text-primary)',
-                fontFamily: "'Lora', Georgia, serif",
-                letterSpacing: '-0.01em',
-                lineHeight: '1.14',
-              }}
-            >
+            <h1 className="article-title">
               {article.title}
             </h1>
 
             {/* Summary */}
             {article.summary && (
-              <p
-                className="leading-relaxed mb-5 max-w-2xl"
-                style={{
-                  color: 'var(--text-muted)',
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontSize: '1.05rem',
-                  fontStyle: 'italic',
-                  lineHeight: '1.75',
-                }}
-              >
+              <p className="article-summary">
                 {article.summary}
               </p>
             )}
+
+            {/* Meta row */}
+            <div className="article-meta-row">
+              {article.publishedAt && (
+                <span className="article-meta-item">
+                  <Calendar size={14} />
+                  {formatDate(article.publishedAt.toString())}
+                </span>
+              )}
+              {article.readingTimeMinutes && (
+                <span className="article-meta-item">
+                  <Clock size={14} />
+                  {article.readingTimeMinutes} min read
+                </span>
+              )}
+              <span className="article-meta-item">
+                <Eye size={14} />
+                {article.viewCount.toLocaleString()} views
+              </span>
+            </div>
 
             {/* Tag pills */}
             {tags.length > 0 && (
@@ -277,8 +307,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                   <Link
                     key={tag.id}
                     href={`/articles?tag=${encodeURIComponent(tag.name)}`}
-                    className="px-4 py-1.5 rounded-full text-sm font-medium border transition-colors hover:border-(--green) hover:text-(--green)"
-                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+                    className="article-tag-pill"
                   >
                     {tag.name}
                   </Link>
@@ -286,89 +315,54 @@ export default async function ArticleDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Navigation assignments: Main Menu › Sub Menu pills */}
+            {/* Navigation assignments: Main Menu > Sub Menu pills */}
             {navAssignments.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-5">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {navAssignments.map((nav: { menuId: number; menuTitle: string; menuSlug: string; subMenuId: number; subMenuTitle: string; subMenuSlug: string }) => (
                   <Link
                     key={`${nav.menuId}-${nav.subMenuId}`}
                     href={`/${nav.menuSlug}/${nav.subMenuSlug}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors hover:border-(--green)"
-                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                    className="article-nav-pill"
                   >
                     <span style={{ color: 'var(--text-secondary)' }}>{nav.menuTitle}</span>
-                    <span className="opacity-40">›</span>
+                    <ChevronRight size={10} className="opacity-40" />
                     <span>{nav.subMenuTitle}</span>
                   </Link>
                 ))}
               </div>
             )}
 
-            {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-              {article.publishedAt && (
-                <span className="flex items-center gap-1.5">
-                  <Calendar size={13} />
-                  {formatDate(article.publishedAt.toString())}
-                </span>
-              )}
-              {article.readingTimeMinutes && (
-                <span className="flex items-center gap-1.5">
-                  <Clock size={13} />
-                  {article.readingTimeMinutes} min read
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Eye size={13} />
-                {article.viewCount.toLocaleString()} views
-              </span>
-            </div>
-
             {/* Share buttons */}
             <ShareButtons url={articleUrl} title={article.title} />
           </div>
-        </div>
+        </header>
 
         {/* ─── Body: TOC sidebar (left) + Article content (right) ── */}
-        <div className="px-0 lg:px-[3%] py-8 sm:py-12">
+        <div className="article-body-wrapper">
 
-          {/* ── Mobile floating panel (icon → slide-in) ─────────────────── */}
+          {/* Mobile floating panel (icon -> slide-in) */}
           {(sections.length > 0 || article.content) && (
             <div className="lg:hidden">
               <MobileArticlePanel
                 sections={sections}
-                content={sections.length > 0
-                  ? sections.map(s => s.content).join('\n')
-                  : article.content}
+                content={fullContent}
               />
             </div>
           )}
 
-          <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
+          <div className="article-body-grid">
 
             {/* Sidebar — Reader Tools + TOC (desktop only) */}
             {(sections.length > 0 || article.content) && (
-              <aside className="hidden lg:flex flex-col w-64 xl:w-72 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] gap-4">
-                {/* Reader Tools — horizontal inline row at the top */}
-                <div
-                  className="shrink-0 rounded-xl overflow-hidden"
-                  style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
-                >
-                  <p
-                    className="text-[10px] font-semibold uppercase tracking-widest px-3 pt-2.5 pb-1"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    Reader Tools
-                  </p>
+              <aside className="article-sidebar">
+                <div className="article-sidebar-card">
+                  <p className="article-sidebar-label">Reader Tools</p>
                   <ArticleReaderTools
-                    content={sections.length > 0
-                      ? sections.map(s => s.content).join('\n')
-                      : article.content}
+                    content={fullContent}
                     inline
                   />
                 </div>
 
-                {/* Table of Contents */}
                 <div className="overflow-y-auto flex-1 min-h-0 no-scrollbar">
                   <TableOfContents
                     sections={sections.length > 0
@@ -380,22 +374,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {/* Main article column */}
-            <article className="flex-1 min-w-0 pb-8 lg:pb-0 px-3 sm:px-4 lg:px-0">
-
-              {/* Cover image */}
-              {article.coverImage && (
-                <div className="relative w-full rounded-2xl overflow-hidden mb-6 sm:mb-10">
-                  <Image
-                    src={article.coverImage.url}
-                    alt={article.title}
-                    width={1200}
-                    height={675}
-                    className="w-full h-auto rounded-2xl"
-                    style={{ display: 'block' }}
-                    priority
-                  />
-                </div>
-              )}
+            <article className="article-main-col">
 
               {/* Article body — multi-section or legacy single content */}
               {sections.length > 0 ? (
@@ -423,15 +402,11 @@ export default async function ArticleDetailPage({ params }: Props) {
 
               {/* Prev / Next */}
               {(prevArticle || nextArticle) && (
-                <nav
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12 pt-8"
-                  style={{ borderTop: '1px solid var(--bg-border)' }}
-                >
+                <nav className="article-prev-next">
                   {prevArticle ? (
                     <Link
                       href={`/articles/${prevArticle.slug}`}
-                      className="group flex items-start gap-3 p-4 rounded-2xl transition-all hover:-translate-y-0.5"
-                      style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
+                      className="article-prev-next-card group"
                     >
                       <ArrowLeft size={16} className="mt-0.5 shrink-0 group-hover:text-(--green) transition-colors" style={{ color: 'var(--text-muted)' }} />
                       <div className="min-w-0">
@@ -445,8 +420,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                   {nextArticle ? (
                     <Link
                       href={`/articles/${nextArticle.slug}`}
-                      className="group flex items-start gap-3 p-4 rounded-2xl text-right justify-end transition-all hover:-translate-y-0.5"
-                      style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
+                      className="article-prev-next-card group text-right justify-end"
                     >
                       <div className="min-w-0">
                         <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Next</p>

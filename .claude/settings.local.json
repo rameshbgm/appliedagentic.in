@@ -14,7 +14,8 @@
       "Bash(set +a)",
       "Bash(npx prisma db push --accept-data-loss)",
       "Bash(npx tsc --noEmit)",
-      "Bash(node -e \"const m = require\\(''@uiw/react-md-editor''\\); console.log\\(Object.keys\\(m\\)\\)\")"
+      "Bash(node -e \"const m = require\\(''@uiw/react-md-editor''\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(npx tsc --noEmit --pretty)"
     ]
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 // components/admin/StatsCard.tsx
 import { useEffect, useState } from 'react'
-import { FileText, Layers, BookOpen, Eye, TrendingUp, Users, Cpu, Image, LucideIcon } from 'lucide-react'
+import { FileText, Layers, BookOpen, Eye, TrendingUp, Users, Cpu, Image, Menu, ListTree, LucideIcon } from 'lucide-react'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
@@ -12,6 +12,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Users,
   Cpu,
   Image,
+  Menu,
+  ListTree,
 }
 
 interface StatsCardProps {

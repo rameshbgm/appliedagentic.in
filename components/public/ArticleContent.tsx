@@ -168,52 +168,54 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
       {/* ── Section AI Summary Modal ──────────────────────────────────────── */}
       {secModal && (
         <div
-          className="reader-overlay ai-overlay"
+          className="ai-modal-backdrop"
           role="dialog"
-          aria-modal
+          aria-modal="true"
           aria-label="Section AI Summary"
           onClick={(e) => { if (e.target === e.currentTarget) { setSecModal(null); document.body.style.overflow = '' } }}
         >
-          <div className="ai-summary-modal">
-            <div className="reader-overlay-header">
-              <span className="reader-overlay-title">
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                  <span dangerouslySetInnerHTML={{ __html: BOT_SVG.replace('stroke="currentColor"', 'stroke="var(--green)"') }} />
-                  <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 400 }}>Section summary</span>
-                </span>
-                <span
-                  className="ml-2 truncate max-w-[260px] inline-block align-middle"
-                  style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}
-                  title={secModal.title}
-                >
-                  {secModal.title}
+          <div className="ai-modal-container">
+            <div className="ai-modal-header">
+              <span className="ai-modal-title">
+                <span dangerouslySetInnerHTML={{ __html: BOT_SVG.replace('stroke="currentColor"', 'stroke="var(--green)"') }} />
+                <span className="ai-modal-title-text">
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Section summary</span>
+                  <span
+                    className="truncate max-w-[260px] block"
+                    style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}
+                    title={secModal.title}
+                  >
+                    {secModal.title}
+                  </span>
                 </span>
               </span>
               <button
-                className="reader-overlay-close"
+                type="button"
+                className="ai-modal-close"
                 onClick={() => { setSecModal(null); document.body.style.overflow = '' }}
                 aria-label="Close"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
-            <div className="ai-summary-body">
+            <div className="ai-modal-body">
               {secModal.state === 'loading' && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 0', color: 'var(--text-muted)' }}>
+                <div className="ai-modal-loading">
                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                  <span style={{ fontSize: 13 }}>Summarizing section…</span>
+                  <span>Summarizing section...</span>
                 </div>
               )}
               {secModal.state === 'error' && (
-                <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>Could not generate summary.</p>
+                <div className="ai-modal-error">
+                  <p>Could not generate summary.</p>
                   <button
+                    type="button"
                     onClick={() => {
                       const title = secModal.title
                       setSecModal({ title, state: 'loading', bullets: [] })
                     }}
-                    style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid var(--bg-border)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}
+                    className="ai-modal-retry-btn"
                   >
                     Retry
                   </button>

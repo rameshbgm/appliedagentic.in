@@ -123,46 +123,46 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          AI SUMMARY MODAL
+          AI SUMMARY POPUP MODAL
       ══════════════════════════════════════════════════════════════════════ */}
       {aiOpen && (
         <div
-          className="reader-overlay ai-overlay"
+          className="ai-modal-backdrop"
           role="dialog"
-          aria-modal
+          aria-modal="true"
           aria-label="AI Summary"
           onClick={(e) => { if (e.target === e.currentTarget) setAiOpen(false) }}
         >
-          <div className="ai-summary-modal">
-            <div className="reader-overlay-header">
-              <span className="reader-overlay-title">
-                <Bot size={14} style={{ display: 'inline', marginRight: 7, verticalAlign: 'middle', color: 'var(--green)' }} />
-                AI Summary — 12 key points
+          <div className="ai-modal-container">
+            {/* Modal header */}
+            <div className="ai-modal-header">
+              <span className="ai-modal-title">
+                <Bot size={16} style={{ color: 'var(--green)' }} />
+                AI Summary — {bullets.length || 12} key points
               </span>
-              <button className="reader-overlay-close" onClick={() => setAiOpen(false)} aria-label="Close">
-                <X size={16} />
+              <button
+                className="ai-modal-close"
+                onClick={() => setAiOpen(false)}
+                aria-label="Close AI Summary"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <div className="ai-summary-body">
+            {/* Modal body */}
+            <div className="ai-modal-body">
               {aiState === 'loading' && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 0', color: 'var(--text-muted)' }}>
+                <div className="ai-modal-loading">
                   <Loader2 size={28} className="animate-spin" style={{ color: 'var(--green)' }} />
-                  <span style={{ fontSize: 13 }}>Summarizing article…</span>
+                  <span>Summarizing article...</span>
                 </div>
               )}
               {aiState === 'error' && (
-                <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>
-                    Could not generate summary. Please try again.
-                  </p>
+                <div className="ai-modal-error">
+                  <p>Could not generate summary. Please try again.</p>
                   <button
                     onClick={() => { setAiState('idle'); }}
-                    style={{
-                      padding: '7px 18px', borderRadius: 8, border: '1px solid var(--bg-border)',
-                      background: 'var(--bg-elevated)', color: 'var(--text-secondary)', fontSize: 13,
-                      cursor: 'pointer',
-                    }}
+                    className="ai-modal-retry-btn"
                   >
                     Retry
                   </button>

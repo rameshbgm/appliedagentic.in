@@ -46,23 +46,26 @@ export default function MobileArticlePanel({ sections, content }: Props) {
           style={{
             position: 'fixed',
             right: 0,
-            top: 'calc(var(--nav-h, 64px) + 12px)',
+            top: 'calc(var(--nav-h, 64px) + 16px)',
             zIndex: 45,
             background: 'var(--bg-surface)',
             border: '1px solid var(--bg-border)',
             borderRight: 'none',
-            borderRadius: '10px 0 0 10px',
+            borderRadius: '12px 0 0 12px',
             boxShadow: '-2px 4px 18px rgba(0,0,0,0.12)',
-            padding: '10px 9px',
+            padding: '12px 11px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             gap: 5,
             cursor: 'pointer',
             color: 'var(--text-secondary)',
+            minWidth: '44px',
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <AlignLeft size={17} />
+          <AlignLeft size={18} />
          
         </button>
       )}

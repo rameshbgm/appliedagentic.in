@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          _count: { select: { articles: true } },
+        },
       }),
     ])
 

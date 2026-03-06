@@ -44,7 +44,7 @@ export default function ShareButtons({ url, title }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-1.5 flex-wrap">
+    <div className="flex items-center gap-2.5 sm:gap-1.5 flex-wrap">
       <span className="text-xs mr-0.5" style={{ color: 'var(--text-muted)' }}>Share:</span>
       {PLATFORMS.map((p) => (
         <a
@@ -54,8 +54,8 @@ export default function ShareButtons({ url, title }: Props) {
           rel="noopener noreferrer"
           title={p.label}
           aria-label={`Share on ${p.label}`}
-          className="flex items-center justify-center w-9 h-9 sm:w-7 sm:h-7 rounded-full transition-all hover:scale-110"
-          style={{ background: p.bg, color: p.color, border: `1px solid ${p.border}` }}
+          className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
+          style={{ background: p.bg, color: p.color, border: `1px solid ${p.border}`, WebkitTapHighlightColor: 'transparent' }}
         >
           {p.icon}
         </a>
@@ -64,10 +64,10 @@ export default function ShareButtons({ url, title }: Props) {
         onClick={copyLink}
         title="Copy link"
         aria-label="Copy link"
-        className="flex items-center justify-center w-9 h-9 sm:w-7 sm:h-7 rounded-full transition-all hover:scale-110"
-        style={{ background: 'var(--bg-elevated)', color: copied ? '#4ade80' : 'var(--text-secondary)', border: '1px solid var(--bg-border)' }}
+        className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
+        style={{ background: 'var(--bg-elevated)', color: copied ? '#4ade80' : 'var(--text-secondary)', border: '1px solid var(--bg-border)', WebkitTapHighlightColor: 'transparent' }}
       >
-        {copied ? <Check size={12} /> : <Link2 size={12} />}
+        {copied ? <Check size={13} /> : <Link2 size={13} />}
       </button>
     </div>
   )

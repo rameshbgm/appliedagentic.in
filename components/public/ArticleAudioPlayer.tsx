@@ -56,17 +56,17 @@ export default function ArticleAudioPlayer({ audioUrl, title }: Props) {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-lg rounded-2xl px-5 py-4 shadow-2xl"
-      style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(108,61,255,0.4)' }}
+      className="fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-lg rounded-2xl px-4 sm:px-5 py-3 sm:py-4 shadow-2xl"
+      style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(108,61,255,0.4)', bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
     >
       <audio ref={audioRef} src={audioUrl} />
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         {/* Play/Pause */}
         <button
           onClick={toggle}
-          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white"
-          style={{ background: 'var(--green)', color: '#fff' }}
+          className="w-11 h-11 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 text-white"
+          style={{ background: 'var(--green)', color: '#fff', WebkitTapHighlightColor: 'transparent' }}
         >
           {playing ? <Pause size={16} /> : <Play size={16} />}
         </button>

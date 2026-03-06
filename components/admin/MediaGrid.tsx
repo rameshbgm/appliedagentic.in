@@ -1,7 +1,7 @@
 'use client'
 // components/admin/MediaGrid.tsx
 import { useState } from 'react'
-import { Trash2, Download, Copy, Check } from 'lucide-react'
+import { Trash2, Download, Copy, Check, Bot, ImageIcon, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 
@@ -13,7 +13,9 @@ interface MediaItem {
   sizeBytes: number | null
   width?: number | null
   height?: number | null
+  aiPrompt?: string | null
   createdAt: string
+  _count?: { articles: number }
 }
 
 interface Props {
@@ -80,7 +82,7 @@ export default function MediaGrid({ items, onDeleted }: Props) {
               style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
             >
               {/* Preview */}
-              <div className="aspect-square w-full" style={{ background: 'var(--bg-surface)' }}>
+              <div className="aspect-square w-full relative" style={{ background: 'var(--bg-surface)' }}>
                 {isImage ? (
                   <img src={item.url} alt={item.filename} className="w-full h-full object-cover" />
                 ) : isAudio ? (
@@ -93,6 +95,35 @@ export default function MediaGrid({ items, onDeleted }: Props) {
                     <span className="text-3xl">📄</span>
                   </div>
                 )}
+
+                {/* Tags: AI-generated / Manual / In-Use */}
+                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
+                  {item.aiPrompt ? (
+                    <span
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
+                      style={{ background: 'rgba(108,61,255,0.85)', color: '#fff' }}
+                      title={`AI Prompt: ${item.aiPrompt}`}
+                    >
+                      <Bot size={9} />AI
+                    </span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
+                      style={{ background: 'rgba(30,41,59,0.80)', color: '#fff' }}
+                    >
+                      <ImageIcon size={9} />Manual
+                    </span>
+                  )}
+                  {(item._count?.articles ?? 0) > 0 && (
+                    <span
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
+                      style={{ background: 'rgba(46,213,115,0.85)', color: '#fff' }}
+                      title={`Used in ${item._count!.articles} article(s)`}
+                    >
+                      <CheckCircle2 size={9} />In Use
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Info */}

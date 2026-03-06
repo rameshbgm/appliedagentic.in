@@ -204,10 +204,12 @@ export default function SettingsPage() {
 
         {tab === 'seo' && (
           <>
+            <p className="text-xs p-3 rounded-xl mb-2" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD' }}>
+              Social profiles are used in article Open Graph metadata and site footer links.
+            </p>
             {[
               { key: 'socialTwitter', label: 'Twitter / X Username', placeholder: '@appliedagentic' },
               { key: 'socialLinkedin', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/company/...' },
-              { key: 'socialGithub', label: 'GitHub URL', placeholder: 'https://github.com/...' },
             ].map(({ key, label: lbl, placeholder }) => (
               <div key={key}>
                 <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
