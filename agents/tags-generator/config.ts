@@ -12,10 +12,10 @@ export const config: AgentConfig = {
   provider: 'gemini',
 
   /**
-   * Gemini models:  gemini-2.0-flash | gemini-1.5-flash-002 | gemini-1.5-pro-002
+   * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-flash-002
    * OpenAI models:  gpt-4o-mini | gpt-4o | ...
    */
-  textModel: 'gemini-2.0-flash',
+  textModel: 'gemini-3-flash-preview',
 
   /** Low temperature for deterministic, repeatable tag lists */
   temperature: 0.2,

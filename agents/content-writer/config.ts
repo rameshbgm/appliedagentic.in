@@ -15,9 +15,9 @@ export const config: AgentConfig = {
   /**
    * Model name for the selected provider.
    * OpenAI models:  gpt-4o | gpt-4o-mini | gpt-4-turbo | ...
-   * Gemini models:  gemini-2.0-flash | gemini-1.5-pro | gemini-1.5-flash
+   * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-pro
    */
-  textModel: 'gemini-2.0-flash',
+  textModel: 'gemini-3-flash-preview',
 
   /** Sampling temperature — higher = more creative (0.0 – 2.0) */
   temperature: 0.75,
