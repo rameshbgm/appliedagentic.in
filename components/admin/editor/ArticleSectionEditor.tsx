@@ -1,9 +1,11 @@
 'use client'
 // components/admin/editor/ArticleSectionEditor.tsx
+import { useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { ChevronUp, ChevronDown, Trash2, GripVertical } from 'lucide-react'
+import AIAssistPanel from './AIAssistPanel'
 
-const ArticleEditor = dynamic(() => import('./ArticleEditor'), {
+const MarkdownEditor = dynamic(() => import('./MarkdownEditor'), {
   ssr: false,
   loading: () => <div className="h-64 rounded-2xl skeleton" />,
 })
@@ -32,11 +34,21 @@ export default function ArticleSectionEditor({
   section, index, total, articleId,
   onChange, onDelete, onMoveUp, onMoveDown, onAudioGenerated,
 }: Props) {
+  const insertRef = useRef<(md: string) => void>(() => {})
+  const replaceRef = useRef<(md: string) => void>(() => {})
+
   return (
     <div
       className="rounded-2xl border overflow-hidden transition-all"
       style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
     >
+      {/* AI Assist Panel — sits above everything */}
+      <AIAssistPanel
+        onInsert={(md) => insertRef.current(md)}
+        onReplace={(md) => replaceRef.current(md)}
+        articleId={articleId}
+        onAudioGenerated={onAudioGenerated}
+      />
       {/* Section header bar */}
       <div
         className="flex items-center gap-2 px-3 py-2 border-b"
@@ -99,11 +111,11 @@ export default function ArticleSectionEditor({
       </div>
 
       {/* Editor */}
-      <ArticleEditor
+      <MarkdownEditor
         content={section.content}
-        onChange={(html) => onChange({ ...section, content: html })}
-        articleId={articleId}
-        onAudioGenerated={onAudioGenerated}
+        onChange={(md) => onChange({ ...section, content: md })}
+        onInsertRef={(fn) => { insertRef.current = fn }}
+        onReplaceRef={(fn) => { replaceRef.current = fn }}
       />
     </div>
   )

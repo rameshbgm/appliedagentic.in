@@ -96,7 +96,6 @@ export interface ArticleFormData {
   readingTimeMinutes?: number
   isFeatured?: boolean
   publishedAt?: string
-  scheduledAt?: string
   seoTitle?: string
   seoDescription?: string
   seoCanonicalUrl?: string

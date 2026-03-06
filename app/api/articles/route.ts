@@ -29,7 +29,6 @@ const ArticleSchema = z.object({
   readingTimeMinutes: z.number().int().optional().nullable(),
   isFeatured: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
-  scheduledAt: z.string().optional().nullable(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   seoCanonicalUrl: z.string().optional(),
@@ -185,7 +184,6 @@ export async function POST(req: NextRequest) {
         publishedAt: data.publishedAt
           ? new Date(data.publishedAt)
           : (data.status === ArticleStatus.PUBLISHED ? new Date() : undefined),
-        scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : undefined,
         seoTitle: data.seoTitle,
         seoDescription: data.seoDescription,
         seoCanonicalUrl: data.seoCanonicalUrl,

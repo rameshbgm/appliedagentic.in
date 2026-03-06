@@ -7,8 +7,7 @@ import { ArticleStatus } from '@prisma/client'
 import { z } from 'zod'
 
 const PublishSchema = z.object({
-  action: z.enum(['publish', 'unpublish', 'schedule', 'archive']),
-  scheduledAt: z.string().optional(),
+  action: z.enum(['publish', 'unpublish', 'archive']),
 })
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -17,28 +16,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const body = await req.json()
-    const { action, scheduledAt } = PublishSchema.parse(body)
+    const { action } = PublishSchema.parse(body)
     const id = parseInt((await params).id)
 
     let updateData: Record<string, unknown> = {}
 
     switch (action) {
       case 'publish':
-        updateData = {
-          status: ArticleStatus.PUBLISHED,
-          publishedAt: new Date(),
-          scheduledAt: null,
-        }
+        updateData = { status: ArticleStatus.PUBLISHED, publishedAt: new Date() }
         break
       case 'unpublish':
         updateData = { status: ArticleStatus.DRAFT }
-        break
-      case 'schedule':
-        if (!scheduledAt) return apiError('scheduledAt is required for schedule action', 422)
-        updateData = {
-          status: ArticleStatus.SCHEDULED,
-          scheduledAt: new Date(scheduledAt),
-        }
         break
       case 'archive':
         updateData = { status: ArticleStatus.ARCHIVED }
@@ -48,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const article = await prisma.article.update({
       where: { id },
       data: updateData,
-      select: { id: true, status: true, publishedAt: true, scheduledAt: true },
+      select: { id: true, status: true, publishedAt: true },
     })
 
     return apiSuccess(article)

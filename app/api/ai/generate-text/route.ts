@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       mode = 'generate',
       tone = 'professional',
       length = 'medium',
+      format,
       context,
       model: reqModel,
       temperature: reqTemp,
@@ -56,8 +57,12 @@ export async function POST(req: NextRequest) {
     const temperature = reqTemp ?? config.temperature
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || config.maxTokens
 
+    const markdownInstruction = format === 'markdown'
+      ? '\n\nFormat your response as well-structured Markdown. Use headings (## for sections, ### for subsections), bullet lists, bold/italic emphasis, and fenced code blocks (```language) where appropriate. Do not include any HTML tags.'
+      : ''
+
     const systemPrompt = customSystemPrompt ||
-      `${SYSTEM_PROMPTS[tone] || SYSTEM_PROMPTS.professional}\n\nInstruction: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.generate}`
+      `${SYSTEM_PROMPTS[tone] || SYSTEM_PROMPTS.professional}\n\nInstruction: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.generate}${markdownInstruction}`
 
     const userMessage = context
       ? `Context:\n${context}\n\n---\n\n${prompt}`

@@ -39,7 +39,6 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   if (!article) notFound()
 
   const subMenuIds = subMenuLinks.map((s: any) => s.subMenuId)
-  const navMenuId = subMenuLinks[0]?.subMenu?.menuId
 
   return (
     <ArticleEditorPage
@@ -50,14 +49,12 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         summary: article.summary ?? '',
         content: article.content,
         status: article.status,
-        scheduledAt: article.scheduledAt?.toISOString().slice(0, 16),
         coverImageUrl: article.coverImage?.url ?? '',
         seoTitle: article.seoTitle ?? '',
         seoDescription: article.seoDescription ?? '',
         audioUrl: article.audioUrl ?? undefined,
         tagNames: article.articleTags.map((at: any) => at.tag.name),
         subMenuIds,
-        navMenuId,
         isFeatured: article.isFeatured,
         sections: article.sections.map((s: any) => ({
           id: s.id,

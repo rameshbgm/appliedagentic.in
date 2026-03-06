@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/)",
+      "Bash(npm run build)",
+      "Bash(npx next build)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/articles)",
+      "Bash(npm install @uiw/react-md-editor react-markdown remark-gfm rehype-highlight rehype-sanitize)",
+      "Bash(npx prisma migrate dev --name add_content_format)",
+      "Bash(dotenv -e .env.local -- npx prisma migrate dev --name add_content_format)",
+      "Bash(set -a)",
+      "Bash(source .env.local)",
+      "Bash(set +a)",
+      "Bash(npx prisma db push --accept-data-loss)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(node -e \"const m = require\\(''@uiw/react-md-editor''\\); console.log\\(Object.keys\\(m\\)\\)\")"
+    ]
+  }
+}

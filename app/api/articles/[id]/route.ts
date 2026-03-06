@@ -30,7 +30,6 @@ const UpdateSchema = z.object({
   readingTimeMinutes: z.number().int().optional().nullable(),
   isFeatured: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
-  scheduledAt: z.string().optional().nullable(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   seoCanonicalUrl: z.string().optional(),
@@ -209,7 +208,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
               ? { publishedAt: new Date() }
               : {})
           ),
-          ...(data.scheduledAt !== undefined && { scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null }),
           ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
           ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),
           ...(data.seoCanonicalUrl !== undefined && { seoCanonicalUrl: data.seoCanonicalUrl }),

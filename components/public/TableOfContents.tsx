@@ -30,6 +30,20 @@ interface Props {
 // Shared slug logic — must match ArticleContent and SectionCard
 const toSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
+function parseMarkdownHeadings(mdContent: string): Heading[] {
+  const headings: Heading[] = []
+  const lines = mdContent.split('\n')
+  for (const line of lines) {
+    const m = line.match(/^(#{1,3})\s+(.+)$/)
+    if (m) {
+      const level = m[1].length // 1, 2, or 3
+      const text = m[2].trim()
+      headings.push({ id: toSlug(text), text, level, isSectionTitle: false })
+    }
+  }
+  return headings
+}
+
 function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
   const effectiveSections: SectionLike[] =
     sections && sections.length > 0
@@ -39,19 +53,12 @@ function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
       : []
 
   const parsed: Heading[] = []
-  // DOMParser is only available in browsers; called only from useEffect
-  const parser = new DOMParser()
 
   for (const section of effectiveSections) {
     if (section.title?.trim()) {
       parsed.push({ id: toSlug(section.title), text: section.title.trim(), level: 0, isSectionTitle: true })
     }
-    const doc = parser.parseFromString(section.content ?? '', 'text/html')
-    doc.querySelectorAll('h1, h2, h3').forEach((el) => {
-      const text = el.textContent?.trim() ?? ''
-      if (!text) return
-      parsed.push({ id: toSlug(text), text, level: Number(el.tagName[1]), isSectionTitle: false })
-    })
+    parsed.push(...parseMarkdownHeadings(section.content ?? ''))
   }
   return parsed
 }

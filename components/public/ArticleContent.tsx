@@ -2,16 +2,14 @@
 // components/public/ArticleContent.tsx
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import MarkdownRenderer from './MarkdownRenderer'
 
 const BOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
 
 interface Props {
   content: string
   sectionIndex?: number
-  /** When set, this component is inside a DB section card — skip H1-section
-   *  wrapping and animate content items directly. */
   sectionTitle?: string
-  /** If true, skip H1-based section wrapping entirely (used inside section-optional cards). */
   standalone?: boolean
 }
 
@@ -163,12 +161,9 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
 
   return (
     <>
-      <div
-        ref={ref}
-        className="article-content"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      <div ref={ref} className="article-content" suppressHydrationWarning>
+        <MarkdownRenderer content={content} />
+      </div>
 
       {/* ── Section AI Summary Modal ──────────────────────────────────────── */}
       {secModal && (

@@ -3,11 +3,10 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
-import { stripHtml } from '@/lib/utils'
 import ArticleSectionEditor, { type SectionData } from '@/components/admin/editor/ArticleSectionEditor'
 
 interface InitialArticle {
@@ -17,13 +16,11 @@ interface InitialArticle {
   summary: string
   content: string
   status: string
-  scheduledAt?: string
   coverImageUrl: string
   seoTitle: string
   seoDescription: string
   audioUrl?: string
   tagNames: string[]
-  navMenuId?: number
   subMenuIds: number[]
   isFeatured?: boolean
   sections?: { id: number; title: string; content: string; order: number }[]
@@ -50,7 +47,6 @@ interface Props {
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   DRAFT:     { bg: '#f1f5f9', text: '#64748b' },
   PUBLISHED: { bg: '#dcfce7', text: '#16a34a' },
-  SCHEDULED: { bg: '#fef3c7', text: '#d97706' },
   ARCHIVED:  { bg: '#f1f5f9', text: '#94a3b8' },
 }
 
@@ -58,6 +54,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [metaLoading, setMetaLoading] = useState(false)
+  const [tagsLoading, setTagsLoading] = useState(false)
   const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
 
@@ -82,8 +80,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [sections, setSections] = useState<SectionData[]>(makeDefaultSections)
   const [meta, setMeta] = useState({
     status: initialArticle.status,
-    scheduledAt: initialArticle.scheduledAt,
-    navMenuId: initialArticle.navMenuId,
     subMenuIds: initialArticle.subMenuIds,
     tagNames: initialArticle.tagNames,
     seoTitle: initialArticle.seoTitle,
@@ -92,8 +88,17 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     isFeatured: initialArticle.isFeatured ?? false,
   })
 
-  const wordCount = stripHtml(sections.map(s => s.content).join(' ')).split(/\s+/).filter(Boolean).length
-  const readingTime = calculateReadingTime(sections.map(s => s.content).join(' '))
+  const combinedContent = sections.map(s => s.content).join(' ')
+  const wordCount = combinedContent
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_~>]+/g, '')
+    .trim()
+    .split(/\s+/).filter(Boolean).length
+  const readingTime = calculateReadingTime(combinedContent)
 
   // Section helpers
   const updateSection = useCallback((tempId: string, updated: SectionData) => {
@@ -135,15 +140,77 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     if (!initialArticle.id) setSlug(autoSlug(v))
   }
 
+  const generateMeta = async () => {
+    setMetaLoading(true)
+    try {
+      const res = await fetch('/api/ai/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Article title: ${title}\n\nContent excerpt:\n${combinedContent.slice(0, 3000)}`,
+          systemPrompt: 'You are an SEO expert. Given an article title and content excerpt, return ONLY valid JSON with two keys: "seoTitle" (max 60 characters, compelling and keyword-rich) and "seoDescription" (max 160 characters, a concise summary encouraging clicks). No markdown, no explanation.',
+          format: 'markdown',
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const text: string = data.data.text.trim()
+        const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+        const parsed = JSON.parse(jsonStr)
+        setMeta((m) => ({
+          ...m,
+          seoTitle: (parsed.seoTitle ?? m.seoTitle).slice(0, 60),
+          seoDescription: (parsed.seoDescription ?? m.seoDescription).slice(0, 160),
+        }))
+        toast.success('SEO meta generated!')
+      } else {
+        toast.error(data.error ?? 'Meta generation failed')
+      }
+    } catch {
+      toast.error('Failed to parse AI response')
+    } finally {
+      setMetaLoading(false)
+    }
+  }
+
+  const generateTags = async () => {
+    setTagsLoading(true)
+    try {
+      const res = await fetch('/api/ai/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Article title: ${title}\n\nContent excerpt:\n${combinedContent.slice(0, 2000)}`,
+          systemPrompt: 'You are a content taxonomy expert. Given an article, return ONLY a JSON array of up to 10 relevant tag strings (lowercase, concise, 1-3 words each). No markdown, no explanation, just the JSON array.',
+          format: 'markdown',
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const text: string = data.data.text.trim()
+        const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+        const parsed: string[] = JSON.parse(jsonStr)
+        if (!Array.isArray(parsed)) throw new Error('Expected array')
+        const newTags = parsed.slice(0, 10).map((t) => t.toLowerCase().trim()).filter(Boolean)
+        setMeta((m) => ({ ...m, tagNames: newTags }))
+        toast.success(`Generated ${newTags.length} tags!`)
+      } else {
+        toast.error(data.error ?? 'Tag generation failed')
+      }
+    } catch {
+      toast.error('Failed to parse AI response')
+    } finally {
+      setTagsLoading(false)
+    }
+  }
+
   const getPayload = () => ({
     title,
     slug: slug || autoSlug(title),
     summary,
-    // legacy content field: combine all sections for backward compat / search indexing
     content: sections.map(s => s.content).join('\n'),
     coverImageUrl,
     status: meta.status,
-    scheduledAt: meta.scheduledAt,
     tagNames: meta.tagNames,
     seoTitle: meta.seoTitle,
     seoDescription: meta.seoDescription,
@@ -241,19 +308,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           >
             <option value="DRAFT">Draft</option>
             <option value="PUBLISHED">Published</option>
-            <option value="SCHEDULED">Scheduled</option>
             <option value="ARCHIVED">Archived</option>
           </select>
-          {/* Scheduled date inline */}
-          {meta.status === 'SCHEDULED' && (
-            <input
-              type="datetime-local"
-              value={meta.scheduledAt ?? ''}
-              onChange={(e) => setMeta((m) => ({ ...m, scheduledAt: e.target.value }))}
-              className="px-3 py-1.5 rounded-lg text-xs border outline-none"
-              style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-            />
-          )}
 
           {/* Preview */}
           {initialArticle.id && (
@@ -292,15 +348,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             disabled={saving}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
             style={{
-              background: meta.status === 'PUBLISHED' ? '#1E293B'
-                : meta.status === 'SCHEDULED' ? '#fef3c7'
-                : 'var(--color-violet)',
-              color: meta.status === 'PUBLISHED' ? '#000' : meta.status === 'SCHEDULED' ? '#d97706' : '#fff',
+              background: meta.status === 'PUBLISHED' ? '#1E293B' : 'var(--color-violet)',
+              color: '#fff',
             }}
           >
             {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
             {meta.status === 'PUBLISHED' ? 'Save & Publish'
-              : meta.status === 'SCHEDULED' ? 'Save & Schedule'
               : meta.status === 'ARCHIVED' ? 'Archive'
               : 'Save Draft'}
           </button>
@@ -465,6 +518,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--bg-border)' }}>
               <Globe size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SEO &amp; Social</span>
+              <button
+                type="button"
+                onClick={generateMeta}
+                disabled={metaLoading || !title.trim()}
+                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
+                style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+              >
+                {metaLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                Generate with AI
+              </button>
             </div>
             <div className="p-4 space-y-4">
               {/* SERP Preview */}
@@ -538,68 +601,55 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Navigation</span>
               {meta.subMenuIds.length > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
-                  {meta.subMenuIds.length} selected
+                  {meta.subMenuIds.length} sub-menu{meta.subMenuIds.length !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
-            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Menu select */}
-              <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-muted)' }}>Menu</label>
-                <select
-                  value={meta.navMenuId ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : undefined
-                    setMeta((m) => ({ ...m, navMenuId: val, subMenuIds: [] }))
-                  }}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                >
-                  <option value="">— None —</option>
-                  {menus.map((m) => (
-                    <option key={m.id} value={m.id}>{m.title}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Sub-menus */}
-              <div>
-                <label className="text-xs font-medium mb-1.5 block" style={{ color: 'var(--text-muted)' }}>Sub-menu</label>
-                {!meta.navMenuId ? (
-                  <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>Select a menu first.</p>
-                ) : (() => {
-                  const subs = menus.find((m) => m.id === meta.navMenuId)?.subMenus ?? []
-                  return subs.length === 0 ? (
-                    <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No sub-menus for this menu.</p>
-                  ) : (
-                    <div>
-                      <select
-                        multiple
-                        size={Math.min(subs.length, 6)}
-                        value={meta.subMenuIds.map(String)}
-                        onChange={(e) => {
-                          const selected = Array.from(e.target.selectedOptions, (opt) => Number(opt.value))
-                          setMeta((m) => ({ ...m, subMenuIds: selected }))
-                        }}
-                        className="w-full rounded-xl border text-sm outline-none"
-                        style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                      >
-                        {subs.map((sm) => (
-                          <option
-                            key={sm.id}
-                            value={sm.id}
-                            style={{ padding: '6px 12px' }}
-                          >
-                            {sm.title}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                        Hold {typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl'} to select multiple
-                      </p>
-                    </div>
-                  )
-                })()}
-              </div>
+            <div className="p-4 space-y-4">
+              {menus.filter(m => (m.subMenus?.length ?? 0) > 0).map((menu) => (
+                <div key={menu.id}>
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-widest mb-2"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {menu.title}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {menu.subMenus?.map((sub) => {
+                      const checked = meta.subMenuIds.includes(sub.id)
+                      return (
+                        <label
+                          key={sub.id}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm select-none"
+                          style={{
+                            borderColor: checked ? 'var(--color-violet)' : 'var(--bg-border)',
+                            background: checked ? 'rgba(124,58,237,0.06)' : 'var(--bg-surface)',
+                            color: checked ? 'var(--color-violet)' : 'var(--text-secondary)',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-violet-600 shrink-0"
+                            checked={checked}
+                            onChange={(e) =>
+                              setMeta((m) => ({
+                                ...m,
+                                subMenuIds: e.target.checked
+                                  ? [...m.subMenuIds, sub.id]
+                                  : m.subMenuIds.filter((id) => id !== sub.id),
+                              }))
+                            }
+                          />
+                          <span className="truncate text-xs font-medium">{sub.title}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+              {menus.every(m => (m.subMenus?.length ?? 0) === 0) && (
+                <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No sub-menus configured yet.</p>
+              )}
             </div>
           </div>
 
@@ -612,15 +662,28 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               <Tag size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Tags</span>
               {meta.tagNames.length > 0 && (
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
-                  {meta.tagNames.length}
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
+                  {meta.tagNames.length}/10
                 </span>
               )}
+              <button
+                type="button"
+                onClick={generateTags}
+                disabled={tagsLoading || !title.trim()}
+                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
+                style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+              >
+                {tagsLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                Generate tags
+              </button>
             </div>
             <div className="p-4">
               <TagInput
                 value={meta.tagNames.map((n) => ({ name: n }))}
-                onChange={(tags) => setMeta((m) => ({ ...m, tagNames: tags.map((t) => t.name) }))}
+                onChange={(tags) => {
+                  const names = tags.map((t) => t.name).slice(0, 10)
+                  setMeta((m) => ({ ...m, tagNames: names }))
+                }}
                 suggestions={allTags}
               />
               {meta.tagNames.length > 0 && (

@@ -94,7 +94,6 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
     { value: '',          label: 'All',       count: totalAll },
     { value: 'DRAFT',     label: 'Draft',     count: countMap['DRAFT']     ?? 0 },
     { value: 'PUBLISHED', label: 'Published', count: countMap['PUBLISHED'] ?? 0 },
-    { value: 'SCHEDULED', label: 'Scheduled', count: countMap['SCHEDULED'] ?? 0 },
     { value: 'ARCHIVED',  label: 'Archived',  count: countMap['ARCHIVED']  ?? 0 },
   ]
 
@@ -225,8 +224,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <td className="px-4 py-3">
                     <span className={`badge ${
                       a.status === 'PUBLISHED' ? 'badge-success' :
-                      a.status === 'DRAFT'     ? 'badge-warning' :
-                      a.status === 'SCHEDULED' ? 'badge-info'    : 'badge-default'
+                      a.status === 'DRAFT'     ? 'badge-warning' : 'badge-default'
                     }`}>
                       {a.status}
                     </span>

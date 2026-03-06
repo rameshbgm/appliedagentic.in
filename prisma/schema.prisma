@@ -20,7 +20,6 @@ enum Role {
 
 enum ArticleStatus {
   DRAFT
-  SCHEDULED
   PUBLISHED
   ARCHIVED
 }
@@ -106,7 +105,6 @@ model Article {
   content            String           @db.LongText
   status             ArticleStatus    @default(DRAFT)
   publishedAt        DateTime?
-  scheduledAt        DateTime?
   isFeatured         Boolean          @default(false)
   coverImageId       Int?
   coverImage         MediaAsset?      @relation("ArticleCoverImage", fields: [coverImageId], references: [id])

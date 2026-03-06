@@ -163,13 +163,13 @@ export default async function ArticleDetailPage({ params }: Props) {
 
         {/* ─── Article Hero ──────────────────────────────────────── */}
         <div
-          className="w-full px-[3%] pt-6 sm:pt-10 pb-8 sm:pb-12"
+          className="w-full px-[3%] pt-3 sm:pt-6 pb-8 sm:pb-12"
           style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
         >
           <div>
 
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm mb-8 flex-wrap" style={{ color: 'var(--text-muted)' }}>
+            <nav className="flex items-center gap-2 text-sm mb-5 flex-wrap" style={{ color: 'var(--text-muted)' }}>
               <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
               <span className="opacity-40">&rsaquo;</span>
               <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
@@ -327,7 +327,9 @@ export default async function ArticleDetailPage({ params }: Props) {
                   ))}
                 </div>
               ) : (
-                article.content && <ArticleContent content={article.content} />
+                article.content && (
+                  <ArticleContent content={article.content} />
+                )
               )}
 
               {/* Audio player */}
