@@ -26,16 +26,17 @@ interface Props {
   initial?: SubMenuData
   menus: Menu[]
   nextOrder?: number
+  defaultMenuId?: number
 }
 
-export default function SubMenuForm({ initial, menus, nextOrder }: Props) {
+export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }: Props) {
   const router = useRouter()
   const isEdit = !!initial?.id
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<SubMenuData>({
     title: initial?.title ?? '',
     slug: initial?.slug ?? '',
-    menuId: initial?.menuId ?? (menus[0]?.id ?? 0),
+    menuId: initial?.menuId ?? defaultMenuId ?? (menus[0]?.id ?? 0),
     description: initial?.description ?? '',
     order: initial?.order ?? nextOrder ?? 1,
     isVisible: initial?.isVisible ?? true,

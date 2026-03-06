@@ -2,7 +2,7 @@
 // app/(admin)/admin/submenus/SubMenusReorderList.tsx
 import Link from 'next/link'
 import { useState, useCallback, useEffect } from 'react'
-import { Pencil, GripVertical } from 'lucide-react'
+import { Pencil, GripVertical, Eye, EyeOff } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -37,13 +37,16 @@ function SortableSubMenuItem({
   sm,
   isDeleting,
   onDeleted,
+  onVisibilityChanged,
 }: {
   sm: SubMenuData
   isDeleting: boolean
   onDeleted: () => void
+  onVisibilityChanged: (id: number, isVisible: boolean) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: sm.id })
+  const [togglingVisibility, setTogglingVisibility] = useState(false)
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -56,6 +59,28 @@ function SortableSubMenuItem({
     marginBottom: isDeleting ? '0px' : undefined,
     zIndex: isDragging ? 50 : undefined,
     pointerEvents: isDeleting ? 'none' : undefined,
+  }
+
+  const toggleVisibility = async () => {
+    setTogglingVisibility(true)
+    try {
+      const res = await fetch(`/api/submenus/${sm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVisible: !sm.isVisible }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onVisibilityChanged(sm.id, !sm.isVisible)
+        toast.success(sm.isVisible ? 'Sub-menu hidden' : 'Sub-menu visible')
+      } else {
+        toast.error(data.error ?? 'Failed to update visibility')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setTogglingVisibility(false)
+    }
   }
 
   return (
@@ -93,21 +118,36 @@ function SortableSubMenuItem({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link
-          href={`/admin/submenus/${sm.id}/edit`}
-          className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
-          title="Edit"
+      <div className="flex items-center gap-2">
+        {/* Visibility toggle — always visible */}
+        <button
+          type="button"
+          onClick={toggleVisibility}
+          disabled={togglingVisibility}
+          title={sm.isVisible ? 'Hide sub-menu' : 'Show sub-menu'}
+          className="p-2 rounded-xl transition-colors hover:bg-gray-100 disabled:opacity-40"
+          style={{ color: sm.isVisible ? 'var(--green)' : 'var(--text-muted)' }}
         >
-          <Pencil size={16} className="text-gray-400" />
-        </Link>
-        <Link
-          href={`/admin/submenus/${sm.id}/articles`}
-          className="px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200 text-gray-600"
-        >
-          Articles
-        </Link>
-        <ConfirmDeleteSubMenu id={sm.id} name={sm.title} onDeleted={onDeleted} />
+          {sm.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+        </button>
+
+        {/* Edit, Articles, Delete — shown on hover */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Link
+            href={`/admin/submenus/${sm.id}/edit`}
+            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            title="Edit"
+          >
+            <Pencil size={16} className="text-gray-400" />
+          </Link>
+          <Link
+            href={`/admin/submenus/${sm.id}/articles`}
+            className="px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-gray-100 transition-colors border border-gray-200 text-gray-600"
+          >
+            Articles
+          </Link>
+          <ConfirmDeleteSubMenu id={sm.id} name={sm.title} onDeleted={onDeleted} />
+        </div>
       </div>
     </div>
   )
@@ -127,6 +167,10 @@ export default function SubMenusReorderList({ initialSubMenus }: { initialSubMen
       setSubMenus((prev) => prev.filter((s) => s.id !== id))
       setDeletingIds((prev) => { const n = new Set(prev); n.delete(id); return n })
     }, 400)
+  }, [])
+
+  const handleVisibilityChanged = useCallback((id: number, isVisible: boolean) => {
+    setSubMenus((prev) => prev.map((s) => s.id === id ? { ...s, isVisible } : s))
   }, [])
 
   const sensors = useSensors(
@@ -191,6 +235,7 @@ export default function SubMenusReorderList({ initialSubMenus }: { initialSubMen
               sm={sm}
               isDeleting={deletingIds.has(sm.id)}
               onDeleted={() => handleDeleteStart(sm.id)}
+              onVisibilityChanged={handleVisibilityChanged}
             />
           ))}
         </SortableContext>

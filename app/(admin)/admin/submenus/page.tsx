@@ -45,7 +45,7 @@ export default async function SubMenusPage({ searchParams }: Props) {
         <Link
           href="/admin/submenus/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: '#1E293B' }}
+          style={{ background: 'var(--color-violet)' }}
         >
           <Plus size={16} /> New Sub-Menu
         </Link>
@@ -63,7 +63,7 @@ export default async function SubMenusPage({ searchParams }: Props) {
           <Link
             href="/admin/submenus/new"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: '#1E293B' }}
+            style={{ background: 'var(--color-violet)' }}
           >
             <Plus size={14} /> Create Sub-Menu
           </Link>
