@@ -1,6 +1,6 @@
 'use client'
-// app/(admin)/admin/submenus/[id]/articles/ArticleLinker.tsx
-// Links / unlinks articles to a sub-menu, with multi-select support
+// app/(admin)/admin/menus/[id]/articles/MenuArticleLinker.tsx
+// Links / unlinks articles to a top-level nav menu, with multi-select support
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 interface LinkedArticle {
   id: number
-  subMenuId: number
+  menuId: number
   articleId: number
   orderIndex: number
   article: {
@@ -31,14 +31,13 @@ interface SearchResult {
 }
 
 interface Props {
-  subMenuId: number
-  subMenuTitle: string
+  menuId: number
   menuTitle: string
   initialArticles: LinkedArticle[]
   compact?: boolean
 }
 
-export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, initialArticles, compact }: Props) {
+export default function MenuArticleLinker({ menuId, menuTitle, initialArticles, compact }: Props) {
   const router = useRouter()
   const [articles, setArticles] = useState<LinkedArticle[]>(initialArticles)
   const [searchQuery, setSearchQuery] = useState('')
@@ -74,14 +73,14 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
   }, [searchQuery, articles]) // eslint-disable-line
 
   const refreshList = useCallback(async () => {
-    const res = await fetch(`/api/submenus/${subMenuId}/articles`)
+    const res = await fetch(`/api/menus/${menuId}/articles`)
     const data = await res.json()
     if (data.success) setArticles(data.data)
-  }, [subMenuId])
+  }, [menuId])
 
   // ── Single-link ──────────────────────────────────────────────────────────────
   const linkArticle = async (articleId: number) => {
-    const res = await fetch(`/api/submenus/${subMenuId}/articles`, {
+    const res = await fetch(`/api/menus/${menuId}/articles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ articleId }),
@@ -113,7 +112,7 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
     try {
       const ids = [...selectedIds]
       for (const articleId of ids) {
-        await fetch(`/api/submenus/${subMenuId}/articles`, {
+        await fetch(`/api/menus/${menuId}/articles`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ articleId }),
@@ -134,7 +133,7 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
 
   // ── Unlink ───────────────────────────────────────────────────────────────────
   const unlinkArticle = async (articleId: number) => {
-    const res = await fetch(`/api/submenus/${subMenuId}/articles?articleId=${articleId}`, {
+    const res = await fetch(`/api/menus/${menuId}/articles?articleId=${articleId}`, {
       method: 'DELETE',
     })
     const data = await res.json()
@@ -155,31 +154,31 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
       {!compact ? (
         <div>
           <Link
-            href="/admin/submenus"
+            href="/admin/menus"
             className="text-sm hover:underline mb-2 inline-block"
             style={{ color: 'var(--text-muted)' }}
           >
-            ← Back to Sub-Menus
+            ← Back to Menus
           </Link>
           <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
-            Articles in &ldquo;{subMenuTitle}&rdquo;
+            Articles in &ldquo;{menuTitle}&rdquo;
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Menu: {menuTitle} · {articles.length} article{articles.length !== 1 ? 's' : ''} linked
+            {articles.length} article{articles.length !== 1 ? 's' : ''} linked directly to this menu
           </p>
         </div>
       ) : (
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>
-              Linked Articles
+              Direct Articles
             </h2>
             <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {articles.length} article{articles.length !== 1 ? 's' : ''} linked to this sub-menu
+              {articles.length} article{articles.length !== 1 ? 's' : ''} linked directly to this menu
             </p>
           </div>
           <Link
-            href={`/admin/submenus/${subMenuId}/articles`}
+            href={`/admin/menus/${menuId}/articles`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border hover:bg-gray-100 transition-colors"
             style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
           >
@@ -230,7 +229,7 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
 
         {unlinkedResults.length > 0 && (
           <div className="rounded-xl overflow-hidden border" style={{ borderColor: 'var(--bg-border)' }}>
-            {/* Select all toggle */}
+            {/* Multi-select all toggle */}
             <button
               onClick={() =>
                 setSelectedIds(
@@ -333,11 +332,11 @@ export default function ArticleLinker({ subMenuId, subMenuTitle, menuTitle, init
             className="text-center py-12 rounded-2xl border-2 border-dashed"
             style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
           >
-            <p className="text-sm">No articles linked yet. Use the search above to add articles.</p>
+            <p className="text-sm">No articles linked yet.</p>
+            <p className="text-xs mt-1">Use the search above to link articles to this menu.</p>
           </div>
         )}
       </div>
     </div>
   )
 }
-

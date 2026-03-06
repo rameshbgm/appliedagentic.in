@@ -80,6 +80,7 @@ export default function ModuleForm({ initialData }: Props) {
         <div>
           <label className={labelClass} style={labelStyle}>Module Name *</label>
           <input
+            suppressHydrationWarning
             value={form.name}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="e.g. AI Agents & Orchestration"
@@ -91,6 +92,7 @@ export default function ModuleForm({ initialData }: Props) {
         <div>
           <label className={labelClass} style={labelStyle}>Slug</label>
           <input
+            suppressHydrationWarning
             value={form.slug}
             onChange={(e) => set('slug', e.target.value)}
             placeholder="ai-agents-orchestration"
@@ -103,6 +105,7 @@ export default function ModuleForm({ initialData }: Props) {
       <div>
         <label className={labelClass} style={labelStyle}>Description</label>
         <textarea
+          suppressHydrationWarning
           value={form.description}
           onChange={(e) => set('description', e.target.value)}
           placeholder="Brief description of this module..."

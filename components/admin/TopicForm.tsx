@@ -75,6 +75,7 @@ export default function TopicForm({ initialData, modules }: Props) {
         <div>
           <label className={labelClass} style={labelStyle}>Topic Name *</label>
           <input
+            suppressHydrationWarning
             value={form.name}
             onChange={(e) => {
               set('name', e.target.value)
@@ -89,6 +90,7 @@ export default function TopicForm({ initialData, modules }: Props) {
         <div>
           <label className={labelClass} style={labelStyle}>Slug</label>
           <input
+            suppressHydrationWarning
             value={form.slug}
             onChange={(e) => set('slug', e.target.value)}
             placeholder="langgraph-deep-dive"
@@ -101,6 +103,7 @@ export default function TopicForm({ initialData, modules }: Props) {
       <div>
         <label className={labelClass} style={labelStyle}>Module *</label>
         <select
+          suppressHydrationWarning
           value={form.moduleId}
           onChange={(e) => set('moduleId', e.target.value ? Number(e.target.value) : '')}
           className={inputClass}
@@ -117,6 +120,7 @@ export default function TopicForm({ initialData, modules }: Props) {
       <div>
         <label className={labelClass} style={labelStyle}>Description</label>
         <textarea
+          suppressHydrationWarning
           value={form.description}
           onChange={(e) => set('description', e.target.value)}
           placeholder="What will readers learn in this topic?"
@@ -129,6 +133,7 @@ export default function TopicForm({ initialData, modules }: Props) {
       <div>
         <label className={labelClass} style={labelStyle}>Order</label>
         <input
+          suppressHydrationWarning
           type="number"
           min={0}
           value={form.order}

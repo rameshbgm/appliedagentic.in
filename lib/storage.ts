@@ -4,10 +4,22 @@ import fs from 'fs/promises'
 import path from 'path'
 import { nanoid } from 'nanoid'
 
-// Uploads are stored in ./public/uploads/ relative to cwd (app root).
-// Next.js standalone server serves ./public/ at the root URL, so files at
-// ./public/uploads/images/foo.jpg are reachable at /uploads/images/foo.jpg.
-// After each build, copy: cp -r public .next/standalone/public
+// ─── Upload directory ────────────────────────────────────────────────────────
+// Defaults to ./public/uploads (relative to cwd) – served by Next.js at /uploads/...
+//
+// Hostinger deployment:
+//   The app lives in  ~/domains/appliedagentic.in/nodejs/
+//   Web root is       ~/domains/appliedagentic.in/public_html/
+//   Apache/LiteSpeed serves public_html directly (before Passenger); uploads
+//   stored there are served as fast static files and survive re-deployments.
+//
+//   Set in .env:
+//     UPLOAD_DIR=/home/u915919430/domains/appliedagentic.in/public_html/uploads
+//     UPLOAD_URL_PREFIX=          # leave empty — public_html IS the web root
+//
+// The URL stored in the DB is always  /uploads/{subDir}/{filename}
+// which maps to  {UPLOAD_DIR}/{subDir}/{filename}  on disk.
+// ─────────────────────────────────────────────────────────────────────────────
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './public/uploads'
 const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? '10')
 
@@ -81,9 +93,12 @@ export async function saveFile(opts: SaveFileOptions): Promise<SaveFileResult> {
 
 export async function deleteFile(url: string): Promise<void> {
   try {
-    const filePath = path.join(process.cwd(), 'public', url)
+    // url is always /uploads/{subDir}/{filename}
+    // Strip the leading /uploads/ prefix to get the relative path within UPLOAD_DIR
+    const relative = url.replace(/^\/uploads\//, '')
+    const filePath = path.resolve(process.cwd(), UPLOAD_DIR, relative)
     await fs.unlink(filePath)
   } catch {
-    // File may not exist; fail silently
+    // File may not exist or path may differ; fail silently
   }
 }

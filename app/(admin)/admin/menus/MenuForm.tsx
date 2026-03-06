@@ -88,6 +88,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           Title <span className="text-red-400">*</span>
         </label>
         <input
+          suppressHydrationWarning
           type="text"
           value={form.title}
           onChange={(e) => handleTitleChange(e.target.value)}
@@ -103,6 +104,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           Slug
         </label>
         <input
+          suppressHydrationWarning
           type="text"
           value={form.slug}
           onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
@@ -120,6 +122,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           Description
         </label>
         <textarea
+          suppressHydrationWarning
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           className="input w-full"
@@ -154,6 +157,7 @@ export default function MenuForm({ initial, nextOrder }: Props) {
           Display Order
         </label>
         <input
+          suppressHydrationWarning
           type="number"
           value={form.order}
           placeholder="e.g. 1"
