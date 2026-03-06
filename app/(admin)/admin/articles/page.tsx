@@ -7,6 +7,8 @@ import { Plus, Pencil, Eye, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft,
 import type { ArticleStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import ArticleActions from './ArticleActions'
+import ArticleFilters from './ArticleFilters'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = { title: 'Articles' }
 export const revalidate = 0
@@ -17,17 +19,21 @@ interface SearchParams {
   page?: string
   sortBy?: string
   sortDir?: string
+  menuId?: string
+  subMenuId?: string
 }
 
 // Build a URL preserving current params, overriding specific keys
 function buildHref(base: string, current: SearchParams, overrides: Partial<SearchParams>): string {
   const merged = { ...current, ...overrides }
   const params = new URLSearchParams()
-  if (merged.status)  params.set('status',  merged.status)
-  if (merged.search)  params.set('search',  merged.search)
+  if (merged.status)   params.set('status',    merged.status)
+  if (merged.search)   params.set('search',    merged.search)
   if (merged.page && merged.page !== '1') params.set('page', merged.page)
-  if (merged.sortBy)  params.set('sortBy',  merged.sortBy)
-  if (merged.sortDir) params.set('sortDir', merged.sortDir)
+  if (merged.sortBy)   params.set('sortBy',    merged.sortBy)
+  if (merged.sortDir)  params.set('sortDir',   merged.sortDir)
+  if (merged.menuId)   params.set('menuId',    merged.menuId)
+  if (merged.subMenuId) params.set('subMenuId', merged.subMenuId)
   const qs = params.toString()
   return qs ? `${base}?${qs}` : base
 }
@@ -56,8 +62,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
   const search   = sp.search
   const sortBy   = sp.sortBy  === 'title' ? 'title'     : 'updatedAt'
   const sortDir  = sp.sortDir === 'asc'   ? ('asc' as const)  : ('desc' as const)
+  const menuId    = sp.menuId    ? parseInt(sp.menuId)    : undefined
+  const subMenuId = sp.subMenuId ? parseInt(sp.subMenuId) : undefined
 
-  const where = {
+  const where: Record<string, unknown> = {
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(search ? {
       OR: [
@@ -65,6 +73,12 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
         { summary: { contains: search } },
       ],
     } : {}),
+    // Filter by submenu (which implicitly is within a menu)
+    ...(subMenuId
+      ? { subMenuArticles: { some: { subMenuId } } }
+      : menuId
+      ? { subMenuArticles: { some: { subMenu: { menuId } } } }
+      : {}),
   }
 
   const orderBy = sortBy === 'title'
@@ -80,6 +94,9 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
       include: {
         topicArticles: {
           include: { topic: { include: { module: { select: { name: true, color: true } } } } },
+        },
+        subMenuArticles: {
+          include: { subMenu: { select: { title: true, menu: { select: { title: true } } } } },
         },
       },
     }),
@@ -127,6 +144,11 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
           New Article
         </Link>
       </div>
+
+      {/* Search + filter row */}
+      <Suspense>
+        <ArticleFilters />
+      </Suspense>
 
       {/* Status filter tabs */}
       <div className="flex flex-wrap gap-2">
@@ -177,6 +199,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 </Link>
               </th>
               <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Module / Topic</th>
+              <th className="text-left px-4 py-3 font-medium hidden xl:table-cell">Navigation</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
               <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Views</th>
               {/* Sortable: Updated */}
@@ -220,6 +243,25 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                         {firstTopic.module.name}
                       </span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 hidden xl:table-cell">
+                    <div className="flex flex-col gap-0.5">
+                      {(a.subMenuArticles as any[]).slice(0, 3).map((sma: any) => (
+                        <span
+                          key={sma.subMenu.title}
+                          className="text-[11px] truncate max-w-[160px]"
+                          style={{ color: 'var(--text-muted)' }}
+                          title={`${sma.subMenu.menu.title} › ${sma.subMenu.title}`}
+                        >
+                          <span style={{ color: 'var(--text-secondary)' }}>{sma.subMenu.menu.title}</span>
+                          <span className="mx-0.5 opacity-40">&rsaquo;</span>
+                          {sma.subMenu.title}
+                        </span>
+                      ))}
+                      {(a.subMenuArticles as any[]).length > 3 && (
+                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>+{(a.subMenuArticles as any[]).length - 3} more</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`badge ${

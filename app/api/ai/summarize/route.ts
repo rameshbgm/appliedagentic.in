@@ -1,9 +1,8 @@
 // app/api/ai/summarize/route.ts
 // Public (no auth) — called from ArticleReaderTools to summarize article content
 import { NextRequest } from 'next/server'
-import { getOpenAIClient, getAIConfig } from '@/lib/openai'
 import { apiSuccess, apiError } from '@/lib/utils'
-import { getArticleSummaryPrompt, getSectionSummaryPrompt } from '@/content/prompts/article-summary'
+import { runSummarizer } from '@/agents/summarizer/agent'
 
 // Strip HTML tags and collapse whitespace to plain text
 function htmlToText(html: string): string {
@@ -34,40 +33,18 @@ export async function POST(req: NextRequest) {
       return apiError('Article content is too short to summarize', 422)
     }
 
-    // Defaults: section → 7 bullets, article → 12 bullets
-    const defaultPoints = type === 'section' ? 7 : 12
-    const points = Math.min(Math.max(Number(maxPoints) || defaultPoints, 3), 20)
-    const plainText = htmlToText(content).slice(0, 12000) // keep within context window
+    const plainText = htmlToText(content).slice(0, 12000)
 
-    const config = await getAIConfig()
-    const openai = getOpenAIClient()
-
-    const systemPrompt = type === 'section'
-      ? getSectionSummaryPrompt(points)
-      : getArticleSummaryPrompt(points)
-
-    const completion = await openai.chat.completions.create({
-      model: config.textModel,
-      temperature: 1,
-      // Reasoning models (o-series) consume internal reasoning tokens before
-      // visible output — budget must cover reasoning + actual response
-      max_completion_tokens: Math.max(config.maxTokens, points * 200),
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: type === 'section'
-            ? `Section content:\n\n${plainText}`
-            : `Article content:\n\n${plainText}` },
-      ],
+    const result = await runSummarizer({
+      prompt: 'Summarize the following content.',
+      context: plainText,
+      scope: type === 'section' ? 'section' : 'article',
+      maxTokens: maxPoints ? maxPoints * 50 : undefined,
     })
 
-    const raw = completion.choices[0]?.message?.content ?? ''
-
-    // Parse "• line" format into a string array, filter empty
-    const bullets = raw
-      .split('\n')
-      .map((l) => l.replace(/^[•\-\*]\s*/, '').trim())
-      .filter(Boolean)
-      .slice(0, points)
+    // Apply optional maxPoints cap
+    const points = Math.min(Math.max(Number(maxPoints) || (type === 'section' ? 3 : 5), 2), 20)
+    const bullets = result.bullets.slice(0, points)
 
     return apiSuccess({ bullets })
   } catch (err: unknown) {

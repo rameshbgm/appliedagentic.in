@@ -1,10 +1,11 @@
 // app/api/ai/generate-audio/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getOpenAIClient, getAIConfig } from '@/lib/openai'
+import { getOpenAIClient } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
 import { saveFile } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { runAudioNarrator, ttsConfig } from '@/agents/audio-narrator/agent'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -12,31 +13,56 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { text, voice, speed, model: reqModel, articleId } = body
+    const {
+      text,
+      voice,
+      speed,
+      model: reqModel,
+      articleId,
+      preprocessMarkdown = false, // if true, run through audio-narrator agent first
+    } = body
 
     if (!text || text.trim().length === 0) return apiError('Text is required', 422)
-    if (text.length > 4096) return apiError('Text exceeds 4096 character limit for TTS', 422)
 
-    const config = await getAIConfig()
     const openai = getOpenAIClient()
-
-    const model = reqModel || config.audioModel
-    const ttsVoice = voice || config.ttsVoice
+    const ttsModel = reqModel || ttsConfig.model
+    const ttsVoice = (voice || ttsConfig.voice) as typeof ttsConfig.voice
     const ttsSpeed = speed ?? 1.0
+    const userId = parseInt((session.user as { id: string }).id)
 
-    const mp3Response = await openai.audio.speech.create({
-      model,
-      voice: ttsVoice,
-      input: text,
-      speed: ttsSpeed,
-    })
+    // ── Prepare text for TTS ──────────────────────────────────────────────
+    let chunks: string[]
 
-    const arrayBuffer = await mp3Response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const { url } = await saveFile({ buffer, mimeType: 'audio/mpeg', subDir: 'audio' })
+    if (preprocessMarkdown) {
+      // Use the LangChain audio-narrator agent to:
+      // 1. Clean Markdown → TTS-ready prose
+      // 2. Split into safe ≤ 3800-char chunks at sentence boundaries
+      const narratorResult = await runAudioNarrator({ prompt: text })
+      chunks = narratorResult.chunks
+    } else {
+      // Legacy path: single text, enforce 4096-char limit
+      if (text.length > 4096) return apiError('Text exceeds 4096 character limit. Enable preprocessMarkdown to handle longer articles.', 422)
+      chunks = [text]
+    }
+
+    // ── Synthesise each chunk via OpenAI TTS ─────────────────────────────
+    const audioBuffers: Buffer[] = []
+    for (const chunk of chunks) {
+      const mp3Response = await openai.audio.speech.create({
+        model: ttsModel,
+        voice: ttsVoice,
+        input: chunk,
+        speed: ttsSpeed,
+      })
+      const arrayBuffer = await mp3Response.arrayBuffer()
+      audioBuffers.push(Buffer.from(arrayBuffer))
+    }
+
+    // Concatenate all buffers into one MP3
+    const combinedBuffer = Buffer.concat(audioBuffers)
+    const { url } = await saveFile({ buffer: combinedBuffer, mimeType: 'audio/mpeg', subDir: 'audio' })
 
     // Save to MediaAsset
-    const userId = parseInt((session.user as { id: string }).id)
     const asset = await prisma.mediaAsset.create({
       data: {
         filename: url.split('/').pop() || 'audio.mp3',
@@ -44,7 +70,7 @@ export async function POST(req: NextRequest) {
         type: 'AUDIO',
         mimeType: 'audio/mpeg',
         aiPrompt: text.slice(0, 200),
-        sizeBytes: buffer.length,
+        sizeBytes: combinedBuffer.length,
         createdByUserId: userId,
       },
     })
@@ -63,13 +89,13 @@ export async function POST(req: NextRequest) {
         userId,
         articleId: articleId ? parseInt(articleId) : null,
         type: 'AUDIO_GENERATION',
-        model,
+        model: ttsModel,
         promptSnippet: text.slice(0, 200),
         status: 'success',
       },
     }).catch(() => {})
 
-    return apiSuccess({ url, mediaAssetId: asset.id })
+    return apiSuccess({ url, mediaAssetId: asset.id, chunks: chunks.length })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI audio generation failed'
     return apiError(`[POST /api/ai/generate-audio] ${message}`, 500, err)

@@ -71,6 +71,16 @@ export default async function ArticleDetailPage({ params }: Props) {
         coverImage: { select: { url: true } },
         articleTags: { include: { tag: { select: { id: true, name: true } } } },
         sections: { orderBy: { order: 'asc' } },
+        subMenuArticles: {
+          include: {
+            subMenu: {
+              select: {
+                id: true, title: true, slug: true,
+                menu: { select: { id: true, title: true, slug: true } },
+              },
+            },
+          },
+        },
         topicArticles: {
           include: {
             topic: {
@@ -117,6 +127,16 @@ export default async function ArticleDetailPage({ params }: Props) {
   const articleModule = article.topicArticles[0]?.topic?.module ?? null
   const tags = article.articleTags.map((t) => t.tag)
   const topics = article.topicArticles.map((ta) => ta.topic)
+
+  // Navigation assignments: deduplicated list of { mainMenu, subMenu } pairs
+  const navAssignments = (article as any).subMenuArticles?.map((sma: any) => ({
+    menuId: sma.subMenu.menu.id,
+    menuTitle: sma.subMenu.menu.title,
+    menuSlug: sma.subMenu.menu.slug,
+    subMenuId: sma.subMenu.id,
+    subMenuTitle: sma.subMenu.title,
+    subMenuSlug: sma.subMenu.slug,
+  })) ?? []
 
   // Collect related articles from same topics (exclude self)
   const relatedMap = new Map<number, (typeof article.topicArticles[0]['topic']['topicArticles'][0]['article'])>()
@@ -208,7 +228,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
             {/* Tag pills */}
             {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-4">
                 {tags.map((tag) => (
                   <Link
                     key={tag.id}
@@ -217,6 +237,24 @@ export default async function ArticleDetailPage({ params }: Props) {
                     style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
                   >
                     {tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Navigation assignments: Main Menu › Sub Menu pills */}
+            {navAssignments.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-5">
+                {navAssignments.map((nav: { menuId: number; menuTitle: string; menuSlug: string; subMenuId: number; subMenuTitle: string; subMenuSlug: string }) => (
+                  <Link
+                    key={`${nav.menuId}-${nav.subMenuId}`}
+                    href={`/${nav.menuSlug}/${nav.subMenuSlug}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors hover:border-(--green)"
+                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                  >
+                    <span style={{ color: 'var(--text-secondary)' }}>{nav.menuTitle}</span>
+                    <span className="opacity-40">›</span>
+                    <span>{nav.subMenuTitle}</span>
                   </Link>
                 ))}
               </div>

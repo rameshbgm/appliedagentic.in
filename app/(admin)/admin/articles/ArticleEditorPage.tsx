@@ -601,11 +601,34 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Navigation</span>
               {meta.subMenuIds.length > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
-                  {meta.subMenuIds.length} sub-menu{meta.subMenuIds.length !== 1 ? 's' : ''}
+                  {meta.subMenuIds.length} assigned
                 </span>
               )}
             </div>
             <div className="p-4 space-y-4">
+
+              {/* Selected assignments pills — shows "Main Menu › Sub Menu" for each selected */}
+              {meta.subMenuIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {menus.flatMap((menu) =>
+                    (menu.subMenus ?? [])
+                      .filter((sub) => meta.subMenuIds.includes(sub.id))
+                      .map((sub) => (
+                        <span
+                          key={sub.id}
+                          className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium"
+                          style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                        >
+                          <span style={{ opacity: 0.7 }}>{menu.title}</span>
+                          <span style={{ opacity: 0.4 }}>›</span>
+                          <span>{sub.title}</span>
+                        </span>
+                      ))
+                  )}
+                </div>
+              )}
+
+              {/* Checkbox grid grouped by main menu */}
               {menus.filter(m => (m.subMenus?.length ?? 0) > 0).map((menu) => (
                 <div key={menu.id}>
                   <p

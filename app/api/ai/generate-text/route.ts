@@ -1,31 +1,15 @@
 // app/api/ai/generate-text/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getOpenAIClient, getAIConfig } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
 import { apiSuccess, apiError } from '@/lib/utils'
-import { z } from 'zod'
-
-const SYSTEM_PROMPTS: Record<string, string> = {
-  professional: 'You are an expert AI writer creating professional, authoritative content for the Applied Agentic AI knowledge platform. Write clearly and precisely.',
-  conversational: 'You are a friendly AI writer creating engaging, conversational content that connects with readers personally. Use accessible language and relatable examples.',
-  technical: 'You are a senior AI/ML engineer writing deeply technical content for practitioners. Include precise terminology, code examples where relevant, and implementation details.',
-  inspirational: 'You are a visionary AI thought leader writing inspirational content that motivates readers to embrace agentic AI. Use powerful language and compelling narratives.',
-}
+import { runContentWriter } from '@/agents/content-writer/agent'
+import { runSeoOptimizer }  from '@/agents/seo-optimizer/agent'
 
 const LENGTH_TOKENS: Record<string, number> = {
-  short: 150,
-  medium: 400,
-  long: 800,
-}
-
-const MODE_INSTRUCTIONS: Record<string, string> = {
-  generate: 'Generate new content based on the prompt.',
-  expand: 'Expand and enrich the provided text with more detail, examples, and depth.',
-  summarize: 'Create a concise, accurate summary of the provided text.',
-  rewrite: 'Rewrite the provided text to improve clarity, flow, and impact.',
-  outline: 'Create a detailed outline with headings and subpoints for the provided topic.',
-  improve: 'Improve the grammar, clarity, and readability of the provided text.',
+  short: 600,
+  medium: 1200,
+  long: 2500,
 }
 
 export async function POST(req: NextRequest) {
@@ -39,10 +23,7 @@ export async function POST(req: NextRequest) {
       mode = 'generate',
       tone = 'professional',
       length = 'medium',
-      format,
       context,
-      model: reqModel,
-      temperature: reqTemp,
       maxTokens: reqMaxTokens,
       systemPrompt: customSystemPrompt,
       articleId,
@@ -50,52 +31,53 @@ export async function POST(req: NextRequest) {
 
     if (!prompt) return apiError('Prompt is required', 422)
 
-    const config = await getAIConfig()
-    const openai = getOpenAIClient()
+    const userId = parseInt((session.user as { id: string }).id)
 
-    const model = reqModel || config.textModel
-    const temperature = reqTemp ?? config.temperature
-    const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || config.maxTokens
+    // ── SEO mode: detected by a custom systemPrompt mentioning "SEO expert" ──
+    const isSeoMode = typeof customSystemPrompt === 'string' &&
+      customSystemPrompt.toLowerCase().includes('seo expert')
 
-    const markdownInstruction = format === 'markdown'
-      ? '\n\nFormat your response as well-structured Markdown. Use headings (## for sections, ### for subsections), bullet lists, bold/italic emphasis, and fenced code blocks (```language) where appropriate. Do not include any HTML tags.'
-      : ''
+    if (isSeoMode) {
+      const result = await runSeoOptimizer({ prompt, context })
+      await prisma.aIUsageLog.create({
+        data: {
+          userId,
+          articleId: articleId || null,
+          type: 'TEXT_GENERATION',
+          model: result.model,
+          inputTokens:  result.usage?.inputTokens,
+          outputTokens: result.usage?.outputTokens,
+          promptSnippet: prompt.slice(0, 200),
+          status: 'success',
+        },
+      }).catch(() => {})
+      // Return as raw text so the editor can JSON.parse it
+      return apiSuccess({ text: result.text })
+    }
 
-    const systemPrompt = customSystemPrompt ||
-      `${SYSTEM_PROMPTS[tone] || SYSTEM_PROMPTS.professional}\n\nInstruction: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.generate}${markdownInstruction}`
-
-    const userMessage = context
-      ? `Context:\n${context}\n\n---\n\n${prompt}`
-      : prompt
-
-    const completion = await openai.chat.completions.create({
-      model,
-      temperature,
-      max_completion_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
+    // ── Content generation mode (default) — uses LangChain content-writer agent ──
+    const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200
+    const result = await runContentWriter({
+      prompt,
+      context,
+      tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
+      maxTokens,
     })
 
-    const text = completion.choices[0]?.message?.content || ''
-
-    // Log AI usage
-    const userId = parseInt((session.user as { id: string }).id)
     await prisma.aIUsageLog.create({
       data: {
         userId,
         articleId: articleId || null,
         type: 'TEXT_GENERATION',
-        model,
-        inputTokens: completion.usage?.prompt_tokens,
-        outputTokens: completion.usage?.completion_tokens,
+        model: result.model,
+        inputTokens:  result.usage?.inputTokens,
+        outputTokens: result.usage?.outputTokens,
         promptSnippet: prompt.slice(0, 200),
         status: 'success',
       },
-    }).catch(() => {}) // Non-blocking
+    }).catch(() => {})
 
-    return apiSuccess({ text })
+    return apiSuccess({ text: result.text })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI text generation failed'
     return apiError(`[POST /api/ai/generate-text] ${message}`, 500, err)

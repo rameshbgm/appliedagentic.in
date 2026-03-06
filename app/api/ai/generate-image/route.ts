@@ -5,6 +5,7 @@ import { getOpenAIClient, getAIConfig } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
 import { saveFile } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { runImagePrompter } from '@/agents/image-prompter/agent'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -12,7 +13,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { prompt, size, quality, style, model: reqModel } = body
+    const {
+      prompt,
+      size,
+      quality,
+      style,
+      model: reqModel,
+      enhancePrompt = true, // set to false to skip LangChain image-prompter step
+    } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
 
@@ -23,9 +31,26 @@ export async function POST(req: NextRequest) {
     const imageSize = size || config.imageSize
     const imageQuality = quality || config.imageQuality
 
+    // ── Step 1: Enhance the prompt via the image-prompter LangChain agent ──
+    let finalPrompt = prompt
+    if (enhancePrompt) {
+      try {
+        const promptResult = await runImagePrompter({
+          prompt,
+          target: model === 'dall-e-3' ? 'dalle3' : 'imagen',
+          aspectRatio: imageSize === '1792x1024' ? '16:9' : imageSize === '1024x1024' ? '1:1' : '1:1',
+        })
+        finalPrompt = promptResult.imagePrompt
+      } catch {
+        // If prompt enhancement fails, fall back to original prompt
+        finalPrompt = prompt
+      }
+    }
+
+    // ── Step 2: Generate the image via DALL-E ──
     const response = await openai.images.generate({
       model,
-      prompt,
+      prompt: finalPrompt,
       size: imageSize as '1024x1024' | '1792x1024' | '1024x1792',
       quality: imageQuality as 'standard' | 'hd',
       style: style || 'vivid',
@@ -51,7 +76,7 @@ export async function POST(req: NextRequest) {
         url,
         type: 'IMAGE',
         mimeType: 'image/png',
-        aiPrompt: prompt,
+        aiPrompt: finalPrompt,
         createdByUserId: userId,
       },
     })
@@ -62,12 +87,18 @@ export async function POST(req: NextRequest) {
         userId,
         type: 'IMAGE_GENERATION',
         model,
-        promptSnippet: prompt.slice(0, 200),
+        promptSnippet: finalPrompt.slice(0, 200),
         status: 'success',
       },
     }).catch(() => {})
 
-    return apiSuccess({ url, revisedPrompt, mediaAssetId: asset.id })
+    return apiSuccess({
+      url,
+      revisedPrompt: revisedPrompt ?? finalPrompt,
+      originalPrompt: prompt,
+      enhancedPrompt: enhancePrompt ? finalPrompt : undefined,
+      mediaAssetId: asset.id,
+    })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI image generation failed'
     return apiError(`[POST /api/ai/generate-image] ${message}`, 500, err)

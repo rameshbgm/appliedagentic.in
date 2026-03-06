@@ -68,6 +68,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || ''
     const topicId = searchParams.get('topicId')
     const moduleId = searchParams.get('moduleId')
+    const menuId = searchParams.get('menuId')
+    const subMenuId = searchParams.get('subMenuId')
     const status = searchParams.get('status') as ArticleStatus | null
     const featured = searchParams.get('featured') === 'true'
     const tag = searchParams.get('tag')
@@ -104,6 +106,12 @@ export async function GET(req: NextRequest) {
 
     if (tag) {
       where.articleTags = { some: { tag: { slug: tag } } }
+    }
+
+    if (subMenuId) {
+      where.subMenuArticles = { some: { subMenuId: parseInt(subMenuId) } }
+    } else if (menuId) {
+      where.subMenuArticles = { some: { subMenu: { menuId: parseInt(menuId) } } }
     }
 
     const [total, articles] = await prisma.$transaction([
