@@ -46,26 +46,30 @@ export default function MobileArticlePanel({ sections, content }: Props) {
           style={{
             position: 'fixed',
             right: 0,
-            top: 'calc(var(--nav-h, 64px) + 16px)',
+            // Align exactly with the sticky section header which sticks at var(--nav-h)
+            top: 'var(--nav-h, 64px)',
             zIndex: 45,
             background: 'var(--bg-surface)',
             border: '1px solid var(--bg-border)',
             borderRight: 'none',
-            borderRadius: '12px 0 0 12px',
-            boxShadow: '-2px 4px 18px rgba(0,0,0,0.12)',
-            padding: '12px 11px',
+            borderTop: 'none',
+            borderBottom: 'none',
+            // Match the section header height (~40px) so they form one visual row
+            height: '40px',
+            borderRadius: '0 0 0 10px',
+            boxShadow: '-2px 4px 18px rgba(0,0,0,0.10)',
+            padding: '0 11px',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             alignItems: 'center',
             gap: 5,
             cursor: 'pointer',
             color: 'var(--text-secondary)',
             minWidth: '44px',
-            minHeight: '44px',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <AlignLeft size={18} />
+          <AlignLeft size={16} />
          
         </button>
       )}

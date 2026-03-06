@@ -79,43 +79,6 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
       }
     })
 
-    // ── Bot icon on h2/h3 for section summarize ───────────────────────────────
-    root.querySelectorAll('h2, h3').forEach((heading) => {
-      if (heading.querySelector('.section-ai-btn')) return
-      const btn = document.createElement('button')
-      btn.className = 'section-ai-btn'
-      btn.title = 'Summarize this section (7 key points)'
-      btn.innerHTML = BOT_SVG
-      btn.addEventListener('click', (ev) => {
-        ev.stopPropagation()
-        // Collect section text: heading + siblings until the next h2/h3
-        const parts: string[] = [heading.textContent ?? '']
-        let node = heading.nextSibling
-        while (node) {
-          const el = node as Element
-          if (el.nodeType === 1 && /^H[12]$/.test(el.tagName ?? '')) break
-          if (el.textContent) parts.push(el.textContent.trim())
-          node = node.nextSibling
-        }
-        // Fallback: use parent section innerHTML
-        const sectionEl = heading.closest('.article-section')
-        const sectionContent = sectionEl ? (sectionEl as HTMLElement).innerText : parts.join('\n')
-        window.dispatchEvent(new CustomEvent('aa-section-summarize', {
-          detail: { title: heading.textContent?.trim() ?? 'Section', content: sectionContent },
-        }))
-      })
-      // Wrap existing text nodes so the heading can flex: [text] [icon-right]
-      if (!heading.querySelector('.section-heading-text')) {
-        const textNodes: Node[] = []
-        heading.childNodes.forEach((n) => { if (n !== btn) textNodes.push(n) })
-        const textWrap = document.createElement('span')
-        textWrap.className = 'section-heading-text'
-        textNodes.forEach((n) => textWrap.appendChild(n))
-        heading.insertBefore(textWrap, heading.firstChild)
-      }
-      heading.appendChild(btn)
-    })
-
     // ── Copy buttons on code blocks ──────────────────────────────────────────
     root.querySelectorAll('pre').forEach((pre) => {
       if (pre.querySelector('.copy-btn')) return

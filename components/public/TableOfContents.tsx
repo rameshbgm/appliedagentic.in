@@ -2,12 +2,12 @@
 // components/public/TableOfContents.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, List, Zap } from 'lucide-react'
+import { ChevronDown, ChevronRight, List, Zap } from 'lucide-react'
 
 interface Heading {
   id: string
   text: string
-  /** 0 = section title (root), 1 = H1, 2 = H2, 3 = H3 */
+  /** 0 = section title, 1 = H1, 2 = H2, 3 = H3 */
   level: number
   isSectionTitle?: boolean
 }
@@ -22,23 +22,18 @@ interface SectionLike {
 interface Props {
   sections?: SectionLike[]
   content?: string
-  /** When true, the mobile version renders flat (no card, no outer margin, no sticky)
-   *  – use this when the parent controls the container/sticky */
   mobileFlat?: boolean
 }
 
-// Shared slug logic — must match ArticleContent and SectionCard
-const toSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+const toSlug = (text: string) =>
+  text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 function parseMarkdownHeadings(mdContent: string): Heading[] {
   const headings: Heading[] = []
-  const lines = mdContent.split('\n')
-  for (const line of lines) {
+  for (const line of mdContent.split('\n')) {
     const m = line.match(/^(#{1,3})\s+(.+)$/)
     if (m) {
-      const level = m[1].length // 1, 2, or 3
-      const text = m[2].trim()
-      headings.push({ id: toSlug(text), text, level, isSectionTitle: false })
+      headings.push({ id: toSlug(m[2].trim()), text: m[2].trim(), level: m[1].length })
     }
   }
   return headings
@@ -53,7 +48,6 @@ function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
       : []
 
   const parsed: Heading[] = []
-
   for (const section of effectiveSections) {
     if (section.title?.trim()) {
       parsed.push({ id: toSlug(section.title), text: section.title.trim(), level: 0, isSectionTitle: true })
@@ -63,22 +57,43 @@ function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
   return parsed
 }
 
+/** Group headings into collapsible section trees */
+interface SectionGroup {
+  title: Heading | null
+  children: Heading[]
+}
+
+function groupIntoSections(headings: Heading[]): SectionGroup[] {
+  const groups: SectionGroup[] = []
+  let current: SectionGroup = { title: null, children: [] }
+
+  for (const h of headings) {
+    if (h.isSectionTitle || h.level === 0) {
+      if (current.title || current.children.length > 0) groups.push(current)
+      current = { title: h, children: [] }
+    } else {
+      current.children.push(h)
+    }
+  }
+  if (current.title || current.children.length > 0) groups.push(current)
+  return groups
+}
+
 export default function TableOfContents({ sections, content, mobileFlat = false }: Props) {
-  const [activeId, setActiveId]   = useState('')
+  const [activeId, setActiveId] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
-  // Start empty on both server and client — populated in useEffect (client-only)
-  // This prevents the hydration mismatch caused by DOMParser being unavailable on the server.
   const [headings, setHeadings] = useState<Heading[]>([])
+  // Track which section groups are collapsed (by section title id)
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   const desktopScrollRef = useRef<HTMLDivElement>(null)
   const mobileScrollRef  = useRef<HTMLDivElement>(null)
 
-  // Populate headings on the client after mount
   useEffect(() => {
     setHeadings(parseHeadings(sections, content))
   }, [sections, content])
 
-  // ── Scroll page to heading ─────────────────────────────────────────────────
+  // ── Scroll to heading — extra offset to clear sticky section header ─────────
   const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id)
     if (!el) return
@@ -86,13 +101,15 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     const navH = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
     ) || 64
-    const top = el.getBoundingClientRect().top + window.scrollY - navH - 20
+    // Extra 56px to clear the sticky section header bar
+    const offset = navH + 64
+    const top = el.getBoundingClientRect().top + window.scrollY - offset
     window.scrollTo({ top, behavior: 'smooth' })
     setActiveId(id)
     setMobileOpen(false)
   }, [])
 
-  // ── Sync active TOC item into view when it changes ─────────────────────────
+  // ── Sync active item into view ─────────────────────────────────────────────
   useEffect(() => {
     if (!activeId) return
     const sync = (container: HTMLDivElement | null) => {
@@ -104,23 +121,21 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     sync(mobileScrollRef.current)
   }, [activeId])
 
-  // ── IntersectionObserver — wait for child useEffects to set heading IDs ───
+  // ── IntersectionObserver ───────────────────────────────────────────────────
   useEffect(() => {
     if (headings.length === 0) return
-
     let observer: IntersectionObserver | null = null
 
     const setup = () => {
       observer?.disconnect()
       observer = new IntersectionObserver(
         (entries) => {
-          // Pick topmost visible heading
           const visible = entries
             .filter((e) => e.isIntersecting)
             .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
           if (visible.length > 0) setActiveId(visible[0].target.id)
         },
-        { rootMargin: '-72px 0px -60% 0px', threshold: 0 }
+        { rootMargin: '-80px 0px -55% 0px', threshold: 0 }
       )
       let found = 0
       headings.forEach((h) => {
@@ -130,7 +145,6 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
       return found
     }
 
-    // Retry at increasing intervals — heading IDs are set by ArticleContent useEffect
     const found = setup()
     const timers: ReturnType<typeof setTimeout>[] = []
     if (found < headings.length) {
@@ -144,44 +158,32 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
 
   if (headings.length === 0) return null
 
-  // ── TOC list (stable; not a nested component) ──────────────────────────────
-  const listEl = (
-    <ul className="space-y-0.5">
-      {headings.map((h, i) => {
-        const indent =
-          h.level === 0 ? '' :
-          h.level === 1 ? 'pl-4' :
-          h.level === 2 ? 'pl-8' : 'pl-11'
+  const groups = groupIntoSections(headings)
+
+  const toggleCollapse = (id: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const renderChildren = (children: Heading[]) => (
+    <ul className="toc-children">
+      {children.map((h, i) => {
         const isActive = activeId === h.id
+        const indent = h.level === 1 ? 'toc-h1' : h.level === 2 ? 'toc-h2' : 'toc-h3'
         return (
           <li key={`${h.id}-${i}`}>
             <button
               type="button"
               data-toc-id={h.id}
               onClick={() => scrollTo(h.id)}
-              className={`w-full flex items-start gap-2 px-3 py-1.5 text-sm text-left transition-colors ${indent}`}
-              style={{
-                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: 'transparent',
-              }}
+              className={`toc-item ${indent}${isActive ? ' toc-item-active' : ''}`}
             >
-              {h.isSectionTitle && (
-                <span className="shrink-0 mt-0.5 text-[11px] font-bold leading-5" style={{ color: 'var(--color-violet, #7C3AED)' }}>
-                  §
-                </span>
-              )}
-              <span
-                className={`leading-5 ${h.level === 0 ? 'font-semibold' : h.level === 1 ? 'font-medium' : 'text-xs'}`}
-                style={isActive ? {
-                  textDecoration: 'underline',
-                  textDecorationColor: 'rgba(30,41,59,0.25)',
-                  textUnderlineOffset: '3px',
-                  textDecorationThickness: '1px',
-                  fontWeight: 600,
-                } : undefined}
-              >
-                {h.text}
-              </span>
+              {h.level === 3 && <span className="toc-h3-dot" />}
+              <span className="toc-item-text">{h.text}</span>
             </button>
           </li>
         )
@@ -189,20 +191,53 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     </ul>
   )
 
+  const listEl = (
+    <div className="toc-list">
+      {groups.map((group, gi) => {
+        const sectionId = group.title?.id ?? `group-${gi}`
+        const isCollapsed = collapsed.has(sectionId)
+        const hasChildren = group.children.length > 0
+
+        return (
+          <div key={sectionId} className="toc-group">
+            {group.title && (
+              <button
+                type="button"
+                data-toc-id={group.title.id}
+                onClick={() => {
+                  if (hasChildren) toggleCollapse(sectionId)
+                  scrollTo(group.title!.id)
+                }}
+                className={`toc-section-btn${activeId === group.title.id ? ' toc-item-active' : ''}`}
+              >
+                <span className="toc-section-icon">
+                  {hasChildren
+                    ? isCollapsed
+                      ? <ChevronRight size={11} />
+                      : <ChevronDown size={11} />
+                    : <span className="toc-section-dot" />}
+                </span>
+                <span className="toc-section-text">{group.title.text}</span>
+              </button>
+            )}
+            {!isCollapsed && hasChildren && renderChildren(group.children)}
+          </div>
+        )
+      })}
+    </div>
+  )
+
   return (
     <>
       {/* Desktop: Card sidebar */}
-      <div
-        className="hidden lg:flex flex-col rounded-2xl overflow-hidden"
-        style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
-      >
-        <div className="px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--bg-border)' }}>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Table of Contents</p>
+      <div className="toc-card hidden lg:flex flex-col rounded-2xl overflow-hidden">
+        <div className="toc-card-header">
+          <p className="toc-card-title">Contents</p>
         </div>
-        <div ref={desktopScrollRef} className="py-3 px-1 overflow-y-auto no-scrollbar" style={{ maxHeight: 'calc(100dvh - 14rem)' }}>
+        <div ref={desktopScrollRef} className="toc-scroll no-scrollbar">
           {listEl}
         </div>
-        <div className="px-4 pb-4 pt-2">
+        <div className="toc-card-footer">
           <Link
             href="/modules"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
@@ -214,30 +249,26 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
         </div>
       </div>
 
-      {/* Mobile: sticky collapsible — standard (with card + sticky) */}
+      {/* Mobile: sticky collapsible */}
       {!mobileFlat && (
-        <div className="lg:hidden mb-6">
-          <div
-            className="sticky top-16 z-30 rounded-2xl overflow-hidden"
-            style={{ border: '1px solid var(--bg-border)', background: 'var(--bg-surface)' }}
-          >
+        <div className="lg:hidden mb-4">
+          <div className="toc-mobile-card sticky z-30" style={{ top: 'var(--nav-h, 64px)' }}>
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="flex items-center justify-between w-full px-4 py-3 text-sm font-bold"
-              style={{ color: 'var(--text-primary)' }}
+              className="toc-mobile-toggle"
             >
               <span className="flex items-center gap-2">
-                <List size={14} style={{ color: 'var(--text-muted)' }} />
-                Table of Contents
+                <List size={13} style={{ color: 'var(--text-muted)' }} />
+                Contents
               </span>
               <ChevronDown
-                size={14}
-                className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+                size={13}
+                className={`transition-transform duration-200 ${mobileOpen ? 'rotate-180' : ''}`}
                 style={{ color: 'var(--text-muted)' }}
               />
             </button>
             {mobileOpen && (
-              <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[60vh] overflow-y-auto no-scrollbar" style={{ borderTop: '1px solid var(--bg-border)' }}>
+              <div ref={mobileScrollRef} className="toc-mobile-body">
                 {listEl}
               </div>
             )}
@@ -245,26 +276,25 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
         </div>
       )}
 
-      {/* Mobile: flat mode — parent controls container / toggle */}
+      {/* Mobile: flat mode */}
       {mobileFlat && (
         <div className="lg:hidden">
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex items-center justify-between w-full px-4 py-3 text-sm font-bold"
-            style={{ color: 'var(--text-primary)' }}
+            className="toc-mobile-toggle"
           >
             <span className="flex items-center gap-2">
-              <List size={14} style={{ color: 'var(--text-muted)' }} />
-              Table of Contents
+              <List size={13} style={{ color: 'var(--text-muted)' }} />
+              Contents
             </span>
             <ChevronDown
-              size={14}
-              className={`transition-transform ${mobileOpen ? 'rotate-180' : ''}`}
+              size={13}
+              className={`transition-transform duration-200 ${mobileOpen ? 'rotate-180' : ''}`}
               style={{ color: 'var(--text-muted)' }}
             />
           </button>
           {mobileOpen && (
-            <div ref={mobileScrollRef} className="pb-3 pt-1 px-1 max-h-[50vh] overflow-y-auto" style={{ borderTop: '1px solid var(--bg-border)' }}>
+            <div ref={mobileScrollRef} className="toc-mobile-body">
               {listEl}
             </div>
           )}

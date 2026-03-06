@@ -211,6 +211,9 @@ export default async function ArticleDetailPage({ params }: Props) {
     ? sections.map(s => s.content).join('\n')
     : article.content
 
+  // Random gradient offset per page render — each refresh gives different colors
+  const gradientOffset = Math.floor(Math.random() * 8)
+
   return (
     <>
       <ReadingProgressBar />
@@ -384,6 +387,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                       key={section.id}
                       section={section}
                       index={idx}
+                      gradientIndex={(idx + gradientOffset) % 8}
                     />
                   ))}
                 </div>
