@@ -138,7 +138,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
         <Link
           href="/admin/articles/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-transform hover:scale-105"
-          style={{ background: '#1E293B' }}
+          style={{ background: '#6C3DFF' }}
         >
           <Plus size={16} />
           New Article
