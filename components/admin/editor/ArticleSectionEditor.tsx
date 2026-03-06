@@ -46,6 +46,7 @@ export default function ArticleSectionEditor({
       <AIAssistPanel
         onInsert={(md) => insertRef.current(md)}
         onReplace={(md) => replaceRef.current(md)}
+        onSetTitle={(title) => onChange({ ...section, title })}
         articleId={articleId}
         onAudioGenerated={onAudioGenerated}
       />

@@ -113,8 +113,14 @@ model Article {
   viewCount          Int              @default(0)
   seoTitle           String?
   seoDescription     String?          @db.Text
+  seoKeywords        String?          @db.Text
   seoCanonicalUrl    String?
+  ogTitle            String?
+  ogDescription      String?          @db.Text
   ogImageUrl         String?
+  twitterTitle       String?
+  twitterDescription String?          @db.Text
+  aiContentDeclaration String?        @default("human-written")
   authorId           Int
   author             User             @relation("ArticleAuthor", fields: [authorId], references: [id])
   createdAt          DateTime         @default(now())

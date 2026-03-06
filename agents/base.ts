@@ -6,6 +6,7 @@ import { ChatOpenAI } from '@langchain/openai'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import type { AgentConfig, AgentInput, AgentOutput } from './types'
+import { logger } from '@/lib/logger'
 
 /**
  * Build a LangChain chain (prompt → LLM) and execute it,
@@ -53,10 +54,24 @@ export async function runAgent(
   ])
 
   // ── Invoke ───────────────────────────────────────────────────────────────
-  const rawMsg = await promptTemplate.pipe(llm).invoke({
-    prompt: input.prompt,
-    ...(input.context ? { context: input.context } : {}),
-  })
+  const t0 = Date.now()
+  let rawMsg
+  try {
+    rawMsg = await promptTemplate.pipe(llm).invoke({
+      prompt: input.prompt,
+      ...(input.context ? { context: input.context } : {}),
+    })
+  } catch (err) {
+    logger.ai(
+      config.provider,
+      config.textModel,
+      input.prompt.slice(0, 120),
+      undefined,
+      Date.now() - t0,
+      'error',
+    )
+    throw err
+  }
 
   const text = typeof rawMsg.content === 'string'
     ? rawMsg.content
@@ -75,5 +90,18 @@ export async function runAgent(
     }
   }
 
+  // ── Log AI call ──────────────────────────────────────────────────────────
+  logger.ai(
+    config.provider,
+    config.textModel,
+    input.prompt.slice(0, 120),
+    usage ? { input: usage.inputTokens, output: usage.outputTokens } : undefined,
+    Date.now() - t0,
+    'success',
+  )
+
   return { text, provider: config.provider, model: config.textModel, usage }
 }
+
+// Note: agent name is derived from `config.textModel` in the log — callers can
+// pass a custom agentName via config.textModel for more readable AI log entries.

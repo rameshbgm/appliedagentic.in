@@ -1,5 +1,5 @@
 // agents/seo-optimizer/agent.ts
-// SEO Optimizer agent — generates seoTitle, seoDescription, and tags from article content.
+// SEO Optimizer agent — generates full SEO + Open Graph + Twitter Card metadata.
 // SERVER-SIDE ONLY.
 
 import { runAgent }     from '../base'
@@ -20,6 +20,16 @@ export interface SeoOptimizerOutput extends AgentOutput {
   seoTitle: string
   /** Meta description (≤ 160 chars) */
   seoDescription: string
+  /** Comma-separated keywords string */
+  seoKeywords: string
+  /** Open Graph title (≤ 70 chars) */
+  ogTitle: string
+  /** Open Graph description (≤ 200 chars) */
+  ogDescription: string
+  /** Twitter/X Card title (≤ 70 chars) */
+  twitterTitle: string
+  /** Twitter/X Card description (≤ 200 chars) */
+  twitterDescription: string
   /** Array of lowercase keyword tags */
   tags: string[]
 }
@@ -32,7 +42,6 @@ export interface SeoOptimizerOutput extends AgentOutput {
  *   prompt: 'Building a ReAct Agent with LangChain',
  *   context: articleContent.slice(0, 3000),
  * })
- * console.log(result.seoTitle, result.seoDescription, result.tags)
  */
 export async function runSeoOptimizer(
   input: SeoOptimizerInput,
@@ -43,7 +52,16 @@ export async function runSeoOptimizer(
   })
 
   // Parse the JSON output
-  let parsed: { seoTitle: string; seoDescription: string; tags: string[] }
+  let parsed: {
+    seoTitle?: string
+    seoDescription?: string
+    seoKeywords?: string
+    ogTitle?: string
+    ogDescription?: string
+    twitterTitle?: string
+    twitterDescription?: string
+    tags?: string[]
+  }
   try {
     const cleaned = result.text
       .replace(/^```(?:json)?\s*/i, '')
@@ -51,14 +69,27 @@ export async function runSeoOptimizer(
       .trim()
     parsed = JSON.parse(cleaned)
   } catch {
-    // Fallback: return raw text and empty arrays so the caller can handle gracefully
-    parsed = { seoTitle: '', seoDescription: result.text.slice(0, 160), tags: [] }
+    parsed = { seoTitle: '', seoDescription: result.text.slice(0, 160) }
   }
+
+  const seoTitle       = (parsed.seoTitle       ?? '').slice(0, 60)
+  const seoDescription = (parsed.seoDescription ?? '').slice(0, 160)
+  const seoKeywords    = parsed.seoKeywords ?? ''
+  const ogTitle        = (parsed.ogTitle        ?? seoTitle).slice(0, 70)
+  const ogDescription  = (parsed.ogDescription  ?? seoDescription).slice(0, 200)
+  const twitterTitle   = (parsed.twitterTitle   ?? ogTitle).slice(0, 70)
+  const twitterDescription = (parsed.twitterDescription ?? ogDescription).slice(0, 200)
+  const tags           = Array.isArray(parsed.tags) ? parsed.tags.slice(0, 10) : []
 
   return {
     ...result,
-    seoTitle:       (parsed.seoTitle       ?? '').slice(0, 60),
-    seoDescription: (parsed.seoDescription ?? '').slice(0, 160),
-    tags:           Array.isArray(parsed.tags) ? parsed.tags.slice(0, 10) : [],
+    seoTitle,
+    seoDescription,
+    seoKeywords,
+    ogTitle,
+    ogDescription,
+    twitterTitle,
+    twitterDescription,
+    tags,
   }
 }

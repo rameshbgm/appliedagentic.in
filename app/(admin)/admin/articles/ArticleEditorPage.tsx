@@ -19,6 +19,12 @@ interface InitialArticle {
   coverImageUrl: string
   seoTitle: string
   seoDescription: string
+  seoKeywords?: string
+  ogTitle?: string
+  ogDescription?: string
+  twitterTitle?: string
+  twitterDescription?: string
+  aiContentDeclaration?: string
   audioUrl?: string
   tagNames: string[]
   subMenuIds: number[]
@@ -86,6 +92,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     tagNames: initialArticle.tagNames,
     seoTitle: initialArticle.seoTitle,
     seoDescription: initialArticle.seoDescription,
+    seoKeywords: initialArticle.seoKeywords ?? '',
+    ogTitle: initialArticle.ogTitle ?? '',
+    ogDescription: initialArticle.ogDescription ?? '',
+    twitterTitle: initialArticle.twitterTitle ?? '',
+    twitterDescription: initialArticle.twitterDescription ?? '',
+    aiContentDeclaration: initialArticle.aiContentDeclaration ?? 'human-written',
     audioUrl: initialArticle.audioUrl,
     isFeatured: initialArticle.isFeatured ?? false,
   })
@@ -145,26 +157,29 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const generateMeta = async () => {
     setMetaLoading(true)
     try {
-      const res = await fetch('/api/ai/generate-text', {
+      const res = await fetch('/api/ai/generate-seo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `Article title: ${title}\n\nContent excerpt:\n${combinedContent.slice(0, 3000)}`,
-          systemPrompt: 'You are an SEO expert. Given an article title and content excerpt, return ONLY valid JSON with two keys: "seoTitle" (max 60 characters, compelling and keyword-rich) and "seoDescription" (max 160 characters, a concise summary encouraging clicks). No markdown, no explanation.',
-          format: 'markdown',
+          prompt: title,
+          context: combinedContent.slice(0, 3000),
         }),
       })
       const data = await res.json()
       if (data.success) {
-        const text: string = data.data.text.trim()
-        const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
-        const parsed = JSON.parse(jsonStr)
+        const d = data.data
         setMeta((m) => ({
           ...m,
-          seoTitle: (parsed.seoTitle ?? m.seoTitle).slice(0, 60),
-          seoDescription: (parsed.seoDescription ?? m.seoDescription).slice(0, 160),
+          seoTitle:            (d.seoTitle            ?? m.seoTitle).slice(0, 60),
+          seoDescription:      (d.seoDescription      ?? m.seoDescription).slice(0, 160),
+          seoKeywords:         d.seoKeywords          ?? m.seoKeywords,
+          ogTitle:             (d.ogTitle             ?? m.ogTitle).slice(0, 70),
+          ogDescription:       (d.ogDescription       ?? m.ogDescription).slice(0, 200),
+          twitterTitle:        (d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
+          twitterDescription:  (d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
+          tagNames:            d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
         }))
-        toast.success('SEO meta generated!')
+        toast.success('SEO metadata generated!')
       } else {
         toast.error(data.error ?? 'Meta generation failed')
       }
@@ -211,6 +226,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     tagNames: meta.tagNames,
     seoTitle: meta.seoTitle,
     seoDescription: meta.seoDescription,
+    seoKeywords: meta.seoKeywords,
+    ogTitle: meta.ogTitle,
+    ogDescription: meta.ogDescription,
+    twitterTitle: meta.twitterTitle,
+    twitterDescription: meta.twitterDescription,
+    aiContentDeclaration: meta.aiContentDeclaration,
     audioUrl: meta.audioUrl,
     isFeatured: meta.isFeatured,
     subMenuIds: meta.subMenuIds,
@@ -586,6 +607,108 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   </p>
                 </div>
               )}
+
+              {/* ── Open Graph ── */}
+              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Open Graph (Social)</p>
+
+              {/* OG Title */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Title</label>
+                  <span className="text-xs" style={{ color: meta.ogTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogTitle.length}/70</span>
+                </div>
+                <input
+                  value={meta.ogTitle}
+                  onChange={(e) => setMeta((m) => ({ ...m, ogTitle: e.target.value }))}
+                  placeholder={meta.seoTitle || title || 'Facebook / LinkedIn / Discord title...'}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* OG Description */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Description</label>
+                  <span className="text-xs" style={{ color: meta.ogDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogDescription.length}/200</span>
+                </div>
+                <textarea
+                  value={meta.ogDescription}
+                  onChange={(e) => setMeta((m) => ({ ...m, ogDescription: e.target.value }))}
+                  placeholder={meta.seoDescription || 'Social sharing description...'}
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* ── Keywords ── */}
+              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Keywords</p>
+              <div>
+                <input
+                  value={meta.seoKeywords}
+                  onChange={(e) => setMeta((m) => ({ ...m, seoKeywords: e.target.value }))}
+                  placeholder="ai agents, langchain, machine learning, ..."
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Comma-separated. Used for meta keywords tag and AI crawler context.</p>
+              </div>
+
+              {/* ── Twitter / X Card ── */}
+              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Twitter / X Card</p>
+
+              {/* Twitter Title */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Title</label>
+                  <span className="text-xs" style={{ color: meta.twitterTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterTitle.length}/70</span>
+                </div>
+                <input
+                  value={meta.twitterTitle}
+                  onChange={(e) => setMeta((m) => ({ ...m, twitterTitle: e.target.value }))}
+                  placeholder={meta.ogTitle || meta.seoTitle || title || 'Twitter / X title...'}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* Twitter Description */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Description</label>
+                  <span className="text-xs" style={{ color: meta.twitterDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterDescription.length}/200</span>
+                </div>
+                <textarea
+                  value={meta.twitterDescription}
+                  onChange={(e) => setMeta((m) => ({ ...m, twitterDescription: e.target.value }))}
+                  placeholder={meta.ogDescription || meta.seoDescription || 'Twitter / X description...'}
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* ── AI / LLM Meta ── */}
+              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>AI &amp; LLM Meta</p>
+
+              {/* AI Content Declaration */}
+              <div>
+                <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Content Declaration</label>
+                <select
+                  value={meta.aiContentDeclaration}
+                  onChange={(e) => setMeta((m) => ({ ...m, aiContentDeclaration: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                >
+                  <option value="human-written">Human-written</option>
+                  <option value="ai-assisted">AI-assisted</option>
+                  <option value="ai-generated">AI-generated</option>
+                </select>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Declares authorship to AI crawlers (GPTBot, Anthropic, Gemini).
+                </p>
+              </div>
             </div>
           </div>
 

@@ -43,17 +43,61 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const article = await prisma.article.findUnique({
       where: { slug: id },
       select: {
-        title: true, summary: true, seoTitle: true, seoDescription: true,
+        title: true,
+        summary: true,
+        seoTitle: true,
+        seoDescription: true,
+        seoKeywords: true,
+        ogTitle: true,
+        ogDescription: true,
+        twitterTitle: true,
+        twitterDescription: true,
+        aiContentDeclaration: true,
         coverImage: { select: { url: true, width: true, height: true } },
       },
     })
     if (!article) return {}
+
+    const resolvedTitle       = article.seoTitle       ?? article.title
+    const resolvedDescription = article.seoDescription ?? article.summary ?? undefined
+    const ogTitle             = article.ogTitle         || resolvedTitle
+    const ogDesc              = article.ogDescription   || resolvedDescription
+    const twitterTitle        = article.twitterTitle    || ogTitle
+    const twitterDesc         = article.twitterDescription || ogDesc
+
+    // Parse seoKeywords: comma-separated string → string[]
+    const keywords = article.seoKeywords
+      ? article.seoKeywords.split(',').map((k) => k.trim()).filter(Boolean)
+      : undefined
+
+    const coverImages = article.coverImage
+      ? [{ url: article.coverImage.url, width: article.coverImage.width ?? undefined, height: article.coverImage.height ?? undefined }]
+      : undefined
+
     return {
-      title: article.seoTitle ?? article.title,
-      description: article.seoDescription ?? article.summary ?? undefined,
-      openGraph: article.coverImage
-        ? { images: [{ url: article.coverImage.url, width: article.coverImage.width ?? undefined, height: article.coverImage.height ?? undefined }] }
-        : undefined,
+      title: resolvedTitle,
+      description: resolvedDescription,
+      keywords,
+      openGraph: {
+        title: ogTitle,
+        description: ogDesc,
+        ...(coverImages ? { images: coverImages } : {}),
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: twitterTitle,
+        description: twitterDesc,
+        ...(coverImages ? { images: coverImages.map((i) => i.url) } : {}),
+      },
+      // Custom meta tags for AI/LLM crawlers
+      other: {
+        ...(article.aiContentDeclaration
+          ? { 'ai-content-declaration': article.aiContentDeclaration }
+          : {}),
+        ...(article.seoKeywords
+          ? { 'x-topic-keywords': article.seoKeywords }
+          : {}),
+      },
     }
   } catch (err) {
     logger.error('[generateMetadata /articles/[id]]', err)

@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       context,
       maxTokens: reqMaxTokens,
       systemPrompt: customSystemPrompt,
+      generateTitle = false,
     } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
@@ -39,8 +40,43 @@ export async function POST(req: NextRequest) {
       return apiSuccess({ text: result.text })
     }
 
-    // ── Content generation mode (default) — uses LangChain content-writer agent ──
+    // ── Content generation mode ──────────────────────────────────────────────
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200
+
+    if (generateTitle) {
+      // Ask the LLM to return JSON with both a section title and markdown content.
+      // We prefix the prompt so the content-writer knows to produce JSON output.
+      const titlePrompt = [
+        `Generate a section title AND the full markdown content for the following topic.`,
+        `Return ONLY valid JSON — no markdown fences, no extra text:`,
+        `{"title": "<concise section heading, 3-8 words>", "content": "<full markdown content>"}`,
+        ``,
+        `Topic: ${prompt}`,
+      ].join('\n')
+
+      const result = await runContentWriter({
+        prompt: titlePrompt,
+        context,
+        tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
+        maxTokens,
+      })
+
+      // Try to parse JSON; fall back to raw text with no title
+      try {
+        const cleaned = result.text
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/```\s*$/, '')
+          .trim()
+        const parsed: { title?: string; content?: string } = JSON.parse(cleaned)
+        return apiSuccess({
+          text:  parsed.content ?? result.text,
+          title: parsed.title  ?? '',
+        })
+      } catch {
+        return apiSuccess({ text: result.text, title: '' })
+      }
+    }
+
     const result = await runContentWriter({
       prompt,
       context,

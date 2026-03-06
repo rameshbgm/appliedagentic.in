@@ -10,6 +10,7 @@ type Tab = 'text' | 'image' | 'audio'
 interface Props {
   onInsert: (md: string) => void
   onReplace: (md: string) => void
+  onSetTitle?: (title: string) => void
   articleId?: number
   onAudioGenerated?: (url: string) => void
 }
@@ -19,7 +20,7 @@ const textTones = ['informative', 'casual', 'professional', 'engaging', 'technic
 const textLengths = ['short', 'medium', 'long']
 const ttsVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
-export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioGenerated }: Props) {
+export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, articleId, onAudioGenerated }: Props) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('text')
   const [loading, setLoading] = useState(false)
@@ -29,6 +30,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
   const [textTone, setTextTone] = useState('informative')
   const [textLength, setTextLength] = useState('medium')
   const [textPrompt, setTextPrompt] = useState('')
+  const [withTitle, setWithTitle] = useState(false)
 
   // Image
   const [imagePrompt, setImagePrompt] = useState('')
@@ -55,13 +57,20 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
           tone: textTone,
           length: textLength,
           format: 'markdown',
+          generateTitle: withTitle,
         }),
       })
       const data = await res.json()
       if (data.success) {
         const md: string = data.data.text
+        const generatedTitle: string = data.data.title ?? ''
         action === 'insert' ? onInsert(md) : onReplace(md)
-        toast.success('Content generated!')
+        if (withTitle && generatedTitle && onSetTitle) {
+          onSetTitle(generatedTitle)
+          toast.success(`Content + title generated!`)
+        } else {
+          toast.success('Content generated!')
+        }
         setTextPrompt('')
       } else {
         toast.error(data.error ?? 'Generation failed')
@@ -197,6 +206,20 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
                   <Sel label="Length" value={textLength} onChange={setTextLength} options={textLengths} />
                 </div>
 
+                {/* Generate section title toggle */}
+                <label
+                  className="flex items-center gap-2 cursor-pointer select-none"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={withTitle}
+                    onChange={(e) => setWithTitle(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-xs">Also generate section title</span>
+                </label>
+
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -219,7 +242,7 @@ export default function AIAssistPanel({ onInsert, onReplace, articleId, onAudioG
                   </button>
                 </div>
                 <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  Generates formatted Markdown. Press ⌘+Enter to insert.
+                  Generates formatted Markdown. Press ⌘+Enter to insert.{withTitle ? ' Section title will be set automatically.' : ''}
                 </p>
               </div>
             )}
