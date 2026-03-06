@@ -22,14 +22,15 @@ export type ArticleLength = 'short' | 'medium' | 'long' | 'extra-long' | 'compre
 export type ArticleFormat =
   | 'article' | 'listicle' | 'how-to' | 'tutorial'
   | 'deep-dive' | 'quick-read' | 'case-study' | 'comparison'
+  | 'newsletter' | 'press-release' | 'faq' | 'product-review'
+  | 'opinion' | 'interview' | 'explainer' | 'white-paper'
+  | 'thought-leadership' | 'ebook-chapter'
 
 export interface ArticleGeneratorInput extends AgentInput {
   /** Article topic or title brief */
   prompt: string
   /** Additional user context or notes */
   context?: string
-  /** Generation mode */
-  mode?: 'generate' | 'outline' | 'expand'
   /** Tone of voice */
   tone?: ArticleTone
   /** Article length */
@@ -44,6 +45,11 @@ export interface ArticleGeneratorInput extends AgentInput {
   referenceContent?: string
   /** Exact number of sections to generate (default: AI decides, 3–8) */
   sectionCount?: number
+  /** Generation mode */
+  mode?: 'generate' | 'outline' | 'expand' | 'rewrite' | 'summarise'
+       | 'newsletter' | 'press-release' | 'faq' | 'social-thread'
+       | 'email-campaign' | 'landing-page' | 'product-review'
+       | 'interview' | 'opinion'
 }
 
 export interface GeneratedSection {
@@ -104,14 +110,24 @@ const TONE_MAP: Record<ArticleTone, string> = {
 }
 
 const FORMAT_MAP: Record<string, string> = {
-  article:     'Standard long-form article with introduction, body sections, and conclusion.',
-  listicle:    'Listicle format — numbered or bulleted list as the primary structure (e.g. "10 Ways to...").',
-  'how-to':    'How-to guide — step-by-step instructions with numbered steps.',
-  tutorial:    'Hands-on tutorial — practical walkthrough with code examples and screenshots described.',
-  'deep-dive': 'Deep-dive — exhaustive exploration of every angle of the topic.',
-  'quick-read': 'Quick-read — punchy, scannable, under 600 words, key points only.',
-  'case-study': 'Case study format — problem, approach, solution, results, lessons learned.',
-  comparison:  'Comparison article — side-by-side evaluation of two or more options.',
+  article:            'Standard long-form article with introduction, body sections, and conclusion.',
+  listicle:           'Listicle format — numbered or bulleted list as the primary structure (e.g. "10 Ways to...").',
+  'how-to':           'How-to guide — step-by-step instructions with numbered steps.',
+  tutorial:           'Hands-on tutorial — practical walkthrough with code examples and screenshots described.',
+  'deep-dive':        'Deep-dive — exhaustive exploration of every angle of the topic.',
+  'quick-read':       'Quick-read — punchy, scannable, under 600 words, key points only.',
+  'case-study':       'Case study format — problem, approach, solution, results, lessons learned.',
+  comparison:         'Comparison article — side-by-side evaluation of two or more options.',
+  newsletter:         'Email newsletter format — engaging subject line, friendly tone, curated insights with a call-to-action.',
+  'press-release':    'Press release format — headline, dateline, lead paragraph, quotes, boilerplate.',
+  faq:                'FAQ format — 8–12 frequently asked questions with clear, concise answers.',
+  'product-review':   'Product/tool review — overview, features, pros, cons, verdict with rating.',
+  opinion:            'Opinion/editorial piece — clear stance, supporting arguments, counterarguments addressed.',
+  interview:          'Q&A interview format — 6–10 questions with detailed answers as if from an expert.',
+  explainer:          'Explainer article — clear definition, why it matters, how it works, examples.',
+  'white-paper':      'White paper — formal, research-backed, executive summary + detailed sections + recommendations.',
+  'thought-leadership': 'Thought leadership — bold perspective, industry trends, forward-looking insights.',
+  'ebook-chapter':    'E-book chapter — longer, structured like a book chapter with intro, sections, key takeaways.',
 }
 
 /**

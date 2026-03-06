@@ -1,4 +1,4 @@
-// app/api/articles/[id]/route.ts
+// app/api/articles/[id]/route.ts  (coverImage uses relation connect/disconnect — no coverImageId scalar in update)
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -222,7 +222,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           ...(data.content !== undefined && { content: data.content }),
           ...(data.status !== undefined && { status: data.status }),
           ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
-          ...(resolvedCoverImageId !== undefined && { coverImageId: resolvedCoverImageId }),
+          ...(resolvedCoverImageId !== undefined && (
+            resolvedCoverImageId === null
+              ? { coverImage: { disconnect: true } }
+              : { coverImage: { connect: { id: resolvedCoverImageId } } }
+          )),
           ...(data.audioUrl !== undefined && { audioUrl: data.audioUrl }),
           ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
           ...(data.publishedAt !== undefined

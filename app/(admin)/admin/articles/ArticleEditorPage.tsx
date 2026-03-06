@@ -269,16 +269,45 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     if (!aiGenForm.topic.trim()) { toast.error('Article topic is required'); return }
     setAIGenLoading(true)
     try {
-      // ── 1. Read attached files as text ──
+      // ── 1. Parse attached files (text or binary via server API) ──
+      const BLOCKED_EXT = new Set([
+        '.exe','.bat','.cmd','.com','.sh','.bash','.ps1','.vbs','.wsf',
+        '.dll','.so','.dylib','.sys','.bin','.img','.iso','.dmg','.msi',
+        '.js','.cjs','.mjs','.ts','.tsx','.jsx',
+        '.py','.rb','.php','.go','.rs','.c','.cpp','.java','.jar',
+        '.zip','.rar','.7z','.tar','.gz','.bz2',
+        '.sql','.db','.sqlite',
+      ])
+      const BINARY_EXT = new Set(['.pdf','.docx','.doc','.xlsx','.xls','.pptx','.ppt','.odt','.ods','.odp','.rtf'])
+
       const attachments: { name: string; content: string; type: string }[] = []
       for (const file of aiAttachments) {
-        const content = await new Promise<string>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = (e) => resolve((e.target?.result as string) ?? '')
-          reader.onerror = () => resolve('')
-          reader.readAsText(file)
-        })
-        attachments.push({ name: file.name, content, type: file.type })
+        const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+        if (BLOCKED_EXT.has(ext)) {
+          toast.error(`Blocked file: "${file.name}" — this file type is not allowed.`)
+          setAIGenLoading(false)
+          return
+        }
+        if (BINARY_EXT.has(ext)) {
+          // Send to server-side parser
+          const fd = new FormData()
+          fd.append('file', file)
+          const parseRes = await fetch('/api/ai/parse-attachment', { method: 'POST', body: fd })
+          const parseData = await parseRes.json()
+          if (parseData.success) {
+            attachments.push({ name: file.name, content: parseData.text, type: file.type })
+          } else {
+            toast.error(`Could not parse "${file.name}": ${parseData.error ?? 'Unknown error'}`)
+          }
+        } else {
+          const content = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload  = (e) => resolve((e.target?.result as string) ?? '')
+            reader.onerror = () => resolve('')
+            reader.readAsText(file)
+          })
+          attachments.push({ name: file.name, content, type: file.type })
+        }
       }
 
       // ── 2. Call generate-article API ──
@@ -1344,14 +1373,26 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               {/* Attachments */}
               <div>
                 <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Attachments (optional) — .txt, .md, .html, .json, .csv
+                  Attachments (optional) — PDF, Word, Excel, PowerPoint, TXT, MD, CSV, HTML, JSON…
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border text-sm w-fit transition-colors hover:opacity-80"
                   style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)', background: 'var(--bg-surface)' }}>
                   <span>Choose files</span>
-                  <input type="file" multiple accept=".txt,.md,.html,.json,.csv" className="hidden"
+                  <input type="file" multiple
+                    accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.odt,.ods,.odp,.rtf,.txt,.md,.mdx,.csv,.html,.htm,.json,.jsonl,.xml,.yaml,.yml,.toml,.ini,.log"
+                    className="hidden"
                     onChange={(e) => {
-                      if (e.target.files) setAIAttachments((prev) => [...prev, ...Array.from(e.target.files!)])
+                      if (!e.target.files) return
+                      const BLOCKED = new Set(['.exe','.bat','.cmd','.sh','.ps1','.dll','.zip','.js','.ts','.py','.rb','.php','.sql','.db'])
+                      const accepted: File[] = []
+                      const blocked: string[] = []
+                      Array.from(e.target.files).forEach((f) => {
+                        const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase()
+                        if (BLOCKED.has(ext)) blocked.push(f.name)
+                        else accepted.push(f)
+                      })
+                      if (blocked.length) toast.error(`Blocked: ${blocked.join(', ')}`)
+                      if (accepted.length) setAIAttachments((prev) => [...prev, ...accepted])
                       e.target.value = ''
                     }}
                   />
@@ -1377,9 +1418,26 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <select value={aiGenForm.mode} onChange={(e) => setAIGenForm((f) => ({ ...f, mode: e.target.value }))}
                     className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
-                    <option value="generate">Generate</option>
-                    <option value="outline">Outline</option>
-                    <option value="expand">Expand</option>
+                    <optgroup label="Creation">
+                      <option value="generate">Generate</option>
+                      <option value="outline">Outline</option>
+                      <option value="expand">Expand</option>
+                      <option value="rewrite">Rewrite</option>
+                      <option value="summarise">Summarise</option>
+                    </optgroup>
+                    <optgroup label="Content Types">
+                      <option value="newsletter">Newsletter</option>
+                      <option value="press-release">Press Release</option>
+                      <option value="faq">FAQ</option>
+                      <option value="social-thread">Social Thread</option>
+                      <option value="email-campaign">Email Campaign</option>
+                    </optgroup>
+                    <optgroup label="Marketing">
+                      <option value="landing-page">Landing Page</option>
+                      <option value="product-review">Product Review</option>
+                      <option value="opinion">Opinion / Editorial</option>
+                      <option value="interview">Interview / Q&A</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -1387,14 +1445,32 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <select value={aiGenForm.format} onChange={(e) => setAIGenForm((f) => ({ ...f, format: e.target.value }))}
                     className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
-                    <option value="article">Article</option>
-                    <option value="listicle">Listicle</option>
-                    <option value="how-to">How-To</option>
-                    <option value="tutorial">Tutorial</option>
-                    <option value="deep-dive">Deep Dive</option>
-                    <option value="quick-read">Quick Read</option>
-                    <option value="case-study">Case Study</option>
-                    <option value="comparison">Comparison</option>
+                    <optgroup label="Standard">
+                      <option value="article">Article</option>
+                      <option value="listicle">Listicle</option>
+                      <option value="how-to">How-To Guide</option>
+                      <option value="tutorial">Tutorial</option>
+                      <option value="deep-dive">Deep Dive</option>
+                    </optgroup>
+                    <optgroup label="Concise">
+                      <option value="quick-read">Quick Read</option>
+                      <option value="explainer">Explainer</option>
+                      <option value="faq">FAQ</option>
+                    </optgroup>
+                    <optgroup label="Analysis">
+                      <option value="case-study">Case Study</option>
+                      <option value="comparison">Comparison</option>
+                      <option value="product-review">Product Review</option>
+                      <option value="opinion">Opinion / Editorial</option>
+                    </optgroup>
+                    <optgroup label="Professional">
+                      <option value="newsletter">Newsletter</option>
+                      <option value="press-release">Press Release</option>
+                      <option value="white-paper">White Paper</option>
+                      <option value="thought-leadership">Thought Leadership</option>
+                      <option value="ebook-chapter">E-Book Chapter</option>
+                      <option value="interview">Interview / Q&A</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>
@@ -1402,7 +1478,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <select value={aiGenForm.sectionCount} onChange={(e) => setAIGenForm((f) => ({ ...f, sectionCount: parseInt(e.target.value, 10) }))}
                     className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
-                    {[2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => (
                       <option key={n} value={n}>{n} sections</option>
                     ))}
                   </select>

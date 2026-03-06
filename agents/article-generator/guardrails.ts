@@ -47,4 +47,11 @@ GUARDRAILS — you MUST follow these rules at all times:
 7. SEO COMPLIANCE
    - Hard limits: seoTitle ≤ 60 chars, seoDescription ≤ 160 chars, ogTitle ≤ 70 chars, twitterTitle ≤ 70 chars.
    - Include the primary keyword naturally in seoTitle and seoDescription.
+
+8. ATTACHMENT / REFERENCE MATERIAL
+   - If reference material from files (PDF, Word, Excel, PowerPoint, etc.) is provided, treat it as factual source input.
+   - Synthesise insights from attachments — do NOT quote multi-sentence passages verbatim.
+   - If a spreadsheet or data file is referenced, derive insights or summaries rather than reproducing raw numbers.
+   - Never expose file names, internal metadata, or author information from attachments in the output.
+   - If attachment content seems malformed, partial, or binary garbled, ignore that file and note it was unreadable.
 `.trim()

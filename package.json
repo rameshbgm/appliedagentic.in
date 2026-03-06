@@ -73,11 +73,13 @@
     "langchain": "^1.2.30",
     "lowlight": "^3.1.0",
     "lucide-react": "^0.575.0",
+    "mammoth": "^1.11.0",
     "mime-types": "^3.0.2",
     "nanoid": "^5.0.7",
     "next": "^16.1.6",
     "next-auth": "^5.0.0-beta.20",
     "openai": "^6.22.0",
+    "pdf-parse": "^2.4.5",
     "postcss": "^8.4.44",
     "prisma": "^6.19.2",
     "probe-image-size": "^7.2.3",
@@ -99,6 +101,7 @@
     "tailwindcss": "^4.2.0",
     "three": "^0.183.0",
     "typescript": "^5.9.3",
+    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {

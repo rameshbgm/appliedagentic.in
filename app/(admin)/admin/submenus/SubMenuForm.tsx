@@ -101,6 +101,7 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
           Parent Menu <span className="text-red-400">*</span>
         </label>
         <select
+          suppressHydrationWarning
           value={form.menuId}
           onChange={(e) => setForm((f) => ({ ...f, menuId: parseInt(e.target.value) }))}
           className="input w-full"
@@ -119,6 +120,7 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
           Title <span className="text-red-400">*</span>
         </label>
         <input
+          suppressHydrationWarning
           type="text"
           value={form.title}
           onChange={(e) => handleTitleChange(e.target.value)}
@@ -134,6 +136,7 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
           Slug
         </label>
         <input
+          suppressHydrationWarning
           type="text"
           value={form.slug}
           onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
@@ -153,6 +156,7 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
           Description
         </label>
         <textarea
+          suppressHydrationWarning
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           className="input w-full"
@@ -187,6 +191,7 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
           Display Order
         </label>
         <input
+          suppressHydrationWarning
           type="number"
           value={form.order}
           placeholder="e.g. 1"
