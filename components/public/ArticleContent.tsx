@@ -1,6 +1,7 @@
 'use client'
 // components/public/ArticleContent.tsx
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import MarkdownRenderer from './MarkdownRenderer'
 
@@ -19,14 +20,22 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
   // ── Section AI summary state ────────────────────────────────────────────────
   type SecModalState = { title: string; state: 'loading' | 'done' | 'error'; bullets: string[] } | null
   const [secModal, setSecModal] = useState<SecModalState>(null)
+  // Cache: title -> bullets (avoids re-fetching when reopening same section)
+  const secCache = useRef<Map<string, string[]>>(new Map())
 
   // ── Listen for section-summarize events (avoids stale closure in useEffect) ─
   useEffect(() => {
     const handler = async (e: Event) => {
       const { title, content: sectionContent } = (e as CustomEvent<{ title: string; content: string }>).detail
-      setSecModal({ title, state: 'loading', bullets: [] })
       // Lock scroll
       document.body.style.overflow = 'hidden'
+      // Return cached result immediately if available
+      const cached = secCache.current.get(title)
+      if (cached) {
+        setSecModal({ title, state: 'done', bullets: cached })
+        return
+      }
+      setSecModal({ title, state: 'loading', bullets: [] })
       try {
         const res = await fetch('/api/ai/summarize', {
           method: 'POST',
@@ -35,6 +44,7 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
         })
         const data = await res.json()
         if (!res.ok || !data.data?.bullets) throw new Error(data.message ?? 'Failed')
+        secCache.current.set(title, data.data.bullets)
         setSecModal({ title, state: 'done', bullets: data.data.bullets })
       } catch (err) {
         setSecModal((prev) => prev ? { ...prev, state: 'error' } : null)
@@ -166,7 +176,7 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
       </div>
 
       {/* ── Section AI Summary Modal ──────────────────────────────────────── */}
-      {secModal && (
+      {secModal && createPortal(
         <div
           className="ai-modal-backdrop"
           role="dialog"
@@ -213,7 +223,14 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
                     type="button"
                     onClick={() => {
                       const title = secModal.title
+                      secCache.current.delete(title)
                       setSecModal({ title, state: 'loading', bullets: [] })
+                      // Re-dispatch so the handler re-fetches
+                      const el = document.querySelector(`[data-section-title="${CSS.escape(title)}"]`)
+                      const sectionContent = el ? (el as HTMLElement).innerText : title
+                      window.dispatchEvent(new CustomEvent('aa-section-summarize', {
+                        detail: { title, content: sectionContent },
+                      }))
                     }}
                     className="ai-modal-retry-btn"
                   >
@@ -229,7 +246,8 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

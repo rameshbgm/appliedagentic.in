@@ -2,6 +2,7 @@
 // components/public/ArticleReaderTools.tsx
 
 import { useEffect, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Bot,
   AArrowUp, AArrowDown, X, Loader2,
@@ -125,7 +126,7 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
       {/* ══════════════════════════════════════════════════════════════════════
           AI SUMMARY POPUP MODAL
       ══════════════════════════════════════════════════════════════════════ */}
-      {aiOpen && (
+      {aiOpen && createPortal(
         <div
           className="ai-modal-backdrop"
           role="dialog"
@@ -176,7 +177,8 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
