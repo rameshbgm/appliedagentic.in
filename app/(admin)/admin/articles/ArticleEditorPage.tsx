@@ -77,13 +77,15 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   // Full article AI generator
   const [showAIGenerator, setShowAIGenerator] = useState(false)
   const [aiGenLoading, setAIGenLoading] = useState(false)
+  const [aiAttachments, setAIAttachments] = useState<File[]>([])
   const [aiGenForm, setAIGenForm] = useState({
     topic: '',
     context: '',
     mode: 'generate',
     tone: 'professional',
     length: 'medium',
-    url: '',
+    format: 'article',
+    urls: [''],
     exclude: '',
   })
 
@@ -266,6 +268,20 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     if (!aiGenForm.topic.trim()) { toast.error('Article topic is required'); return }
     setAIGenLoading(true)
     try {
+      // ── 1. Read attached files as text ──
+      const attachments: { name: string; content: string; type: string }[] = []
+      for (const file of aiAttachments) {
+        const content = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = (e) => resolve((e.target?.result as string) ?? '')
+          reader.onerror = () => resolve('')
+          reader.readAsText(file)
+        })
+        attachments.push({ name: file.name, content, type: file.type })
+      }
+
+      // ── 2. Call generate-article API ──
+      const validUrls = aiGenForm.urls.filter((u) => u.trim())
       const res = await fetch('/api/ai/generate-article', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -275,45 +291,104 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           mode: aiGenForm.mode,
           tone: aiGenForm.tone,
           length: aiGenForm.length,
-          url: aiGenForm.url || undefined,
+          format: aiGenForm.format,
+          urls: validUrls.length ? validUrls : undefined,
+          attachments: attachments.length ? attachments : undefined,
           exclude: aiGenForm.exclude || undefined,
         }),
       })
       const data = await res.json()
-      if (data.success) {
-        const d = data.data
-        // Populate article fields
-        if (d.title) setTitle(d.title)
-        if (d.slug && !initialArticle.id) setSlug(d.slug)
-        if (d.summary) setSummary(d.summary)
-        // Populate sections or fall back to single section
-        if (Array.isArray(d.sections) && d.sections.length > 0) {
-          setSections(d.sections.map((s: { title: string; content: string }, i: number) => ({
-            tempId: `ai-section-${Date.now()}-${i}`,
-            title: s.title ?? '',
-            content: s.content ?? '',
-            order: i,
-          })))
-        } else if (d.content) {
-          setSections([{ tempId: `ai-section-${Date.now()}`, title: '', content: d.content, order: 0 }])
-        }
-        // Populate SEO + meta
-        setMeta((m) => ({
-          ...m,
-          seoTitle:           (d.seoTitle           ?? m.seoTitle).slice(0, 60),
-          seoDescription:     (d.seoDescription     ?? m.seoDescription).slice(0, 160),
-          seoKeywords:        d.seoKeywords         ?? m.seoKeywords,
-          ogTitle:            (d.ogTitle            ?? m.ogTitle).slice(0, 70),
-          ogDescription:      (d.ogDescription      ?? m.ogDescription).slice(0, 200),
-          twitterTitle:       (d.twitterTitle       ?? m.twitterTitle).slice(0, 70),
-          twitterDescription: (d.twitterDescription ?? m.twitterDescription).slice(0, 200),
-          tagNames:           d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
-          aiContentDeclaration: 'ai-generated',
-        }))
-        setShowAIGenerator(false)
-        toast.success('Article generated! Review and edit before publishing.')
-      } else {
+      if (!data.success) {
         toast.error(data.error ?? 'Article generation failed')
+        return
+      }
+      const d = data.data
+
+      // ── 3. Build sections from response ──
+      const newSections =
+        Array.isArray(d.sections) && d.sections.length > 0
+          ? d.sections.map((s: { title: string; content: string }, i: number) => ({
+              tempId: `ai-${Date.now()}-${i}`,
+              title: s.title ?? '',
+              content: s.content ?? '',
+              order: i,
+            }))
+          : [{ tempId: `ai-${Date.now()}`, title: '', content: d.content ?? '', order: 0 }]
+
+      const newTitle   = d.title || aiGenForm.topic
+      const newSlug    = d.slug || newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const newSummary = d.summary || ''
+      const newTags    = d.tags?.length > 0 ? d.tags.slice(0, 10) : meta.tagNames
+
+      // ── 4. Fill all editor fields ──
+      setTitle(newTitle)
+      if (!initialArticle.id) setSlug(newSlug)
+      setSummary(newSummary)
+      setSections(newSections)
+      setMeta((m) => ({
+        ...m,
+        status:              'DRAFT',
+        tagNames:            newTags,
+        seoTitle:            (d.seoTitle            ?? m.seoTitle).slice(0, 60),
+        seoDescription:      (d.seoDescription      ?? m.seoDescription).slice(0, 160),
+        seoKeywords:         d.seoKeywords          ?? m.seoKeywords,
+        ogTitle:             (d.ogTitle             ?? m.ogTitle).slice(0, 70),
+        ogDescription:       (d.ogDescription       ?? m.ogDescription).slice(0, 200),
+        twitterTitle:        (d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
+        twitterDescription:  (d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
+        aiContentDeclaration: 'ai-generated',
+      }))
+
+      // ── 5. Auto-save as DRAFT ──
+      const savePayload = {
+        title:               newTitle,
+        slug:                newSlug,
+        summary:             newSummary,
+        content:             newSections.map((s: { content: string }) => s.content).join('\n'),
+        coverImageUrl,
+        status:              'DRAFT',
+        tagNames:            newTags,
+        seoTitle:            (d.seoTitle ?? '').slice(0, 60),
+        seoDescription:      (d.seoDescription ?? '').slice(0, 160),
+        seoKeywords:         d.seoKeywords ?? '',
+        ogTitle:             (d.ogTitle ?? '').slice(0, 70),
+        ogDescription:       (d.ogDescription ?? '').slice(0, 200),
+        twitterTitle:        (d.twitterTitle ?? '').slice(0, 70),
+        twitterDescription:  (d.twitterDescription ?? '').slice(0, 200),
+        aiContentDeclaration: 'ai-generated',
+        audioUrl:            meta.audioUrl,
+        isFeatured:          false,
+        subMenuIds:          meta.subMenuIds,
+        menuIds:             meta.menuIds,
+        sections:            newSections.map((s: { id?: string; title: string; content: string }, i: number) => ({
+          id: s.id, title: s.title, content: s.content, order: i,
+        })),
+      }
+      const saveUrl    = initialArticle.id ? `/api/articles/${initialArticle.id}` : '/api/articles'
+      const saveMethod = initialArticle.id ? 'PUT' : 'POST'
+      const saveRes    = await fetch(saveUrl, {
+        method: saveMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(savePayload),
+      })
+      const saveData = await saveRes.json()
+
+      setShowAIGenerator(false)
+      setAIAttachments([])
+      setAIGenForm((f) => ({ ...f, urls: [''], context: '', exclude: '' }))
+
+      const srcCount = d.referenceSourceCount ?? (validUrls.length + attachments.length)
+      const srcNote  = srcCount > 0 ? ` (${srcCount} source${srcCount !== 1 ? 's' : ''} used)` : ''
+
+      if (saveData.success) {
+        toast.success(`Article generated & saved as draft!${srcNote}`)
+        if (!initialArticle.id && saveData.data?.id) {
+          router.push(`/admin/articles/${saveData.data.id}/edit`)
+        } else {
+          router.refresh()
+        }
+      } else {
+        toast.success(`Article generated!${srcNote} Click Save to persist.`)
       }
     } catch {
       toast.error('Failed to generate article')
@@ -1176,10 +1251,10 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           onClick={(e) => { if (e.target === e.currentTarget) setShowAIGenerator(false) }}
         >
           <div
-            className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+            className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
             style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
           >
-            {/* Modal header */}
+            {/* ── Header ── */}
             <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--bg-border)' }}>
               <div className="flex items-center gap-2">
                 <Wand2 size={18} style={{ color: 'var(--color-violet)' }} />
@@ -1187,18 +1262,15 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   AI Article Generator
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowAIGenerator(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <button type="button" onClick={() => setShowAIGenerator(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" style={{ color: 'var(--text-muted)' }}>
                 <XIcon size={16} />
               </button>
             </div>
 
-            {/* Modal body */}
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* ── Body ── */}
+            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+
               {/* Topic */}
               <div>
                 <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
@@ -1229,63 +1301,158 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 />
               </div>
 
-              {/* Mode, Tone, Length row */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Reference URLs */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Reference URLs (optional) — AI will fetch and read each page
+                </label>
+                <div className="space-y-2">
+                  {aiGenForm.urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={url}
+                        onChange={(e) => {
+                          const next = [...aiGenForm.urls]
+                          next[idx] = e.target.value
+                          setAIGenForm((f) => ({ ...f, urls: next }))
+                        }}
+                        placeholder="https://example.com/source-article"
+                        className="flex-1 px-3 py-2 rounded-xl border text-sm outline-none"
+                        style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                      />
+                      {aiGenForm.urls.length > 1 && (
+                        <button type="button"
+                          onClick={() => setAIGenForm((f) => ({ ...f, urls: f.urls.filter((_, i) => i !== idx) }))}
+                          className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" style={{ color: '#ef4444' }}>
+                          <XIcon size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setAIGenForm((f) => ({ ...f, urls: [...f.urls, ''] }))}
+                    className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:opacity-80"
+                    style={{ borderColor: 'var(--color-violet)', color: 'var(--color-violet)', background: 'rgba(124,58,237,0.05)' }}>
+                    + Add URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Attachments */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Attachments (optional) — .txt, .md, .html, .json, .csv
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border text-sm w-fit transition-colors hover:opacity-80"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)', background: 'var(--bg-surface)' }}>
+                  <span>Choose files</span>
+                  <input type="file" multiple accept=".txt,.md,.html,.json,.csv" className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) setAIAttachments((prev) => [...prev, ...Array.from(e.target.files!)])
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                {aiAttachments.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {aiAttachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs"
+                        style={{ borderColor: 'var(--bg-border)', background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+                        <span>{file.name}</span>
+                        <button type="button" onClick={() => setAIAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                          className="hover:text-red-500 transition-colors"><XIcon size={11} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Mode + Format row */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Mode</label>
-                  <select
-                    value={aiGenForm.mode}
-                    onChange={(e) => setAIGenForm((f) => ({ ...f, mode: e.target.value }))}
+                  <select value={aiGenForm.mode} onChange={(e) => setAIGenForm((f) => ({ ...f, mode: e.target.value }))}
                     className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
-                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                  >
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
                     <option value="generate">Generate</option>
                     <option value="outline">Outline</option>
                     <option value="expand">Expand</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Tone</label>
-                  <select
-                    value={aiGenForm.tone}
-                    onChange={(e) => setAIGenForm((f) => ({ ...f, tone: e.target.value }))}
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Format</label>
+                  <select value={aiGenForm.format} onChange={(e) => setAIGenForm((f) => ({ ...f, format: e.target.value }))}
                     className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
-                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="professional">Professional</option>
-                    <option value="conversational">Conversational</option>
-                    <option value="technical">Technical</option>
-                    <option value="inspirational">Inspirational</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Length</label>
-                  <select
-                    value={aiGenForm.length}
-                    onChange={(e) => setAIGenForm((f) => ({ ...f, length: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
-                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="short">Short (~500w)</option>
-                    <option value="medium">Medium (~1000w)</option>
-                    <option value="long">Long (~2000w)</option>
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
+                    <option value="article">Article</option>
+                    <option value="listicle">Listicle</option>
+                    <option value="how-to">How-To</option>
+                    <option value="tutorial">Tutorial</option>
+                    <option value="deep-dive">Deep Dive</option>
+                    <option value="quick-read">Quick Read</option>
+                    <option value="case-study">Case Study</option>
+                    <option value="comparison">Comparison</option>
                   </select>
                 </div>
               </div>
 
-              {/* Target URL */}
-              <div>
-                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Target URL Slug (optional)
-                </label>
-                <input
-                  type="text"
-                  value={aiGenForm.url}
-                  onChange={(e) => setAIGenForm((f) => ({ ...f, url: e.target.value }))}
-                  placeholder="e.g. building-react-agent-langchain"
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
+              {/* Tone + Length row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Tone</label>
+                  <select value={aiGenForm.tone} onChange={(e) => setAIGenForm((f) => ({ ...f, tone: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
+                    <optgroup label="Common">
+                      <option value="professional">Professional</option>
+                      <option value="conversational">Conversational</option>
+                      <option value="casual">Casual</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="humorous">Humorous</option>
+                    </optgroup>
+                    <optgroup label="Technical / Educational">
+                      <option value="technical">Technical</option>
+                      <option value="academic">Academic</option>
+                      <option value="educational">Educational</option>
+                      <option value="beginner-friendly">Beginner-Friendly</option>
+                      <option value="research-focused">Research-Focused</option>
+                    </optgroup>
+                    <optgroup label="Persuasive / Motivational">
+                      <option value="inspirational">Inspirational</option>
+                      <option value="persuasive">Persuasive</option>
+                      <option value="motivational">Motivational</option>
+                      <option value="authoritative">Authoritative</option>
+                      <option value="visionary">Visionary</option>
+                    </optgroup>
+                    <optgroup label="Analytical / Journalistic">
+                      <option value="analytical">Analytical</option>
+                      <option value="journalistic">Journalistic</option>
+                      <option value="critical">Critical</option>
+                      <option value="investigative">Investigative</option>
+                      <option value="thought-provoking">Thought-Provoking</option>
+                    </optgroup>
+                    <optgroup label="Narrative / Creative">
+                      <option value="storytelling">Storytelling</option>
+                      <option value="narrative">Narrative</option>
+                      <option value="empathetic">Empathetic</option>
+                      <option value="pragmatic">Pragmatic</option>
+                      <option value="concise">Concise</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Length</label>
+                  <select value={aiGenForm.length} onChange={(e) => setAIGenForm((f) => ({ ...f, length: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
+                    <option value="short">Short (~600w)</option>
+                    <option value="medium">Medium (~1 200w)</option>
+                    <option value="long">Long (~2 500w)</option>
+                    <option value="extra-long">Extra Long (~4 000w)</option>
+                    <option value="comprehensive">Comprehensive (~6 000w+)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Exclude */}
@@ -1293,43 +1460,34 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                   Exclude (optional)
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={aiGenForm.exclude}
                   onChange={(e) => setAIGenForm((f) => ({ ...f, exclude: e.target.value }))}
-                  placeholder="Topics or terms to explicitly exclude from the article..."
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  placeholder="Topics, terms, or phrases the AI should NOT include. One per line or comma-separated."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
                   style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
                 />
-                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Comma-separated topics or terms the AI should not mention.
-                </p>
               </div>
 
               <div className="p-3 rounded-xl border text-xs" style={{ background: 'rgba(124,58,237,0.05)', borderColor: 'rgba(124,58,237,0.2)', color: 'var(--text-muted)' }}>
-                ⚠️ This will <strong>replace</strong> the current title, content, sections, SEO, and tags. Your existing content will be overwritten. Save first if needed.
+                ⚠️ This will <strong>replace</strong> current title, content, sections, SEO, and tags, then <strong>auto-save as Draft</strong>. Save any existing work first.
               </div>
             </div>
 
-            {/* Modal footer */}
+            {/* ── Footer ── */}
             <div className="flex items-center justify-end gap-3 px-5 py-4 border-t" style={{ borderColor: 'var(--bg-border)' }}>
-              <button
-                type="button"
-                onClick={() => setShowAIGenerator(false)}
+              <button type="button" onClick={() => setShowAIGenerator(false)}
                 className="px-4 py-2 rounded-xl text-sm border hover:bg-gray-50 transition-colors"
-                style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
-              >
+                style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={generateFullArticle}
+              <button type="button" onClick={generateFullArticle}
                 disabled={aiGenLoading || !aiGenForm.topic.trim()}
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
-              >
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
                 {aiGenLoading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-                {aiGenLoading ? 'Generating Article…' : 'Generate Article'}
+                {aiGenLoading ? 'Generating & Saving…' : 'Generate & Save Draft'}
               </button>
             </div>
           </div>
