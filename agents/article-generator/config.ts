@@ -19,8 +19,8 @@ export const config: AgentConfig = {
   /** Balanced temperature for creative but structured output */
   temperature: 0.7,
 
-  /** Full articles require generous token budget */
-  maxTokens: 6000,
+  /** Fallback token budget — overridden per-length in the agent (2500/4500/7000) */
+  maxTokens: 4500,
 
   streaming: false,
 }

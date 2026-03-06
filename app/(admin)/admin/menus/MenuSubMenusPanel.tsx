@@ -1,7 +1,7 @@
 'use client'
 // app/(admin)/admin/menus/MenuSubMenusPanel.tsx
 // Shows sub-menus linked to a menu on the edit page for quick access.
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, Eye, EyeOff, FileText } from 'lucide-react'
 import { toast } from 'sonner'

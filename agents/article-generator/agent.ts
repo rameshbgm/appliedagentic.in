@@ -114,7 +114,7 @@ export async function runArticleGenerator(
   }
 
   const title            = (parsed.title            ?? input.prompt).slice(0, 200)
-  const slug             = (parsed.slug             ?? '').replace(/[^a-z0-9-]/g, '') || ''
+  const slug             = (parsed.slug             ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '') || ''
   const summary          = (parsed.summary          ?? '').slice(0, 300)
   const content          = parsed.content           ?? result.text
   const sections         = Array.isArray(parsed.sections) ? parsed.sections : []
