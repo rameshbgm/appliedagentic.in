@@ -42,6 +42,8 @@ export interface ArticleGeneratorInput extends AgentInput {
   exclude?: string
   /** Pre-fetched reference content from URLs and attachments */
   referenceContent?: string
+  /** Exact number of sections to generate (default: AI decides, 3–8) */
+  sectionCount?: number
 }
 
 export interface GeneratedSection {
@@ -141,6 +143,7 @@ export async function runArticleGenerator(
     `Format: ${formatInstruction}`,
     `Tone: ${toneInstruction}`,
     `Length: ${length} (see guardrails for word counts)`,
+    input.sectionCount ? `Sections: Generate EXACTLY ${input.sectionCount} sections. No more, no fewer.` : '',
     input.context ? `Additional context from user:\n${input.context}` : '',
     input.referenceContent
       ? `REFERENCE MATERIAL (from URLs/attachments — use this as source material and inspiration, do NOT copy verbatim):\n---\n${input.referenceContent.slice(0, 12000)}\n---`

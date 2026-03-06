@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
       urls = [],    // multiple URLs
       attachments = [], // [{ name: string; content: string; type: string }]
       exclude,
+      sectionCount, // optional: exact number of sections
     } = body
 
     if (!prompt?.trim()) return apiError('Article topic is required', 422)
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       url: allUrls[0],
       exclude,
       referenceContent,
+      sectionCount: sectionCount ? parseInt(String(sectionCount), 10) : undefined,
     })
 
     return apiSuccess({

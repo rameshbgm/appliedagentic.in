@@ -87,6 +87,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     format: 'article',
     urls: [''],
     exclude: '',
+    sectionCount: 5,
   })
 
   const [title, setTitle] = useState(initialArticle.title)
@@ -295,6 +296,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           urls: validUrls.length ? validUrls : undefined,
           attachments: attachments.length ? attachments : undefined,
           exclude: aiGenForm.exclude || undefined,
+          sectionCount: aiGenForm.sectionCount,
         }),
       })
       const data = await res.json()
@@ -1368,8 +1370,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 )}
               </div>
 
-              {/* Mode + Format row */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Mode + Format + Sections row */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Mode</label>
                   <select value={aiGenForm.mode} onChange={(e) => setAIGenForm((f) => ({ ...f, mode: e.target.value }))}
@@ -1393,6 +1395,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     <option value="quick-read">Quick Read</option>
                     <option value="case-study">Case Study</option>
                     <option value="comparison">Comparison</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Sections</label>
+                  <select value={aiGenForm.sectionCount} onChange={(e) => setAIGenForm((f) => ({ ...f, sectionCount: parseInt(e.target.value, 10) }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}>
+                    {[2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => (
+                      <option key={n} value={n}>{n} sections</option>
+                    ))}
                   </select>
                 </div>
               </div>
