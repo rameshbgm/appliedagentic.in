@@ -2,7 +2,7 @@
 // app/(admin)/admin/menus/MenusReorderList.tsx
 import Link from 'next/link'
 import { useState, useCallback, useEffect } from 'react'
-import { Pencil, GripVertical } from 'lucide-react'
+import { Pencil, GripVertical, Eye, EyeOff } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -34,9 +34,15 @@ interface MenuData {
   _count: { subMenus: number }
 }
 
-function SortableMenuItem({ menu, isDeleting, onDeleted }: { menu: MenuData; isDeleting: boolean; onDeleted: () => void }) {
+function SortableMenuItem({ menu, isDeleting, onDeleted, onVisibilityChanged }: {
+  menu: MenuData
+  isDeleting: boolean
+  onDeleted: () => void
+  onVisibilityChanged: (id: number, isVisible: boolean) => void
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: menu.id })
+  const [togglingVisibility, setTogglingVisibility] = useState(false)
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -49,6 +55,28 @@ function SortableMenuItem({ menu, isDeleting, onDeleted }: { menu: MenuData; isD
     marginBottom: isDeleting ? '0px' : undefined,
     zIndex: isDragging ? 50 : undefined,
     pointerEvents: isDeleting ? 'none' : undefined,
+  }
+
+  const toggleVisibility = async () => {
+    setTogglingVisibility(true)
+    try {
+      const res = await fetch(`/api/menus/${menu.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isVisible: !menu.isVisible }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onVisibilityChanged(menu.id, !menu.isVisible)
+        toast.success(menu.isVisible ? 'Menu hidden' : 'Menu visible')
+      } else {
+        toast.error(data.error ?? 'Failed to update visibility')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setTogglingVisibility(false)
+    }
   }
 
   return (
@@ -100,15 +128,30 @@ function SortableMenuItem({ menu, isDeleting, onDeleted }: { menu: MenuData; isD
         )}
       </div>
 
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link
-          href={`/admin/menus/${menu.id}/edit`}
-          className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
-          title="Edit"
+      <div className="flex items-center gap-2">
+        {/* Visibility toggle — always visible */}
+        <button
+          type="button"
+          onClick={toggleVisibility}
+          disabled={togglingVisibility}
+          title={menu.isVisible ? 'Hide menu' : 'Show menu'}
+          className="p-2 rounded-xl transition-colors hover:bg-gray-100 disabled:opacity-40"
+          style={{ color: menu.isVisible ? 'var(--green)' : 'var(--text-muted)' }}
         >
-          <Pencil size={16} className="text-gray-400" />
-        </Link>
-        <ConfirmDeleteMenu id={menu.id} name={menu.title} onDeleted={onDeleted} />
+          {menu.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+        </button>
+
+        {/* Edit + Delete — shown on hover */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Link
+            href={`/admin/menus/${menu.id}/edit`}
+            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            title="Edit"
+          >
+            <Pencil size={16} className="text-gray-400" />
+          </Link>
+          <ConfirmDeleteMenu id={menu.id} name={menu.title} onDeleted={onDeleted} />
+        </div>
       </div>
     </div>
   )
@@ -128,6 +171,10 @@ export default function MenusReorderList({ initialMenus }: { initialMenus: MenuD
       setMenus((prev) => prev.filter((m) => m.id !== id))
       setDeletingIds((prev) => { const n = new Set(prev); n.delete(id); return n })
     }, 400)
+  }, [])
+
+  const handleVisibilityChanged = useCallback((id: number, isVisible: boolean) => {
+    setMenus((prev) => prev.map((m) => m.id === id ? { ...m, isVisible } : m))
   }, [])
 
   const sensors = useSensors(
@@ -192,6 +239,7 @@ export default function MenusReorderList({ initialMenus }: { initialMenus: MenuD
               menu={menu}
               isDeleting={deletingIds.has(menu.id)}
               onDeleted={() => handleDeleteStart(menu.id)}
+              onVisibilityChanged={handleVisibilityChanged}
             />
           ))}
         </SortableContext>

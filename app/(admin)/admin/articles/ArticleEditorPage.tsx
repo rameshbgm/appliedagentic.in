@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
@@ -65,6 +65,27 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [tagsLoading, setTagsLoading] = useState(false)
   const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
+
+  // SEO tabs
+  const [seoTab, setSeoTab] = useState<'seo' | 'og' | 'twitter' | 'meta'>('seo')
+
+  // Cover image AI
+  const [showCoverAI, setShowCoverAI] = useState(false)
+  const [coverAIPrompt, setCoverAIPrompt] = useState('')
+  const [coverAILoading, setCoverAILoading] = useState(false)
+
+  // Full article AI generator
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [aiGenLoading, setAIGenLoading] = useState(false)
+  const [aiGenForm, setAIGenForm] = useState({
+    topic: '',
+    context: '',
+    mode: 'generate',
+    tone: 'professional',
+    length: 'medium',
+    url: '',
+    exclude: '',
+  })
 
   const [title, setTitle] = useState(initialArticle.title)
   const [slug, setSlug] = useState(initialArticle.slug)
@@ -216,6 +237,91 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     }
   }
 
+  const generateCoverImage = async () => {
+    if (!coverAIPrompt.trim()) { toast.error('Enter an image prompt'); return }
+    setCoverAILoading(true)
+    try {
+      const res = await fetch('/api/ai/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: coverAIPrompt, size: '1792x1024', style: 'vivid' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setCoverImageUrl(data.data.url)
+        setShowCoverAI(false)
+        setCoverAIPrompt('')
+        toast.success('Cover image generated!')
+      } else {
+        toast.error(data.error ?? 'Image generation failed')
+      }
+    } catch {
+      toast.error('Failed to generate cover image')
+    } finally {
+      setCoverAILoading(false)
+    }
+  }
+
+  const generateFullArticle = async () => {
+    if (!aiGenForm.topic.trim()) { toast.error('Article topic is required'); return }
+    setAIGenLoading(true)
+    try {
+      const res = await fetch('/api/ai/generate-article', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: aiGenForm.topic,
+          context: aiGenForm.context || undefined,
+          mode: aiGenForm.mode,
+          tone: aiGenForm.tone,
+          length: aiGenForm.length,
+          url: aiGenForm.url || undefined,
+          exclude: aiGenForm.exclude || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const d = data.data
+        // Populate article fields
+        if (d.title) setTitle(d.title)
+        if (d.slug && !initialArticle.id) setSlug(d.slug)
+        if (d.summary) setSummary(d.summary)
+        // Populate sections or fall back to single section
+        if (Array.isArray(d.sections) && d.sections.length > 0) {
+          setSections(d.sections.map((s: { title: string; content: string }, i: number) => ({
+            tempId: `ai-section-${Date.now()}-${i}`,
+            title: s.title ?? '',
+            content: s.content ?? '',
+            order: i,
+          })))
+        } else if (d.content) {
+          setSections([{ tempId: `ai-section-${Date.now()}`, title: '', content: d.content, order: 0 }])
+        }
+        // Populate SEO + meta
+        setMeta((m) => ({
+          ...m,
+          seoTitle:           (d.seoTitle           ?? m.seoTitle).slice(0, 60),
+          seoDescription:     (d.seoDescription     ?? m.seoDescription).slice(0, 160),
+          seoKeywords:        d.seoKeywords         ?? m.seoKeywords,
+          ogTitle:            (d.ogTitle            ?? m.ogTitle).slice(0, 70),
+          ogDescription:      (d.ogDescription      ?? m.ogDescription).slice(0, 200),
+          twitterTitle:       (d.twitterTitle       ?? m.twitterTitle).slice(0, 70),
+          twitterDescription: (d.twitterDescription ?? m.twitterDescription).slice(0, 200),
+          tagNames:           d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
+          aiContentDeclaration: 'ai-generated',
+        }))
+        setShowAIGenerator(false)
+        toast.success('Article generated! Review and edit before publishing.')
+      } else {
+        toast.error(data.error ?? 'Article generation failed')
+      }
+    } catch {
+      toast.error('Failed to generate article')
+    } finally {
+      setAIGenLoading(false)
+    }
+  }
+
   const getPayload = () => ({
     title,
     slug: slug || autoSlug(title),
@@ -360,6 +466,18 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             {meta.isFeatured ? 'Featured' : 'Feature'}
           </button>
 
+          {/* AI Generate Article button */}
+          <button
+            type="button"
+            onClick={() => setShowAIGenerator(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#fff' }}
+            title="Generate entire article with AI"
+          >
+            <Wand2 size={13} />
+            AI Generate
+          </button>
+
           {/* Single Save button */}
           <button
             type="button"
@@ -485,6 +603,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     Remove
                   </button>
                 )}
+                {/* AI Generate cover image */}
+                <button
+                  type="button"
+                  onClick={() => setShowCoverAI((v) => !v)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
+                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                >
+                  <Sparkles size={12} />
+                  Generate with AI
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowCoverPicker(true)}
@@ -496,6 +624,46 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 </button>
               </div>
             </div>
+
+            {/* AI cover image generation panel */}
+            {showCoverAI && (
+              <div className="p-4 border-b space-y-3" style={{ borderColor: 'var(--bg-border)', background: 'var(--bg-surface)' }}>
+                <label className="text-[10px] uppercase tracking-widest font-semibold block" style={{ color: 'var(--text-muted)' }}>
+                  Describe the cover image
+                </label>
+                <textarea
+                  value={coverAIPrompt}
+                  onChange={(e) => setCoverAIPrompt(e.target.value)}
+                  placeholder="e.g. A futuristic AI neural network visualization with glowing nodes on a dark background..."
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                  style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={generateCoverImage}
+                    disabled={coverAILoading || !coverAIPrompt.trim()}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: 'var(--color-violet)' }}
+                  >
+                    {coverAILoading ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                    {coverAILoading ? 'Generating…' : 'Generate Cover Image'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCoverAI(false); setCoverAIPrompt('') }}
+                    className="px-3 py-2 rounded-xl text-xs border hover:bg-gray-50 transition-colors"
+                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  Generates a wide (16:9) image and saves it to your media library.
+                </p>
+              </div>
+            )}
 
             {coverImageUrl ? (
               <div className="relative">
@@ -534,6 +702,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             className="rounded-2xl border overflow-hidden"
             style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
           >
+            {/* Header */}
             <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--bg-border)' }}>
               <Globe size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SEO &amp; Social</span>
@@ -545,170 +714,244 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
               >
                 {metaLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                Generate with AI
+                Generate All with AI
               </button>
             </div>
+
+            {/* Tab bar */}
+            <div className="flex border-b" style={{ borderColor: 'var(--bg-border)' }}>
+              {(['seo', 'og', 'twitter', 'meta'] as const).map((tab) => {
+                const labels: Record<string, string> = { seo: 'SEO', og: 'Open Graph', twitter: 'Twitter / X', meta: 'AI & LLM' }
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setSeoTab(tab)}
+                    className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${seoTab === tab ? 'border-b-2' : ''}`}
+                    style={{
+                      borderColor: seoTab === tab ? 'var(--color-violet)' : 'transparent',
+                      color: seoTab === tab ? 'var(--color-violet)' : 'var(--text-muted)',
+                      background: 'transparent',
+                    }}
+                  >
+                    {labels[tab]}
+                  </button>
+                )
+              })}
+            </div>
+
             <div className="p-4 space-y-4">
-              {/* SERP Preview */}
-              <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
-                <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Google Preview</p>
-                <p className="text-sm font-medium mb-0.5 truncate" style={{ color: '#1a0dab' }}>
-                  {meta.seoTitle || title || 'Page Title'}
-                </p>
-                <p className="text-xs mb-0.5" style={{ color: '#006621' }}>
-                  appliedagentic.in/articles/{slug || 'article-slug'}
-                </p>
-                <p className="text-xs line-clamp-2" style={{ color: '#545454' }}>
-                  {meta.seoDescription || summary || 'No description provided. Add a meta description to improve click-through rates.'}
-                </p>
-              </div>
+              {/* ── SEO Tab ── */}
+              {seoTab === 'seo' && (
+                <>
+                  {/* SERP Preview */}
+                  <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
+                    <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>Google Preview</p>
+                    <p className="text-sm font-medium mb-0.5 truncate" style={{ color: '#1a0dab' }}>
+                      {meta.seoTitle || title || 'Page Title'}
+                    </p>
+                    <p className="text-xs mb-0.5" style={{ color: '#006621' }}>
+                      appliedagentic.in/articles/{slug || 'article-slug'}
+                    </p>
+                    <p className="text-xs line-clamp-2" style={{ color: '#545454' }}>
+                      {meta.seoDescription || summary || 'No description provided. Add a meta description to improve click-through rates.'}
+                    </p>
+                  </div>
 
-              {/* SEO Title */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>SEO Title</label>
-                  <span className="text-xs" style={{ color: meta.seoTitle.length > 60 ? '#ef4444' : meta.seoTitle.length > 50 ? '#f59e0b' : 'var(--text-muted)' }}>
-                    {meta.seoTitle.length}/60
-                  </span>
-                </div>
-                <input
-                  value={meta.seoTitle}
-                  onChange={(e) => setMeta((m) => ({ ...m, seoTitle: e.target.value }))}
-                  placeholder={title || 'Override the page title for search engines...'}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* SEO Title */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>SEO Title</label>
+                      <span className="text-xs" style={{ color: meta.seoTitle.length > 60 ? '#ef4444' : meta.seoTitle.length > 50 ? '#f59e0b' : 'var(--text-muted)' }}>
+                        {meta.seoTitle.length}/60
+                      </span>
+                    </div>
+                    <input
+                      value={meta.seoTitle}
+                      onChange={(e) => setMeta((m) => ({ ...m, seoTitle: e.target.value }))}
+                      placeholder={title || 'Override the page title for search engines...'}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* Meta Description */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Meta Description</label>
-                  <span className="text-xs" style={{ color: meta.seoDescription.length > 160 ? '#ef4444' : meta.seoDescription.length > 140 ? '#f59e0b' : 'var(--text-muted)' }}>
-                    {meta.seoDescription.length}/160
-                  </span>
-                </div>
-                <textarea
-                  value={meta.seoDescription}
-                  onChange={(e) => setMeta((m) => ({ ...m, seoDescription: e.target.value }))}
-                  placeholder={summary || 'Describe this article for search engines and social sharing...'}
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* Meta Description */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Meta Description</label>
+                      <span className="text-xs" style={{ color: meta.seoDescription.length > 160 ? '#ef4444' : meta.seoDescription.length > 140 ? '#f59e0b' : 'var(--text-muted)' }}>
+                        {meta.seoDescription.length}/160
+                      </span>
+                    </div>
+                    <textarea
+                      value={meta.seoDescription}
+                      onChange={(e) => setMeta((m) => ({ ...m, seoDescription: e.target.value }))}
+                      placeholder={summary || 'Describe this article for search engines and social sharing...'}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* OG image hint */}
-              {coverImageUrl && (
-                <div className="flex items-center gap-3 p-2 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
-                  <img src={coverImageUrl} alt="" className="w-16 h-10 rounded-lg object-cover shrink-0" />
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Cover image will be used as the social share (OG) image.
-                  </p>
-                </div>
+                  {/* Keywords */}
+                  <div>
+                    <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Keywords</label>
+                    <input
+                      value={meta.seoKeywords}
+                      onChange={(e) => setMeta((m) => ({ ...m, seoKeywords: e.target.value }))}
+                      placeholder="ai agents, langchain, machine learning, ..."
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Comma-separated. Used for meta keywords tag and AI crawler context.</p>
+                  </div>
+                </>
               )}
 
-              {/* ── Open Graph ── */}
-              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Open Graph (Social)</p>
+              {/* ── Open Graph Tab ── */}
+              {seoTab === 'og' && (
+                <>
+                  {coverImageUrl && (
+                    <div className="flex items-center gap-3 p-2 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
+                      <img src={coverImageUrl} alt="" className="w-16 h-10 rounded-lg object-cover shrink-0" />
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Cover image will be used as the social share (OG) image.
+                      </p>
+                    </div>
+                  )}
 
-              {/* OG Title */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Title</label>
-                  <span className="text-xs" style={{ color: meta.ogTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogTitle.length}/70</span>
-                </div>
-                <input
-                  value={meta.ogTitle}
-                  onChange={(e) => setMeta((m) => ({ ...m, ogTitle: e.target.value }))}
-                  placeholder={meta.seoTitle || title || 'Facebook / LinkedIn / Discord title...'}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* OG Title */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Title</label>
+                      <span className="text-xs" style={{ color: meta.ogTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogTitle.length}/70</span>
+                    </div>
+                    <input
+                      value={meta.ogTitle}
+                      onChange={(e) => setMeta((m) => ({ ...m, ogTitle: e.target.value }))}
+                      placeholder={meta.seoTitle || title || 'Facebook / LinkedIn / Discord title...'}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* OG Description */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Description</label>
-                  <span className="text-xs" style={{ color: meta.ogDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogDescription.length}/200</span>
-                </div>
-                <textarea
-                  value={meta.ogDescription}
-                  onChange={(e) => setMeta((m) => ({ ...m, ogDescription: e.target.value }))}
-                  placeholder={meta.seoDescription || 'Social sharing description...'}
-                  rows={2}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* OG Description */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>OG Description</label>
+                      <span className="text-xs" style={{ color: meta.ogDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.ogDescription.length}/200</span>
+                    </div>
+                    <textarea
+                      value={meta.ogDescription}
+                      onChange={(e) => setMeta((m) => ({ ...m, ogDescription: e.target.value }))}
+                      placeholder={meta.seoDescription || 'Social sharing description...'}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* ── Keywords ── */}
-              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Keywords</p>
-              <div>
-                <input
-                  value={meta.seoKeywords}
-                  onChange={(e) => setMeta((m) => ({ ...m, seoKeywords: e.target.value }))}
-                  placeholder="ai agents, langchain, machine learning, ..."
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Comma-separated. Used for meta keywords tag and AI crawler context.</p>
-              </div>
+                  {/* OG Preview simulation */}
+                  <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Social Card Preview</p>
+                    <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--bg-border)' }}>
+                      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-32 object-cover" />}
+                      <div className="p-2" style={{ background: '#f0f2f5' }}>
+                        <p className="text-xs text-gray-500 uppercase">appliedagentic.in</p>
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">{meta.ogTitle || meta.seoTitle || title || 'Title'}</p>
+                        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{meta.ogDescription || meta.seoDescription || 'Description'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* ── Twitter / X Card ── */}
-              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>Twitter / X Card</p>
+              {/* ── Twitter Tab ── */}
+              {seoTab === 'twitter' && (
+                <>
+                  {/* Twitter Title */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Title</label>
+                      <span className="text-xs" style={{ color: meta.twitterTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterTitle.length}/70</span>
+                    </div>
+                    <input
+                      value={meta.twitterTitle}
+                      onChange={(e) => setMeta((m) => ({ ...m, twitterTitle: e.target.value }))}
+                      placeholder={meta.ogTitle || meta.seoTitle || title || 'Twitter / X title...'}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* Twitter Title */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Title</label>
-                  <span className="text-xs" style={{ color: meta.twitterTitle.length > 70 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterTitle.length}/70</span>
-                </div>
-                <input
-                  value={meta.twitterTitle}
-                  onChange={(e) => setMeta((m) => ({ ...m, twitterTitle: e.target.value }))}
-                  placeholder={meta.ogTitle || meta.seoTitle || title || 'Twitter / X title...'}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* Twitter Description */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Description</label>
+                      <span className="text-xs" style={{ color: meta.twitterDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterDescription.length}/200</span>
+                    </div>
+                    <textarea
+                      value={meta.twitterDescription}
+                      onChange={(e) => setMeta((m) => ({ ...m, twitterDescription: e.target.value }))}
+                      placeholder={meta.ogDescription || meta.seoDescription || 'Twitter / X description...'}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-              {/* Twitter Description */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Twitter Description</label>
-                  <span className="text-xs" style={{ color: meta.twitterDescription.length > 200 ? '#ef4444' : 'var(--text-muted)' }}>{meta.twitterDescription.length}/200</span>
-                </div>
-                <textarea
-                  value={meta.twitterDescription}
-                  onChange={(e) => setMeta((m) => ({ ...m, twitterDescription: e.target.value }))}
-                  placeholder={meta.ogDescription || meta.seoDescription || 'Twitter / X description...'}
-                  rows={2}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                />
-              </div>
+                  {/* Twitter Card preview simulation */}
+                  <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Twitter Card Preview</p>
+                    <div className="rounded-2xl overflow-hidden border border-gray-200">
+                      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-40 object-cover" />}
+                      <div className="p-3 bg-white">
+                        <p className="text-sm font-bold text-gray-900 truncate">{meta.twitterTitle || meta.ogTitle || meta.seoTitle || title || 'Title'}</p>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{meta.twitterDescription || meta.ogDescription || meta.seoDescription || 'Description'}</p>
+                        <p className="text-xs text-gray-400 mt-1">appliedagentic.in</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* ── AI / LLM Meta ── */}
-              <p className="text-xs font-semibold uppercase tracking-widest pt-2 border-t" style={{ color: 'var(--text-muted)', borderColor: 'var(--bg-border)' }}>AI &amp; LLM Meta</p>
+              {/* ── AI & LLM Meta Tab ── */}
+              {seoTab === 'meta' && (
+                <>
+                  {/* AI Content Declaration */}
+                  <div>
+                    <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Content Declaration</label>
+                    <select
+                      value={meta.aiContentDeclaration}
+                      onChange={(e) => setMeta((m) => ({ ...m, aiContentDeclaration: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                      style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                    >
+                      <option value="human-written">Human-written</option>
+                      <option value="ai-assisted">AI-assisted</option>
+                      <option value="ai-generated">AI-generated</option>
+                    </select>
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                      Declares authorship to AI crawlers (GPTBot, Anthropic, Gemini).
+                    </p>
+                  </div>
 
-              {/* AI Content Declaration */}
-              <div>
-                <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Content Declaration</label>
-                <select
-                  value={meta.aiContentDeclaration}
-                  onChange={(e) => setMeta((m) => ({ ...m, aiContentDeclaration: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
-                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                >
-                  <option value="human-written">Human-written</option>
-                  <option value="ai-assisted">AI-assisted</option>
-                  <option value="ai-generated">AI-generated</option>
-                </select>
-                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Declares authorship to AI crawlers (GPTBot, Anthropic, Gemini).
-                </p>
-              </div>
+                  <div className="p-3 rounded-xl border space-y-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>AI Crawler Signals</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      These meta tags signal AI bots (GPTBot, ClaudeBot, Gemini) how to treat this content.
+                      The SEO keywords and content declaration are embedded in the page&apos;s &lt;head&gt;.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {meta.seoKeywords.split(',').filter(Boolean).slice(0, 6).map((kw) => (
+                        <span key={kw.trim()} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>
+                          {kw.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -923,6 +1166,174 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           onSelect={(url) => setCoverImageUrl(url)}
           onClose={() => setShowCoverPicker(false)}
         />
+      )}
+
+      {/* ── AI Article Generator Modal ── */}
+      {showAIGenerator && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAIGenerator(false) }}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--bg-border)' }}>
+              <div className="flex items-center gap-2">
+                <Wand2 size={18} style={{ color: 'var(--color-violet)' }} />
+                <h2 className="font-display font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                  AI Article Generator
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAIGenerator(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <XIcon size={16} />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Topic */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Article Topic <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={aiGenForm.topic}
+                  onChange={(e) => setAIGenForm((f) => ({ ...f, topic: e.target.value }))}
+                  placeholder="e.g. Building a ReAct Agent with LangChain and Gemini"
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* Additional context */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Additional Context / Notes
+                </label>
+                <textarea
+                  value={aiGenForm.context}
+                  onChange={(e) => setAIGenForm((f) => ({ ...f, context: e.target.value }))}
+                  placeholder="Any specific requirements, outline, or key points to include..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* Mode, Tone, Length row */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Mode</label>
+                  <select
+                    value={aiGenForm.mode}
+                    onChange={(e) => setAIGenForm((f) => ({ ...f, mode: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="generate">Generate</option>
+                    <option value="outline">Outline</option>
+                    <option value="expand">Expand</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Tone</label>
+                  <select
+                    value={aiGenForm.tone}
+                    onChange={(e) => setAIGenForm((f) => ({ ...f, tone: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="professional">Professional</option>
+                    <option value="conversational">Conversational</option>
+                    <option value="technical">Technical</option>
+                    <option value="inspirational">Inspirational</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>Length</label>
+                  <select
+                    value={aiGenForm.length}
+                    onChange={(e) => setAIGenForm((f) => ({ ...f, length: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-xs outline-none"
+                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="short">Short (~500w)</option>
+                    <option value="medium">Medium (~1000w)</option>
+                    <option value="long">Long (~2000w)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Target URL */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Target URL Slug (optional)
+                </label>
+                <input
+                  type="text"
+                  value={aiGenForm.url}
+                  onChange={(e) => setAIGenForm((f) => ({ ...f, url: e.target.value }))}
+                  placeholder="e.g. building-react-agent-langchain"
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+
+              {/* Exclude */}
+              <div>
+                <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  Exclude (optional)
+                </label>
+                <input
+                  type="text"
+                  value={aiGenForm.exclude}
+                  onChange={(e) => setAIGenForm((f) => ({ ...f, exclude: e.target.value }))}
+                  placeholder="Topics or terms to explicitly exclude from the article..."
+                  className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                />
+                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Comma-separated topics or terms the AI should not mention.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl border text-xs" style={{ background: 'rgba(124,58,237,0.05)', borderColor: 'rgba(124,58,237,0.2)', color: 'var(--text-muted)' }}>
+                ⚠️ This will <strong>replace</strong> the current title, content, sections, SEO, and tags. Your existing content will be overwritten. Save first if needed.
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex items-center justify-end gap-3 px-5 py-4 border-t" style={{ borderColor: 'var(--bg-border)' }}>
+              <button
+                type="button"
+                onClick={() => setShowAIGenerator(false)}
+                className="px-4 py-2 rounded-xl text-sm border hover:bg-gray-50 transition-colors"
+                style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={generateFullArticle}
+                disabled={aiGenLoading || !aiGenForm.topic.trim()}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+              >
+                {aiGenLoading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                {aiGenLoading ? 'Generating Article…' : 'Generate Article'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

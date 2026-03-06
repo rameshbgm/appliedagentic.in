@@ -1,6 +1,6 @@
 'use client'
 // components/admin/editor/ArticleSectionEditor.tsx
-import { useRef } from 'react'
+import { useRef, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { ChevronUp, ChevronDown, Trash2, GripVertical } from 'lucide-react'
 import AIAssistPanel from './AIAssistPanel'
@@ -36,6 +36,15 @@ export default function ArticleSectionEditor({
 }: Props) {
   const insertRef = useRef<(md: string) => void>(() => {})
   const replaceRef = useRef<(md: string) => void>(() => {})
+
+  // Stabilise the callback refs so MarkdownEditor's useEffect
+  // doesn't re-fire on every render causing insert to miss content updates.
+  const onInsertRef = useCallback((fn: (md: string) => void) => {
+    insertRef.current = fn
+  }, [])
+  const onReplaceRef = useCallback((fn: (md: string) => void) => {
+    replaceRef.current = fn
+  }, [])
 
   return (
     <div
@@ -115,8 +124,8 @@ export default function ArticleSectionEditor({
       <MarkdownEditor
         content={section.content}
         onChange={(md) => onChange({ ...section, content: md })}
-        onInsertRef={(fn) => { insertRef.current = fn }}
-        onReplaceRef={(fn) => { replaceRef.current = fn }}
+        onInsertRef={onInsertRef}
+        onReplaceRef={onReplaceRef}
       />
     </div>
   )

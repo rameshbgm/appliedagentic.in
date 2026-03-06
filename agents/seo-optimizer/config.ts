@@ -8,13 +8,13 @@ export const config: AgentConfig = {
    * OpenAI API key  → OPENAI_API_KEY in .env.local
    * Gemini API key  → GOOGLE_GENAI_API_KEY in .env.local
    */
-  provider: 'openai',
+  provider: 'gemini',
 
   /**
    * OpenAI models:  gpt-4o-mini | gpt-4o | ...
-   * Gemini models:  gemini-1.5-flash | gemini-1.5-pro | ...
+   * Gemini models:  gemini-2.0-flash | gemini-1.5-flash | gemini-1.5-pro | ...
    */
-  textModel: 'gpt-4o-mini',
+  textModel: 'gemini-2.0-flash',
 
   /** Low temperature for deterministic, precise SEO output */
   temperature: 0.4,
