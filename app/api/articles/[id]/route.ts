@@ -36,6 +36,7 @@ const UpdateSchema = z.object({
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
   subMenuIds: z.array(z.number().int()).optional(),
+  menuIds: z.array(z.number().int()).optional(),
   sections: z.array(SectionInput).optional(),
 })
 
@@ -53,6 +54,8 @@ const articleInclude = {
   },
   articleTags: { include: { tag: true } },
   coverImage: { select: { id: true, url: true, altText: true, width: true, height: true } },
+  subMenuArticles: { include: { subMenu: { select: { id: true, title: true, menu: { select: { id: true, title: true } } } } } },
+  menuArticles: { include: { menu: { select: { id: true, title: true } } } },
   sections: { orderBy: { order: 'asc' as const } },
 }
 
@@ -168,6 +171,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           await tx.subMenuArticle.createMany({
             data: data.subMenuIds.map((subMenuId, i) => ({
               subMenuId,
+              articleId: id,
+              orderIndex: i + 1,
+            })),
+          })
+        }
+      }
+
+      // Update direct Menu associations if provided
+      if (data.menuIds !== undefined) {
+        await tx.menuArticle.deleteMany({ where: { articleId: id } })
+        if (data.menuIds.length > 0) {
+          await tx.menuArticle.createMany({
+            data: data.menuIds.map((menuId, i) => ({
+              menuId,
               articleId: id,
               orderIndex: i + 1,
             })),

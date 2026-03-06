@@ -1,6 +1,6 @@
 'use client'
 // components/admin/editor/MarkdownEditor.tsx
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
@@ -27,28 +27,43 @@ function countWords(md: string): { words: number; chars: number } {
 
 export default function MarkdownEditor({ content, onChange, onInsertRef, onReplaceRef }: MarkdownEditorProps) {
   const [value, setValue] = useState(content)
+  // Keep a ref so insertContent/replaceContent can read the latest value
+  // without creating stale closures and without calling setState inside a state update.
+  const valueRef = useRef(value)
 
   const handleChange = useCallback((val: string | undefined) => {
     const md = val ?? ''
+    valueRef.current = md
     setValue(md)
     onChange(md)
   }, [onChange])
 
+  // Fix: compute next value first, then call setValue + onChange separately.
+  // This avoids calling onChange() inside a setValue functional updater, which
+  // was causing "setState in render" warnings because it triggered parent state
+  // updates while React was still processing our own state transition.
   const insertContent = useCallback((md: string) => {
-    setValue((prev) => {
-      const next = prev ? `${prev}\n\n${md}` : md
-      onChange(next)
-      return next
-    })
+    const next = valueRef.current ? `${valueRef.current}\n\n${md}` : md
+    valueRef.current = next
+    setValue(next)
+    onChange(next)
   }, [onChange])
 
   const replaceContent = useCallback((md: string) => {
+    valueRef.current = md
     setValue(md)
     onChange(md)
   }, [onChange])
 
-  if (onInsertRef) onInsertRef(insertContent)
-  if (onReplaceRef) onReplaceRef(replaceContent)
+  // Register insert/replace callbacks via useEffect so they are never called
+  // during the render phase — only after the component has committed to the DOM.
+  useEffect(() => {
+    if (onInsertRef) onInsertRef(insertContent)
+  }, [onInsertRef, insertContent])
+
+  useEffect(() => {
+    if (onReplaceRef) onReplaceRef(replaceContent)
+  }, [onReplaceRef, replaceContent])
 
   const { words, chars } = countWords(value)
 

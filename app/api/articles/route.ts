@@ -35,6 +35,7 @@ const ArticleSchema = z.object({
   ogImageUrl: z.string().optional(),
   audioUrl: z.string().optional().nullable(),
   subMenuIds: z.array(z.number().int()).optional(),
+  menuIds: z.array(z.number().int()).optional(),
   sections: z.array(SectionInput).optional(),
 })
 
@@ -54,6 +55,8 @@ const articleInclude = {
   coverImage: {
     select: { id: true, url: true, altText: true, width: true, height: true },
   },
+  subMenuArticles: { include: { subMenu: { select: { id: true, title: true, menu: { select: { id: true, title: true } } } } } },
+  menuArticles: { include: { menu: { select: { id: true, title: true } } } },
   sections: { orderBy: { order: 'asc' as const } },
 }
 
@@ -211,6 +214,14 @@ export async function POST(req: NextRequest) {
     if (data.subMenuIds?.length) {
       await prisma.subMenuArticle.createMany({
         data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: article.id, orderIndex: i + 1 })),
+        skipDuplicates: true,
+      })
+    }
+
+    // Link directly to menus if provided
+    if (data.menuIds?.length) {
+      await prisma.menuArticle.createMany({
+        data: data.menuIds.map((menuId, i) => ({ menuId, articleId: article.id, orderIndex: i + 1 })),
         skipDuplicates: true,
       })
     }

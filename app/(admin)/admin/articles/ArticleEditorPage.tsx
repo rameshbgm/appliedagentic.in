@@ -22,6 +22,7 @@ interface InitialArticle {
   audioUrl?: string
   tagNames: string[]
   subMenuIds: number[]
+  menuIds: number[]
   isFeatured?: boolean
   sections?: { id: number; title: string; content: string; order: number }[]
 }
@@ -81,6 +82,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [meta, setMeta] = useState({
     status: initialArticle.status,
     subMenuIds: initialArticle.subMenuIds,
+    menuIds: initialArticle.menuIds,
     tagNames: initialArticle.tagNames,
     seoTitle: initialArticle.seoTitle,
     seoDescription: initialArticle.seoDescription,
@@ -176,29 +178,24 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const generateTags = async () => {
     setTagsLoading(true)
     try {
-      const res = await fetch('/api/ai/generate-text', {
+      const res = await fetch('/api/ai/generate-tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: `Article title: ${title}\n\nContent excerpt:\n${combinedContent.slice(0, 2000)}`,
-          systemPrompt: 'You are a content taxonomy expert. Given an article, return ONLY a JSON array of up to 10 relevant tag strings (lowercase, concise, 1-3 words each). No markdown, no explanation, just the JSON array.',
-          format: 'markdown',
         }),
       })
       const data = await res.json()
       if (data.success) {
-        const text: string = data.data.text.trim()
-        const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
-        const parsed: string[] = JSON.parse(jsonStr)
-        if (!Array.isArray(parsed)) throw new Error('Expected array')
-        const newTags = parsed.slice(0, 10).map((t) => t.toLowerCase().trim()).filter(Boolean)
+        const tags: string[] = data.data.tags ?? []
+        const newTags = tags.slice(0, 10).map((t) => t.toLowerCase().trim()).filter(Boolean)
         setMeta((m) => ({ ...m, tagNames: newTags }))
         toast.success(`Generated ${newTags.length} tags!`)
       } else {
         toast.error(data.error ?? 'Tag generation failed')
       }
     } catch {
-      toast.error('Failed to parse AI response')
+      toast.error('Failed to generate tags')
     } finally {
       setTagsLoading(false)
     }
@@ -217,6 +214,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     audioUrl: meta.audioUrl,
     isFeatured: meta.isFeatured,
     subMenuIds: meta.subMenuIds,
+    menuIds: meta.menuIds,
     sections: sections.map((s, i) => ({
       id: s.id,
       title: s.title,
@@ -599,23 +597,37 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--bg-border)' }}>
               <Navigation2 size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Navigation</span>
-              {meta.subMenuIds.length > 0 && (
+              {(meta.subMenuIds.length + meta.menuIds.length) > 0 && (
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
-                  {meta.subMenuIds.length} assigned
+                  {meta.subMenuIds.length + meta.menuIds.length} assigned
                 </span>
               )}
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-5">
 
-              {/* Selected assignments pills — shows "Main Menu › Sub Menu" for each selected */}
-              {meta.subMenuIds.length > 0 && (
+              {/* Assignment pills — shows both direct menu and sub-menu assignments */}
+              {(meta.menuIds.length > 0 || meta.subMenuIds.length > 0) && (
                 <div className="flex flex-wrap gap-1.5">
+                  {/* Direct menu pills */}
+                  {menus
+                    .filter((menu) => meta.menuIds.includes(menu.id))
+                    .map((menu) => (
+                      <span
+                        key={`menu-${menu.id}`}
+                        className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium"
+                        style={{ background: 'rgba(16,185,129,0.12)', color: '#059669', border: '1px solid rgba(16,185,129,0.25)' }}
+                      >
+                        <span>📁</span>
+                        <span>{menu.title}</span>
+                      </span>
+                    ))}
+                  {/* Sub-menu pills */}
                   {menus.flatMap((menu) =>
                     (menu.subMenus ?? [])
                       .filter((sub) => meta.subMenuIds.includes(sub.id))
                       .map((sub) => (
                         <span
-                          key={sub.id}
+                          key={`sub-${sub.id}`}
                           className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium"
                           style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
                         >
@@ -628,51 +640,98 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 </div>
               )}
 
-              {/* Checkbox grid grouped by main menu */}
-              {menus.filter(m => (m.subMenus?.length ?? 0) > 0).map((menu) => (
-                <div key={menu.id}>
-                  <p
-                    className="text-[11px] font-semibold uppercase tracking-widest mb-2"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {menu.title}
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                    {menu.subMenus?.map((sub) => {
-                      const checked = meta.subMenuIds.includes(sub.id)
-                      return (
-                        <label
-                          key={sub.id}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm select-none"
-                          style={{
-                            borderColor: checked ? 'var(--color-violet)' : 'var(--bg-border)',
-                            background: checked ? 'rgba(124,58,237,0.06)' : 'var(--bg-surface)',
-                            color: checked ? 'var(--color-violet)' : 'var(--text-secondary)',
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            className="accent-violet-600 shrink-0"
-                            checked={checked}
-                            onChange={(e) =>
-                              setMeta((m) => ({
-                                ...m,
-                                subMenuIds: e.target.checked
-                                  ? [...m.subMenuIds, sub.id]
-                                  : m.subMenuIds.filter((id) => id !== sub.id),
-                              }))
-                            }
-                          />
-                          <span className="truncate text-xs font-medium">{sub.title}</span>
-                        </label>
-                      )
-                    })}
-                  </div>
+              {/* ── Direct Menu Assignment ── */}
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Assign to Main Menu
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {menus.map((menu) => {
+                    const checked = meta.menuIds.includes(menu.id)
+                    return (
+                      <label
+                        key={menu.id}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm select-none"
+                        style={{
+                          borderColor: checked ? '#059669' : 'var(--bg-border)',
+                          background: checked ? 'rgba(16,185,129,0.06)' : 'var(--bg-surface)',
+                          color: checked ? '#059669' : 'var(--text-secondary)',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="shrink-0"
+                          style={{ accentColor: '#059669' }}
+                          checked={checked}
+                          onChange={(e) =>
+                            setMeta((m) => ({
+                              ...m,
+                              menuIds: e.target.checked
+                                ? [...m.menuIds, menu.id]
+                                : m.menuIds.filter((id) => id !== menu.id),
+                            }))
+                          }
+                        />
+                        <span className="truncate text-xs font-medium">{menu.title}</span>
+                      </label>
+                    )
+                  })}
                 </div>
-              ))}
-              {menus.every(m => (m.subMenus?.length ?? 0) === 0) && (
-                <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No sub-menus configured yet.</p>
-              )}
+                {menus.length === 0 && (
+                  <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No menus configured yet.</p>
+                )}
+              </div>
+
+              {/* ── Sub-menu Assignment ── */}
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Assign to Sub-menu
+                </p>
+                {menus.filter(m => (m.subMenus?.length ?? 0) > 0).map((menu) => (
+                  <div key={menu.id} className="mb-3">
+                    <p
+                      className="text-[10px] font-medium mb-1.5 pl-0.5"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {menu.title}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {menu.subMenus?.map((sub) => {
+                        const checked = meta.subMenuIds.includes(sub.id)
+                        return (
+                          <label
+                            key={sub.id}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm select-none"
+                            style={{
+                              borderColor: checked ? 'var(--color-violet)' : 'var(--bg-border)',
+                              background: checked ? 'rgba(124,58,237,0.06)' : 'var(--bg-surface)',
+                              color: checked ? 'var(--color-violet)' : 'var(--text-secondary)',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              className="accent-violet-600 shrink-0"
+                              checked={checked}
+                              onChange={(e) =>
+                                setMeta((m) => ({
+                                  ...m,
+                                  subMenuIds: e.target.checked
+                                    ? [...m.subMenuIds, sub.id]
+                                    : m.subMenuIds.filter((id) => id !== sub.id),
+                                }))
+                              }
+                            />
+                            <span className="truncate text-xs font-medium">{sub.title}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {menus.every(m => (m.subMenus?.length ?? 0) === 0) && (
+                  <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>No sub-menus configured yet.</p>
+                )}
+              </div>
             </div>
           </div>
 

@@ -1,7 +1,6 @@
 // app/api/ai/generate-text/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runContentWriter } from '@/agents/content-writer/agent'
 import { runSeoOptimizer }  from '@/agents/seo-optimizer/agent'
@@ -26,12 +25,9 @@ export async function POST(req: NextRequest) {
       context,
       maxTokens: reqMaxTokens,
       systemPrompt: customSystemPrompt,
-      articleId,
     } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
-
-    const userId = parseInt((session.user as { id: string }).id)
 
     // ── SEO mode: detected by a custom systemPrompt mentioning "SEO expert" ──
     const isSeoMode = typeof customSystemPrompt === 'string' &&
@@ -39,18 +35,6 @@ export async function POST(req: NextRequest) {
 
     if (isSeoMode) {
       const result = await runSeoOptimizer({ prompt, context })
-      await prisma.aIUsageLog.create({
-        data: {
-          userId,
-          articleId: articleId || null,
-          type: 'TEXT_GENERATION',
-          model: result.model,
-          inputTokens:  result.usage?.inputTokens,
-          outputTokens: result.usage?.outputTokens,
-          promptSnippet: prompt.slice(0, 200),
-          status: 'success',
-        },
-      }).catch(() => {})
       // Return as raw text so the editor can JSON.parse it
       return apiSuccess({ text: result.text })
     }
@@ -63,19 +47,6 @@ export async function POST(req: NextRequest) {
       tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
       maxTokens,
     })
-
-    await prisma.aIUsageLog.create({
-      data: {
-        userId,
-        articleId: articleId || null,
-        type: 'TEXT_GENERATION',
-        model: result.model,
-        inputTokens:  result.usage?.inputTokens,
-        outputTokens: result.usage?.outputTokens,
-        promptSnippet: prompt.slice(0, 200),
-        status: 'success',
-      },
-    }).catch(() => {})
 
     return apiSuccess({ text: result.text })
   } catch (err: unknown) {

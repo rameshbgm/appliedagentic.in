@@ -42,8 +42,13 @@ export async function runAgent(
   // Guardrails are appended to the system prompt as a separate section.
   const fullSystem = `${systemPrompt}\n\n---\n\nGUARDRAILS:\n${guardrails}`
 
+  // Escape literal curly-braces in the system prompt so LangChain's template
+  // parser does not treat JSON examples (e.g. { "key": "..." }) as variable
+  // placeholders. Only the human message uses real {prompt}/{context} vars.
+  const escapedSystem = fullSystem.replace(/\{/g, '{{').replace(/\}/g, '}}')
+
   const promptTemplate = ChatPromptTemplate.fromMessages([
-    ['system', fullSystem],
+    ['system', escapedSystem],
     ['human', input.context ? `Context:\n{context}\n\n---\n\n{prompt}` : '{prompt}'],
   ])
 

@@ -125,6 +125,7 @@ model Article {
   articleTags        ArticleTag[]
   aiLogs             AIUsageLog[]
   subMenuArticles    SubMenuArticle[]
+  menuArticles       MenuArticle[]
   sections           ArticleSection[]
 
   @@index([slug])
@@ -258,6 +259,7 @@ model NavMenu {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   subMenus    NavSubMenu[]
+  menuArticles MenuArticle[]
 
   @@index([slug])
   @@index([order])
@@ -291,5 +293,19 @@ model SubMenuArticle {
 
   @@unique([subMenuId, articleId])
   @@index([subMenuId])
+  @@index([articleId])
+}
+
+// Direct menu ↔ article assignment (top-level, independent of sub-menus)
+model MenuArticle {
+  id         Int     @id @default(autoincrement())
+  menuId     Int
+  articleId  Int
+  orderIndex Int     @default(0)
+  menu       NavMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  article    Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, articleId])
+  @@index([menuId])
   @@index([articleId])
 }

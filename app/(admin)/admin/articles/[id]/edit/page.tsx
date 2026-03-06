@@ -12,7 +12,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   const { id } = await params
   const articleId = Number(id)
 
-  const [article, menus, tags, subMenuLinks] = await Promise.all([
+  const [article, menus, tags, subMenuLinks, menuLinks] = await Promise.all([
     prisma.article.findUnique({
       where: { id: articleId },
       include: {
@@ -34,11 +34,16 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
       where: { articleId },
       select: { subMenuId: true, subMenu: { select: { menuId: true } } },
     }),
+    prisma.menuArticle.findMany({
+      where: { articleId },
+      select: { menuId: true },
+    }),
   ])
 
   if (!article) notFound()
 
   const subMenuIds = subMenuLinks.map((s: any) => s.subMenuId)
+  const menuIds = menuLinks.map((m: any) => m.menuId)
 
   return (
     <ArticleEditorPage
@@ -55,6 +60,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         audioUrl: article.audioUrl ?? undefined,
         tagNames: article.articleTags.map((at: any) => at.tag.name),
         subMenuIds,
+        menuIds,
         isFeatured: article.isFeatured,
         sections: article.sections.map((s: any) => ({
           id: s.id,
