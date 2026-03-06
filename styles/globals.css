@@ -129,6 +129,16 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* ─── Mega-nav column scrollbar — 3 px, subtle ──────────────────────────────── */
+.mega-col-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99,99,120,.18) transparent;
+}
+.mega-col-scroll::-webkit-scrollbar              { width: 3px; }
+.mega-col-scroll::-webkit-scrollbar-track        { background: transparent; }
+.mega-col-scroll::-webkit-scrollbar-thumb        { background: rgba(99,99,120,.2); border-radius: 99px; }
+.mega-col-scroll::-webkit-scrollbar-thumb:hover  { background: rgba(59,130,246,.45); }
+
 /* ─── Tile chips — thin 3 × 3 px scrollbar ──────────────────────────────────── */
 .tile-chips-scroll {
   max-height: 96px;   /* ~3 rows of chips */

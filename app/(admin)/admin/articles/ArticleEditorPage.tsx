@@ -3,8 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
+import ImageCropModal from '@/components/admin/ImageCropModal'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
 import ArticleSectionEditor, { type SectionData } from '@/components/admin/editor/ArticleSectionEditor'
@@ -94,6 +95,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [slug, setSlug] = useState(initialArticle.slug)
   const [summary, setSummary] = useState(initialArticle.summary)
   const [coverImageUrl, setCoverImageUrl] = useState(initialArticle.coverImageUrl)
+  const [coverImageId, setCoverImageId] = useState<number | null>(null)
+  const [showCoverCrop, setShowCoverCrop] = useState(false)
 
   // Multi-section state — default from DB sections or fall back to a single section from legacy content
   const makeDefaultSections = (): SectionData[] => {
@@ -252,6 +255,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       const data = await res.json()
       if (data.success) {
         setCoverImageUrl(data.data.url)
+        setCoverImageId(data.data.mediaAssetId ?? null)
         setShowCoverAI(false)
         setCoverAIPrompt('')
         toast.success('Cover image generated!')
@@ -707,6 +711,17 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   >
                     <XIcon size={11} />
                     Remove
+                  </button>
+                )}
+                {coverImageUrl && coverImageId && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverCrop(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:bg-gray-50"
+                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+                  >
+                    <CropIcon size={12} />
+                    Crop
                   </button>
                 )}
                 {/* AI Generate cover image */}
@@ -1269,8 +1284,19 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       {/* Media Picker Modal */}
       {showCoverPicker && (
         <MediaPickerModal
-          onSelect={(url) => setCoverImageUrl(url)}
+          onSelect={(url, id) => { setCoverImageUrl(url); setCoverImageId(id ?? null) }}
           onClose={() => setShowCoverPicker(false)}
+        />
+      )}
+
+      {/* Cover image crop modal */}
+      {showCoverCrop && coverImageUrl && coverImageId && (
+        <ImageCropModal
+          imageUrl={coverImageUrl}
+          mediaAssetId={coverImageId}
+          aspect={16 / 9}
+          onComplete={(newUrl, newId) => { setCoverImageUrl(newUrl); setCoverImageId(newId); setShowCoverCrop(false) }}
+          onClose={() => setShowCoverCrop(false)}
         />
       )}
 

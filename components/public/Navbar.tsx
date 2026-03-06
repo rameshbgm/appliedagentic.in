@@ -156,7 +156,7 @@ export default function Navbar({ navMenus = [] }: Props) {
         </div>
       </header>
 
-      {/* ── Mega-Nav Dropdown: 2 columns — menus (left) + submenus (right) ── */}
+      {/* ── Mega-Nav Dropdown: 2 fixed-width columns, both scrollable ── */}
       {hasMegaMenus && (
         <div
           className={`hidden lg:block fixed left-0 right-0 z-30 transition-all duration-200 origin-top ${megaOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
@@ -164,11 +164,17 @@ export default function Navbar({ navMenus = [] }: Props) {
           onMouseEnter={cancelClose}
           onMouseLeave={scheduleMegaClose}
         >
-          <div className="max-w-6xl mx-auto px-[3%] flex" style={{ minHeight: 280 }}>
+          {/* Fixed-height container — both columns scroll independently */}
+          <div className="max-w-6xl mx-auto px-[3%] flex" style={{ height: 400 }}>
 
-            {/* LEFT: all menus */}
-            <div className="w-56 shrink-0 py-5 pr-2" style={{ borderRight: `1px solid ${megaBdr}` }}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 mb-3" style={{ color: textMuted }}>Browse</p>
+            {/* ── LEFT column: all menus — fixed 220px, scrollable ── */}
+            <div
+              className="shrink-0 py-4 pr-2 overflow-y-auto mega-col-scroll"
+              style={{ width: 220, borderRight: `1px solid ${megaBdr}` }}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] px-3 mb-2 sticky top-0 pb-1" style={{ color: textMuted, background: megaBg }}>
+                Menus
+              </p>
               <div className="space-y-0.5">
                 {navMenus.map((menu) => {
                   const hasChildren  = menu.subMenus && menu.subMenus.length > 0
@@ -176,20 +182,37 @@ export default function Navbar({ navMenus = [] }: Props) {
                   return (
                     <div
                       key={menu.id}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2.5 cursor-pointer transition-colors"
-                      style={{ background: isLeftActive ? leftActiveBg : 'transparent', color: isLeftActive ? '#3b82f6' : textSecond }}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-colors"
+                      style={{
+                        background: isLeftActive ? leftActiveBg : 'transparent',
+                        color: isLeftActive ? '#3b82f6' : textSecond,
+                      }}
                       onMouseEnter={() => { cancelClose(); setActiveMenuId(hasChildren ? menu.id : null) }}
                     >
+                      {/* Active indicator bar */}
+                      <span
+                        className="shrink-0 rounded-full transition-all duration-150"
+                        style={{
+                          width: 3,
+                          height: isLeftActive ? 18 : 6,
+                          background: isLeftActive ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'),
+                          marginRight: 2,
+                        }}
+                      />
                       <Link
                         href={`/${menu.slug}`}
-                        className="flex-1 text-sm font-medium leading-snug"
+                        className="flex-1 text-[13px] font-medium leading-snug truncate"
                         style={{ color: 'inherit', fontFamily: "'Inter', sans-serif" }}
                         onClick={() => setMegaOpen(false)}
                       >
                         {menu.title}
                       </Link>
                       {hasChildren && (
-                        <ChevronRight size={13} className="shrink-0 opacity-50" style={{ color: isLeftActive ? '#3b82f6' : textMuted }} />
+                        <ChevronRight
+                          size={12}
+                          className="shrink-0 transition-transform duration-150"
+                          style={{ color: isLeftActive ? '#3b82f6' : textMuted, opacity: isLeftActive ? 1 : 0.5, transform: isLeftActive ? 'translateX(2px)' : 'none' }}
+                        />
                       )}
                     </div>
                   )
@@ -197,22 +220,33 @@ export default function Navbar({ navMenus = [] }: Props) {
               </div>
             </div>
 
-            {/* RIGHT: submenus of active menu */}
-            <div className="flex-1 py-5 pl-6 pr-2">
+            {/* ── RIGHT column: submenus of active menu — flex-1, scrollable ── */}
+            <div className="flex-1 min-w-0 py-4 pl-5 pr-2 overflow-y-auto mega-col-scroll">
               {activeMenu?.subMenus && activeMenu.subMenus.length > 0 ? (
                 <>
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: textMuted }}>{activeMenu.title}</p>
+                  {/* Header — sticky so menu title stays visible on scroll */}
+                  <div
+                    className="flex items-center justify-between mb-3 pb-2 sticky top-0"
+                    style={{ background: megaBg, borderBottom: `1px solid ${megaBdr}` }}
+                  >
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-[0.12em]"
+                      style={{ color: textMuted }}
+                    >
+                      {activeMenu.title}
+                    </p>
                     <Link
                       href={`/${activeMenu.slug}`}
                       onClick={() => setMegaOpen(false)}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold tracking-wide transition-opacity hover:opacity-70"
-                      style={{ color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold transition-opacity hover:opacity-70"
+                      style={{ color: '#3b82f6', letterSpacing: '0.05em', textTransform: 'uppercase' }}
                     >
                       View all <ArrowRight size={10} />
                     </Link>
                   </div>
-                  <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${activeMenu.subMenus.length > 4 ? 3 : 2}, minmax(0,1fr))` }}>
+
+                  {/* Fixed 3-column grid — grows by adding rows, never breaks layout */}
+                  <div className="grid grid-cols-3 gap-1">
                     {activeMenu.subMenus.map((sub) => (
                       <Link
                         key={sub.id}
@@ -223,20 +257,28 @@ export default function Navbar({ navMenus = [] }: Props) {
                         onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)')}
                         onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
                       >
-                        <p className="text-sm font-semibold leading-snug group-hover/sub:text-[#3b82f6] transition-colors" style={{ color: textPrimary, fontFamily: "'Inter', sans-serif", letterSpacing: '-0.01em' }}>{sub.title}</p>
+                        <p
+                          className="text-[13px] font-semibold leading-snug group-hover/sub:text-[#3b82f6] transition-colors truncate"
+                          style={{ color: textPrimary, fontFamily: "'Inter', sans-serif", letterSpacing: '-0.01em' }}
+                        >
+                          {sub.title}
+                        </p>
                         {sub.description && (
-                          <p className="text-[11.5px] line-clamp-1 leading-snug" style={{ color: textMuted }}>{sub.description}</p>
+                          <p className="text-[11px] line-clamp-1 leading-snug" style={{ color: textMuted }}>
+                            {sub.description}
+                          </p>
                         )}
                       </Link>
                     ))}
                   </div>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-full opacity-40">
-                  <p className="text-sm" style={{ color: textMuted }}>Hover a menu to explore</p>
+                <div className="flex items-center justify-center h-full" style={{ opacity: 0.35 }}>
+                  <p className="text-sm" style={{ color: textMuted }}>Hover a menu to see sub-menus</p>
                 </div>
               )}
             </div>
+
           </div>
         </div>
       )}

@@ -10,7 +10,7 @@ interface MediaItem {
   filename: string
   url: string
   mimeType: string
-  fileSize: number
+  sizeBytes: number | null
   width?: number | null
   height?: number | null
   createdAt: string
@@ -99,7 +99,7 @@ export default function MediaGrid({ items, onDeleted }: Props) {
               <div className="p-2">
                 <p className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>{item.filename}</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {formatBytes(item.fileSize)}
+                  {item.sizeBytes != null ? formatBytes(item.sizeBytes) : '—'}
                   {item.width && item.height && ` · ${item.width}×${item.height}`}
                 </p>
               </div>

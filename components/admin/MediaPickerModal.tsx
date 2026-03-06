@@ -1,8 +1,9 @@
 'use client'
 // components/admin/MediaPickerModal.tsx
 import { useEffect, useState } from 'react'
-import { X, Search, Check, Upload, Loader2 } from 'lucide-react'
+import { X, Search, Check, Upload, Loader2, Crop as CropIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import ImageCropModal from '@/components/admin/ImageCropModal'
 
 interface MediaItem {
   id: number
@@ -33,6 +34,7 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<number | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [cropItem, setCropItem] = useState<MediaItem | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -86,6 +88,7 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
         className="w-full max-w-4xl max-h-[85vh] flex flex-col rounded-2xl overflow-hidden border shadow-2xl"
@@ -211,6 +214,19 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
             </button>
             <button
               type="button"
+              disabled={selected == null}
+              onClick={() => {
+                const item = items.find((i) => i.id === selected)
+                if (item) setCropItem(item)
+              }}
+              className="px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-40 inline-flex items-center gap-1.5 border transition-colors"
+              style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+            >
+              <CropIcon size={13} />
+              Crop &amp; Resize
+            </button>
+            <button
+              type="button"
               onClick={confirmSelect}
               disabled={selected == null}
               className="px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-40 transition-colors"
@@ -222,5 +238,21 @@ export default function MediaPickerModal({ onSelect, onClose }: Props) {
         </div>
       </div>
     </div>
+
+    {/* Crop modal — z-[60] so it floats above this modal (z-50) */}
+    {cropItem && (
+      <ImageCropModal
+        imageUrl={cropItem.url}
+        mediaAssetId={cropItem.id}
+        onComplete={(newUrl, newId) => {
+          const newItem: MediaItem = { ...cropItem, id: newId, url: newUrl, sizeBytes: 0, filename: newUrl.split('/').pop() ?? cropItem.filename }
+          setItems((prev) => [newItem, ...prev])
+          setSelected(newId)
+          setCropItem(null)
+        }}
+        onClose={() => setCropItem(null)}
+      />
+    )}
+  </>
   )
 }

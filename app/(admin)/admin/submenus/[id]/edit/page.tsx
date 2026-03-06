@@ -79,7 +79,6 @@ export default async function EditSubMenuPage({ params }: Props) {
         subMenuTitle={subMenu.title}
         menuTitle={subMenu.menu.title}
         initialArticles={linkedArticles}
-        compact
       />
     </div>
   )

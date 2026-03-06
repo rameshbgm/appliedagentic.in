@@ -72,8 +72,13 @@ export default function SubMenuForm({ initial, menus, nextOrder, defaultMenuId }
       const data = await res.json()
       if (data.success) {
         toast.success(isEdit ? 'Sub-menu updated' : 'Sub-menu created')
-        router.push('/admin/submenus')
-        router.refresh()
+        if (isEdit) {
+          router.refresh()
+        } else {
+          // After create, go straight to the edit page so articles can be linked
+          router.push(`/admin/submenus/${data.data.id}/edit`)
+          router.refresh()
+        }
       } else {
         toast.error(data.error ?? 'Save failed')
       }
