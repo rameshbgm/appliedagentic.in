@@ -76,7 +76,9 @@ function groupUnderH1(headings: Heading[]): HeadingGroup[] {
   for (const h of headings) {
     if (h.level === 1) {
       if (current) groups.push(current)
-      current = { h1: h, children: [], key: h.id }
+      // Append index to make key unique even when two H1s share the same text/slug
+      const idx = groups.length
+      current = { h1: h, children: [], key: `${h.id}-${idx}` }
     } else if (current) {
       current.children.push(h)
     } else {
