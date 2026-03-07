@@ -1,15 +1,14 @@
 'use client'
 // components/public/TableOfContents.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ChevronDown, List, Zap } from 'lucide-react'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, List, Zap } from 'lucide-react'
 
 interface Heading {
   id: string
   text: string
-  /** 0 = section title, 1 = H1, 2 = H2, 3 = H3 */
-  level: number
-  isSectionTitle?: boolean
+  /** 1 = H1, 2 = H2, 3 = H3 */
+  level: 1 | 2 | 3
 }
 
 interface SectionLike {
@@ -33,7 +32,11 @@ function parseMarkdownHeadings(mdContent: string): Heading[] {
   for (const line of mdContent.split('\n')) {
     const m = line.match(/^(#{1,3})\s+(.+)$/)
     if (m) {
-      headings.push({ id: toSlug(m[2].trim()), text: m[2].trim(), level: m[1].length })
+      headings.push({
+        id: toSlug(m[2].trim()),
+        text: m[2].trim(),
+        level: m[1].length as 1 | 2 | 3,
+      })
     }
   }
   return headings
@@ -49,33 +52,43 @@ function parseHeadings(sections?: SectionLike[], content?: string): Heading[] {
 
   const parsed: Heading[] = []
   for (const section of effectiveSections) {
+    // Treat non-empty section titles as H1 entries
     if (section.title?.trim()) {
-      parsed.push({ id: toSlug(section.title), text: section.title.trim(), level: 0, isSectionTitle: true })
+      parsed.push({ id: toSlug(section.title), text: section.title.trim(), level: 1 })
     }
     parsed.push(...parseMarkdownHeadings(section.content ?? ''))
   }
   return parsed
 }
 
-/** Group headings into collapsible section trees */
-interface SectionGroup {
-  title: Heading | null
+/** Group H2/H3 under their nearest H1 parent for collapsible trees */
+interface HeadingGroup {
+  h1: Heading
   children: Heading[]
+  /** id used as collapse key */
+  key: string
 }
 
-function groupIntoSections(headings: Heading[]): SectionGroup[] {
-  const groups: SectionGroup[] = []
-  let current: SectionGroup = { title: null, children: [] }
+function groupUnderH1(headings: Heading[]): HeadingGroup[] {
+  const groups: HeadingGroup[] = []
+  let current: HeadingGroup | null = null
 
   for (const h of headings) {
-    if (h.isSectionTitle || h.level === 0) {
-      if (current.title || current.children.length > 0) groups.push(current)
-      current = { title: h, children: [] }
-    } else {
+    if (h.level === 1) {
+      if (current) groups.push(current)
+      current = { h1: h, children: [], key: h.id }
+    } else if (current) {
       current.children.push(h)
+    } else {
+      // H2/H3 before any H1 — create an implicit group with no title
+      // (rare; just show them ungrouped at top)
+      if (!groups.find((g) => g.key === '__orphans__')) {
+        groups.push({ h1: { id: '__orphans__', text: '', level: 1 }, children: [], key: '__orphans__' })
+      }
+      groups[groups.findIndex((g) => g.key === '__orphans__')].children.push(h)
     }
   }
-  if (current.title || current.children.length > 0) groups.push(current)
+  if (current) groups.push(current)
   return groups
 }
 
@@ -83,7 +96,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
   const [activeId, setActiveId] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [headings, setHeadings] = useState<Heading[]>([])
-  // Track which section groups are collapsed (by section title id)
+  // Collapsed state: set of H1 keys that are collapsed
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   const desktopScrollRef = useRef<HTMLDivElement>(null)
@@ -93,7 +106,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     setHeadings(parseHeadings(sections, content))
   }, [sections, content])
 
-  // ── Scroll to heading — extra offset to clear sticky section header ─────────
+  // ── Scroll to heading — extra offset to clear the sticky section header ───
   const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id)
     if (!el) return
@@ -101,15 +114,15 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     const navH = parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--nav-h')
     ) || 64
-    // Extra 56px to clear the sticky section header bar
-    const offset = navH + 64
+    // 72px extra: 40px sticky section header + 32px breathing room
+    const offset = navH + 72
     const top = el.getBoundingClientRect().top + window.scrollY - offset
-    window.scrollTo({ top, behavior: 'smooth' })
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     setActiveId(id)
     setMobileOpen(false)
   }, [])
 
-  // ── Sync active item into view ─────────────────────────────────────────────
+  // ── Sync active item into view inside the TOC scroll container ────────────
   useEffect(() => {
     if (!activeId) return
     const sync = (container: HTMLDivElement | null) => {
@@ -121,7 +134,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     sync(mobileScrollRef.current)
   }, [activeId])
 
-  // ── IntersectionObserver ───────────────────────────────────────────────────
+  // ── IntersectionObserver to track active heading ─────────────────────────
   useEffect(() => {
     if (headings.length === 0) return
     let observer: IntersectionObserver | null = null
@@ -158,73 +171,79 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
 
   if (headings.length === 0) return null
 
-  const groups = groupIntoSections(headings)
+  const groups = groupUnderH1(headings)
 
-  const toggleCollapse = (id: string) => {
+  const toggleCollapse = (key: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
 
-  const renderChildren = (children: Heading[]) => (
-    <ul className="toc-children">
-      {children.map((h, i) => {
-        const isActive = activeId === h.id
-        const indent = h.level === 1 ? 'toc-h1' : h.level === 2 ? 'toc-h2' : 'toc-h3'
-        return (
-          <li key={`${h.id}-${i}`}>
-            <button
-              type="button"
-              data-toc-id={h.id}
-              onClick={() => scrollTo(h.id)}
-              className={`toc-item ${indent}${isActive ? ' toc-item-active' : ''}`}
-            >
-              {h.level === 3 && <span className="toc-h3-dot" />}
-              <span className="toc-item-text">{h.text}</span>
-            </button>
-          </li>
-        )
-      })}
-    </ul>
-  )
-
   const listEl = (
-    <div className="toc-list">
-      {groups.map((group, gi) => {
-        const sectionId = group.title?.id ?? `group-${gi}`
-        const isCollapsed = collapsed.has(sectionId)
+    <nav className="toc-nav" aria-label="Table of contents">
+      {groups.map((group) => {
+        const isCollapsed = collapsed.has(group.key)
         const hasChildren = group.children.length > 0
+        const isH1Active  = activeId === group.h1.id
+        const showH1Title = group.h1.id !== '__orphans__' && group.h1.text
 
         return (
-          <div key={sectionId} className="toc-group">
-            {group.title && (
-              <button
-                type="button"
-                data-toc-id={group.title.id}
-                onClick={() => {
-                  if (hasChildren) toggleCollapse(sectionId)
-                  scrollTo(group.title!.id)
-                }}
-                className={`toc-section-btn${activeId === group.title.id ? ' toc-item-active' : ''}`}
-              >
-                <span className="toc-section-icon">
-                  {hasChildren
-                    ? isCollapsed
-                      ? <ChevronRight size={11} />
-                      : <ChevronDown size={11} />
-                    : <span className="toc-section-dot" />}
-                </span>
-                <span className="toc-section-text">{group.title.text}</span>
-              </button>
+          <div key={group.key} className="toc-group">
+            {/* H1 row */}
+            {showH1Title && (
+              <div className="toc-h1-row">
+                <button
+                  type="button"
+                  data-toc-id={group.h1.id}
+                  onClick={() => scrollTo(group.h1.id)}
+                  className={`toc-h1-label${isH1Active ? ' toc-active' : ''}`}
+                >
+                  {group.h1.text}
+                </button>
+                {hasChildren && (
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse(group.key)}
+                    className="toc-collapse-btn"
+                    aria-label={isCollapsed ? 'Expand section' : 'Collapse section'}
+                  >
+                    <ChevronDown
+                      size={12}
+                      className={`toc-chevron${isCollapsed ? ' toc-chevron-collapsed' : ''}`}
+                    />
+                  </button>
+                )}
+              </div>
             )}
-            {!isCollapsed && hasChildren && renderChildren(group.children)}
+
+            {/* H2 / H3 children */}
+            {!isCollapsed && hasChildren && (
+              <ul className="toc-children">
+                {group.children.map((h, i) => {
+                  const isActive = activeId === h.id
+                  return (
+                    <li key={`${h.id}-${i}`}>
+                      <button
+                        type="button"
+                        data-toc-id={h.id}
+                        onClick={() => scrollTo(h.id)}
+                        className={`toc-child-btn toc-level-${h.level}${isActive ? ' toc-active' : ''}`}
+                      >
+                        {h.level === 3 && <span className="toc-h3-marker" />}
+                        <span className="toc-child-text">{h.text}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
           </div>
         )
       })}
-    </div>
+    </nav>
   )
 
   return (
@@ -232,6 +251,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
       {/* Desktop: Card sidebar */}
       <div className="toc-card hidden lg:flex flex-col rounded-2xl overflow-hidden">
         <div className="toc-card-header">
+          <List size={13} style={{ color: 'var(--text-muted)' }} />
           <p className="toc-card-title">Contents</p>
         </div>
         <div ref={desktopScrollRef} className="toc-scroll no-scrollbar">
@@ -276,7 +296,7 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
         </div>
       )}
 
-      {/* Mobile: flat mode */}
+      {/* Mobile: flat mode (inside slide-in panel) */}
       {mobileFlat && (
         <div className="lg:hidden">
           <button

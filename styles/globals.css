@@ -351,6 +351,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.82;
   margin-bottom: 1.25em;
 }
+/* Remove top spacing from the very first element inside a section body to
+   avoid the blank gap at the top of each section content box */
+.section-optional-body .article-content > *:first-child,
+.section-optional-body .article-content > h1:first-child,
+.section-optional-body .article-content > h2:first-child,
+.section-optional-body .article-content > h3:first-child,
+.section-optional-body .article-content > p:first-child {
+  margin-top: 0 !important;
+}
 .article-content a  { color: var(--green); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(30,41,59,0.35); font-style: inherit; }
 .article-content a:hover { opacity: 0.75; }
 .article-content img {
@@ -607,6 +616,222 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   }
 }
 /* section-optional light — inherits :root */
+
+/* ─── Section title gradient text (font color, not background fill) ──────── */
+.section-title-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent; /* fallback */
+}
+
+/* ─── Table of Contents — full redesign ─────────────────────────────────────
+   New class names: toc-card, toc-nav, toc-group, toc-h1-row, toc-h1-label,
+   toc-collapse-btn, toc-chevron, toc-children, toc-child-btn, toc-level-2,
+   toc-level-3, toc-h3-marker, toc-active, toc-scroll, toc-card-header,
+   toc-card-title, toc-card-footer, toc-mobile-card, toc-mobile-toggle,
+   toc-mobile-body
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Desktop card */
+.toc-card {
+  border: 1px solid var(--bg-border);
+  background: var(--bg-surface);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.toc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--bg-border);
+}
+.toc-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+.toc-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - var(--nav-h) - 200px);
+  padding: 8px 0;
+}
+.toc-card-footer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--bg-border);
+}
+
+/* The nav tree */
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 4px 0;
+}
+.toc-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* H1 row: label + collapse toggle side by side */
+.toc-h1-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 8px;
+}
+.toc-h1-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 5px 4px 5px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 7px;
+  line-height: 1.4;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toc-h1-label:hover,
+.toc-h1-label.toc-active {
+  color: var(--green);
+  background: var(--green-glow);
+}
+.toc-collapse-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.toc-collapse-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+.toc-chevron {
+  transition: transform 0.2s ease;
+}
+.toc-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+/* H2 / H3 children */
+.toc-children {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 4px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-left: 2px solid var(--bg-border);
+  margin-left: 16px;
+  margin-bottom: 4px;
+}
+.toc-child-btn {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1.45;
+}
+/* H2 */
+.toc-level-2 {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.toc-level-2:hover,
+.toc-level-2.toc-active {
+  color: var(--green);
+  background: var(--green-glow);
+}
+/* H3 — indented further */
+.toc-level-3 {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-family: 'Inter', system-ui, sans-serif;
+  padding-left: 14px;
+}
+.toc-level-3:hover,
+.toc-level-3.toc-active {
+  color: var(--green);
+  background: var(--green-glow);
+}
+.toc-h3-marker {
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  margin-right: 2px;
+}
+.toc-level-3.toc-active .toc-h3-marker,
+.toc-level-3:hover .toc-h3-marker {
+  background: var(--green);
+}
+.toc-child-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile toggle */
+.toc-mobile-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.toc-mobile-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.toc-mobile-body {
+  border-top: 1px solid var(--bg-border);
+  padding: 4px 0;
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    ARTICLE PAGE LAYOUT — Mobile-first reading experience

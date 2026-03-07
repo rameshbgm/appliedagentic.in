@@ -1,72 +1,16 @@
 'use client'
 // components/public/ArticleContent.tsx
-import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import MarkdownRenderer from './MarkdownRenderer'
 
-const BOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
-
 interface Props {
   content: string
-  sectionIndex?: number
-  sectionTitle?: string
   standalone?: boolean
 }
 
-export default function ArticleContent({ content, sectionIndex, sectionTitle, standalone }: Props) {
+export default function ArticleContent({ content, standalone }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-
-  // ── Section AI summary state ────────────────────────────────────────────────
-  type SecModalState = { title: string; state: 'loading' | 'done' | 'error'; bullets: string[] } | null
-  const [secModal, setSecModal] = useState<SecModalState>(null)
-  // Cache: title -> bullets (avoids re-fetching when reopening same section)
-  const secCache = useRef<Map<string, string[]>>(new Map())
-
-  // ── Listen for section-summarize events (avoids stale closure in useEffect) ─
-  useEffect(() => {
-    const handler = async (e: Event) => {
-      const { title, content: sectionContent } = (e as CustomEvent<{ title: string; content: string }>).detail
-      // Lock scroll
-      document.body.style.overflow = 'hidden'
-      // Return cached result immediately if available
-      const cached = secCache.current.get(title)
-      if (cached) {
-        setSecModal({ title, state: 'done', bullets: cached })
-        return
-      }
-      setSecModal({ title, state: 'loading', bullets: [] })
-      try {
-        const res = await fetch('/api/ai/summarize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: sectionContent, maxPoints: 7, type: 'section' }),
-        })
-        const data = await res.json()
-        if (!res.ok || !data.data?.bullets) throw new Error(data.message ?? 'Failed')
-        secCache.current.set(title, data.data.bullets)
-        setSecModal({ title, state: 'done', bullets: data.data.bullets })
-      } catch (err) {
-        setSecModal((prev) => prev ? { ...prev, state: 'error' } : null)
-        toast.error(err instanceof Error ? err.message : 'Section summary failed')
-      }
-    }
-    window.addEventListener('aa-section-summarize', handler)
-    return () => window.removeEventListener('aa-section-summarize', handler)
-  }, [])
-
-  // Restore scroll when modal closes
-  useEffect(() => {
-    if (!secModal) document.body.style.overflow = ''
-  }, [secModal])
-
-  // Keyboard: close on Escape
-  useEffect(() => {
-    if (!secModal) return
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { setSecModal(null); document.body.style.overflow = '' } }
-    window.addEventListener('keydown', h)
-    return () => window.removeEventListener('keydown', h)
-  }, [secModal])
 
   useEffect(() => {
     if (!ref.current) return
@@ -133,85 +77,8 @@ export default function ArticleContent({ content, sectionIndex, sectionTitle, st
   }, [content])
 
   return (
-    <>
-      <div ref={ref} className="article-content" suppressHydrationWarning>
-        <MarkdownRenderer content={content} />
-      </div>
-
-      {/* ── Section AI Summary Modal ──────────────────────────────────────── */}
-      {secModal && createPortal(
-        <div
-          className="ai-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Section AI Summary"
-          onClick={(e) => { if (e.target === e.currentTarget) { setSecModal(null); document.body.style.overflow = '' } }}
-        >
-          <div className="ai-modal-container">
-            <div className="ai-modal-header">
-              <span className="ai-modal-title">
-                <span dangerouslySetInnerHTML={{ __html: BOT_SVG.replace('stroke="currentColor"', 'stroke="var(--green)"') }} />
-                <span className="ai-modal-title-text">
-                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Section summary</span>
-                  <span
-                    className="truncate max-w-[260px] block"
-                    style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}
-                    title={secModal.title}
-                  >
-                    {secModal.title}
-                  </span>
-                </span>
-              </span>
-              <button
-                type="button"
-                className="ai-modal-close"
-                onClick={() => { setSecModal(null); document.body.style.overflow = '' }}
-                aria-label="Close"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            <div className="ai-modal-body">
-              {secModal.state === 'loading' && (
-                <div className="ai-modal-loading">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                  <span>Summarizing section...</span>
-                </div>
-              )}
-              {secModal.state === 'error' && (
-                <div className="ai-modal-error">
-                  <p>Could not generate summary.</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const title = secModal.title
-                      secCache.current.delete(title)
-                      setSecModal({ title, state: 'loading', bullets: [] })
-                      // Re-dispatch so the handler re-fetches
-                      const el = document.querySelector(`[data-section-title="${CSS.escape(title)}"]`)
-                      const sectionContent = el ? (el as HTMLElement).innerText : title
-                      window.dispatchEvent(new CustomEvent('aa-section-summarize', {
-                        detail: { title, content: sectionContent },
-                      }))
-                    }}
-                    className="ai-modal-retry-btn"
-                  >
-                    Retry
-                  </button>
-                </div>
-              )}
-              {secModal.state === 'done' && secModal.bullets.map((b, i) => (
-                <div key={`${b}-${i}`} className="ai-bullet anim-fade-up" style={{ animationDelay: `${i * 55}ms` }}>
-                  <span className="ai-bullet-num">{i + 1}</span>
-                  <span className="ai-bullet-text">{b}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
+    <div ref={ref} className="article-content" suppressHydrationWarning>
+      <MarkdownRenderer content={content} />
+    </div>
   )
 }
