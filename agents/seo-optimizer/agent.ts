@@ -51,7 +51,8 @@ export async function runSeoOptimizer(
     prompt: `Article title: ${input.prompt}`,
   })
 
-  // Parse the JSON output
+  // Parse the JSON output — extract the first {...} block to tolerate
+  // any preamble or trailing text the LLM may add.
   let parsed: {
     seoTitle?: string
     seoDescription?: string
@@ -63,13 +64,18 @@ export async function runSeoOptimizer(
     tags?: string[]
   }
   try {
-    const cleaned = result.text
+    // Strip optional ```json / ``` fences first
+    const stripped = result.text
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/```\s*$/, '')
       .trim()
-    parsed = JSON.parse(cleaned)
-  } catch {
-    parsed = { seoTitle: '', seoDescription: result.text.slice(0, 160) }
+    // Extract the outermost JSON object even if there is text around it
+    const match = stripped.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON object found in SEO response')
+    parsed = JSON.parse(match[0])
+  } catch (e) {
+    console.error('[seo-optimizer] JSON parse failed:', e, '\nRaw text:', result.text.slice(0, 300))
+    parsed = {}
   }
 
   const seoTitle       = (parsed.seoTitle       ?? '').slice(0, 60)

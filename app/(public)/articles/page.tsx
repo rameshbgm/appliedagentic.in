@@ -38,7 +38,7 @@ export default async function ArticlesPage({ searchParams }: Props) {
       prisma.article.count({ where }),
       prisma.article.findMany({
         where,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: INITIAL_SIZE,
         select: {
           id: true,

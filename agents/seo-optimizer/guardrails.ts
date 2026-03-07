@@ -1,22 +1,12 @@
 // agents/seo-optimizer/guardrails.ts
 
 export const guardrails = `
-## SEO OPTIMIZER GUARDRAILS
-
-- Output MUST be valid JSON parseable with JSON.parse(). No markdown, no backticks.
-- ALL eight fields (seoTitle, seoDescription, seoKeywords, ogTitle, ogDescription,
-  twitterTitle, twitterDescription, tags) MUST be present in the output.
-- seoTitle MUST NOT exceed 60 characters.
-- seoDescription MUST NOT exceed 160 characters.
-- ogTitle MUST NOT exceed 70 characters.
-- ogDescription MUST NOT exceed 200 characters.
-- twitterTitle MUST NOT exceed 70 characters.
-- twitterDescription MUST NOT exceed 200 characters.
-- seoKeywords MUST be a single comma-separated string (not an array).
-- tags MUST be a JSON array containing between 5 and 10 lowercase strings.
-- Do NOT use keyword stuffing — all text must read naturally.
-- Do NOT use deceptive or misleading SEO tactics.
-- Do NOT include the site name in any title or description unless it appears naturally.
-- Tags MUST be lowercase strings with no special characters except hyphens.
-- Do NOT return null, undefined, or empty strings for any field.
+- Output MUST be a JSON object: { "field": "value", ... }
+- Response starts with { and ends with } — no other characters outside the object
+- All 8 fields required: seoTitle, seoDescription, seoKeywords, ogTitle, ogDescription, twitterTitle, twitterDescription, tags
+- seoTitle ≤ 60 chars | seoDescription ≤ 160 chars | ogTitle ≤ 70 chars | twitterTitle ≤ 70 chars
+- seoKeywords must be a comma-separated string (NOT an array)
+- tags must be a JSON array of 5–10 lowercase strings
+- No markdown fences, no explanation, no preamble
+- No null, undefined, or empty string values
 `.trim()

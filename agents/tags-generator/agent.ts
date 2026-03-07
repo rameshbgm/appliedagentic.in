@@ -28,23 +28,28 @@ export async function runTagsGenerator(input: TagsGeneratorInput): Promise<TagsG
     context: input.context,
   })
 
-  // Parse the JSON array from the model response.
-  // Strip optional markdown fences in case the model adds them despite instructions.
+  // Parse the JSON array — extract the first [...] block to tolerate
+  // any preamble or trailing text the LLM may add despite instructions.
   let tags: string[] = []
   try {
-    const clean = result.text
+    // Strip optional markdown fences first
+    const stripped = result.text
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/```\s*$/, '')
       .trim()
-    const parsed = JSON.parse(clean)
+    // Extract the outermost JSON array even if there is surrounding text
+    const match = stripped.match(/\[[\s\S]*\]/)
+    if (!match) throw new Error('No JSON array found in tags response')
+    const parsed = JSON.parse(match[0])
     if (Array.isArray(parsed)) {
       tags = parsed
         .filter((t) => typeof t === 'string' && t.trim().length > 0)
-        .map((t) => t.toLowerCase().trim())
+        .map((t) => t.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, ''))
+        .filter((t) => t.length > 0)
         .slice(0, 10)
     }
-  } catch {
-    // If parsing fails return an empty array; the API route will handle it gracefully
+  } catch (e) {
+    console.error('[tags-generator] JSON parse failed:', e, '\nRaw text:', result.text.slice(0, 200))
     tags = []
   }
 

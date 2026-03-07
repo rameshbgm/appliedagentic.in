@@ -15,13 +15,13 @@ export const config: AgentConfig = {
    * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-flash-002
    * OpenAI models:  gpt-4o-mini | gpt-4o | ...
    */
-  textModel: 'gemini-3-flash-preview',
+  textModel: 'gemini-2.0-flash',
 
   /** Low temperature for deterministic, repeatable tag lists */
-  temperature: 0.2,
+  temperature: 0.3,
 
-  /** Tag lists are very short; 200 tokens is more than enough */
-  maxTokens: 200,
+  /** 10 tags in a JSON array — well under 150 tokens; 300 gives safe headroom */
+  maxTokens: 300,
 
   streaming: false,
 }

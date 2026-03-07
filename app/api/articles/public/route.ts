@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const [articles, totalCount] = await Promise.all([
       prisma.article.findMany({
         where,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         skip: offset,
         take: limit,
         select: {

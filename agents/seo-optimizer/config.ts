@@ -14,12 +14,12 @@ export const config: AgentConfig = {
    * OpenAI models:  gpt-4o-mini | gpt-4o | ...
    * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-pro | ...
    */
-  textModel: 'gemini-3-flash-preview',
+  textModel: 'gemini-2.0-flash',
 
   /** Low temperature for deterministic, precise SEO output */
   temperature: 0.4,
 
-  /** SEO fields are short; 400 tokens is ample */
-  maxTokens: 400,
+  /** 8 SEO fields; 600 tokens gives comfortable headroom */
+  maxTokens: 600,
   streaming: false,
 }

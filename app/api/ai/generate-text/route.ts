@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runContentWriter } from '@/agents/content-writer/agent'
-import { runSeoOptimizer }  from '@/agents/seo-optimizer/agent'
 
 const LENGTH_TOKENS: Record<string, number> = {
   short: 600,
@@ -24,21 +23,10 @@ export async function POST(req: NextRequest) {
       length = 'medium',
       context,
       maxTokens: reqMaxTokens,
-      systemPrompt: customSystemPrompt,
       generateTitle = false,
     } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
-
-    // ── SEO mode: detected by a custom systemPrompt mentioning "SEO expert" ──
-    const isSeoMode = typeof customSystemPrompt === 'string' &&
-      customSystemPrompt.toLowerCase().includes('seo expert')
-
-    if (isSeoMode) {
-      const result = await runSeoOptimizer({ prompt, context })
-      // Return as raw text so the editor can JSON.parse it
-      return apiSuccess({ text: result.text })
-    }
 
     // ── Content generation mode ──────────────────────────────────────────────
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200

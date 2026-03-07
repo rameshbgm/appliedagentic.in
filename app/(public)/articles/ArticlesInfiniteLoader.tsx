@@ -75,9 +75,10 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {articles.map((a) => (
+        {articles.map((a, i) => (
           <ArticleCard
             key={a.id}
+            index={i + 1}
             title={a.title}
             slug={a.slug}
             summary={a.summary}
