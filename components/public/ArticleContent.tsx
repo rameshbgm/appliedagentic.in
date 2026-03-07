@@ -17,9 +17,18 @@ export default function ArticleContent({ content, standalone }: Props) {
     const root = ref.current
 
     // ── Heading IDs for TOC ──────────────────────────────────────────────────
+    // Deduplicate against any IDs already present in the document so that when
+    // multiple sections contain headings with the same text the second one gets
+    // a "-2" suffix (matching what TableOfContents.parseHeadings generates).
     root.querySelectorAll('h1, h2, h3').forEach((el) => {
       if (!el.id) {
-        el.id = (el.textContent ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        const base = (el.textContent ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        let id = base
+        let n = 2
+        while (document.getElementById(id) && document.getElementById(id) !== el) {
+          id = `${base}-${n++}`
+        }
+        el.id = id
       }
     })
 

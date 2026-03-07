@@ -20,6 +20,18 @@ const SECTION_GRADIENTS = [
   'linear-gradient(90deg, #BE185D, #F59E0B)',
 ]
 
+// Solid accent colour (start of each gradient) — used for border, badge, header tint
+const SECTION_COLORS = [
+  '#7C3AED',
+  '#059669',
+  '#D97706',
+  '#DB2777',
+  '#0891B2',
+  '#EA580C',
+  '#4F46E5',
+  '#BE185D',
+]
+
 interface Section {
   id: number
   title: string
@@ -37,11 +49,12 @@ type SummaryState = 'idle' | 'loading' | 'done' | 'error'
 
 export default function SectionCard({ section, index, gradientIndex }: Props) {
   const hasTitle = Boolean(section.title?.trim())
-  const titleId = hasTitle
-    ? section.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    : `section-${index + 1}`
+  // Use the section's DB id for the anchor so that duplicate title text across
+  // sections (e.g. two "Conclusion" sections) never collides.
+  const titleId = `section-${section.id}`
 
   const gradient = SECTION_GRADIENTS[gradientIndex % SECTION_GRADIENTS.length]
+  const accentColor = SECTION_COLORS[gradientIndex % SECTION_COLORS.length]
 
   // ── Section AI summary — managed per-card (fixes re-generation bug) ────────
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -79,7 +92,14 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
   const closeSummary = () => setSummaryOpen(false)
 
   return (
-    <div className="section-optional" id={`section-${index + 1}`}>
+    <div
+      className="section-optional"
+      id={`section-${index + 1}`}
+      style={{
+        // @ts-expect-error CSS custom properties
+        '--section-color': accentColor,
+      }}
+    >
 
       {hasTitle && (
         <div id={titleId} className="section-optional-header">

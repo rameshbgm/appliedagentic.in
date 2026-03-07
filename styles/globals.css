@@ -277,6 +277,9 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.92;
   letter-spacing: 0.009em;
   text-align: justify;
+  hyphens: none;
+  -webkit-hyphens: none;
+  -ms-hyphens: none;
 
   overflow-x: hidden;
   overflow-y: visible;
@@ -538,11 +541,12 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .section-optional {
   position: relative;
   border: 1px solid var(--bg-border);
-  border-left: none;
+  border-left: 4px solid var(--section-color, var(--bg-border));
   border-right: none;
   overflow: visible;
   margin-bottom: 1.75rem;
   background: var(--bg-elevated);
+  border-radius: 0 8px 8px 0;
 }
 /* No ::before left bar */
 .section-optional::before { display: none; }
@@ -552,7 +556,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   align-items: center;
   gap: 0.5rem;
   padding: 0.65rem 1.25rem;
-  border-bottom: 1px solid var(--bg-border);
+  border-bottom: 2px solid var(--section-color, var(--bg-border));
   background: var(--bg-surface);
   scroll-margin-top: calc(var(--nav-h) + 16px);
   position: sticky;
@@ -574,7 +578,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  background: #7C3AED;
+  background: var(--section-color, #7C3AED);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -594,8 +598,9 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 @media (max-width: 640px) {
   .section-optional {
     margin-bottom: 1rem;
-    border-left: none;
+    border-left: 4px solid var(--section-color, var(--bg-border));
     border-right: none;
+    border-radius: 0 6px 6px 0;
   }
   .section-optional-header {
     padding: 0.55rem 1rem;
@@ -646,6 +651,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   gap: 6px;
   padding: 10px 14px 8px;
   border-bottom: 1px solid var(--bg-border);
+  flex-shrink: 0;
 }
 .toc-card-title {
   font-size: 10px;
@@ -655,13 +661,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   color: var(--text-muted);
 }
 .toc-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - var(--nav-h) - 200px);
   padding: 8px 0;
 }
 .toc-card-footer {
   padding: 10px 12px;
   border-top: 1px solid var(--bg-border);
+  flex-shrink: 0;
 }
 
 /* The nav tree */
@@ -674,6 +682,12 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .toc-group {
   display: flex;
   flex-direction: column;
+}
+/* Separator appears AFTER a section's children, before the next section title */
+.toc-group:not(:last-child) {
+  border-bottom: 1px solid var(--bg-border);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 /* H1 row: label + collapse toggle side by side */
@@ -692,7 +706,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   font-weight: 700;
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.01em;
-  color: var(--text-secondary);
+  /* Uses per-section accent colour set via --toc-h1-color on the parent group */
+  color: var(--toc-h1-color, var(--text-primary));
   background: none;
   border: none;
   cursor: pointer;
@@ -705,8 +720,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .toc-h1-label:hover,
 .toc-h1-label.toc-active {
-  color: var(--green);
-  background: var(--green-glow);
+  color: var(--toc-h1-color, var(--green));
+  background: color-mix(in srgb, var(--toc-h1-color, var(--green)) 12%, transparent);
 }
 .toc-collapse-btn {
   flex-shrink: 0;
@@ -741,7 +756,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   display: flex;
   flex-direction: column;
   gap: 1px;
-  border-left: 2px solid var(--bg-border);
+  /* Left bar inherits section accent colour */
+  border-left: 2px solid var(--toc-h1-color, var(--bg-border));
   margin-left: 16px;
   margin-bottom: 4px;
 }
@@ -763,26 +779,26 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .toc-level-2 {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--toc-h1-color, var(--text-secondary));
   font-family: 'Inter', system-ui, sans-serif;
 }
 .toc-level-2:hover,
 .toc-level-2.toc-active {
-  color: var(--green);
-  background: var(--green-glow);
+  color: var(--toc-h1-color, var(--green));
+  background: color-mix(in srgb, var(--toc-h1-color, var(--green)) 10%, transparent);
 }
 /* H3 — indented further */
 .toc-level-3 {
   font-size: 11px;
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--toc-h1-color, var(--text-muted));
   font-family: 'Inter', system-ui, sans-serif;
   padding-left: 14px;
 }
 .toc-level-3:hover,
 .toc-level-3.toc-active {
-  color: var(--green);
-  background: var(--green-glow);
+  color: var(--toc-h1-color, var(--green));
+  background: color-mix(in srgb, var(--toc-h1-color, var(--green)) 10%, transparent);
 }
 .toc-h3-marker {
   flex-shrink: 0;
@@ -794,7 +810,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .toc-level-3.toc-active .toc-h3-marker,
 .toc-level-3:hover .toc-h3-marker {
-  background: var(--green);
+  background: var(--toc-h1-color, var(--green));
 }
 .toc-child-text {
   overflow: hidden;
@@ -1067,6 +1083,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     align-self: flex-start;
     max-height: calc(100vh - var(--nav-h) - 32px);
     gap: 12px;
+    overflow: hidden;
   }
 }
 @media (min-width: 1280px) {

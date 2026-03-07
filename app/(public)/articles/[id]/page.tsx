@@ -211,9 +211,6 @@ export default async function ArticleDetailPage({ params }: Props) {
     ? sections.map(s => s.content).join('\n')
     : article.content
 
-  // Random gradient offset per page render — each refresh gives different colors
-  const gradientOffset = Math.floor(Math.random() * 8)
-
   return (
     <>
       <ReadingProgressBar />
@@ -366,7 +363,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                   />
                 </div>
 
-                <div className="overflow-y-auto flex-1 min-h-0 no-scrollbar">
+                <div className="flex flex-col flex-1 min-h-0">
                   <TableOfContents
                     sections={sections.length > 0
                       ? sections
@@ -387,7 +384,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                       key={section.id}
                       section={section}
                       index={idx}
-                      gradientIndex={(idx + gradientOffset) % 8}
+                      gradientIndex={idx % 8}
                     />
                   ))}
                 </div>
