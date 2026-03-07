@@ -184,7 +184,10 @@ export async function runArticleGenerator(
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/```\s*$/, '')
       .trim()
-    parsed = JSON.parse(cleaned)
+    // Extract the outermost JSON object to tolerate any preamble or trailing text
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON object found in article generator response')
+    parsed = JSON.parse(match[0])
   } catch {
     // Fallback: treat raw text as article content
     parsed = {

@@ -71,7 +71,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
         } else {
           toast.success('Content generated!')
         }
-        setTextPrompt('')
       } else {
         toast.error(data.error ?? 'Generation failed')
       }
