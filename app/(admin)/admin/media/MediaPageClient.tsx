@@ -81,6 +81,7 @@ export default function MediaPage() {
             placeholder="Search files..."
             className="w-full pl-8 pr-3 py-2 rounded-xl border text-sm outline-none"
             style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+            suppressHydrationWarning
           />
         </div>
         <select
@@ -88,6 +89,7 @@ export default function MediaPage() {
           onChange={(e) => { setTypeFilter(e.target.value); }}
           className="px-3 py-2 rounded-xl border text-sm outline-none"
           style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+          suppressHydrationWarning
         >
           <option value="">All Types</option>
           <option value="IMAGE">Images</option>

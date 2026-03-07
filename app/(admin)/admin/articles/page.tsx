@@ -278,7 +278,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                     {new Date(a.updatedAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 sticky right-0" style={{ background: 'var(--bg-card)' }}>
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center justify-end gap-1">
                       <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100">
                         <Eye size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>

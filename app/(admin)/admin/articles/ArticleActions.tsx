@@ -1,7 +1,7 @@
 'use client'
 // app/(admin)/articles/ArticleActions.tsx
 import { useState } from 'react'
-import { Copy, Trash2, Zap, CloudUpload, Loader2 } from 'lucide-react'
+import { Copy, Trash2, Zap, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
@@ -11,7 +11,6 @@ export default function ArticleActions({ id, title, status }: { id: number; titl
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [publishing, setPublishing] = useState(false)
-  const [delegating, setDelegating] = useState(false)
 
   const handleDuplicate = async () => {
     const res = await fetch(`/api/articles/${id}/duplicate`, { method: 'POST' })
@@ -32,20 +31,6 @@ export default function ArticleActions({ id, title, status }: { id: number; titl
       if (data.success) { toast.success('Article published'); router.refresh() }
       else toast.error(data.error ?? 'Publish failed')
     } finally { setPublishing(false) }
-  }
-
-  const handleDelegate = async () => {
-    setDelegating(true)
-    try {
-      const res = await fetch('/api/ai/delegate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ articleId: id }),
-      })
-      const data = await res.json()
-      if (data.success) { toast.success('Delegated to cloud agent — SEO & tags enriched!'); router.refresh() }
-      else toast.error(data.error ?? 'Delegation failed')
-    } finally { setDelegating(false) }
   }
 
   const handleDelete = async () => {
@@ -70,16 +55,6 @@ export default function ArticleActions({ id, title, status }: { id: number; titl
           <Zap size={14} className="text-lime-600" fill="currentColor" />
         </button>
       )}
-      <button
-        onClick={handleDelegate}
-        disabled={delegating}
-        className="p-1.5 rounded-lg hover:bg-sky-100 transition-colors disabled:opacity-50"
-        title="Delegate to cloud agent"
-      >
-        {delegating
-          ? <Loader2 size={14} className="text-sky-500 animate-spin" />
-          : <CloudUpload size={14} className="text-sky-500" />}
-      </button>
       <button onClick={handleDuplicate} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors" title="Duplicate">
         <Copy size={14} style={{ color: 'var(--text-muted)' }} />
       </button>

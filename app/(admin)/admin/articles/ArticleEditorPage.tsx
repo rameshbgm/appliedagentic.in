@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon, CloudUpload } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import ImageCropModal from '@/components/admin/ImageCropModal'
 import TagInput from '@/components/shared/TagInput'
@@ -62,7 +62,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [delegating, setDelegating] = useState(false)
   const [metaLoading, setMetaLoading] = useState(false)
   const [tagsLoading, setTagsLoading] = useState(false)
   const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
@@ -270,87 +269,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     }
   }
 
-  const delegateToCloudAgent = async () => {
-    if (!title.trim()) { toast.error('Title is required before delegating'); return }
-    setDelegating(true)
-    try {
-      // ── 1. Save first so the agent has the latest content ──
-      const savePayload = {
-        title,
-        slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-        summary,
-        content: sections.map(s => s.content).join('\n'),
-        coverImageUrl,
-        status: meta.status,
-        tagNames: meta.tagNames,
-        seoTitle: meta.seoTitle,
-        seoDescription: meta.seoDescription,
-        seoKeywords: meta.seoKeywords,
-        ogTitle: meta.ogTitle,
-        ogDescription: meta.ogDescription,
-        twitterTitle: meta.twitterTitle,
-        twitterDescription: meta.twitterDescription,
-        aiContentDeclaration: meta.aiContentDeclaration,
-        audioUrl: meta.audioUrl,
-        isFeatured: meta.isFeatured,
-        subMenuIds: meta.subMenuIds,
-        menuIds: meta.menuIds,
-        sections: sections.map((s, i) => ({ id: s.id, title: s.title, content: s.content, order: i })),
-      }
-      const saveUrl = initialArticle.id ? `/api/articles/${initialArticle.id}` : '/api/articles'
-      const saveMethod = initialArticle.id ? 'PUT' : 'POST'
-      const saveRes = await fetch(saveUrl, {
-        method: saveMethod,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(savePayload),
-      })
-      const saveData = await saveRes.json()
-      if (!saveData.success) {
-        toast.error(saveData.error ?? 'Save failed before delegation')
-        return
-      }
-      const savedId: number = initialArticle.id ?? saveData.data?.id
-      if (!savedId) { toast.error('Could not determine article ID'); return }
-      if (!initialArticle.id && saveData.data?.id) {
-        router.push(`/admin/articles/${saveData.data.id}/edit`)
-      }
-
-      // ── 2. Delegate enrichment to cloud agent ──
-      const delegateRes = await fetch('/api/ai/delegate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ articleId: savedId }),
-      })
-      const delegateData = await delegateRes.json()
-      if (!delegateData.success) {
-        toast.error(delegateData.error ?? 'Delegation failed')
-        return
-      }
-
-      // ── 3. Update editor state with enriched data ──
-      const d = delegateData.data
-      setMeta((m) => ({
-        ...m,
-        seoTitle:             (d.seoTitle            ?? m.seoTitle).slice(0, 60),
-        seoDescription:       (d.seoDescription      ?? m.seoDescription).slice(0, 160),
-        seoKeywords:          d.seoKeywords           ?? m.seoKeywords,
-        ogTitle:              (d.ogTitle              ?? m.ogTitle).slice(0, 70),
-        ogDescription:        (d.ogDescription        ?? m.ogDescription).slice(0, 200),
-        twitterTitle:         (d.twitterTitle         ?? m.twitterTitle).slice(0, 70),
-        twitterDescription:   (d.twitterDescription   ?? m.twitterDescription).slice(0, 200),
-        aiContentDeclaration: d.aiContentDeclaration  ?? m.aiContentDeclaration,
-        tagNames:             d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
-      }))
-
-      toast.success('Saved & delegated to cloud agent — SEO and tags enriched!')
-      router.refresh()
-    } catch (err) {
-      console.error('Delegation error:', err)
-      toast.error('Failed to delegate to cloud agent')
-    } finally {
-      setDelegating(false)
-    }
-  }
 
 
   const generateFullArticle = async () => {
@@ -671,21 +589,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <Wand2 size={13} />
             AI Generate
           </button>
-
-          {/* Delegate to cloud agent button (only available once the article is saved) */}
-          {initialArticle.id && (
-            <button
-              type="button"
-              onClick={delegateToCloudAgent}
-              disabled={delegating || saving}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff' }}
-              title="Save changes and delegate SEO & tag enrichment to the cloud agent"
-            >
-              {delegating ? <Loader2 size={13} className="animate-spin" /> : <CloudUpload size={13} />}
-              {delegating ? 'Delegating…' : 'Delegate to Cloud Agent'}
-            </button>
-          )}
 
           {/* Single Save button */}
           <button

@@ -9,7 +9,6 @@ import {
   FileText,
   Image as ImageIcon,
   Settings,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -25,7 +24,6 @@ const navItems = [
   { href: '/admin/submenus', icon: ListTree, label: 'Sub-Menus' },
   { href: '/admin/articles', icon: FileText, label: 'Articles' },
   { href: '/admin/media', icon: ImageIcon, label: 'Media' },
-  { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
 ]
 

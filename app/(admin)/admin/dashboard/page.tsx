@@ -7,17 +7,60 @@ import Link from 'next/link'
 import { Plus, FileText, Menu, ListTree, Image as ImageIcon } from 'lucide-react'
 import StatsCard from '@/components/admin/StatsCard'
 import DashboardCharts from './DashboardCharts'
+import { prisma } from '@/lib/prisma'
+import { ArticleStatus } from '@prisma/client'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 export const revalidate = 60
 
 async function getStats() {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/analytics`, { cache: 'no-store' })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.success ? data.data : null
+    const [
+      totalModules, totalTopics,
+      publishedArticles, draftArticles, totalArticlesRaw,
+      totalMedia, totalMenus, totalSubMenus,
+      viewsAgg, recentArticles, aiLogs, topArticles,
+    ] = await prisma.$transaction([
+      prisma.module.count(),
+      prisma.topic.count(),
+      prisma.article.count({ where: { status: ArticleStatus.PUBLISHED } }),
+      prisma.article.count({ where: { status: ArticleStatus.DRAFT } }),
+      prisma.article.count(),
+      prisma.mediaAsset.count(),
+      prisma.navMenu.count(),
+      prisma.navSubMenu.count(),
+      prisma.article.aggregate({ _sum: { viewCount: true } }),
+      prisma.article.findMany({
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+        select: { id: true, title: true, slug: true, status: true, updatedAt: true, viewCount: true, createdAt: true },
+      }),
+      prisma.aIUsageLog.aggregate({ _count: true, _sum: { inputTokens: true, outputTokens: true } }),
+      prisma.article.findMany({
+        where: { status: ArticleStatus.PUBLISHED },
+        orderBy: { viewCount: 'desc' },
+        take: 5,
+        select: { id: true, title: true, slug: true, viewCount: true },
+      }),
+    ])
+
+    return {
+      stats: {
+        totalModules,
+        totalTopics,
+        totalArticles: totalArticlesRaw,
+        publishedArticles,
+        draftArticles,
+        totalMedia,
+        totalMenus,
+        totalSubMenus,
+        totalViews: viewsAgg._sum.viewCount ?? 0,
+        aiRequests: aiLogs._count,
+        aiTokens: (aiLogs._sum.inputTokens ?? 0) + (aiLogs._sum.outputTokens ?? 0),
+      },
+      recentArticles,
+      topArticles,
+    }
   } catch {
     return null
   }
@@ -25,20 +68,22 @@ async function getStats() {
 
 export default async function DashboardPage() {
   const raw = await getStats()
-  const s = raw?.stats ?? {}
+  const s = raw?.stats ?? {} as Record<string, number>
   const recentArticles = raw?.recentArticles ?? []
-
-  const totalArticles = s.totalArticles ?? ((s.publishedArticles ?? 0) + (s.draftArticles ?? 0))
-  const totalViews = s.totalViews ?? 0
+  const topArticles = raw?.topArticles ?? []
 
   const cards = [
-    { label: 'Total Articles', value: totalArticles,             iconName: 'FileText',   color: '#6C3DFF' },
-    { label: 'Published',      value: s.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
-    { label: 'Draft',          value: s.draftArticles    ?? 0,  iconName: 'FileText',   color: '#FFA502' },
-    { label: 'Menus',          value: s.totalMenus       ?? 0,  iconName: 'Menu',        color: '#10B981' },
-    { label: 'Sub-Menus',      value: s.totalSubMenus    ?? 0,  iconName: 'ListTree',    color: '#3B82F6' },
-    { label: 'Total Views',    value: totalViews,               iconName: 'Eye',         color: '#FF6B6B', suffix: '' },
-    { label: 'Media Assets',   value: s.totalMedia       ?? 0,  iconName: 'Image',       color: '#FF69B4' },
+    { label: 'Total Articles',  value: s.totalArticles     ?? 0, iconName: 'FileText',   color: '#6C3DFF' },
+    { label: 'Published',       value: s.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
+    { label: 'Draft',           value: s.draftArticles     ?? 0, iconName: 'FileText',   color: '#FFA502' },
+    { label: 'Total Views',     value: s.totalViews        ?? 0, iconName: 'Eye',         color: '#FF6B6B' },
+    { label: 'Menus',           value: s.totalMenus        ?? 0, iconName: 'Menu',        color: '#10B981' },
+    { label: 'Sub-Menus',       value: s.totalSubMenus     ?? 0, iconName: 'ListTree',    color: '#3B82F6' },
+    { label: 'Media Assets',    value: s.totalMedia        ?? 0, iconName: 'Image',       color: '#FF69B4' },
+    { label: 'Modules',         value: s.totalModules      ?? 0, iconName: 'Layers',      color: '#00D4FF' },
+    { label: 'Topics',          value: s.totalTopics       ?? 0, iconName: 'BookOpen',    color: '#FFA502' },
+    { label: 'AI Requests',     value: s.aiRequests        ?? 0, iconName: 'Cpu',         color: '#A29BFE' },
+    { label: 'AI Tokens Used',  value: s.aiTokens          ?? 0, iconName: 'Cpu',         color: '#55EFC4' },
   ]
 
   const quickActions = [
@@ -65,7 +110,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
         {cards.map((c) => (
           <StatsCard key={c.label} {...c} />
         ))}
@@ -93,8 +138,45 @@ export default async function DashboardPage() {
 
       {/* Charts */}
       <Suspense fallback={<div className="h-64 rounded-2xl skeleton" />}>
-        <DashboardCharts recentArticles={recentArticles} topArticles={recentArticles} />
+        <DashboardCharts topArticles={topArticles} />
       </Suspense>
+
+      {/* Top Articles by Views */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
+            Top Articles by Views
+          </h2>
+          <Link href="/admin/articles" className="text-xs font-medium" style={{ color: '#6C3DFF' }}>
+            View all →
+          </Link>
+        </div>
+        <div className="space-y-3">
+          {topArticles.length > 0 ? topArticles.map((a: any, i: number) => (
+            <div key={a.id} className="flex items-center gap-4">
+              <span
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                style={{ background: 'rgba(108,61,255,0.2)', color: '#A29BFE' }}
+              >
+                {i + 1}
+              </span>
+              <a
+                href={`/articles/${a.slug}`}
+                target="_blank"
+                className="flex-1 text-sm truncate hover:text-violet-400 transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {a.title}
+              </a>
+              <span className="text-sm font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>
+                {(a.viewCount ?? 0).toLocaleString()} views
+              </span>
+            </div>
+          )) : (
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No published articles yet.</p>
+          )}
+        </div>
+      </div>
 
       {/* Recent articles table */}
       {recentArticles.length > 0 && (

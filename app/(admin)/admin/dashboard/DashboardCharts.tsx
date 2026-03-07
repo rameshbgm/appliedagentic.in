@@ -3,16 +3,15 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 interface Props {
-  recentArticles: { title: string; viewCount: number }[]
   topArticles: { title: string; viewCount: number }[]
 }
 
 const COLORS = ['#6C3DFF', '#00D4FF', '#FF6B6B', '#FFA502', '#2ED573']
 
-export default function DashboardCharts({ recentArticles, topArticles }: Props) {
+export default function DashboardCharts({ topArticles }: Props) {
   const topData = topArticles.slice(0, 5).map((a) => ({
     name: a.title.length > 20 ? a.title.slice(0, 20) + '…' : a.title,
-    views: a.viewCount,
+    views: a.viewCount ?? 0,
   }))
 
   return (

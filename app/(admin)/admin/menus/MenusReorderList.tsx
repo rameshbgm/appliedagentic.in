@@ -141,8 +141,8 @@ function SortableMenuItem({ menu, isDeleting, onDeleted, onVisibilityChanged }: 
           {menu.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
 
-        {/* Edit + Delete — shown on hover */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Edit + Delete */}
+        <div className="flex items-center gap-1">
           <Link
             href={`/admin/menus/${menu.id}/edit`}
             className="p-2 rounded-xl hover:bg-gray-100 transition-colors"

@@ -1,15 +1,13 @@
 'use client'
 // app/(admin)/admin/settings/SettingsPageClient.tsx
 import { useState, useEffect } from 'react'
-import { Save, Loader2, TestTube2 } from 'lucide-react'
+import { Save, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-type TabId = 'general' | 'ai' | 'seo' | 'account'
+type TabId = 'general' | 'account'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'general', label: 'General' },
-  { id: 'ai', label: 'AI Config' },
-  { id: 'seo', label: 'SEO & Social' },
   { id: 'account', label: 'Admin Account' },
 ]
 
@@ -17,24 +15,12 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<TabId>('general')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [testing, setTesting] = useState(false)
 
   const [settings, setSettings] = useState({
     siteName: 'Applied Agentic AI',
     tagline: 'Master the AI era, one concept at a time.',
     siteUrl: '',
     seoDescription: '',
-    socialTwitter: '',
-    socialLinkedin: '',
-    socialGithub: '',
-    openaiTextModel: 'gpt-4o',
-    openaiImageModel: 'dall-e-3',
-    openaiAudioModel: 'tts-1',
-    openaiTemperature: 0.7,
-    openaiMaxTokens: 2048,
-    openaiImageSize: '1024x1024',
-    openaiImageQuality: 'standard',
-    openaiTtsVoice: 'alloy',
   })
 
   const [account, setAccount] = useState({
@@ -51,7 +37,13 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.data) {
-          setSettings((s) => ({ ...s, ...data.data }))
+          setSettings((s) => ({
+            ...s,
+            siteName: data.data.siteName ?? s.siteName,
+            tagline: data.data.tagline ?? s.tagline,
+            siteUrl: data.data.siteUrl ?? s.siteUrl,
+            seoDescription: data.data.metaDescription ?? s.seoDescription,
+          }))
         }
       })
       .finally(() => setLoading(false))
@@ -68,7 +60,12 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({
+          siteName: settings.siteName,
+          tagline: settings.tagline,
+          siteUrl: settings.siteUrl,
+          metaDescription: settings.seoDescription,
+        }),
       })
       const data = await res.json()
       if (data.success) toast.success('Settings saved!')
@@ -102,21 +99,8 @@ export default function SettingsPage() {
     }
   }
 
-  const testAI = async () => {
-    setTesting(true)
-    try {
-      const res = await fetch('/api/ai/test', { method: 'POST' })
-      const data = await res.json()
-      if (data.success) toast.success(`AI connected! ${data.data.models} models available.`)
-      else toast.error(data.error ?? 'AI test failed')
-    } finally {
-      setTesting(false)
-    }
-  }
-
   const inputClass = "w-full px-3 py-2.5 rounded-xl border text-sm outline-none"
   const inputStyle = { background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }
-  const label = (text: string) => <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{text}</label>
 
   if (loading) return <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={`skeleton-${i}`} className="h-12 rounded-xl skeleton" />)}</div>
 
@@ -162,66 +146,6 @@ export default function SettingsPage() {
           </>
         )}
 
-        {tab === 'ai' && (
-          <>
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>OpenAI Configuration</h3>
-              <button onClick={testAI} disabled={testing} className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs border" style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}>
-                {testing ? <Loader2 size={12} className="animate-spin" /> : <TestTube2 size={12} />}Test Connection
-              </button>
-            </div>
-            <p className="text-xs p-3 rounded-xl" style={{ background: 'rgba(108,61,255,0.1)', color: '#A29BFE' }}>
-              API key is configured via environment variable (OPENAI_API_KEY). Use this panel to configure model defaults.
-            </p>
-            {[
-              { key: 'openaiTextModel', label: 'Text Model', placeholder: 'gpt-4o' },
-              { key: 'openaiImageModel', label: 'Image Model', placeholder: 'dall-e-3' },
-              { key: 'openaiAudioModel', label: 'Audio (TTS) Model', placeholder: 'tts-1' },
-              { key: 'openaiImageSize', label: 'Default Image Size', placeholder: '1024x1024' },
-              { key: 'openaiImageQuality', label: 'Image Quality', placeholder: 'standard' },
-              { key: 'openaiTtsVoice', label: 'Default TTS Voice', placeholder: 'alloy' },
-            ].map(({ key, label: lbl, placeholder }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
-                <input value={(settings as any)[key] ?? ''} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
-              </div>
-            ))}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Temperature ({settings.openaiTemperature})</label>
-                <input type="range" min={0} max={2} step={0.1} value={settings.openaiTemperature} onChange={(e) => setSettings((s) => ({ ...s, openaiTemperature: parseFloat(e.target.value) }))} className="w-full" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Max Tokens</label>
-                <input type="number" value={settings.openaiMaxTokens} onChange={(e) => setSettings((s) => ({ ...s, openaiMaxTokens: parseInt(e.target.value) }))} className={inputClass} style={inputStyle} />
-              </div>
-            </div>
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save AI Config
-            </button>
-          </>
-        )}
-
-        {tab === 'seo' && (
-          <>
-            <p className="text-xs p-3 rounded-xl mb-2" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD' }}>
-              Social profiles are used in article Open Graph metadata and site footer links.
-            </p>
-            {[
-              { key: 'socialTwitter', label: 'Twitter / X Username', placeholder: '@appliedagentic' },
-              { key: 'socialLinkedin', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/company/...' },
-            ].map(({ key, label: lbl, placeholder }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
-                <input value={(settings as any)[key] ?? ''} onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.value }))} placeholder={placeholder} className={inputClass} style={inputStyle} />
-              </div>
-            ))}
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
-            </button>
-          </>
-        )}
-
         {tab === 'account' && (
           <>
             <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Name</label>
@@ -250,3 +174,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+
