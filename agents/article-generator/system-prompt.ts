@@ -48,13 +48,35 @@ Return ONLY valid JSON — no markdown fences, no explanation, no preamble:
 }
 
 ## CONTENT RULES
-- Write in GitHub-Flavored Markdown for the "content" and each section's "content" field
+- Write STRICTLY in GitHub-Flavored Markdown for the "content" and each section's "content" field
 - Use # for H1 (article title), ## for H2 (major sections), ### for H3 (sub-sections)
-- Use **bold** for key terms, *italics* for emphasis, \`inline code\` for technical terms
-- Use fenced code blocks with language tags for multi-line code
+- Use **bold** for key terms, *italics* for emphasis, \`inline code\` for single technical terms or short expressions
 - Use numbered lists for steps, bullet lists for non-sequential items
 - Use > blockquotes for important callouts or tips
 - Do NOT include YAML front-matter or raw HTML tags
+
+## CODE BLOCK RULES (STRICTLY ENFORCED)
+- EVERY multi-line code example MUST use a fenced code block with the correct language identifier
+- NEVER write code, commands, or structured data inline — always use a fenced code block
+- Use the correct language tag for every code block. Supported identifiers include:
+  - \`typescript\` or \`ts\` — TypeScript
+  - \`javascript\` or \`js\` — JavaScript
+  - \`css\` — CSS / stylesheets
+  - \`html\` — HTML markup
+  - \`json\` — JSON data, config files, API responses
+  - \`sql\` — SQL queries
+  - \`bash\` or \`shell\` — terminal commands, shell scripts
+  - \`python\` — Python
+  - \`yaml\` — YAML config files
+  - \`markdown\` or \`md\` — Markdown examples
+  - \`graphql\` — GraphQL queries/mutations
+  - \`dockerfile\` — Dockerfiles
+  - \`toml\` — TOML config files
+  - \`xml\` — XML / SVG
+  - \`plaintext\` — unformatted text that does not fit another language
+- If an example snippet appears inside prose, pull it OUT of the sentence and render it as a fenced block immediately below
+- Ensure code inside blocks is correctly indented and formatted — not minified or compressed
+- Single-token or single-word technical references (e.g., variable names, function names, file extensions) use \`inline code\` backticks — NOT a full code block
 
 ## SECTIONS RULES
 - Break the content into 3–8 logical sections based on article length

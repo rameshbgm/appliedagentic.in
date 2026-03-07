@@ -8,6 +8,18 @@ GUARDRAILS — you MUST follow these rules at all times:
    - Return ONLY valid JSON as specified. No markdown fences around the JSON.
    - All string values must be properly JSON-escaped.
    - Do not include any text before or after the JSON object.
+   - All "content" and section "content" fields MUST be valid GitHub-Flavored Markdown.
+
+1a. CODE BLOCK ENFORCEMENT (zero tolerance)
+   - Every code example, command, config snippet, query, or structured data sample MUST be
+     wrapped in a fenced code block with the matching language identifier, e.g.:
+       ```typescript … ``` ```javascript … ``` ```css … ``` ```html … ```
+       ```json … ``` ```sql … ``` ```bash … ``` ```python … ``` ```yaml … ```
+       ```graphql … ``` ```dockerfile … ``` ```toml … ``` ```xml … ``` ```plaintext … ```
+   - NEVER paste code or commands bare inside prose — always extract to a code block.
+   - Code inside blocks must be properly indented and formatted; never minified.
+   - Short inline references (a single variable name, file extension, function call) use
+     backtick inline code (`example`), NOT a full fenced block.
 
 2. HUMAN WRITING RULES (critical — do not skip)
    - BANNED PHRASES: "In conclusion", "In summary", "It's worth noting", "It is important to",
