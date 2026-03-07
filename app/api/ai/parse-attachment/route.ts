@@ -45,10 +45,8 @@ function getExt(filename: string): string {
 // ── Parsers ────────────────────────────────────────────────────────────────
 
 async function parsePdf(buffer: Buffer): Promise<string> {
-  // pdf-parse uses a dynamic require internally; import the underlying module
-  // to avoid issues with the default entry point.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require('pdf-parse/lib/pdf-parse.js')
+  const pdfParse = require('pdf-parse')
   const data = await pdfParse(buffer)
   return (data.text as string) ?? ''
 }
