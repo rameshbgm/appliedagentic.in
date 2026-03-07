@@ -176,6 +176,9 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
+  // Sanitise a single-line text field: collapse any newlines / excess whitespace to a space
+  const cleanLine = (s: string | undefined | null) => (s ?? '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+
   const handleTitleChange = (v: string) => {
     setTitle(v)
     if (!initialArticle.id) setSlug(autoSlug(v))
@@ -197,13 +200,13 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         const d = data.data
         setMeta((m) => ({
           ...m,
-          seoTitle:            (d.seoTitle            ?? m.seoTitle).slice(0, 60),
-          seoDescription:      (d.seoDescription      ?? m.seoDescription).slice(0, 160),
+          seoTitle:            cleanLine(d.seoTitle            ?? m.seoTitle).slice(0, 60),
+          seoDescription:      cleanLine(d.seoDescription      ?? m.seoDescription).slice(0, 160),
           seoKeywords:         d.seoKeywords          ?? m.seoKeywords,
-          ogTitle:             (d.ogTitle             ?? m.ogTitle).slice(0, 70),
-          ogDescription:       (d.ogDescription       ?? m.ogDescription).slice(0, 200),
-          twitterTitle:        (d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
-          twitterDescription:  (d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
+          ogTitle:             cleanLine(d.ogTitle             ?? m.ogTitle).slice(0, 70),
+          ogDescription:       cleanLine(d.ogDescription       ?? m.ogDescription).slice(0, 200),
+          twitterTitle:        cleanLine(d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
+          twitterDescription:  cleanLine(d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
           tagNames:            d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
         }))
         toast.success('SEO metadata generated!')
@@ -366,17 +369,23 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         ...m,
         status:              'DRAFT',
         tagNames:            newTags,
-        seoTitle:            (d.seoTitle            ?? m.seoTitle).slice(0, 60),
-        seoDescription:      (d.seoDescription      ?? m.seoDescription).slice(0, 160),
+        seoTitle:            cleanLine(d.seoTitle            ?? m.seoTitle).slice(0, 60),
+        seoDescription:      cleanLine(d.seoDescription      ?? m.seoDescription).slice(0, 160),
         seoKeywords:         d.seoKeywords          ?? m.seoKeywords,
-        ogTitle:             (d.ogTitle             ?? m.ogTitle).slice(0, 70),
-        ogDescription:       (d.ogDescription       ?? m.ogDescription).slice(0, 200),
-        twitterTitle:        (d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
-        twitterDescription:  (d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
+        ogTitle:             cleanLine(d.ogTitle             ?? m.ogTitle).slice(0, 70),
+        ogDescription:       cleanLine(d.ogDescription       ?? m.ogDescription).slice(0, 200),
+        twitterTitle:        cleanLine(d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
+        twitterDescription:  cleanLine(d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
         aiContentDeclaration: 'ai-generated',
       }))
 
       // ── 5. Auto-save as DRAFT ──
+      const seoTitleSave            = cleanLine(d.seoTitle            ?? '').slice(0, 60)
+      const seoDescriptionSave      = cleanLine(d.seoDescription      ?? '').slice(0, 160)
+      const ogTitleSave             = cleanLine(d.ogTitle             ?? '').slice(0, 70)
+      const ogDescriptionSave       = cleanLine(d.ogDescription       ?? '').slice(0, 200)
+      const twitterTitleSave        = cleanLine(d.twitterTitle        ?? '').slice(0, 70)
+      const twitterDescriptionSave  = cleanLine(d.twitterDescription  ?? '').slice(0, 200)
       const savePayload = {
         title:               newTitle,
         slug:                newSlug,
@@ -385,13 +394,13 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         coverImageUrl,
         status:              'DRAFT',
         tagNames:            newTags,
-        seoTitle:            (d.seoTitle ?? '').slice(0, 60),
-        seoDescription:      (d.seoDescription ?? '').slice(0, 160),
+        seoTitle:            seoTitleSave,
+        seoDescription:      seoDescriptionSave,
         seoKeywords:         d.seoKeywords ?? '',
-        ogTitle:             (d.ogTitle ?? '').slice(0, 70),
-        ogDescription:       (d.ogDescription ?? '').slice(0, 200),
-        twitterTitle:        (d.twitterTitle ?? '').slice(0, 70),
-        twitterDescription:  (d.twitterDescription ?? '').slice(0, 200),
+        ogTitle:             ogTitleSave,
+        ogDescription:       ogDescriptionSave,
+        twitterTitle:        twitterTitleSave,
+        twitterDescription:  twitterDescriptionSave,
         aiContentDeclaration: 'ai-generated',
         audioUrl:            meta.audioUrl,
         isFeatured:          false,

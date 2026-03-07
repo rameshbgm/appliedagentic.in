@@ -32,37 +32,27 @@ export async function POST(req: NextRequest) {
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200
 
     if (generateTitle) {
-      // Ask the LLM to return JSON with both a section title and markdown content.
-      // We prefix the prompt so the content-writer knows to produce JSON output.
-      const titlePrompt = [
-        `Generate a section title AND the full markdown content for the following topic.`,
-        `Return ONLY valid JSON — no markdown fences, no extra text:`,
-        `{"title": "<concise section heading, 3-8 words>", "content": "<full markdown content>"}`,
-        ``,
-        `Topic: ${prompt}`,
-      ].join('\n')
-
+      // Generate markdown content normally (content-writer system prompt enforces RAW MARKDOWN).
+      // Then extract the first H1 heading (# ...) as the section title and return the rest
+      // as the body. This avoids conflicting JSON/markdown instructions to the LLM.
       const result = await runContentWriter({
-        prompt: titlePrompt,
+        prompt,
         context,
         tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
         maxTokens,
       })
 
-      // Try to parse JSON; fall back to raw text with no title
-      try {
-        const cleaned = result.text
-          .replace(/^```(?:json)?\s*/i, '')
-          .replace(/```\s*$/, '')
-          .trim()
-        const parsed: { title?: string; content?: string } = JSON.parse(cleaned)
-        return apiSuccess({
-          text:  parsed.content ?? result.text,
-          title: parsed.title  ?? '',
-        })
-      } catch {
-        return apiSuccess({ text: result.text, title: '' })
+      const markdown = result.text.trim()
+      // Match a leading H1 heading: "# Title\n" or "# Title\r\n"
+      const h1Match = markdown.match(/^#\s+(.+?)(?:\r?\n|$)/)
+      if (h1Match) {
+        const title   = h1Match[1].trim()
+        // Remove the H1 line from the content so it isn't duplicated in the section body
+        const content = markdown.slice(h1Match[0].length).trimStart()
+        return apiSuccess({ text: content, title })
       }
+      // No H1 found — return full markdown with no title
+      return apiSuccess({ text: markdown, title: '' })
     }
 
     const result = await runContentWriter({
