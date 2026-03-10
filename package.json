@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "prisma generate && rm -rf .next && next build",
+    "postbuild": "[ -d ./static-html ] && mkdir -p /home/u915919430/domains/appliedagentic.in/public_html && cp -a ./static-html/. /home/u915919430/domains/appliedagentic.in/public_html/ || true",
     "build:prod": "dotenv -e .env.production -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:uat": "dotenv -e .env.uat -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:with-migrate": "dotenv -e .env.production -- sh -c 'prisma migrate deploy && prisma generate && rm -rf .next && next build'",
