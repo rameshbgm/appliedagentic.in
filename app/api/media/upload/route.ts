@@ -4,10 +4,16 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { saveFile, validateFileSize, validateMimeType, getMediaType } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
+  logger.debug('[POST /api/media/upload] request received')
+
   const session = await auth()
-  if (!session) return apiError('Unauthorized', 401)
+  if (!session) {
+    logger.debug('[POST /api/media/upload] unauthorized — no session')
+    return apiError('Unauthorized', 401)
+  }
 
   try {
     const formData = await req.formData()
@@ -15,16 +21,32 @@ export async function POST(req: NextRequest) {
     const altText = formData.get('altText') as string | null
     const subDir = (formData.get('subDir') as string) || 'images'
 
+    logger.debug('[POST /api/media/upload] file received', {
+      name: file?.name,
+      type: file?.type,
+      size: file?.size,
+      subDir,
+    })
+
     if (!file) return apiError('No file provided', 422)
 
     const mimeTypeValidation = validateMimeType(file.type)
-    if (!mimeTypeValidation.valid) return apiError(mimeTypeValidation.error!, 422)
+    if (!mimeTypeValidation.valid) {
+      logger.warn(`[POST /api/media/upload] invalid mime type: ${file.type}`)
+      return apiError(mimeTypeValidation.error!, 422)
+    }
 
     const sizeValidation = validateFileSize(file.size)
-    if (!sizeValidation.valid) return apiError(sizeValidation.error!, 422)
+    if (!sizeValidation.valid) {
+      logger.warn(`[POST /api/media/upload] file too large: ${file.size} bytes`)
+      return apiError(sizeValidation.error!, 422)
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer())
+    logger.debug(`[POST /api/media/upload] saving file to subDir="${subDir}", UPLOAD_DIR="${process.env.UPLOAD_DIR ?? '(not set — using ./public/uploads)'}"`)
+
     const { url, filename, sizeBytes } = await saveFile({ buffer, mimeType: file.type, subDir })
+    logger.debug(`[POST /api/media/upload] file saved: url=${url} filename=${filename} size=${sizeBytes}`)
 
     const mediaType = getMediaType(file.type)
     const userId = parseInt((session.user as { id: string }).id)
@@ -38,8 +60,9 @@ export async function POST(req: NextRequest) {
         const dims = await probeImageSize.default(buffer as unknown as NodeJS.ReadableStream)
         width = dims.width
         height = dims.height
+        logger.debug(`[POST /api/media/upload] image dimensions: ${width}x${height}`)
       } catch {
-        // Dimension detection failed; continue without
+        logger.debug('[POST /api/media/upload] dimension detection skipped')
       }
     }
 
@@ -57,6 +80,7 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    logger.debug(`[POST /api/media/upload] DB record created id=${asset.id}`)
     return apiSuccess(asset, 201)
   } catch (err) {
     return apiError('Upload failed', 500, err)

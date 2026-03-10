@@ -3,6 +3,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { nanoid } from 'nanoid'
+import { logger } from '@/lib/logger'
 
 // ─── Upload directory ────────────────────────────────────────────────────────
 // Defaults to ./public/uploads (relative to cwd) – served by Next.js at /uploads/...
@@ -85,9 +86,13 @@ export async function saveFile(opts: SaveFileOptions): Promise<SaveFileResult> {
   // path.resolve handles both relative (./public/uploads) and absolute paths correctly
   const dirPath = path.resolve(process.cwd(), UPLOAD_DIR, subDir)
 
+  logger.debug(`[saveFile] UPLOAD_DIR="${UPLOAD_DIR}" resolved dirPath="${dirPath}"`)
+
   await fs.mkdir(dirPath, { recursive: true })
   const filePath = path.join(dirPath, filename)
   await fs.writeFile(filePath, buffer)
+
+  logger.debug(`[saveFile] written ${buffer.length} bytes → ${filePath}`)
 
   // URL is always relative to the public root
   const url = `/uploads/${subDir}/${filename}`

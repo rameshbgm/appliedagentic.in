@@ -18,7 +18,7 @@ interface Article {
 }
 
 export default function ArticlesView({ articles }: { articles: Article[] }) {
-  const [view, setView] = useState<'list' | 'grid'>('list')
+  const [view, setView] = useState<'list' | 'grid'>('grid')
 
   if (articles.length === 0) {
     return (

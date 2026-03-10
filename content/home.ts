@@ -45,7 +45,7 @@ export const browseTopicsContent = {
   badge:           'Learning Modules',
   headline:        'Everything you need to master',
   headlineAccent:  'Agentic AI',
-  subheadline:     'Six topic areas covering foundations, hands-on projects, tools and career paths.',
+  subheadline:     'Topic areas covering foundations, hands-on projects, tools and career paths.',
 }
 
 // ─── Featured Articles Section ─────────────────────────────────────────────────

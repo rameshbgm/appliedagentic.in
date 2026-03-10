@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, Clock } from 'lucide-react'
 import type { Metadata } from 'next'
 import SubMenusView from './SubMenusView'
+import ArticlesView from './[subMenuSlug]/ArticlesView'
 
 interface Props {
   params: Promise<{ menuSlug: string }>
@@ -67,8 +67,10 @@ export default async function MenuPage({ params }: Props) {
                 summary: true,
                 readingTimeMinutes: true,
                 publishedAt: true,
+                viewCount: true,
                 status: true,
-                coverImage: { select: { url: true, altText: true } },
+                coverImage: { select: { url: true } },
+                articleTags: { include: { tag: { select: { id: true, name: true } } } },
               },
             },
           },
@@ -134,48 +136,7 @@ export default async function MenuPage({ params }: Props) {
             <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
               Articles
             </h2>
-            <div className="space-y-4">
-              {articles.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/articles/${article.slug}`}
-                  className="group card p-5 flex gap-4 items-start transition-all hover:-translate-y-0.5"
-                >
-                  {article.coverImage?.url && (
-                    <img
-                      src={article.coverImage.url}
-                      alt={article.coverImage.altText ?? article.title}
-                      className="w-20 h-14 rounded-xl object-cover shrink-0 hidden sm:block"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className="font-semibold text-base mb-1 group-hover:text-(--green) transition-colors line-clamp-2"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {article.title}
-                    </h3>
-                    {article.summary && (
-                      <p className="text-sm line-clamp-2 mb-2" style={{ color: 'var(--text-secondary)' }}>
-                        {article.summary}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {article.readingTimeMinutes && (
-                        <span className="flex items-center gap-1">
-                          <Clock size={11} />
-                          {article.readingTimeMinutes} min read
-                        </span>
-                      )}
-                      {article.publishedAt && (
-                        <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                  </div>
-                  <ArrowRight size={16} className="shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: 'var(--green)' }} />
-                </Link>
-              ))}
-            </div>
+            <ArticlesView articles={articles} />
           </section>
         )}
 
