@@ -54,8 +54,8 @@ export default function MobileArticlePanel({ sections, content }: Props) {
             borderRight: 'none',
             borderTop: 'none',
             borderBottom: 'none',
-            // Match the section header height (~40px) so they form one visual row
-            height: '40px',
+            // Match the section header height — min 44px for touch target
+            height: '44px',
             borderRadius: '0 0 0 10px',
             boxShadow: '-2px 4px 18px rgba(0,0,0,0.10)',
             padding: '0 11px',
@@ -148,8 +148,8 @@ export default function MobileArticlePanel({ sections, content }: Props) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 30,
-              height: 30,
+              width: 36,
+              height: 36,
               borderRadius: 8,
               border: '1px solid var(--bg-border)',
               background: 'var(--bg-elevated)',

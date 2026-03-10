@@ -54,7 +54,7 @@ export default function ShareButtons({ url, title }: Props) {
           rel="noopener noreferrer"
           title={p.label}
           aria-label={`Share on ${p.label}`}
-          className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
+          className="flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
           style={{ background: p.bg, color: p.color, border: `1px solid ${p.border}`, WebkitTapHighlightColor: 'transparent' }}
         >
           {p.icon}
@@ -64,7 +64,7 @@ export default function ShareButtons({ url, title }: Props) {
         onClick={copyLink}
         title="Copy link"
         aria-label="Copy link"
-        className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
+        className="flex items-center justify-center w-11 h-11 sm:w-8 sm:h-8 rounded-full transition-all hover:scale-110 active:scale-95"
         style={{ background: 'var(--bg-elevated)', color: copied ? '#4ade80' : 'var(--text-secondary)', border: '1px solid var(--bg-border)', WebkitTapHighlightColor: 'transparent' }}
       >
         {copied ? <Check size={13} /> : <Link2 size={13} />}

@@ -442,19 +442,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   }
   .article-content pre {
     padding: 0.85em 1em;
-    margin: 1.25em -16px; /* Bleed to edges on mobile for more code space */
+    /* Bleed to edges on mobile; account for notch in landscape via safe-area-inset */
+    margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
     border-radius: 0;
     font-size: 12.5px;
   }
   .article-content img {
-    margin: 1.25em -16px;
-    width: calc(100% + 32px) !important;
-    max-width: calc(100% + 32px);
+    margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
+    width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px)) !important;
+    max-width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
     border-radius: 0;
   }
   .article-content table {
-    margin: 1.25em -16px;
-    width: calc(100% + 32px);
+    margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
+    width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
     font-size: 13px;
   }
   .article-content th,
@@ -470,8 +471,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   }
   .article-content iframe,
   .article-content video {
-    margin: 1.25em -16px;
-    width: calc(100% + 32px);
+    margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
+    width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
     border-radius: 0;
   }
 }
