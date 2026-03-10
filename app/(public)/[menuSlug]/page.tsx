@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowRight, FileText, Clock } from 'lucide-react'
+import { ArrowRight, Clock } from 'lucide-react'
 import type { Metadata } from 'next'
+import SubMenusView from './SubMenusView'
 
 interface Props {
   params: Promise<{ menuSlug: string }>
@@ -124,39 +125,7 @@ export default async function MenuPage({ params }: Props) {
 
         {/* ── Sub-menus section ── */}
         {menu.subMenus.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-              Topics
-            </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {menu.subMenus.map((sm) => (
-                <Link
-                  key={sm.id}
-                  href={`/${menu.slug}/${sm.slug}`}
-                  className="group card p-6 flex flex-col transition-all hover:-translate-y-1"
-                >
-                  <h3
-                    className="font-display font-semibold text-lg mb-2 group-hover:text-(--green) transition-colors"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {sm.title}
-                  </h3>
-                  {sm.description && (
-                    <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: 'var(--text-secondary)' }}>
-                      {sm.description}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between mt-auto pt-4" style={{ borderTop: '1px solid var(--bg-border)' }}>
-                    <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <FileText size={12} />
-                      {sm._count.articles} article{sm._count.articles !== 1 ? 's' : ''}
-                    </span>
-                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" style={{ color: 'var(--green)' }} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+          <SubMenusView subMenus={menu.subMenus} menuSlug={menu.slug} />
         )}
 
         {/* ── Articles section (directly assigned to this menu) ── */}
