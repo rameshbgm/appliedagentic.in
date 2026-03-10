@@ -2130,3 +2130,607 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   50%       { transform: translateY(-5px); }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ARTICLE PAGE — DARK TERMINAL THEME
+   Scoped entirely to .article-page so no other pages are affected.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. CSS Variable Override + Page Background ────────────────────────────── */
+.article-page {
+  --bg-page:           #04040c;
+  --bg-primary:        #04040c;
+  --bg-surface:        #0d1117;
+  --bg-elevated:       #111120;
+  --bg-border:         rgba(255, 255, 255, 0.07);
+  --bg-border-hover:   rgba(255, 255, 255, 0.15);
+  --text-primary:      #f0f0ff;
+  --text-secondary:    #a0a0cc;
+  --text-muted:        #606088;
+  --green:             #76b900;
+  --green-light:       #00d4aa;
+  --green-glow:        rgba(118, 185, 0, 0.25);
+  --shadow-card:       0 2px 12px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 4px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(118, 185, 0, 0.15);
+  background: #04040c;
+  color: #f0f0ff;
+}
+
+/* ─── 2. Cover Image ─────────────────────────────────────────────────────────── */
+.article-page .article-cover-gradient {
+  background: linear-gradient(to top, #04040c 0%, transparent 100%);
+}
+
+/* ─── 3. Article Hero ────────────────────────────────────────────────────────── */
+.article-page .article-hero {
+  background: #04040c;
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .article-title {
+  background: linear-gradient(135deg, #ff6ec7 0%, #a855f7 50%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  /* neon glow */
+  filter:
+    drop-shadow(0 0 8px rgba(255, 110, 199, 0.75))
+    drop-shadow(0 0 20px rgba(168, 85, 247, 0.5))
+    drop-shadow(0 0 40px rgba(59, 130, 246, 0.3));
+  /* prevent descenders (g, y, p…) from being clipped by the text bounding box */
+  padding-bottom: 0.15em;
+  display: inline-block;
+  width: 100%;
+}
+.article-page .article-summary {
+  color: #606088;
+}
+.article-page .article-breadcrumb {
+  color: #606088;
+}
+.article-page .article-breadcrumb a {
+  color: #606088;
+}
+.article-page .article-breadcrumb-current {
+  color: #a0a0cc;
+}
+.article-page .article-tag-pill {
+  background: rgba(118, 185, 0, 0.08);
+  border-color: rgba(118, 185, 0, 0.3);
+  color: #76b900;
+}
+.article-page .article-tag-pill:hover {
+  background: rgba(118, 185, 0, 0.15);
+  border-color: #76b900;
+  color: #76b900;
+}
+.article-page .article-nav-pill {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #606088;
+}
+.article-page .article-nav-pill:hover {
+  border-color: #76b900;
+  color: #a0a0cc;
+}
+.article-page .article-meta-row {
+  color: #606088;
+}
+.article-page .article-meta-item {
+  color: #606088;
+}
+
+/* ─── 4. Article Body Wrapper ────────────────────────────────────────────────── */
+.article-page .article-body-wrapper {
+  background: #04040c;
+}
+
+/* ─── 5. TOC Sidebar — Dark Terminal Style ───────────────────────────────────── */
+.article-page .toc-card {
+  background: #111120;
+  border-color: rgba(118, 185, 0, 0.2);
+}
+.article-page .toc-card-header {
+  background: #161b22;
+  border-bottom-color: rgba(118, 185, 0, 0.12);
+}
+.article-page .toc-card-title {
+  color: #606088;
+}
+.article-page .toc-collapse-btn {
+  color: #606088;
+}
+.article-page .toc-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #a0a0cc;
+}
+.article-page .toc-group {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.article-page .toc-children {
+  border-left-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .toc-level-2,
+.article-page .toc-level-3 {
+  color: #606088;
+}
+.article-page .toc-level-2:hover,
+.article-page .toc-level-3:hover {
+  color: #a0a0cc;
+  background: rgba(255, 255, 255, 0.04);
+}
+.article-page .toc-level-2.toc-active,
+.article-page .toc-level-3.toc-active {
+  color: #76b900;
+  background: rgba(118, 185, 0, 0.08);
+}
+.article-page .toc-h3-marker {
+  background: rgba(255, 255, 255, 0.15);
+}
+.article-page .toc-card-footer {
+  background: #111120;
+  border-top-color: rgba(118, 185, 0, 0.12);
+}
+.article-page .toc-mobile-card {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .toc-mobile-toggle {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #a0a0cc;
+}
+.article-page .toc-mobile-body {
+  background: #0d1117;
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── 6. Section Cards — Terminal Window Chrome ──────────────────────────────── */
+.article-page .section-optional {
+  background: #0d1117;
+  border-color: rgba(118, 185, 0, 0.15);
+  border-left: none;
+  border-radius: 12px;
+}
+.article-page .section-optional::before {
+  display: flex;
+  align-items: center;
+  content: '● ○ ○';
+  background: #161b22;
+  color: #444466;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(118, 185, 0, 0.12);
+}
+.article-page .section-optional-header {
+  background: #0d1117;
+  border-bottom-color: rgba(118, 185, 0, 0.15);
+}
+.article-page .section-optional-title {
+  color: #f0f0ff;
+}
+.article-page .section-optional-badge {
+  background: var(--section-color, rgba(118, 185, 0, 0.6));
+}
+.article-page .section-optional-body {
+  color: #a0a0cc;
+}
+
+/* ─── 7. Article Content — Dark Overrides ────────────────────────────────────── */
+.article-page .article-content {
+  color: #a0a0cc;
+}
+.article-page .article-content h1,
+.article-page .article-content h2,
+.article-page .article-content h3,
+.article-page .article-content h4 {
+  color: #f0f0ff !important;
+}
+.article-page .article-content h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+}
+.article-page .article-content p {
+  color: #a0a0cc;
+}
+.article-page .article-content > p:first-of-type,
+.article-page .article-content .article-lead {
+  color: #c8c8e8;
+}
+.article-page .article-content a {
+  color: #76b900;
+  text-decoration-color: rgba(118, 185, 0, 0.35);
+}
+.article-page .article-content a:hover {
+  color: #00d4aa;
+  opacity: 1;
+}
+.article-page .article-content blockquote {
+  background: #0d1117;
+  border-left: 3px solid #76b900;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.25rem;
+  color: #a0a0cc;
+  margin: 1.5em 0;
+}
+.article-page .article-content blockquote p {
+  color: #a0a0cc;
+  margin-bottom: 0;
+}
+/* Pre/code — terminal style */
+.article-page .article-content pre {
+  background: #0d1117 !important;
+  border: 1px solid rgba(118, 185, 0, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: hidden;
+  position: relative;
+}
+.article-page .article-content pre::before {
+  content: '● ● ●  bash';
+  display: flex;
+  align-items: center;
+  background: #161b22;
+  color: #606088;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(118, 185, 0, 0.12);
+}
+.article-page .article-content pre code {
+  display: block;
+  padding: 16px 22px !important;
+  background: transparent !important;
+  color: #c8d6e5 !important;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  overflow-x: auto;
+}
+.article-page .article-content code:not(pre code) {
+  background: rgba(118, 185, 0, 0.1);
+  color: #c8d6e5;
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  font-size: 0.88em;
+}
+.article-page .article-content table {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .article-content th {
+  background: rgba(118, 185, 0, 0.12);
+  color: #76b900;
+  border-bottom: 2px solid rgba(118, 185, 0, 0.2);
+}
+.article-page .article-content td {
+  color: #a0a0cc;
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+.article-page .article-content tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.article-page .article-content li::marker {
+  color: #76b900;
+}
+.article-page .article-content hr {
+  background: linear-gradient(90deg, transparent, rgba(118, 185, 0, 0.4), transparent);
+  border: none;
+  height: 1px;
+  margin: 2em 0;
+}
+.article-page .article-content img {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+/* ─── 8. Prev/Next Navigation Cards ─────────────────────────────────────────── */
+.article-page .article-prev-next {
+  border-top-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .article-prev-next-card {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+@media (min-width: 640px) {
+  .article-page .article-prev-next-card:hover {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(118, 185, 0, 0.15);
+  }
+}
+
+/* ─── 9. Reader Tools & AI Modal ─────────────────────────────────────────────── */
+.article-page .art-tools-strip {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .art-tools-strip.mobile {
+  background: #0d1117;
+  border-top-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .art-tools-divider {
+  background: rgba(255, 255, 255, 0.07);
+}
+.article-page .tool-btn {
+  color: #a0a0cc;
+}
+.article-page .tool-btn:hover {
+  background: #161b22;
+  color: #f0f0ff;
+}
+.article-page .tool-btn.active {
+  background: rgba(118, 185, 0, 0.15);
+  color: #76b900;
+}
+@media (min-width: 1024px) {
+  .article-page .tool-btn::after {
+    background: #161b22;
+    color: #f0f0ff;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+.article-page .ai-modal-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+.article-page .ai-modal-container {
+  background: #0d1117;
+  border: 1px solid rgba(118, 185, 0, 0.2);
+}
+.article-page .ai-modal-header {
+  background: #161b22;
+  border-bottom-color: rgba(118, 185, 0, 0.12);
+}
+.article-page .ai-modal-title-text {
+  color: #f0f0ff;
+}
+.article-page .ai-modal-close {
+  color: #606088;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.article-page .ai-modal-close:hover,
+.article-page .ai-modal-close:active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f0ff;
+}
+.article-page .ai-modal-body {
+  background: #0d1117;
+  color: #a0a0cc;
+}
+.article-page .ai-bullet {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.article-page .ai-bullet-num {
+  background: rgba(118, 185, 0, 0.15);
+  color: #76b900;
+  border-color: rgba(118, 185, 0, 0.3);
+}
+.article-page .ai-bullet-text {
+  color: #a0a0cc;
+}
+.article-page .ai-modal-retry-btn {
+  background: rgba(118, 185, 0, 0.12);
+  border-color: rgba(118, 185, 0, 0.3);
+  color: #76b900;
+}
+.article-page .ai-modal-retry-btn:hover {
+  background: rgba(118, 185, 0, 0.22);
+}
+
+/* ─── 10. Sidebar Card ───────────────────────────────────────────────────────── */
+.article-page .article-sidebar-card {
+  background: #0d1117;
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.article-page .article-sidebar-label {
+  color: #606088;
+}
+
+/* ─── 11. Scrollbar & Text Selection ─────────────────────────────────────────── */
+.article-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.article-page ::-webkit-scrollbar-thumb {
+  background: rgba(118, 185, 0, 0.3);
+  border-radius: 4px;
+}
+.article-page ::-webkit-scrollbar-thumb:hover {
+  background: rgba(118, 185, 0, 0.5);
+}
+.article-page ::selection {
+  background: rgba(118, 185, 0, 0.25);
+  color: #f0f0ff;
+}
+
+/* ─── 12. Mobile responsiveness ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .article-page .section-optional {
+    border-left: none;
+    border-radius: 10px;
+  }
+  .article-page .toc-mobile-card {
+    background: #0d1117;
+  }
+}
+
+/* ─── Article Page — Light Theme Override ───────────────────────────────────
+   Applied when .article-theme-light is toggled on .article-page via reader tools.
+   Resets all dark variables back to the site's default light values.
+   ─────────────────────────────────────────────────────────────────────────── */
+.article-page.article-theme-light {
+  --bg-page:           #FFFFFF;
+  --bg-primary:        #FFFFFF;
+  --bg-surface:        #FFFFFF;
+  --bg-elevated:       #F8FAFC;
+  --bg-border:         rgba(0, 0, 0, 0.10);
+  --bg-border-hover:   rgba(0, 0, 0, 0.20);
+  --text-primary:      #111827;
+  --text-secondary:    #374151;
+  --text-muted:        #6B7280;
+  --green:             #1E293B;
+  --green-light:       #334155;
+  --green-glow:        rgba(30, 41, 59, 0.12);
+  --shadow-card:       0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  background: #FFFFFF;
+  color: #111827;
+}
+
+/* Hero */
+.article-page.article-theme-light .article-hero {
+  background: #FFFFFF;
+  border-bottom-color: rgba(0, 0, 0, 0.10);
+}
+.article-page.article-theme-light .article-cover-gradient {
+  background: linear-gradient(to top, #FFFFFF 0%, transparent 100%);
+}
+/* Title — restore plain color, remove glow */
+.article-page.article-theme-light .article-title {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
+  color: #111827;
+  filter: none;
+}
+.article-page.article-theme-light .article-summary  { color: #6B7280; }
+.article-page.article-theme-light .article-breadcrumb { color: #6B7280; }
+.article-page.article-theme-light .article-breadcrumb a { color: #6B7280; }
+.article-page.article-theme-light .article-breadcrumb-current { color: #374151; }
+.article-page.article-theme-light .article-meta-row  { color: #6B7280; }
+.article-page.article-theme-light .article-meta-item { color: #6B7280; }
+.article-page.article-theme-light .article-tag-pill {
+  background: transparent;
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #374151;
+}
+.article-page.article-theme-light .article-tag-pill:hover {
+  border-color: #1E293B;
+  color: #1E293B;
+}
+.article-page.article-theme-light .article-nav-pill {
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #6B7280;
+}
+
+/* Body wrapper */
+.article-page.article-theme-light .article-body-wrapper { background: #FFFFFF; }
+
+/* TOC */
+.article-page.article-theme-light .toc-card {
+  background: #FFFFFF;
+  border-color: rgba(0, 0, 0, 0.10);
+}
+.article-page.article-theme-light .toc-card-header {
+  background: #F8FAFC;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.article-page.article-theme-light .toc-card-title   { color: #6B7280; }
+.article-page.article-theme-light .toc-collapse-btn { color: #6B7280; }
+.article-page.article-theme-light .toc-group        { border-bottom-color: rgba(0,0,0,0.08); }
+.article-page.article-theme-light .toc-children     { border-left-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .toc-level-2,
+.article-page.article-theme-light .toc-level-3      { color: #6B7280; }
+.article-page.article-theme-light .toc-level-2.toc-active,
+.article-page.article-theme-light .toc-level-3.toc-active {
+  color: #1E293B;
+  background: rgba(30, 41, 59, 0.07);
+}
+.article-page.article-theme-light .toc-card-footer {
+  background: #FFFFFF;
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+.article-page.article-theme-light .toc-mobile-card  { background: #FFFFFF; border-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .toc-mobile-toggle { background: #FFFFFF; border-color: rgba(0,0,0,0.10); color: #374151; }
+.article-page.article-theme-light .toc-mobile-body  { background: #FFFFFF; border-top-color: rgba(0,0,0,0.08); }
+
+/* Section cards */
+.article-page.article-theme-light .section-optional {
+  background: #F8FAFC;
+  border-color: rgba(0, 0, 0, 0.10);
+  border-left: 4px solid var(--section-color, rgba(0,0,0,0.15));
+  border-radius: 0 8px 8px 0;
+}
+.article-page.article-theme-light .section-optional::before { display: none; }
+.article-page.article-theme-light .section-optional-header {
+  background: #FFFFFF;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.article-page.article-theme-light .section-optional-title { color: #111827; }
+.article-page.article-theme-light .section-optional-body  { color: #374151; }
+
+/* Article content */
+.article-page.article-theme-light .article-content      { color: #374151; }
+.article-page.article-theme-light .article-content h1,
+.article-page.article-theme-light .article-content h2,
+.article-page.article-theme-light .article-content h3,
+.article-page.article-theme-light .article-content h4   { color: #111827 !important; }
+.article-page.article-theme-light .article-content h2   { border-bottom-color: rgba(30,41,59,.10) !important; }
+.article-page.article-theme-light .article-content p    { color: #374151; }
+.article-page.article-theme-light .article-content > p:first-of-type,
+.article-page.article-theme-light .article-content .article-lead { color: #111827; }
+.article-page.article-theme-light .article-content a    {
+  color: #1E293B;
+  text-decoration-color: rgba(30, 41, 59, 0.35);
+}
+.article-page.article-theme-light .article-content blockquote {
+  background: #F8FAFC;
+  border-left: 3px solid #1E293B;
+  color: #374151;
+}
+.article-page.article-theme-light .article-content blockquote p { color: #374151; }
+.article-page.article-theme-light .article-content pre {
+  background: #F8FAFC !important;
+  border: 1px solid rgba(0,0,0,0.10) !important;
+}
+.article-page.article-theme-light .article-content pre::before {
+  background: #eef0f3;
+  color: #6B7280;
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+.article-page.article-theme-light .article-content pre code {
+  color: #1e293b !important;
+}
+.article-page.article-theme-light .article-content code:not(pre code) {
+  background: rgba(30, 41, 59, 0.07);
+  color: #1e293b;
+}
+.article-page.article-theme-light .article-content th {
+  background: rgba(30, 41, 59, 0.07);
+  color: #1E293B;
+  border-bottom-color: rgba(30,41,59,0.15);
+}
+.article-page.article-theme-light .article-content td   { color: #374151; border-bottom-color: rgba(0,0,0,0.06); }
+.article-page.article-theme-light .article-content li::marker { color: #1E293B; }
+.article-page.article-theme-light .article-content hr   {
+  background: linear-gradient(90deg, transparent, rgba(30,41,59,0.3), transparent);
+}
+.article-page.article-theme-light .article-content img  { border-color: rgba(0,0,0,0.10); }
+
+/* Prev/Next */
+.article-page.article-theme-light .article-prev-next       { border-top-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .article-prev-next-card  { background: #F8FAFC; border-color: rgba(0,0,0,0.10); }
+
+/* Reader tools */
+.article-page.article-theme-light .art-tools-strip         { background: #FFFFFF; border-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .art-tools-strip.mobile  { background: #FFFFFF; border-top-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .art-tools-divider       { background: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .tool-btn                { color: #374151; }
+.article-page.article-theme-light .tool-btn:hover          { background: #F8FAFC; color: #111827; }
+.article-page.article-theme-light .tool-btn.active         { background: rgba(30,41,59,0.10); color: #1E293B; }
+
+/* AI modal */
+.article-page.article-theme-light .ai-modal-container  { background: #FFFFFF; border-color: rgba(0,0,0,0.12); }
+.article-page.article-theme-light .ai-modal-header     { background: #F8FAFC; border-bottom-color: rgba(0,0,0,0.08); }
+.article-page.article-theme-light .ai-modal-title-text { color: #111827; }
+.article-page.article-theme-light .ai-modal-close      { color: #6B7280; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+.article-page.article-theme-light .ai-modal-body       { background: #FFFFFF; color: #374151; }
+.article-page.article-theme-light .ai-bullet           { border-bottom-color: rgba(0,0,0,0.06); }
+.article-page.article-theme-light .ai-bullet-num       { background: rgba(30,41,59,0.08); color: #1E293B; border-color: rgba(30,41,59,0.2); }
+.article-page.article-theme-light .ai-bullet-text      { color: #374151; }
+
+/* Sidebar card */
+.article-page.article-theme-light .article-sidebar-card { background: #FFFFFF; border-color: rgba(0,0,0,0.10); }
+.article-page.article-theme-light .article-sidebar-label { color: #6B7280; }
+
+/* Scrollbar & selection */
+.article-page.article-theme-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+.article-page.article-theme-light ::selection { background: rgba(30,41,59,0.15); color: #111827; }
+

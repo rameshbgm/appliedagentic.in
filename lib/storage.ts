@@ -8,14 +8,17 @@ import { nanoid } from 'nanoid'
 // Defaults to ./public/uploads (relative to cwd) – served by Next.js at /uploads/...
 //
 // Hostinger deployment:
-//   The app lives in  ~/domains/appliedagentic.in/nodejs/
-//   Web root is       ~/domains/appliedagentic.in/public_html/
-//   Apache/LiteSpeed serves public_html directly (before Passenger); uploads
-//   stored there are served as fast static files and survive re-deployments.
+//   Files are stored OUTSIDE the deployment folder so they survive redeployments.
+//   The app lives in  ~/domains/appliedagentic.in/nodejs/  (wiped on redeploy)
+//   Uploads live in   ~/domains/appliedagentic.in/uploads/ (persistent)
 //
-//   Set in .env:
-//     UPLOAD_DIR=/home/u915919430/domains/appliedagentic.in/public_html/uploads
-//     UPLOAD_URL_PREFIX=          # leave empty — public_html IS the web root
+//   Set in .env.production:
+//     UPLOAD_DIR=/home/u915919430/domains/appliedagentic.in/uploads
+//
+//   Create the folder on the server once via SSH or File Manager:
+//     mkdir -p /home/u915919430/domains/appliedagentic.in/uploads
+//
+//   Files are served by app/uploads/[...path]/route.ts at /uploads/{subDir}/{filename}
 //
 // The URL stored in the DB is always  /uploads/{subDir}/{filename}
 // which maps to  {UPLOAD_DIR}/{subDir}/{filename}  on disk.

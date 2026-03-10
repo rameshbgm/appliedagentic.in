@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Bot,
-  AArrowUp, AArrowDown, X, Loader2,
+  AArrowUp, AArrowDown, X, Loader2, Sun, Moon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -37,6 +37,27 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
       const next = Math.min(MAX_SIZE, Math.max(MIN_SIZE, prev + delta))
       document.documentElement.style.setProperty('--article-font-size', `${next}px`)
       localStorage.setItem('aa-article-font-size', String(next))
+      return next
+    })
+  }, [])
+
+  // ── Article theme (dark / light) — scoped to .article-page only ──────────
+  const [articleTheme, setArticleTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(() => {
+    const stored = (localStorage.getItem('aa-article-theme') ?? 'dark') as 'dark' | 'light'
+    setArticleTheme(stored)
+    const page = document.querySelector('.article-page')
+    if (stored === 'light') page?.classList.add('article-theme-light')
+  }, [])
+
+  const toggleArticleTheme = useCallback(() => {
+    setArticleTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('aa-article-theme', next)
+      const page = document.querySelector('.article-page')
+      if (next === 'light') page?.classList.add('article-theme-light')
+      else page?.classList.remove('article-theme-light')
       return next
     })
   }, [])
@@ -120,6 +141,19 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
           disabled={fontSize <= MIN_SIZE}
         >
           <AArrowDown size={16} />
+        </button>
+
+        <div className="art-tools-divider" />
+
+        {/* Theme toggle */}
+        <button
+          type="button"
+          className={`tool-btn${articleTheme === 'light' ? ' active' : ''}`}
+          onClick={toggleArticleTheme}
+          data-tip={articleTheme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+          aria-label="Toggle article theme"
+        >
+          {articleTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>
       </div>
 

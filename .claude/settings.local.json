@@ -15,7 +15,11 @@
       "Bash(npx prisma db push --accept-data-loss)",
       "Bash(npx tsc --noEmit)",
       "Bash(node -e \"const m = require\\(''@uiw/react-md-editor''\\); console.log\\(Object.keys\\(m\\)\\)\")",
-      "Bash(npx tsc --noEmit --pretty)"
+      "Bash(npx tsc --noEmit --pretty)",
+      "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/articles/)",
+      "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/articles/[id]/)",
+      "Bash(grep -n \"article-page\" /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/articles/[id]/page.tsx)",
+      "Bash(cat:*)"
     ]
   }
 }
