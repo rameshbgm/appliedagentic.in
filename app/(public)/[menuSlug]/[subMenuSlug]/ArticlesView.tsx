@@ -79,7 +79,7 @@ export default function ArticlesView({ articles }: { articles: Article[] }) {
               key={article.id}
               href={`/articles/${article.slug}`}
               className="group card p-5 flex flex-col sm:flex-row gap-4 transition-all hover:-translate-y-0.5"
-              onClick={showLoading}
+              onClick={() => showLoading(`/articles/${article.slug}`)}
             >
               {article.coverImage && (
                 <div className="w-full sm:w-44 h-32 sm:h-28 rounded-xl overflow-hidden shrink-0">
@@ -155,7 +155,7 @@ export default function ArticlesView({ articles }: { articles: Article[] }) {
               key={article.id}
               href={`/articles/${article.slug}`}
               className="group card flex flex-col overflow-hidden transition-all hover:-translate-y-1"
-              onClick={showLoading}
+              onClick={() => showLoading(`/articles/${article.slug}`)}
             >
               {/* Cover */}
               <div

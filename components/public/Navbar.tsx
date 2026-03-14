@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useRef, useCallback } from 'react'
 import { Menu as MenuIcon, X, Search, Zap, ChevronRight, ArrowRight } from 'lucide-react'
 import { useTheme } from '@/components/shared/ThemeProvider'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface NavSubMenuData {
   id: number
@@ -31,6 +32,7 @@ export default function Navbar({ navMenus = [] }: Props) {
   const { theme }                               = useTheme()
   const closeTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDark      = theme === 'dark'
+  const { showLoading } = useArticleLoading()
 
   const navBg        = isDark ? 'rgba(8,14,30,0.96)'     : 'rgba(255,255,255,0.95)'
   const navBorder    = isDark ? 'rgba(255,255,255,0.07)'  : 'rgba(0,0,0,0.08)'
@@ -77,7 +79,7 @@ export default function Navbar({ navMenus = [] }: Props) {
         <div className="w-full px-[3%] h-16 flex items-center justify-between gap-4">
 
           {/* ── Logo ── */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group" onClick={() => setMegaOpen(false)}>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 group" onClick={() => { setMegaOpen(false); showLoading('/') }}>
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)' }}
@@ -105,7 +107,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                     key={menu.id}
                     href={`/${menu.slug}`}
                     onMouseEnter={() => { cancelClose(); setMegaOpen(false); setActiveMenuId(null) }}
-                    onClick={() => setMegaOpen(false)}
+                    onClick={() => { setMegaOpen(false); showLoading(`/${menu.slug}`) }}
                     className={`flex items-center h-9 px-4 rounded-lg transition-all ${hoverBg}`}
                     style={{ color: textSecond, fontSize: '13.5px', fontWeight: 500, letterSpacing: '0.01em', fontFamily: "'Inter', sans-serif" }}
                   >
@@ -130,7 +132,7 @@ export default function Navbar({ navMenus = [] }: Props) {
             <Link
               href="/search"
               onMouseEnter={() => { cancelClose(); setMegaOpen(false); setActiveMenuId(null) }}
-              onClick={() => setMegaOpen(false)}
+              onClick={() => { setMegaOpen(false); showLoading('/search') }}
               className={`flex items-center gap-1.5 h-9 px-4 rounded-lg transition-all ${hoverBg}`}
               style={{ color: textSecond, fontSize: '13.5px', fontWeight: 500, letterSpacing: '0.01em', fontFamily: "'Inter', sans-serif" }}
             >
@@ -141,7 +143,7 @@ export default function Navbar({ navMenus = [] }: Props) {
 
           {/* ── Right Actions ── */}
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/search" aria-label="Search" className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`} style={{ color: textSecond }}>
+            <Link href="/search" aria-label="Search" onClick={() => showLoading('/search')} className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`} style={{ color: textSecond }}>
               <Search size={20} />
             </Link>
             <button
@@ -203,7 +205,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                         href={`/${menu.slug}`}
                         className="flex-1 text-[13px] font-medium leading-snug truncate"
                         style={{ color: 'inherit', fontFamily: "'Inter', sans-serif" }}
-                        onClick={() => setMegaOpen(false)}
+                        onClick={() => { setMegaOpen(false); showLoading(`/${menu.slug}`) }}
                       >
                         {menu.title}
                       </Link>
@@ -237,7 +239,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                     </p>
                     <Link
                       href={`/${activeMenu.slug}`}
-                      onClick={() => setMegaOpen(false)}
+                      onClick={() => { setMegaOpen(false); showLoading(`/${activeMenu.slug}`) }}
                       className="inline-flex items-center gap-1 text-[11px] font-semibold transition-opacity hover:opacity-70"
                       style={{ color: '#3b82f6', letterSpacing: '0.05em', textTransform: 'uppercase' }}
                     >
@@ -251,7 +253,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                       <Link
                         key={sub.id}
                         href={`/${activeMenu.slug}/${sub.slug}`}
-                        onClick={() => setMegaOpen(false)}
+                        onClick={() => { setMegaOpen(false); showLoading(`/${activeMenu.slug}/${sub.slug}`) }}
                         className="group/sub flex flex-col gap-0.5 rounded-xl px-3 py-2.5 transition-colors"
                         style={{ background: 'transparent' }}
                         onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)')}
@@ -307,7 +309,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                   <div className="flex items-stretch rounded-xl overflow-hidden">
                     <Link
                       href={`/${menu.slug}`}
-                      onClick={closeMobile}
+                      onClick={() => { closeMobile(); showLoading(`/${menu.slug}`) }}
                       className={`flex-1 flex items-center px-4 py-3 transition-colors ${hoverBg}`}
                       style={{ color: textPrimary, fontSize: '14px', fontWeight: 600, letterSpacing: '-0.01em', fontFamily: "'Inter', sans-serif" }}
                     >
@@ -330,7 +332,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                         <div key={sub.id}>
                           <Link
                             href={`/${menu.slug}/${sub.slug}`}
-                            onClick={closeMobile}
+                            onClick={() => { closeMobile(); showLoading(`/${menu.slug}/${sub.slug}`) }}
                             className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-xl transition-colors ${hoverBg}`}
                           >
                             <span className="leading-snug" style={{ color: textPrimary, fontSize: '13.5px', fontWeight: 600, letterSpacing: '-0.01em', fontFamily: "'Inter', sans-serif" }}>{sub.title}</span>

@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, FileText, LayoutGrid, LayoutList } from 'lucide-react'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface SubMenu {
   id: number
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function SubMenusView({ subMenus, menuSlug }: Props) {
+  const { showLoading } = useArticleLoading()
   const [view, setView] = useState<'grid' | 'list'>('grid')
 
   return (
@@ -69,6 +71,7 @@ export default function SubMenusView({ subMenus, menuSlug }: Props) {
             <Link
               key={sm.id}
               href={`/${menuSlug}/${sm.slug}`}
+              onClick={() => showLoading(`/${menuSlug}/${sm.slug}`)}
               className="group card p-6 flex flex-col transition-all hover:-translate-y-1"
             >
               <h3
@@ -113,6 +116,7 @@ export default function SubMenusView({ subMenus, menuSlug }: Props) {
             <Link
               key={sm.id}
               href={`/${menuSlug}/${sm.slug}`}
+              onClick={() => showLoading(`/${menuSlug}/${sm.slug}`)}
               className="group card px-5 py-4 flex items-center gap-4 transition-all hover:-translate-y-0.5"
             >
               <div className="flex-1 min-w-0">

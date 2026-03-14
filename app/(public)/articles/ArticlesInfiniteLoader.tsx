@@ -149,7 +149,7 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
           {articles.map((a, i) => {
             const [gA, gB] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
             return (
-              <Link key={a.id} href={`/articles/${a.slug}`} className="group block" onClick={showLoading}>
+              <Link key={a.id} href={`/articles/${a.slug}`} className="group block" onClick={() => showLoading(`/articles/${a.slug}`)}>
                 <div
                   className="flex items-start gap-0 overflow-hidden rounded-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}

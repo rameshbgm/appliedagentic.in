@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import ArticleLoadingModal from './ArticleLoadingModal'
 
 interface ArticleLoadingContextValue {
-  showLoading: () => void
+  showLoading: (targetHref?: string) => void
   isLoading: boolean
 }
 
@@ -49,7 +49,12 @@ export function ArticleLoadingProvider({ children }: { children: React.ReactNode
     }, minDelay)
   }, [])
 
-  const showLoading = useCallback(() => {
+  const showLoading = useCallback((targetHref?: string) => {
+    // Skip modal for same-page navigation (e.g. logo click from home, anchor links)
+    if (targetHref) {
+      const norm = (s: string) => s.split('?')[0].split('#')[0].replace(/\/$/, '') || '/'
+      if (norm(targetHref) === norm(pathname)) return
+    }
     clearTimers()
     prevPathRef.current  = pathname
     startedAtRef.current = Date.now()

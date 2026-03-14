@@ -4,6 +4,7 @@ import Link from 'next/link'
 import LazyImage from '@/components/shared/LazyImage'
 import { Clock, Eye } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Article {
   id: string
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function RelatedArticles({ articles, title = 'Related Articles' }: Props) {
+  const { showLoading } = useArticleLoading()
   if (!articles.length) return null
 
   return (
@@ -39,6 +41,7 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
             <Link
               key={a.id}
               href={`/articles/${a.slug}`}
+              onClick={() => showLoading(`/articles/${a.slug}`)}
               className="group shrink-0 w-72 sm:w-auto rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg snap-start"
               style={{
                 background: 'var(--bg-elevated)',

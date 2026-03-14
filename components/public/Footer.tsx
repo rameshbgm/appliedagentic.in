@@ -1,5 +1,6 @@
 // components/public/Footer.tsx
 import Link from 'next/link'
+import NavLink from '@/components/shared/NavLink'
 import { Zap, Twitter, Linkedin, Github } from 'lucide-react'
 import FooterNewsletterWrapper from './FooterNewsletterWrapper'
 import { footerContent } from '@/content/footer'
@@ -16,13 +17,13 @@ export default function Footer({ menus = [] }: Props) {
 
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
+            <NavLink href="/" className="inline-flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: 'var(--green)' }}>
                 <Zap size={15} className="text-white" />
               </div>
               <span className="text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>{siteConfig.name}</span>
-            </Link>
+            </NavLink>
             <p className="text-[13px] leading-relaxed mb-5" style={{ color: 'var(--text-muted)' }}>
               {footerContent.brand.description}
             </p>
@@ -49,11 +50,11 @@ export default function Footer({ menus = [] }: Props) {
             <ul className="space-y-2.5">
               {menus.slice(0, 6).map((m) => (
                 <li key={m.slug}>
-                  <Link href={`/${m.slug}`}
+                  <NavLink href={`/${m.slug}`}
                     className="text-[13px] transition-colors hover:text-[var(--green)]"
                     style={{ color: 'var(--text-secondary)' }}>
                     {m.title ?? m.name}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -67,9 +68,9 @@ export default function Footer({ menus = [] }: Props) {
             <ul className="space-y-2.5">
               {footerContent.exploreLinks.map(({ href, label }) => (
                 <li key={href}>
-                  <Link href={href} className="text-[13px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-secondary)' }}>
+                  <NavLink href={href} className="text-[13px] transition-colors hover:text-[var(--green)]" style={{ color: 'var(--text-secondary)' }}>
                     {label}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>

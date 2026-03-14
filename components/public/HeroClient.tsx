@@ -8,6 +8,7 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Zap } from 'lucide-react'
 import { heroContent } from '@/content/home'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Props {
   menuCount:    number
@@ -94,6 +95,7 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
   const { headline, typewriterTopics, subheadline, ctas, staticStats, dynamicStatLabels, badge } =
     heroContent
 
+  const { showLoading } = useArticleLoading()
   const typewritten = useTypewriter(typewriterTopics)
 
   const stats = [
@@ -150,6 +152,7 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
             <Link
               href={ctas.primary.href}
+              onClick={() => showLoading(ctas.primary.href)}
               className="inline-flex items-center gap-2 px-7 sm:px-9 py-3 sm:py-3.5 text-xs sm:text-sm font-bold uppercase tracking-widest text-neon bg-transparent border border-white/20 transition-all duration-200 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] active:translate-y-0"
             >
               <Zap size={13} />

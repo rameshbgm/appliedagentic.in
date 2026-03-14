@@ -38,7 +38,7 @@ export default function ArticleCard({
   const numLabel = String(index).padStart(2, '0')
 
   return (
-    <Link href={`/articles/${slug}`} className="block group h-full" onClick={showLoading}>
+    <Link href={`/articles/${slug}`} className="block group h-full" onClick={() => showLoading(`/articles/${slug}`)}>
       <article
         className="relative h-full flex flex-col overflow-hidden rounded-2xl transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl"
         style={{

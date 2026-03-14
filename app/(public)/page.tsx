@@ -6,6 +6,7 @@ import ArticleCard from '@/components/public/ArticleCard'
 import NewsletterSection from '@/components/public/NewsletterSection'
 import { StaggerContainer, FadeIn, ParallaxSection } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
+import NavLink from '@/components/shared/NavLink'
 import { ArrowRight, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 import { browseTopicsContent, featuredArticlesContent, ctaBannerContent } from '@/content/home'
@@ -134,7 +135,7 @@ export default async function HomePage() {
                       className="h-1.5 w-10 rounded-full"
                       style={{ background: `linear-gradient(90deg, ${colorA}, ${colorB})` }}
                     />
-                    <Link
+                    <NavLink
                       href={`/${menu.slug}`}
                       className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
                       style={{
@@ -144,18 +145,18 @@ export default async function HomePage() {
                       }}
                     >
                       <ArrowRight size={14} />
-                    </Link>
+                    </NavLink>
                   </div>
 
                   {/* Title */}
-                  <Link href={`/${menu.slug}`}>
+                  <NavLink href={`/${menu.slug}`}>
                     <h3
                       className="text-xl font-bold leading-snug transition-colors"
                       style={{ color: 'var(--text-primary)' }}
                     >
                       {menu.title}
                     </h3>
-                  </Link>
+                  </NavLink>
 
                   {/* Description */}
                   {menu.description && (
@@ -171,7 +172,7 @@ export default async function HomePage() {
                       style={{ borderTop: `1px solid ${colorA}18` }}
                     >
                       {menu.subMenus.map((sub) => (
-                        <Link
+                        <NavLink
                           key={sub.id}
                           href={`/${menu.slug}/${sub.slug}`}
                           className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all hover:scale-105"
@@ -183,7 +184,7 @@ export default async function HomePage() {
                         >
                           <ChevronRight size={9} />
                           {sub.title}
-                        </Link>
+                        </NavLink>
                       ))}
                     </div>
                   )}
