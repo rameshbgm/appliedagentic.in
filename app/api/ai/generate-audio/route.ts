@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       data: {
         filename,
         url,
-        data: combinedBuffer,
+        data: new Uint8Array(combinedBuffer) as Uint8Array<ArrayBuffer>,
         type: 'AUDIO',
         mimeType: 'audio/mpeg',
         aiPrompt: text.slice(0, 200),

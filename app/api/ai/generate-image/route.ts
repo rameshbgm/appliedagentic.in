@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       data: {
         filename,
         url,
-        data: buffer,
+        data: new Uint8Array(buffer) as Uint8Array<ArrayBuffer>,
         type: 'IMAGE',
         mimeType: 'image/png',
         sizeBytes: buffer.length,
