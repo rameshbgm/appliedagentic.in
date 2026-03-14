@@ -40,6 +40,18 @@ export async function GET(req: NextRequest) {
               topic: { select: { module: { select: { name: true, color: true } } } },
             },
           },
+          subMenuArticles: {
+            take: 1,
+            include: {
+              subMenu: {
+                select: {
+                  title: true,
+                  slug: true,
+                  menu: { select: { title: true, slug: true } },
+                },
+              },
+            },
+          },
         },
       }),
       prisma.article.count({ where }),

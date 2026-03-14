@@ -44,6 +44,10 @@ export async function GET(req: NextRequest) {
           summary: true,
           publishedAt: true,
           readingTimeMinutes: true,
+          articleTags: {
+            take: 4,
+            include: { tag: { select: { name: true } } },
+          },
           topicArticles: {
             take: 1,
             include: {

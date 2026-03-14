@@ -3,10 +3,19 @@
 // Client component: renders the initial server-loaded articles, then loads
 // more in batches of 50 when the user scrolls near the bottom.
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import ArticleCard from '@/components/public/ArticleCard'
 import { Loader2, LayoutGrid, LayoutList, Clock, Eye, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
+
+interface SubMenuMeta {
+  subMenu: {
+    title: string
+    slug: string
+    menu: { title: string; slug: string }
+  }
+}
 
 interface Article {
   id: number
@@ -18,6 +27,7 @@ interface Article {
   createdAt: string | Date
   articleTags: { tag: { name: string } }[]
   topicArticles: { topic: { module: { name: string; color: string | null } | null } | null }[]
+  subMenuArticles?: SubMenuMeta[]
 }
 
 interface Props {
@@ -39,6 +49,7 @@ const CARD_GRADIENTS = [
 
 export default function ArticlesInfiniteLoader({ initialArticles, totalCount, tag }: Props) {
   const { showLoading } = useArticleLoading()
+  const router = useRouter()
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [offset, setOffset]     = useState(initialArticles.length)
   const [loading, setLoading]   = useState(false)
@@ -125,21 +136,30 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
       {/* ── Grid view ── */}
       {view === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((a, i) => (
-            <ArticleCard
-              key={a.id}
-              index={i + 1}
-              title={a.title}
-              slug={a.slug}
-              summary={a.summary}
-              readingTime={a.readingTimeMinutes}
-              viewCount={a.viewCount}
-              createdAt={a.createdAt}
-              tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
-              moduleName={a.topicArticles[0]?.topic?.module?.name}
-              moduleColor={a.topicArticles[0]?.topic?.module?.color}
-            />
-          ))}
+          {articles.map((a, i) => {
+            const sma = a.subMenuArticles?.[0]
+            const navChip = sma ? {
+              href: `/${sma.subMenu.menu.slug}/${sma.subMenu.slug}`,
+              subMenuTitle: sma.subMenu.title,
+              menuTitle: sma.subMenu.menu.title,
+            } : null
+            return (
+              <ArticleCard
+                key={a.id}
+                index={i + 1}
+                title={a.title}
+                slug={a.slug}
+                summary={a.summary}
+                readingTime={a.readingTimeMinutes}
+                viewCount={a.viewCount}
+                createdAt={a.createdAt}
+                tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
+                moduleName={a.topicArticles[0]?.topic?.module?.name}
+                moduleColor={a.topicArticles[0]?.topic?.module?.color}
+                navChip={navChip}
+              />
+            )
+          })}
         </div>
       )}
 
@@ -148,6 +168,7 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
         <div className="space-y-3">
           {articles.map((a, i) => {
             const [gA, gB] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
+            const sma = a.subMenuArticles?.[0]
             return (
               <Link key={a.id} href={`/articles/${a.slug}`} className="group block" onClick={() => showLoading(`/articles/${a.slug}`)}>
                 <div
@@ -178,6 +199,28 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
+                      {/* Submenu chip */}
+                      {sma && (() => {
+                        const sub  = sma.subMenu.title
+                        const menu = sma.subMenu.menu.title
+                        const fullLabel = `${sub} (${menu})`
+                        const dispSub  = sub.length  > 10 ? sub.slice(0, 10)  + '…' : sub
+                        const dispMenu = menu.length > 8  ? menu.slice(0, 8)  + '…' : menu
+                        return (
+                          <span
+                            role="link"
+                            tabIndex={0}
+                            title={fullLabel}
+                            className="inline-flex items-center gap-0.5 text-[10px] font-medium rounded-full px-2 py-0.5 mb-1 transition-opacity hover:opacity-75 cursor-pointer"
+                            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); showLoading(`/${sma.subMenu.menu.slug}/${sma.subMenu.slug}`); router.push(`/${sma.subMenu.menu.slug}/${sma.subMenu.slug}`) }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); showLoading(`/${sma.subMenu.menu.slug}/${sma.subMenu.slug}`); router.push(`/${sma.subMenu.menu.slug}/${sma.subMenu.slug}`) } }}
+                          >
+                            <span style={{ color: 'var(--green)' }}>{dispSub}</span>
+                            <span style={{ color: 'var(--text-muted)' }}>&nbsp;({dispMenu})</span>
+                          </span>
+                        )
+                      })()}
                       <h3
                         className="font-semibold text-[14px] leading-snug line-clamp-1 group-hover:text-(--green) transition-colors"
                         style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}

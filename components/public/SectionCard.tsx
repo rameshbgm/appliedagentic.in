@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import ArticleContent from './ArticleContent'
+import { featureFlags } from '@/content/features'
 
 const BOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
 
@@ -44,11 +45,12 @@ interface Props {
   section: Section
   index: number
   gradientIndex: number
+  totalSections?: number
 }
 
 type SummaryState = 'idle' | 'loading' | 'done' | 'error'
 
-export default function SectionCard({ section, index, gradientIndex }: Props) {
+export default function SectionCard({ section, index, gradientIndex, totalSections = 1 }: Props) {
   const hasTitle = Boolean(section.title?.trim())
   // Use the section's DB id for the anchor so that duplicate title text across
   // sections (e.g. two "Conclusion" sections) never collides.
@@ -125,14 +127,16 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
             {section.title}
           </span>
 
-          {/* AI summarize — only on the section header */}
-          <button
-            type="button"
-            className="section-ai-btn section-ai-header-btn"
-            title="AI summary of this section"
-            onClick={(e) => { e.stopPropagation(); openSummary() }}
-            dangerouslySetInnerHTML={{ __html: BOT_SVG }}
-          />
+          {/* AI summarize — only when feature flag is on and article has multiple sections */}
+          {featureFlags.aiSummary && totalSections > 1 && (
+            <button
+              type="button"
+              className="section-ai-btn section-ai-header-btn"
+              title="AI summary of this section"
+              onClick={(e) => { e.stopPropagation(); openSummary() }}
+              dangerouslySetInnerHTML={{ __html: BOT_SVG }}
+            />
+          )}
 
           {/* Collapse chevron */}
           <ChevronDown
@@ -162,7 +166,7 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
       )}
 
       {/* ── Section AI Summary Modal (portal, per-card) ────────────────────── */}
-      {summaryOpen && typeof document !== 'undefined' && createPortal(
+      {featureFlags.aiSummary && totalSections > 1 && summaryOpen && typeof document !== 'undefined' && createPortal(
         <div
           className="ai-modal-backdrop"
           role="dialog"

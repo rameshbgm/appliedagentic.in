@@ -46,7 +46,7 @@ async function getData() {
       }),
       prisma.article.findMany({
         where: { status: 'PUBLISHED', isFeatured: true },
-        orderBy: { viewCount: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: 6,
         include: {
           articleTags: { include: { tag: { select: { name: true } } } },

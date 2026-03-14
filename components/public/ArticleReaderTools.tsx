@@ -8,6 +8,7 @@ import {
   AArrowUp, AArrowDown, X, Loader2, Sun, Moon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { featureFlags } from '@/content/features'
 
 interface Props {
   content: string
@@ -108,17 +109,21 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
       {/* ── Tool strip ─────────────────────────────────────────────────────── */}
       <div className={stripClass} role="toolbar" aria-label="Article reader tools">
 
-        {/* AI Summary */}
-        <button
-          className={`tool-btn${aiState === 'done' ? ' active' : ''}`}
-          onClick={summarize}
-          data-tip="AI summary"
-          aria-label="AI summarize article"
-        >
-          {aiState === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
-        </button>
+        {/* AI Summary — only shown when featureFlags.aiSummary is true */}
+        {featureFlags.aiSummary && (
+          <>
+            <button
+              className={`tool-btn${aiState === 'done' ? ' active' : ''}`}
+              onClick={summarize}
+              data-tip="AI summary"
+              aria-label="AI summarize article"
+            >
+              {aiState === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
+            </button>
 
-        <div className="art-tools-divider" />
+            <div className="art-tools-divider" />
+          </>
+        )}
 
         {/* Font size */}
         <button
@@ -160,7 +165,7 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
       {/* ══════════════════════════════════════════════════════════════════════
           AI SUMMARY POPUP MODAL
       ══════════════════════════════════════════════════════════════════════ */}
-      {aiOpen && createPortal(
+      {featureFlags.aiSummary && aiOpen && createPortal(
         <div
           className="ai-modal-backdrop"
           role="dialog"

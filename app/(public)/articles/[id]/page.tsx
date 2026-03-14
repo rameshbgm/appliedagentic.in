@@ -384,6 +384,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                       section={section}
                       index={idx}
                       gradientIndex={idx % 8}
+                      totalSections={sections.length}
                     />
                   ))}
                 </div>

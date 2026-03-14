@@ -56,6 +56,18 @@ export default async function ArticlesPage({ searchParams }: Props) {
               topic: { select: { module: { select: { name: true, color: true } } } },
             },
           },
+          subMenuArticles: {
+            take: 1,
+            include: {
+              subMenu: {
+                select: {
+                  title: true,
+                  slug: true,
+                  menu: { select: { title: true, slug: true } },
+                },
+              },
+            },
+          },
         },
       }),
     ])

@@ -42,8 +42,8 @@ export async function runSummarizer(
 ): Promise<SummarizerOutput> {
   const scopeNote =
     input.scope === 'section'
-      ? 'This is a SECTION summary — return 2–3 bullets maximum.'
-      : 'This is a FULL ARTICLE summary — return 3–7 bullets.'
+      ? 'SCOPE: section. Output ONLY 2–3 bullet lines starting with "- ". No intro, no heading, nothing else.'
+      : 'SCOPE: full article. Output ONLY 4–7 bullet lines starting with "- ". No intro, no heading, nothing else.'
 
   const enrichedPrompt = `${scopeNote}\n\n${input.prompt}`
 

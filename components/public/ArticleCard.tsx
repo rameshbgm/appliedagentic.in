@@ -1,6 +1,7 @@
 'use client'
 // components/public/ArticleCard.tsx
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Clock, Eye, ArrowRight } from 'lucide-react'
 import LazyImage from '@/components/shared/LazyImage'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
@@ -27,13 +28,16 @@ interface Props {
   moduleColor?: string | null
   moduleName?: string | null
   index?: number
+  /** Optional submenu navigation chip — only shown when provided (All Articles page only). */
+  navChip?: { href: string; subMenuTitle: string; menuTitle: string } | null
 }
 
 export default function ArticleCard({
   title, slug, summary, coverImageUrl, readingTime, viewCount = 0,
-  createdAt, tags = [], moduleName, index = 1,
+  createdAt, tags = [], moduleName, index = 1, navChip,
 }: Props) {
   const { showLoading } = useArticleLoading()
+  const router = useRouter()
   const [gA, gB] = CARD_GRADIENTS[(index - 1) % CARD_GRADIENTS.length]
   const numLabel = String(index).padStart(2, '0')
 
@@ -95,6 +99,29 @@ export default function ArticleCard({
                 {moduleName}
               </span>
             )}
+
+            {/* Submenu navigation chip — only when navChip is provided */}
+            {navChip && (() => {
+              const sub = navChip.subMenuTitle
+              const menu = navChip.menuTitle
+              const fullLabel = `${sub} (${menu})`
+              const dispSub  = sub.length  > 10 ? sub.slice(0, 10)  + '\u2026' : sub
+              const dispMenu = menu.length > 8  ? menu.slice(0, 8)  + '\u2026' : menu
+              return (
+                <span
+                  role="link"
+                  tabIndex={0}
+                  title={fullLabel}
+                  className="self-start inline-flex items-center gap-0.5 text-[10px] font-medium rounded-full px-2 py-0.5 transition-opacity hover:opacity-80 cursor-pointer"
+                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); showLoading(navChip.href); router.push(navChip.href) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); showLoading(navChip.href); router.push(navChip.href) } }}
+                >
+                  <span style={{ color: 'var(--green)' }}>{dispSub}</span>
+                  <span style={{ color: 'var(--text-muted)' }}> ({dispMenu})</span>
+                </span>
+              )
+            })()}
 
             {/* Title — gradient on hover */}
             <h3
