@@ -3,6 +3,7 @@
 
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import ArticleContent from './ArticleContent'
 
@@ -56,6 +57,9 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
   const gradient = SECTION_GRADIENTS[gradientIndex % SECTION_GRADIENTS.length]
   const accentColor = SECTION_COLORS[gradientIndex % SECTION_COLORS.length]
 
+  // ── Collapse state
+  const [collapsed, setCollapsed] = useState(false)
+
   // ── Section AI summary — managed per-card (fixes re-generation bug) ────────
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summaryState, setSummaryState] = useState<SummaryState>('idle')
@@ -102,13 +106,21 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
     >
 
       {hasTitle && (
-        <div id={titleId} className="section-optional-header">
+        <div
+          id={titleId}
+          className="section-optional-header"
+          role="button"
+          aria-expanded={!collapsed}
+          aria-controls={`section-body-${section.id}`}
+          onClick={() => setCollapsed((c) => !c)}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+        >
           <span className="section-optional-badge">{index + 1}</span>
 
           {/* Gradient applied to text (font color), not background */}
           <span
             className="section-optional-title section-title-gradient"
-            style={{ backgroundImage: gradient }}
+            style={{ backgroundImage: gradient, flex: 1 }}
           >
             {section.title}
           </span>
@@ -118,14 +130,30 @@ export default function SectionCard({ section, index, gradientIndex }: Props) {
             type="button"
             className="section-ai-btn section-ai-header-btn"
             title="AI summary of this section"
-            onClick={openSummary}
+            onClick={(e) => { e.stopPropagation(); openSummary() }}
             dangerouslySetInnerHTML={{ __html: BOT_SVG }}
+          />
+
+          {/* Collapse chevron */}
+          <ChevronDown
+            size={15}
+            className="shrink-0 transition-transform duration-250"
+            style={{
+              opacity: 0.5,
+              transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+              transitionDuration: '250ms',
+            }}
+            aria-hidden
           />
         </div>
       )}
 
       {section.content && (
-        <div className="section-optional-body">
+        <div
+          id={`section-body-${section.id}`}
+          className="section-optional-body"
+          hidden={collapsed}
+        >
           <ArticleContent
             content={section.content}
             standalone
