@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, Eye, ArrowRight, LayoutGrid, LayoutList } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Tag { id: number; name: string }
 interface Article {
@@ -18,6 +19,7 @@ interface Article {
 }
 
 export default function ArticlesView({ articles }: { articles: Article[] }) {
+  const { showLoading } = useArticleLoading()
   const [view, setView] = useState<'list' | 'grid'>('grid')
 
   if (articles.length === 0) {
@@ -77,6 +79,7 @@ export default function ArticlesView({ articles }: { articles: Article[] }) {
               key={article.id}
               href={`/articles/${article.slug}`}
               className="group card p-5 flex flex-col sm:flex-row gap-4 transition-all hover:-translate-y-0.5"
+              onClick={showLoading}
             >
               {article.coverImage && (
                 <div className="w-full sm:w-44 h-32 sm:h-28 rounded-xl overflow-hidden shrink-0">
@@ -152,6 +155,7 @@ export default function ArticlesView({ articles }: { articles: Article[] }) {
               key={article.id}
               href={`/articles/${article.slug}`}
               className="group card flex flex-col overflow-hidden transition-all hover:-translate-y-1"
+              onClick={showLoading}
             >
               {/* Cover */}
               <div

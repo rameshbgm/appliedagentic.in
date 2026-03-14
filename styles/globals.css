@@ -2735,3 +2735,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-page.article-theme-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
 .article-page.article-theme-light ::selection { background: rgba(30,41,59,0.15); color: #111827; }
 
+
+/* ─── Article Loading Modal ──────────────────────────────────────────────────── */
+@keyframes aa-dot-pulse {
+  0%, 60%, 100% { transform: scale(0.55); opacity: 0.35; }
+  30%           { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes aa-grad-shift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}

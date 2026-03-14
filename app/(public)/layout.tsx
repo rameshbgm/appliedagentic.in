@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 import Loader3D from '@/components/shared/Loader3D'
 import RouteProgress from '@/components/shared/RouteProgress'
+import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
 
 export const metadata: Metadata = {
   title: { default: 'Applied Agentic AI', template: '%s | Applied Agentic AI' },
@@ -42,14 +43,16 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <ThemeProvider>
-      <ToastNotifier />
-      <RouteProgress />
-      <Loader3D />
-      <Navbar navMenus={navMenus} />
-      <main className="min-h-screen pt-16">
-        {children}
-      </main>
-      <Footer menus={navMenus} />
+      <ArticleLoadingProvider>
+        <ToastNotifier />
+        <RouteProgress />
+        <Loader3D />
+        <Navbar navMenus={navMenus} />
+        <main className="min-h-screen pt-16">
+          {children}
+        </main>
+        <Footer menus={navMenus} />
+      </ArticleLoadingProvider>
     </ThemeProvider>
   )
 }

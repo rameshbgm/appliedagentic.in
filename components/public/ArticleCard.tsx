@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Clock, Eye, ArrowRight } from 'lucide-react'
 import LazyImage from '@/components/shared/LazyImage'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 // Warm-to-cool gradient pairs that cycle per card index
 const CARD_GRADIENTS = [
@@ -32,11 +33,12 @@ export default function ArticleCard({
   title, slug, summary, coverImageUrl, readingTime, viewCount = 0,
   createdAt, tags = [], moduleName, index = 1,
 }: Props) {
+  const { showLoading } = useArticleLoading()
   const [gA, gB] = CARD_GRADIENTS[(index - 1) % CARD_GRADIENTS.length]
   const numLabel = String(index).padStart(2, '0')
 
   return (
-    <Link href={`/articles/${slug}`} className="block group h-full">
+    <Link href={`/articles/${slug}`} className="block group h-full" onClick={showLoading}>
       <article
         className="relative h-full flex flex-col overflow-hidden rounded-2xl transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl"
         style={{

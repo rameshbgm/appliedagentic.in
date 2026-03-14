@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import ArticleCard from '@/components/public/ArticleCard'
 import { Loader2, LayoutGrid, LayoutList, Clock, Eye, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Article {
   id: number
@@ -37,6 +38,7 @@ const CARD_GRADIENTS = [
 ]
 
 export default function ArticlesInfiniteLoader({ initialArticles, totalCount, tag }: Props) {
+  const { showLoading } = useArticleLoading()
   const [articles, setArticles] = useState<Article[]>(initialArticles)
   const [offset, setOffset]     = useState(initialArticles.length)
   const [loading, setLoading]   = useState(false)
@@ -147,7 +149,7 @@ export default function ArticlesInfiniteLoader({ initialArticles, totalCount, ta
           {articles.map((a, i) => {
             const [gA, gB] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
             return (
-              <Link key={a.id} href={`/articles/${a.slug}`} className="group block">
+              <Link key={a.id} href={`/articles/${a.slug}`} className="group block" onClick={showLoading}>
                 <div
                   className="flex items-start gap-0 overflow-hidden rounded-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
