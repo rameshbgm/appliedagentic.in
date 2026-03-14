@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import ImageCropModal from '@/components/admin/ImageCropModal'
+import LazyImage from '@/components/shared/LazyImage'
 import TagInput from '@/components/shared/TagInput'
 import { calculateReadingTime } from '@/lib/readingTime'
 import ArticleSectionEditor, { type SectionData } from '@/components/admin/editor/ArticleSectionEditor'
@@ -987,7 +988,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Social Card Preview</p>
                     <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--bg-border)' }}>
-                      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-32 object-cover" />}
+                      {coverImageUrl && <LazyImage src={coverImageUrl} alt="" wrapperClassName="relative overflow-hidden w-full h-32" className="object-cover" />}
                       <div className="p-2" style={{ background: '#f0f2f5' }}>
                         <p className="text-xs text-gray-500 uppercase">appliedagentic.in</p>
                         <p className="text-sm font-semibold text-gray-900 mt-0.5 truncate">{meta.ogTitle || meta.seoTitle || title || 'Title'}</p>
@@ -1036,7 +1037,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <div className="p-3 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)' }}>
                     <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Twitter Card Preview</p>
                     <div className="rounded-2xl overflow-hidden border border-gray-200">
-                      {coverImageUrl && <img src={coverImageUrl} alt="" className="w-full h-40 object-cover" />}
+                      {coverImageUrl && <LazyImage src={coverImageUrl} alt="" wrapperClassName="relative overflow-hidden w-full h-40" className="object-cover" />}
                       <div className="p-3 bg-white">
                         <p className="text-sm font-bold text-gray-900 truncate">{meta.twitterTitle || meta.ogTitle || meta.seoTitle || title || 'Title'}</p>
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{meta.twitterDescription || meta.ogDescription || meta.seoDescription || 'Description'}</p>

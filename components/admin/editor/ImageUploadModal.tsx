@@ -2,6 +2,7 @@
 // components/admin/editor/ImageUploadModal.tsx
 import { useState, useRef } from 'react'
 import { Upload, Image as ImageIcon, X, Search } from 'lucide-react'
+import LazyImage from '@/components/shared/LazyImage'
 import { toast } from 'sonner'
 
 interface Props {
@@ -137,7 +138,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
                 />
               </div>
               {url && (
-                <img src={url} alt={alt} className="w-full h-40 object-cover rounded-xl border" style={{ borderColor: 'var(--bg-border)' }} />
+                <LazyImage src={url} alt={alt} wrapperClassName="relative overflow-hidden w-full h-40 rounded-xl border" className="object-cover" />
               )}
               <button
                 onClick={() => url && onInsert(url, alt)}
@@ -171,7 +172,7 @@ export default function ImageUploadModal({ onInsert, onClose }: Props) {
                       onClick={() => onInsert(item.url, item.filename)}
                       className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-violet-500 transition-all"
                     >
-                      <img src={item.url} alt={item.filename} className="w-full h-full object-cover" />
+                      <LazyImage fill src={item.url} alt={item.filename} className="object-cover" />
                     </button>
                   ))}
                 </div>

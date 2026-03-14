@@ -3,6 +3,7 @@
 // Top-bar AI assistant — generates proper markdown from a topic or raw text.
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Loader2, Image as ImageIcon, Music } from 'lucide-react'
+import LazyImage from '@/components/shared/LazyImage'
 import { toast } from 'sonner'
 
 type Tab = 'text' | 'image' | 'audio'
@@ -275,7 +276,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                 </button>
                 {generatedImageUrl && (
                   <div className="space-y-2">
-                    <img src={generatedImageUrl} alt="AI generated" className="w-full rounded-xl border" style={{ borderColor: 'var(--bg-border)' }} />
+                    <LazyImage src={generatedImageUrl} alt="AI generated" aspectClass="aspect-video" className="object-contain rounded-xl border" />
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"

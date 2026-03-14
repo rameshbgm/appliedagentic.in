@@ -229,7 +229,7 @@ export default function MediaGrid({ items, onDeleted }: Props) {
               const media = items.find(i => i.id === usageMediaId)
               return media?.mimeType.startsWith('image/') ? (
                 <div className="relative h-32 w-full shrink-0 overflow-hidden" style={{ background: '#f1f5f9' }}>
-                  <img src={media.url} alt={media.filename} className="w-full h-full object-cover" />
+                  <LazyImage fill src={media.url} alt={media.filename} className="object-cover" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55))' }} />
                   <div className="absolute bottom-3 left-4 right-12">
                     <p className="text-white text-sm font-semibold truncate">{media.filename}</p>

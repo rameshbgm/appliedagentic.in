@@ -12,6 +12,15 @@ interface Props {
   className?: string
   /** Aspect-ratio wrapper class, e.g. "aspect-video" or "aspect-square" */
   aspectClass?: string
+  /** Fully custom wrapper class (overrides aspectClass-based class). Must include `relative overflow-hidden`. */
+  wrapperClassName?: string
+  /**
+   * Render without a wrapper div — emits only the shimmer + <img> as absolute
+   * siblings. Use when the parent element is already `relative overflow-hidden`.
+   */
+  fill?: boolean
+  /** Skip `loading="lazy"` — use for above-the-fold hero images. */
+  priority?: boolean
   /** Width/height passed to the underlying <img> for intrinsic sizing hints */
   width?: number
   height?: number
@@ -67,54 +76,68 @@ function ShimmerPlaceholder({ className }: { className?: string }) {
   )
 }
 
-export default function LazyImage({ src, alt, className = '', aspectClass = '', width, height }: Props) {
+export default function LazyImage({ src, alt, className = '', aspectClass = '', wrapperClassName, fill, priority, width, height }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
 
   const handleLoad = useCallback(() => setLoaded(true), [])
   const handleError = useCallback(() => setErrored(true), [])
 
-  const wrapperClass = aspectClass
-    ? `${aspectClass} relative overflow-hidden w-full`
-    : 'relative overflow-hidden w-full'
+  const imgClass = [
+    'absolute inset-0 w-full h-full transition-opacity duration-500',
+    className,
+    loaded ? 'opacity-100' : 'opacity-0',
+  ].filter(Boolean).join(' ')
+
+  const shimmer = !loaded && !errored && (
+    <ShimmerPlaceholder className="absolute inset-0 w-full h-full" />
+  )
+
+  const errorFallback = errored && (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1" style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <circle cx="8" cy="10" r="2" />
+        <polyline points="2,18 8,12 13,15 17,11 22,15" />
+        <line x1="2" y1="2" x2="22" y2="22" strokeWidth="1.5" />
+      </svg>
+      <span className="text-xs">Image unavailable</span>
+    </div>
+  )
+
+  const img = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      {...(!priority ? { loading: 'lazy' as const } : {})}
+      decoding="async"
+      width={width}
+      height={height}
+      onLoad={handleLoad}
+      onError={handleError}
+      className={imgClass}
+    />
+  )
+
+  // Fill mode: render without a wrapper — parent must be `relative overflow-hidden`
+  if (fill) {
+    return <>{shimmer}{errorFallback}{img}</>
+  }
+
+  const resolvedWrapperClass = wrapperClassName
+    ? wrapperClassName
+    : aspectClass
+      ? `${aspectClass} relative overflow-hidden w-full`
+      : 'relative overflow-hidden w-full'
 
   return (
-    <div className={wrapperClass}>
-      {/* Shimmer shown while image is loading, hidden once loaded or errored */}
-      {!loaded && !errored && (
-        <ShimmerPlaceholder className="absolute inset-0 w-full h-full" />
-      )}
-
-      {/* Error fallback */}
-      {errored && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1" style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-            <circle cx="8" cy="10" r="2" />
-            <polyline points="2,18 8,12 13,15 17,11 22,15" />
-            <line x1="2" y1="2" x2="22" y2="22" strokeWidth="1.5" />
-          </svg>
-          <span className="text-xs">Image unavailable</span>
-        </div>
-      )}
-
-      {/* Actual image — loads in the background */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        width={width}
-        height={height}
-        onLoad={handleLoad}
-        onError={handleError}
-        className={[
-          className,
-          'absolute inset-0 w-full h-full transition-opacity duration-500',
-          loaded ? 'opacity-100' : 'opacity-0',
-        ].filter(Boolean).join(' ')}
-      />
+    <div className={resolvedWrapperClass}>
+      {shimmer}
+      {errorFallback}
+      {img}
     </div>
   )
 }
+
+

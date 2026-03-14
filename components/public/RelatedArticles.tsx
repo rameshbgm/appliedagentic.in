@@ -1,7 +1,7 @@
 'use client'
 // components/public/RelatedArticles.tsx
 import Link from 'next/link'
-import Image from 'next/image'
+import LazyImage from '@/components/shared/LazyImage'
 import { Clock, Eye } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -46,14 +46,12 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
               }}
             >
               {a.coverImage ? (
-                <div className="relative h-36 overflow-hidden">
-                  <Image
-                    src={a.coverImage}
-                    alt={a.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
+                <LazyImage
+                  src={a.coverImage}
+                  alt={a.title}
+                  wrapperClassName="relative overflow-hidden w-full h-36"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
               ) : (
                 <div
                   className="h-36 flex items-center justify-center text-3xl"

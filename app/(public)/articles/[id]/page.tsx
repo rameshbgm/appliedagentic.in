@@ -2,7 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
+import LazyImage from '@/components/shared/LazyImage'
 import Link from 'next/link'
 import ArticleContent from '@/components/public/ArticleContent'
 import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
@@ -229,14 +229,13 @@ export default async function ArticleDetailPage({ params }: Props) {
 
         {/* ─── Cover Image (full-bleed on mobile) ──────────────────── */}
         {article.coverImage && (
-          <div className="article-cover-wrapper">
-            <Image
+          <div className="article-cover-wrapper" style={{ aspectRatio: '16/9' }}>
+            <LazyImage
               src={article.coverImage.url}
               alt={article.title}
-              width={1200}
-              height={675}
-              className="article-cover-img"
               priority
+              fill
+              className="article-cover-img object-cover"
             />
             <div className="article-cover-gradient" />
           </div>
