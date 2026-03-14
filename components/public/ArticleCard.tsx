@@ -2,6 +2,7 @@
 // components/public/ArticleCard.tsx
 import Link from 'next/link'
 import { Clock, Eye, ArrowRight } from 'lucide-react'
+import LazyImage from '@/components/shared/LazyImage'
 
 // Warm-to-cool gradient pairs that cycle per card index
 const CARD_GRADIENTS = [
@@ -62,13 +63,12 @@ export default function ArticleCard({
 
         {/* Cover image */}
         {coverImageUrl && (
-          <div className="aspect-video overflow-hidden shrink-0">
-            <img
-              src={coverImageUrl}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
+          <LazyImage
+            src={coverImageUrl}
+            alt={title}
+            aspectClass="aspect-video"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         )}
 
         {/* Left gradient accent bar + content row */}

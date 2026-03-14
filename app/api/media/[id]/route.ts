@@ -2,7 +2,6 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { deleteFile } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,7 +9,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const asset = await prisma.mediaAsset.findUnique({ where: { id: parseInt((await params).id) } })
+    const asset = await prisma.mediaAsset.findUnique({
+      where: { id: parseInt((await params).id) },
+      // Never return the binary blob through the API
+      select: { id: true, filename: true, url: true, type: true, mimeType: true, altText: true, caption: true, width: true, height: true, sizeBytes: true, aiPrompt: true, createdByUserId: true, createdAt: true },
+    })
     if (!asset) return apiError('Media not found', 404)
     return apiSuccess(asset)
   } catch (err) {
@@ -27,6 +30,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const asset = await prisma.mediaAsset.update({
       where: { id: parseInt((await params).id) },
       data: { altText, caption },
+      select: { id: true, filename: true, url: true, type: true, mimeType: true, altText: true, caption: true, width: true, height: true, sizeBytes: true, aiPrompt: true, createdByUserId: true, createdAt: true },
     })
     return apiSuccess(asset)
   } catch (err) {
@@ -42,10 +46,7 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     const asset = await prisma.mediaAsset.findUnique({ where: { id: parseInt((await params).id) } })
     if (!asset) return apiError('Media not found', 404)
 
-    // Delete physical file
-    await deleteFile(asset.url)
-
-    // Delete DB record
+    // Data is stored in the DB — deleting the record removes the blob too
     await prisma.mediaAsset.delete({ where: { id: parseInt((await params).id) } })
 
     return apiSuccess({ deleted: true })

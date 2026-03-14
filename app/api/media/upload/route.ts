@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { saveFile, validateFileSize, validateMimeType, getMediaType } from '@/lib/storage'
+import { prepareAsset, validateFileSize, validateMimeType, getMediaType } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { logger } from '@/lib/logger'
 
@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    logger.debug(`[POST /api/media/upload] saving file to subDir="${subDir}", UPLOAD_DIR="${process.env.UPLOAD_DIR ?? '(not set — using ./public/uploads)'}"`)
+    const { url, filename } = prepareAsset({ mimeType: file.type, subDir })
+    const sizeBytes = buffer.length
 
-    const { url, filename, sizeBytes } = await saveFile({ buffer, mimeType: file.type, subDir })
-    logger.debug(`[POST /api/media/upload] file saved: url=${url} filename=${filename} size=${sizeBytes}`)
+    logger.debug(`[POST /api/media/upload] prepared asset url=${url} filename=${filename} size=${sizeBytes}`)
 
     const mediaType = getMediaType(file.type)
     const userId = parseInt((session.user as { id: string }).id)
@@ -66,10 +66,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Store file binary data in the database
     const asset = await prisma.mediaAsset.create({
       data: {
         filename,
         url,
+        data: buffer,
         type: mediaType,
         mimeType: file.type,
         altText: altText || null,
@@ -80,8 +82,10 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // Return asset without the binary data blob
+    const { data: _data, ...assetMeta } = asset
     logger.debug(`[POST /api/media/upload] DB record created id=${asset.id}`)
-    return apiSuccess(asset, 201)
+    return apiSuccess(assetMeta, 201)
   } catch (err) {
     return apiError('Upload failed', 500, err)
   }

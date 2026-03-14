@@ -1,30 +1,8 @@
 // lib/storage.ts
-// Pluggable file storage abstraction — currently local disk, swappable for S3/Cloudinary
-import fs from 'fs/promises'
-import path from 'path'
+// File metadata helpers - binary data is now stored in the database (MediaAsset.data).
+// Disk I/O has been removed. All image/audio bytes live in the DB LONGBLOB column.
 import { nanoid } from 'nanoid'
-import { logger } from '@/lib/logger'
 
-// ─── Upload directory ────────────────────────────────────────────────────────
-// Defaults to ./public/uploads (relative to cwd) – served by Next.js at /uploads/...
-//
-// Hostinger deployment:
-//   Files are stored OUTSIDE the deployment folder so they survive redeployments.
-//   The app lives in  ~/domains/appliedagentic.in/nodejs/  (wiped on redeploy)
-//   Uploads live in   ~/domains/appliedagentic.in/uploads/ (persistent)
-//
-//   Set in .env.production:
-//     UPLOAD_DIR=/home/u915919430/domains/appliedagentic.in/uploads
-//
-//   Create the folder on the server once via SSH or File Manager:
-//     mkdir -p /home/u915919430/domains/appliedagentic.in/uploads
-//
-//   Files are served by app/uploads/[...path]/route.ts at /uploads/{subDir}/{filename}
-//
-// The URL stored in the DB is always  /uploads/{subDir}/{filename}
-// which maps to  {UPLOAD_DIR}/{subDir}/{filename}  on disk.
-// ─────────────────────────────────────────────────────────────────────────────
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'public', 'uploads')
 const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? '10')
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
@@ -67,45 +45,19 @@ export function validateMimeType(mimeType: string): { valid: boolean; error?: st
   return { valid: true }
 }
 
-export interface SaveFileOptions {
-  buffer: Buffer
-  mimeType: string
-  subDir?: string // 'images' | 'audio' | 'ai'
-}
-
-export interface SaveFileResult {
+/**
+ * Generate a stable virtual URL and filename for a DB-stored asset.
+ * No disk writes occur - callers store the buffer in MediaAsset.data.
+ */
+export interface PreparedAsset {
   url: string
   filename: string
-  sizeBytes: number
 }
 
-export async function saveFile(opts: SaveFileOptions): Promise<SaveFileResult> {
-  const { buffer, mimeType, subDir = 'images' } = opts
+export function prepareAsset(opts: { mimeType: string; subDir?: string }): PreparedAsset {
+  const { mimeType, subDir = 'images' } = opts
   const ext = getExtension(mimeType)
   const filename = `${Date.now()}-${nanoid(8)}.${ext}`
-  const dirPath = path.join(UPLOAD_DIR, subDir)
-
-  logger.debug(`[saveFile] UPLOAD_DIR="${UPLOAD_DIR}" resolved dirPath="${dirPath}"`)
-
-  await fs.mkdir(dirPath, { recursive: true })
-  const filePath = path.join(dirPath, filename)
-  await fs.writeFile(filePath, buffer)
-
-  logger.debug(`[saveFile] written ${buffer.length} bytes → ${filePath}`)
-
-  // URL is always relative to the public root
   const url = `/uploads/${subDir}/${filename}`
-  return { url, filename, sizeBytes: buffer.length }
-}
-
-export async function deleteFile(url: string): Promise<void> {
-  try {
-    // url is always /uploads/{subDir}/{filename}
-    // Strip the leading /uploads/ prefix to get the relative path within UPLOAD_DIR
-    const relative = url.replace(/^\/uploads\//, '')
-    const filePath = path.join(UPLOAD_DIR, relative)
-    await fs.unlink(filePath)
-  } catch {
-    // File may not exist or path may differ; fail silently
-  }
+  return { url, filename }
 }

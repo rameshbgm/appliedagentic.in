@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { Trash2, Download, Copy, Check, Bot, ImageIcon, CheckCircle2, X, FileText, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
+import LazyImage from '@/components/shared/LazyImage'
 
 interface MediaItem {
   id: number
@@ -112,7 +113,12 @@ export default function MediaGrid({ items, onDeleted }: Props) {
               {/* Preview */}
               <div className="aspect-square w-full relative" style={{ background: 'var(--bg-surface)' }}>
                 {isImage ? (
-                  <img src={item.url} alt={item.filename} className="w-full h-full object-cover" />
+                  <LazyImage
+                    src={item.url}
+                    alt={item.filename}
+                    aspectClass="aspect-square"
+                    className="object-cover"
+                  />
                 ) : isAudio ? (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                     <span className="text-3xl">🎵</span>

@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { getOpenAIClient, getAIConfig } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
-import { saveFile } from '@/lib/storage'
+import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runImagePrompter } from '@/agents/image-prompter/agent'
 
@@ -63,19 +63,21 @@ export async function POST(req: NextRequest) {
 
     if (!imageUrl) return apiError('No image was generated', 500)
 
-    // Download and save the image
+    // Download the generated image
     const imageResponse = await fetch(imageUrl)
     const buffer = Buffer.from(await imageResponse.arrayBuffer())
-    const { url } = await saveFile({ buffer, mimeType: 'image/png', subDir: 'ai' })
+    const { url, filename } = prepareAsset({ mimeType: 'image/png', subDir: 'ai' })
 
-    // Create MediaAsset record
+    // Create MediaAsset record — binary stored in DB
     const userId = parseInt((session.user as { id: string }).id)
     const asset = await prisma.mediaAsset.create({
       data: {
-        filename: url.split('/').pop() || 'ai-image.png',
+        filename,
         url,
+        data: buffer,
         type: 'IMAGE',
         mimeType: 'image/png',
+        sizeBytes: buffer.length,
         aiPrompt: finalPrompt,
         createdByUserId: userId,
       },

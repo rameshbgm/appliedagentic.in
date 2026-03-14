@@ -190,7 +190,8 @@ model ArticleTag {
 model MediaAsset {
   id              Int        @id @default(autoincrement())
   filename        String
-  url             String
+  url             String     @unique
+  data            Bytes?     @db.LongBlob
   type            MediaType
   mimeType        String?
   altText         String?

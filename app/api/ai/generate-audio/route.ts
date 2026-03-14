@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { getOpenAIClient } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
-import { saveFile } from '@/lib/storage'
+import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runAudioNarrator, ttsConfig } from '@/agents/audio-narrator/agent'
 
@@ -60,13 +60,15 @@ export async function POST(req: NextRequest) {
 
     // Concatenate all buffers into one MP3
     const combinedBuffer = Buffer.concat(audioBuffers)
-    const { url } = await saveFile({ buffer: combinedBuffer, mimeType: 'audio/mpeg', subDir: 'audio' })
+    // Generate URL/filename without writing to disk
+    const { url, filename } = prepareAsset({ mimeType: 'audio/mpeg', subDir: 'audio' })
 
-    // Save to MediaAsset
+    // Save to MediaAsset — binary stored in DB
     const asset = await prisma.mediaAsset.create({
       data: {
-        filename: url.split('/').pop() || 'audio.mp3',
+        filename,
         url,
+        data: combinedBuffer,
         type: 'AUDIO',
         mimeType: 'audio/mpeg',
         aiPrompt: text.slice(0, 200),

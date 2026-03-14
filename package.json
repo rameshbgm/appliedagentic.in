@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "prisma generate && rm -rf .next && next build",
-    "postbuild": "node scripts/postbuild.mjs",
     "build:prod": "dotenv -e .env.production -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:uat": "dotenv -e .env.uat -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:with-migrate": "dotenv -e .env.production -- sh -c 'prisma migrate deploy && prisma generate && rm -rf .next && next build'",

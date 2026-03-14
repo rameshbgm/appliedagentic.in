@@ -27,7 +27,11 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: {
+        // Never return the binary blob — only metadata
+        select: {
+          id: true, filename: true, url: true, type: true, mimeType: true,
+          altText: true, caption: true, width: true, height: true, sizeBytes: true,
+          aiPrompt: true, createdByUserId: true, createdAt: true,
           _count: { select: { articles: true } },
         },
       }),
