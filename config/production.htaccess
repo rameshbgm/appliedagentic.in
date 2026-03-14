@@ -1,0 +1,11 @@
+Options +FollowSymLinks
+
+PassengerAppRoot /home/u915919430/domains/appliedagentic.in/nodejs
+PassengerAppType node
+PassengerNodejs /opt/alt/alt-nodejs24/root/bin/node
+PassengerStartupFile server.js
+PassengerBaseURI /
+PassengerRestartDir /home/u915919430/domains/appliedagentic.in/nodejs/tmp
+RewriteRule ^\.builds - [F,L]
+SetEnv NODE_OPTIONS "--require /home/u915919430/domains/appliedagentic.in/public_html/.builds/config/preload-timestamp.js"
+SetEnv LSNODE_CONSOLE_LOG console.log

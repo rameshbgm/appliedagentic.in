@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "prisma generate && rm -rf .next && next build",
-    "postbuild": "echo '[postbuild] CWD:' $(pwd) && echo '[postbuild] static-html exists:' $([ -d ./static-html ] && echo YES || echo NO) && echo '[postbuild] static-html contents:' && ls ./static-html 2>/dev/null || echo '(empty or missing)' && if [ -d ./static-html ]; then DEST=/home/u915919430/domains/appliedagentic.in/public_html && echo \"[postbuild] Copying to $DEST\" && mkdir -p \"$DEST\" && cp -av ./static-html/. \"$DEST/\" && echo '[postbuild] Done.' || echo '[postbuild] ERROR: copy failed'; else echo '[postbuild] Skipping copy (static-html folder not found)'; fi",
+    "postbuild": "node scripts/postbuild.mjs",
     "build:prod": "dotenv -e .env.production -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:uat": "dotenv -e .env.uat -- sh -c 'prisma generate && rm -rf .next && next build'",
     "build:with-migrate": "dotenv -e .env.production -- sh -c 'prisma migrate deploy && prisma generate && rm -rf .next && next build'",

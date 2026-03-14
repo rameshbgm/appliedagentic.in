@@ -24,7 +24,7 @@ import { logger } from '@/lib/logger'
 // The URL stored in the DB is always  /uploads/{subDir}/{filename}
 // which maps to  {UPLOAD_DIR}/{subDir}/{filename}  on disk.
 // ─────────────────────────────────────────────────────────────────────────────
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './public/uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), 'public', 'uploads')
 const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? '10')
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
@@ -83,8 +83,7 @@ export async function saveFile(opts: SaveFileOptions): Promise<SaveFileResult> {
   const { buffer, mimeType, subDir = 'images' } = opts
   const ext = getExtension(mimeType)
   const filename = `${Date.now()}-${nanoid(8)}.${ext}`
-  // path.resolve handles both relative (./public/uploads) and absolute paths correctly
-  const dirPath = path.resolve(process.cwd(), UPLOAD_DIR, subDir)
+  const dirPath = path.join(UPLOAD_DIR, subDir)
 
   logger.debug(`[saveFile] UPLOAD_DIR="${UPLOAD_DIR}" resolved dirPath="${dirPath}"`)
 
@@ -104,7 +103,7 @@ export async function deleteFile(url: string): Promise<void> {
     // url is always /uploads/{subDir}/{filename}
     // Strip the leading /uploads/ prefix to get the relative path within UPLOAD_DIR
     const relative = url.replace(/^\/uploads\//, '')
-    const filePath = path.resolve(process.cwd(), UPLOAD_DIR, relative)
+    const filePath = path.join(UPLOAD_DIR, relative)
     await fs.unlink(filePath)
   } catch {
     // File may not exist or path may differ; fail silently
