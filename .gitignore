@@ -22,9 +22,8 @@ logs/
 # Prisma generated client
 prisma/generated/
 
-# Uploaded media files
+# Uploaded media files (only the runtime upload dirs, not source routes)
 public/uploads/
-uploads/
 
 # Logs
 *.log

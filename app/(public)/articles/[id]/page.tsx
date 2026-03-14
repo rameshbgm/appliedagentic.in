@@ -229,13 +229,13 @@ export default async function ArticleDetailPage({ params }: Props) {
 
         {/* ─── Cover Image (full-bleed on mobile) ──────────────────── */}
         {article.coverImage && (
-          <div className="article-cover-wrapper" style={{ aspectRatio: '16/9' }}>
+          <div className="article-cover-wrapper">
             <LazyImage
               src={article.coverImage.url}
               alt={article.title}
               priority
-              fill
-              className="article-cover-img object-cover"
+              aspectClass="aspect-video"
+              className="object-cover"
             />
             <div className="article-cover-gradient" />
           </div>

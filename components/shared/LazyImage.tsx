@@ -4,7 +4,7 @@
 // While the image is pending, an animated SVG shimmer placeholder is shown so
 // the surrounding text content remains immediately readable.
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 interface Props {
   src: string
@@ -83,6 +83,20 @@ export default function LazyImage({ src, alt, className = '', aspectClass = '', 
   const handleLoad = useCallback(() => setLoaded(true), [])
   const handleError = useCallback(() => setErrored(true), [])
 
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // Cached image fix: if the browser already has the image when the component
+  // mounts (e.g. client-side navigation hits the cache), onLoad fires before
+  // React can attach the listener. Check img.complete on mount to handle this.
+  useEffect(() => {
+    const el = imgRef.current
+    if (!el) return
+    if (el.complete) {
+      if (el.naturalWidth > 0) setLoaded(true)
+      else setErrored(true)
+    }
+  }, [])
+
   const imgClass = [
     'absolute inset-0 w-full h-full transition-opacity duration-500',
     className,
@@ -108,6 +122,7 @@ export default function LazyImage({ src, alt, className = '', aspectClass = '', 
   const img = (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
       {...(!priority ? { loading: 'lazy' as const } : {})}
