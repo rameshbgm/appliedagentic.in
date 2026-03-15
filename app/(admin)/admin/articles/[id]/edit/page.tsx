@@ -72,6 +72,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
           id: s.id,
           title: s.title,
           content: s.content,
+          audioUrl: s.audioUrl ?? undefined,
           order: s.order,
         })),
       }}

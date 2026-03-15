@@ -20,7 +20,10 @@
       "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/articles/[id]/)",
       "Bash(grep -n \"article-page\" /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(public\\\\\\)/articles/[id]/page.tsx)",
       "Bash(cat:*)",
-      "Bash(grep -r \"ArticleContent\\\\|react-markdown\\\\|markdown-it\" /Users/laxmi/ramesh/code/appliedagentic.in/app /Users/laxmi/ramesh/code/appliedagentic.in/components --include=*.tsx --include=*.ts)"
+      "Bash(grep -r \"ArticleContent\\\\|react-markdown\\\\|markdown-it\" /Users/laxmi/ramesh/code/appliedagentic.in/app /Users/laxmi/ramesh/code/appliedagentic.in/components --include=*.tsx --include=*.ts)",
+      "Bash(npx dotenv:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc -l \"/Users/laxmi/ramesh/code/appliedagentic.in/app/\\(admin\\)/admin/articles/ArticleEditorPage.tsx\")"
     ]
   }
 }

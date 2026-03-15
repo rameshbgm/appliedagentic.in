@@ -18,6 +18,7 @@ interface MediaItem {
   aiPrompt?: string | null
   createdAt: string
   _count?: { articles: number }
+  audioUsageCount?: number
 }
 
 interface ArticleUsage {
@@ -103,14 +104,15 @@ export default function MediaGrid({ items, onDeleted }: Props) {
         {items.map((item) => {
           const isImage = item.mimeType.startsWith('image/')
           const isAudio = item.mimeType.startsWith('audio/')
+          const totalUsage = (item._count?.articles ?? 0) + (item.audioUsageCount ?? 0)
 
           return (
             <div
               key={item.id}
-              className="group relative rounded-2xl overflow-hidden border"
+              className="rounded-2xl overflow-hidden border flex flex-col"
               style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
             >
-              {/* Preview */}
+              {/* ── Preview ─────────────────────────────────── */}
               <div className="aspect-square w-full relative" style={{ background: 'var(--bg-surface)' }}>
                 {isImage ? (
                   <LazyImage
@@ -120,50 +122,50 @@ export default function MediaGrid({ items, onDeleted }: Props) {
                     className="object-cover"
                   />
                 ) : isAudio ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-3">
                     <span className="text-3xl">🎵</span>
-                    <audio src={item.url} controls className="w-full px-2" />
+                    <audio src={item.url} controls className="w-full" style={{ maxWidth: '100%' }} />
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="text-3xl">📄</span>
                   </div>
                 )}
-
-                {/* Tags: AI-generated / Manual / In-Use */}
-                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1 z-10">
-                  {item.aiPrompt ? (
-                    <span
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
-                      style={{ background: 'rgba(108,61,255,0.85)', color: '#fff' }}
-                      title={`AI Prompt: ${item.aiPrompt}`}
-                    >
-                      <Bot size={9} />AI
-                    </span>
-                  ) : (
-                    <span
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
-                      style={{ background: 'rgba(30,41,59,0.80)', color: '#fff' }}
-                    >
-                      <ImageIcon size={9} />Manual
-                    </span>
-                  )}
-                  {(item._count?.articles ?? 0) > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => openUsageModal(item.id)}
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold cursor-pointer hover:opacity-80 transition-opacity"
-                      style={{ background: 'rgba(46,213,115,0.85)', color: '#fff' }}
-                      title={`Used in ${item._count!.articles} article(s) — click to view`}
-                    >
-                      <CheckCircle2 size={9} />In Use ({item._count!.articles})
-                    </button>
-                  )}
-                </div>
               </div>
 
-              {/* Info */}
-              <div className="p-2">
+              {/* ── Tags row ─────────────────────────────────── */}
+              <div className="flex flex-wrap items-center gap-1 px-2 pt-2">
+                {item.aiPrompt ? (
+                  <span
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
+                    style={{ background: 'rgba(108,61,255,0.15)', color: '#7c3aed' }}
+                    title={`AI Prompt: ${item.aiPrompt}`}
+                  >
+                    <Bot size={9} />AI
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold"
+                    style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)' }}
+                  >
+                    <ImageIcon size={9} />Manual
+                  </span>
+                )}
+                {totalUsage > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => openUsageModal(item.id)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold hover:opacity-80 transition-opacity"
+                    style={{ background: 'rgba(46,213,115,0.15)', color: '#16a34a' }}
+                    title={`Used in ${totalUsage} article(s) — click to view`}
+                  >
+                    <CheckCircle2 size={9} />In Use ({totalUsage})
+                  </button>
+                )}
+              </div>
+
+              {/* ── File info ────────────────────────────────── */}
+              <div className="px-2 pt-1 pb-1">
                 <p className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>{item.filename}</p>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   {item.sizeBytes != null ? formatBytes(item.sizeBytes) : '—'}
@@ -171,29 +173,35 @@ export default function MediaGrid({ items, onDeleted }: Props) {
                 </p>
               </div>
 
-              {/* Actions overlay */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              {/* ── Action buttons ───────────────────────────── */}
+              <div className="flex items-center gap-1 px-2 pb-2 pt-0.5 border-t mt-auto" style={{ borderColor: 'var(--bg-border)' }}>
                 <button
                   onClick={() => copyUrl(item.id, item.url)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs transition-colors hover:opacity-80"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
                   title="Copy URL"
                 >
-                  {copiedId === item.id ? <Check size={14} className="text-green-400" /> : <Copy size={14} className="text-white" />}
+                  {copiedId === item.id
+                    ? <><Check size={12} className="text-green-500" /><span>Copied</span></>
+                    : <><Copy size={12} /><span>Copy</span></>
+                  }
                 </button>
                 <a
                   href={item.url}
                   download={item.filename}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs transition-colors hover:opacity-80"
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
                   title="Download"
                 >
-                  <Download size={14} className="text-white" />
+                  <Download size={12} /><span>Save</span>
                 </a>
                 <button
                   onClick={() => setDeleteId(item.id)}
-                  className="p-2 rounded-xl bg-red-500/30 hover:bg-red-500/50 transition-colors"
+                  className="flex items-center justify-center p-1.5 rounded-lg text-xs transition-colors hover:bg-red-50"
+                  style={{ color: '#ef4444' }}
                   title="Delete"
                 >
-                  <Trash2 size={14} className="text-red-300" />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
@@ -253,7 +261,7 @@ export default function MediaGrid({ items, onDeleted }: Props) {
                   <FileText size={15} style={{ color: '#6C3DFF' }} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm text-gray-900">Articles Using This Image</h3>
+                  <h3 className="font-semibold text-sm text-gray-900">Articles Using This File</h3>
                   {!usageLoading && (
                     <p className="text-xs text-gray-400 mt-0">
                       {usageArticles.length === 0 ? 'No articles' : `${usageArticles.length} article${usageArticles.length !== 1 ? 's' : ''}`}

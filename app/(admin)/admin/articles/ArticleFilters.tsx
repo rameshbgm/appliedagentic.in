@@ -97,6 +97,7 @@ export default function ArticleFilters() {
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search articles…"
           className="w-full pl-8 pr-3 py-2 text-sm rounded-xl border outline-none transition-colors focus:ring-1"
+          suppressHydrationWarning
           style={{
             background: 'var(--bg-elevated)',
             borderColor: searchInput ? 'var(--color-violet)' : 'var(--bg-border)',
@@ -120,6 +121,7 @@ export default function ArticleFilters() {
         value={currentMenuId}
         onChange={(e) => handleMenuChange(e.target.value)}
         className="px-3 py-2 text-sm rounded-xl border outline-none cursor-pointer"
+        suppressHydrationWarning
         style={{
           background: 'var(--bg-elevated)',
           borderColor: currentMenuId ? 'var(--color-violet)' : 'var(--bg-border)',
@@ -141,6 +143,7 @@ export default function ArticleFilters() {
           value={currentSubMenuId}
           onChange={(e) => handleSubMenuChange(e.target.value)}
           className="px-3 py-2 text-sm rounded-xl border outline-none cursor-pointer"
+          suppressHydrationWarning
           style={{
             background: 'var(--bg-elevated)',
             borderColor: currentSubMenuId ? 'var(--color-violet)' : 'var(--bg-border)',

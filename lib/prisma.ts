@@ -3,6 +3,11 @@ import { PrismaClient } from '@prisma/client'
 
 const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
+// Close idle DB connections after 60 s to stay within Hostinger's
+// max_connections_per_hour quota (500/hr). Prisma reconnects lazily on the
+// next query — callers never notice the brief reconnect.
+const IDLE_DISCONNECT_MS = 60_000
+
 // If DATABASE_URL isn't set during build (common in CI or static exports),
 // export a lightweight stub that safely returns empty results for read
 // operations. This prevents Prisma from throwing `Environment variable not
@@ -32,16 +37,41 @@ if (!process.env.DATABASE_URL) {
 } else {
   const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
+    prismaBase: PrismaClient | undefined
+    prismaIdleTimer: ReturnType<typeof setTimeout> | undefined
   }
 
-  _prisma =
-    globalForPrisma.prisma ??
-    new PrismaClient({
+  if (!globalForPrisma.prismaBase) {
+    const base = new PrismaClient({
       // In verbose mode log every query; in production log only errors
       log: isVerbose ? ['query', 'info', 'warn', 'error'] : ['error'],
     })
 
-  globalForPrisma.prisma = _prisma
+    // Reset the idle watchdog on every model operation.
+    function resetIdleTimer() {
+      if (globalForPrisma.prismaIdleTimer) clearTimeout(globalForPrisma.prismaIdleTimer)
+      globalForPrisma.prismaIdleTimer = setTimeout(() => {
+        globalForPrisma.prismaIdleTimer = undefined
+        base.$disconnect().catch(() => { /* already disconnected */ })
+      }, IDLE_DISCONNECT_MS)
+    }
+
+    globalForPrisma.prismaBase = base
+    // $extends wraps every model operation; cast back to PrismaClient so the
+    // rest of the codebase keeps its typed prisma.xxx.findMany() etc. calls.
+    globalForPrisma.prisma = base.$extends({
+      query: {
+        $allModels: {
+          async $allOperations({ args, query }) {
+            resetIdleTimer()
+            return query(args)
+          },
+        },
+      },
+    }) as unknown as PrismaClient
+  }
+
+  _prisma = globalForPrisma.prisma!
 
   // ── Database connection health-check ──────────────────────────────────────────
   async function testDatabaseConnection() {
@@ -50,7 +80,7 @@ if (!process.env.DATABASE_URL) {
     //  dynamic imports are excluded from that analysis.)
     const { logger } = await import('@/lib/logger')
     try {
-      await _prisma.$queryRaw`SELECT 1`
+      await globalForPrisma.prismaBase!.$queryRaw`SELECT 1`
       logger.info('[Database] Connection OK')
     } catch (err) {
       const safeUrl = (process.env.DATABASE_URL ?? '(not set)').replace(/:([^:@/]+)@/, ':***@')

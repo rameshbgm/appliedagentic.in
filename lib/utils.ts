@@ -2,7 +2,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, formatDistanceToNow } from 'date-fns'
-import { logger } from '@/lib/logger'
 
 /** Merge Tailwind classes safely */
 export function cn(...inputs: ClassValue[]) {
@@ -68,7 +67,10 @@ export function apiSuccess<T>(data: T, status = 200) {
  */
 export function apiError(message: string, status = 400, err?: unknown) {
   if (err !== undefined) {
-    logger.error(message, err)
+    // Dynamic import keeps logger (and its `fs` dependency) out of client bundles.
+    // apiError is only ever called in API route handlers (server-side), so the
+    // async import resolves before the response is returned.
+    import('@/lib/logger').then(({ logger }) => logger.error(message, err)).catch(() => {})
   }
   return Response.json({ success: false, error: message }, { status })
 }

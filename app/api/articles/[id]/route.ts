@@ -13,6 +13,7 @@ const SectionInput = z.object({
   id: z.number().int().optional(),
   title: z.string().default(''),
   content: z.string().default(''),
+  audioUrl: z.string().optional(),
   order: z.number().int().default(0),
 })
 
@@ -207,6 +208,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
               articleId: id,
               title: s.title,
               content: s.content,
+              audioUrl: s.audioUrl ?? null,
               order: s.order ?? i,
             })),
           })
@@ -249,7 +251,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         include: articleInclude,
       })
-    })
+    }, { timeout: 30000 })
 
     // Revalidate cached pages affected by this update.
     // Fetch the current submenu associations (after update) to get their paths.

@@ -13,6 +13,8 @@ interface Props {
   onReplace: (md: string) => void
   onSetTitle?: (title: string) => void
   articleId?: number
+  sectionId?: number
+  sectionContent?: string
   onAudioGenerated?: (url: string) => void
 }
 
@@ -21,7 +23,7 @@ const textTones = ['informative', 'casual', 'professional', 'engaging', 'technic
 const textLengths = ['short', 'medium', 'long']
 const ttsVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
-export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, articleId, onAudioGenerated }: Props) {
+export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, articleId, sectionId, sectionContent, onAudioGenerated }: Props) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Tab>('text')
   const [loading, setLoading] = useState(false)
@@ -103,6 +105,8 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
 
   const generateAudio = async () => {
     if (!articleId) { toast.error('Save the article first to attach audio'); return }
+    const text = audioSource === 'custom' ? audioText : sectionContent
+    if (!text?.trim()) { toast.error(audioSource === 'custom' ? 'Enter text to convert' : 'Section has no content'); return }
     setLoading(true)
     try {
       const res = await fetch('/api/ai/generate-audio', {
@@ -110,7 +114,9 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           articleId,
-          text: audioSource === 'custom' ? audioText : undefined,
+          sectionId,
+          text,
+          preprocessMarkdown: true,
           voice: audioVoice,
           speed: audioSpeed,
         }),

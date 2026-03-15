@@ -53,6 +53,7 @@ interface Section {
   id: number
   title: string
   content: string
+  audioUrl?: string | null
   order: number
 }
 
@@ -130,47 +131,46 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
     >
 
       {hasTitle && (
-        <div
-          id={titleId}
-          className="section-optional-header"
-          role="button"
-          aria-expanded={!collapsed}
-          aria-controls={`section-body-${section.id}`}
-          onClick={() => setCollapsed((c) => !c)}
-          style={{ cursor: 'pointer', userSelect: 'none' }}
-        >
-          <span className="section-optional-badge">{index + 1}</span>
-
-          {/* Gradient applied to text (font color), not background */}
-          <span
-            className="section-optional-title section-title-gradient"
-            style={{ backgroundImage: gradient, flex: 1 }}
+        <div id={titleId} className="section-optional-header" style={{ userSelect: 'none' }}>
+          {/* Collapse trigger wraps badge + title + chevron only */}
+          <button
+            type="button"
+            className="section-optional-header-toggle"
+            aria-controls={`section-body-${section.id}`}
+            onClick={() => setCollapsed((c) => !c)}
+            style={{ display: 'contents' }}
           >
-            {section.title}
-          </span>
+            <span className="section-optional-badge">{index + 1}</span>
 
-          {/* AI summarize — only when feature flag is on and article has multiple sections */}
+            <span
+              className="section-optional-title section-title-gradient"
+              style={{ backgroundImage: gradient, flex: 1 }}
+            >
+              {section.title}
+            </span>
+
+            <ChevronDown
+              size={15}
+              className="shrink-0 transition-transform duration-250"
+              style={{
+                opacity: 0.5,
+                transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                transitionDuration: '250ms',
+              }}
+              aria-hidden
+            />
+          </button>
+
+          {/* AI summarize — separate from toggle, no nesting issue */}
           {featureFlags.aiSummary && totalSections > 1 && (
             <button
               type="button"
               className="section-ai-btn section-ai-header-btn"
               title="AI summary of this section"
-              onClick={(e) => { e.stopPropagation(); openSummary() }}
+              onClick={openSummary}
               dangerouslySetInnerHTML={{ __html: BOT_SVG }}
             />
           )}
-
-          {/* Collapse chevron */}
-          <ChevronDown
-            size={15}
-            className="shrink-0 transition-transform duration-250"
-            style={{
-              opacity: 0.5,
-              transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-              transitionDuration: '250ms',
-            }}
-            aria-hidden
-          />
         </div>
       )}
 
@@ -203,7 +203,7 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
                 <span className="ai-modal-title-text">
                   <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Section summary</span>
                   <span
-                    className="truncate max-w-[260px] block"
+                    className="truncate max-w-65 block"
                     style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}
                     title={section.title}
                   >

@@ -37,7 +37,55 @@ export async function GET(req: NextRequest) {
       }),
     ])
 
-    return apiSuccess({ items: assets, total, page, limit, totalPages: Math.ceil(total / limit) })
+    // For audio assets, _count.articles is always 0 (no FK relation).
+    // Compute usage by matching Article.audioUrl and ArticleSection.audioUrl.
+    const audioAssets = assets.filter((a) => a.type === 'AUDIO')
+    const audioUsageCounts: Record<number, number> = {}
+
+    if (audioAssets.length > 0) {
+      const audioUrls = audioAssets.map((a) => a.url)
+
+      const [articleNarrations, sectionUsages] = await Promise.all([
+        // Articles using this audio as the top-level narration
+        prisma.article.groupBy({
+          by: ['audioUrl'],
+          where: { audioUrl: { in: audioUrls } },
+          _count: { _all: true },
+        }),
+        // Sections using this audio — get distinct articleIds per URL
+        prisma.articleSection.findMany({
+          where: { audioUrl: { in: audioUrls } },
+          select: { audioUrl: true, articleId: true },
+          distinct: ['audioUrl', 'articleId'],
+        }),
+      ])
+
+      const urlCount: Record<string, number> = {}
+      for (const r of articleNarrations) {
+        if (r.audioUrl) urlCount[r.audioUrl] = (urlCount[r.audioUrl] ?? 0) + r._count._all
+      }
+      // Count distinct articles per URL coming from sections
+      const sectionArticleMap: Record<string, Set<number>> = {}
+      for (const s of sectionUsages) {
+        if (!s.audioUrl) continue
+        if (!sectionArticleMap[s.audioUrl]) sectionArticleMap[s.audioUrl] = new Set()
+        sectionArticleMap[s.audioUrl].add(s.articleId)
+      }
+      for (const [url, ids] of Object.entries(sectionArticleMap)) {
+        urlCount[url] = (urlCount[url] ?? 0) + ids.size
+      }
+
+      for (const asset of audioAssets) {
+        audioUsageCounts[asset.id] = urlCount[asset.url] ?? 0
+      }
+    }
+
+    const items = assets.map((a) => ({
+      ...a,
+      audioUsageCount: audioUsageCounts[a.id] ?? 0,
+    }))
+
+    return apiSuccess({ items, total, page, limit, totalPages: Math.ceil(total / limit) })
   } catch (err) {
     return apiError('Failed to fetch media', 500, err)
   }

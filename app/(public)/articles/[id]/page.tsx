@@ -17,7 +17,7 @@ import { formatDate } from '@/lib/utils'
 import { Clock, Eye, Calendar, ArrowLeft, ArrowRight, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
-type ArticleSection = { id: number; articleId: number; title: string; content: string; order: number; createdAt: Date; updatedAt: Date }
+type ArticleSection = { id: number; articleId: number; title: string; content: string; audioUrl?: string | null; order: number; createdAt: Date; updatedAt: Date }
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -424,10 +424,14 @@ export default async function ArticleDetailPage({ params }: Props) {
                 )
               )}
 
-              {/* Audio player */}
-              {article.audioUrl && (
+              {/* Audio player — article-level or first available section audio */}
+              {(article.audioUrl || sections.some(s => s.audioUrl)) && (
                 <div className="mt-8">
-                  <ArticleAudioPlayer audioUrl={article.audioUrl} title={article.title} />
+                  <ArticleAudioPlayer
+                    audioUrl={article.audioUrl ?? sections.find(s => s.audioUrl)!.audioUrl!}
+                    title={article.title}
+                    sections={sections.map((s) => ({ id: s.id, title: s.title }))}
+                  />
                 </div>
               )}
 

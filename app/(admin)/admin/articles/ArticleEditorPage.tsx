@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon, Headphones } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import ImageCropModal from '@/components/admin/ImageCropModal'
 import LazyImage from '@/components/shared/LazyImage'
@@ -32,7 +32,7 @@ interface InitialArticle {
   subMenuIds: number[]
   menuIds: number[]
   isFeatured?: boolean
-  sections?: { id: number; title: string; content: string; order: number }[]
+  sections?: { id: number; title: string; content: string; audioUrl?: string; order: number }[]
 }
 
 interface SubMenu {
@@ -107,6 +107,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         id: s.id,
         title: s.title,
         content: s.content,
+        audioUrl: s.audioUrl,
         order: s.order,
       }))
     }
@@ -144,7 +145,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
 
   // Section helpers
   const updateSection = useCallback((tempId: string, updated: SectionData) => {
-    setSections((prev) => prev.map((s) => s.tempId === tempId ? updated : s))
+    setSections((prev) => prev.map((s) => {
+      if (s.tempId !== tempId) return s
+      // Mark audio stale when content changes and audio already exists
+      const audioStale = s.audioUrl && updated.content !== s.content ? true : updated.audioStale
+      return { ...updated, audioStale: !!audioStale }
+    }))
   }, [])
 
   const deleteSection = useCallback((tempId: string) => {
@@ -174,6 +180,49 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       },
     ])
   }, [])
+
+  const updateSectionAudio = useCallback((tempId: string, audioUrl: string | null) => {
+    setSections((prev) => prev.map((s) => s.tempId === tempId ? { ...s, audioUrl: audioUrl ?? undefined, audioStale: false } : s))
+  }, [])
+
+  const [allAudioLoading, setAllAudioLoading] = useState(false)
+
+  // Audio sync modal — shown when stale sections exist on save
+  const [audioSyncModal, setAudioSyncModal] = useState(false)
+  const [audioSyncProgress, setAudioSyncProgress] = useState<{ current: number; total: number } | null>(null)
+
+  const generateAllAudio = async () => {
+    if (!initialArticle.id) { toast.error('Save the article first'); return }
+    const sectionsWithContent = sections.filter((s) => s.content?.trim())
+    if (!sectionsWithContent.length) { toast.error('No sections with content'); return }
+    setAllAudioLoading(true)
+    let success = 0
+    for (const s of sectionsWithContent) {
+      try {
+        const res = await fetch('/api/ai/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            articleId: initialArticle.id,
+            sectionId: s.id,
+            text: s.content,
+            preprocessMarkdown: true,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          updateSectionAudio(s.tempId, data.data.audioUrl)
+          success++
+        } else {
+          toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}": ${data.error ?? 'Unknown error'}`)
+        }
+      } catch {
+        toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
+      }
+    }
+    setAllAudioLoading(false)
+    if (success > 0) toast.success(`Audio generated for ${success} section${success !== 1 ? 's' : ''}!`)
+  }
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -468,12 +517,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       id: s.id,
       title: s.title,
       content: s.content,
+      audioUrl: s.audioUrl,
       order: i,
     })),
   })
 
-  const save = useCallback(async () => {
-    if (!title.trim()) { toast.error('Title is required'); return }
+  const doSave = useCallback(async () => {
     setSaving(true)
     try {
       const payload = getPayload()
@@ -491,15 +540,22 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         if (!initialArticle.id) {
           router.push(`/admin/articles/${data.data.id}/edit`)
         } else {
-          // Sync saved section IDs back to state
+          // Sync saved section IDs back to state, preserving audioUrl and clearing audioStale
           if (data.data?.sections) {
-            setSections(data.data.sections.map((s: { id: number; title: string; content: string; order: number }) => ({
-              tempId: `existing-${s.id}`,
-              id: s.id,
-              title: s.title,
-              content: s.content,
-              order: s.order,
-            })))
+            setSections((prev) =>
+              data.data.sections.map((s: { id: number; title: string; content: string; audioUrl?: string; order: number }) => {
+                const existing = prev.find((p) => p.id === s.id || p.tempId === `existing-${s.id}`)
+                return {
+                  tempId: `existing-${s.id}`,
+                  id: s.id,
+                  title: s.title,
+                  content: s.content,
+                  audioUrl: s.audioUrl ?? existing?.audioUrl,
+                  audioStale: false,
+                  order: s.order,
+                }
+              })
+            )
           }
           router.refresh()
         }
@@ -510,6 +566,49 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       setSaving(false)
     }
   }, [title, slug, summary, sections, coverImageUrl, meta, initialArticle.id]) // eslint-disable-line
+
+  const regenerateStaleAndSave = async () => {
+    if (!initialArticle.id) return
+    const staleSections = sections.filter((s) => s.audioUrl && s.audioStale && s.content?.trim())
+    setAudioSyncProgress({ current: 0, total: staleSections.length })
+    for (let i = 0; i < staleSections.length; i++) {
+      const s = staleSections[i]
+      setAudioSyncProgress({ current: i + 1, total: staleSections.length })
+      try {
+        const res = await fetch('/api/ai/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            articleId: initialArticle.id,
+            sectionId: s.id,
+            text: s.content,
+            preprocessMarkdown: true,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          updateSectionAudio(s.tempId, data.data.audioUrl)
+        } else {
+          toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
+        }
+      } catch {
+        toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
+      }
+    }
+    setAudioSyncModal(false)
+    setAudioSyncProgress(null)
+    await doSave()
+  }
+
+  const save = useCallback(async () => {
+    if (!title.trim()) { toast.error('Title is required'); return }
+    const staleSections = sections.filter((s) => s.audioUrl && s.audioStale)
+    if (staleSections.length > 0) {
+      setAudioSyncModal(true)
+      return
+    }
+    await doSave()
+  }, [title, sections, doSave]) // eslint-disable-line
 
   // Auto-save every 60s
   useEffect(() => {
@@ -600,6 +699,21 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             AI Generate
           </button>
 
+          {/* Gen All Audio button */}
+          {initialArticle.id && (
+            <button
+              type="button"
+              onClick={generateAllAudio}
+              disabled={allAudioLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #059669, #0891B2)', color: '#fff' }}
+              title="Generate audio for all sections"
+            >
+              {allAudioLoading ? <Loader2 size={13} className="animate-spin" /> : <Headphones size={13} />}
+              Gen All Audio
+            </button>
+          )}
+
           {/* Single Save button */}
           <button
             type="button"
@@ -682,7 +796,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 onDelete={() => deleteSection(section.tempId)}
                 onMoveUp={() => moveSection(idx, idx - 1)}
                 onMoveDown={() => moveSection(idx, idx + 1)}
-                onAudioGenerated={(url) => setMeta((m) => ({ ...m, audioUrl: url }))}
+                onAudioGenerated={(url) => updateSectionAudio(section.tempId, url)}
               />
             ))}
 
@@ -1616,6 +1730,89 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 {aiGenLoading ? 'Generating & Saving…' : 'Generate & Save Draft'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Audio Sync Modal ─────────────────────────────────────────────────── */}
+      {audioSyncModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="relative w-full max-w-md mx-4 rounded-2xl shadow-2xl p-6 flex flex-col gap-5"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+          >
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <span
+                className="flex items-center justify-center w-10 h-10 rounded-full shrink-0"
+                style={{ background: 'rgba(245,158,11,0.12)' }}
+              >
+                <Headphones size={18} style={{ color: '#d97706' }} />
+              </span>
+              <div>
+                <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                  Audio out of sync
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  {sections.filter((s) => s.audioUrl && s.audioStale).length} section
+                  {sections.filter((s) => s.audioUrl && s.audioStale).length !== 1 ? 's have' : ' has'} been
+                  modified since audio was generated. Regenerate before saving?
+                </p>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {audioSyncProgress && (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <span>Regenerating section {audioSyncProgress.current} of {audioSyncProgress.total}…</span>
+                  <span>{Math.round((audioSyncProgress.current / audioSyncProgress.total) * 100)}%</span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-border)' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(audioSyncProgress.current / audioSyncProgress.total) * 100}%`,
+                      background: 'linear-gradient(90deg, #059669, #0891B2)',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            {!audioSyncProgress && (
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setAudioSyncModal(false)}
+                  className="px-3 py-1.5 rounded-lg text-xs border transition-colors hover:bg-gray-50"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => { setAudioSyncModal(false); await doSave() }}
+                  className="px-3 py-1.5 rounded-lg text-xs border transition-colors hover:bg-gray-50"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                >
+                  Save Anyway
+                </button>
+                <button
+                  type="button"
+                  onClick={regenerateStaleAndSave}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white hover:opacity-90 transition-opacity"
+                  style={{ background: 'linear-gradient(135deg, #059669, #0891B2)' }}
+                >
+                  <Headphones size={12} />
+                  Regenerate &amp; Save
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

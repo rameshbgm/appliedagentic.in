@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       speed,
       model: reqModel,
       articleId,
+      sectionId,
       preprocessMarkdown = false, // if true, run through audio-narrator agent first
     } = body
 
@@ -77,8 +78,13 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // If articleId provided, update article audioUrl
-    if (articleId) {
+    // If sectionId provided, update section audioUrl; otherwise fall back to article audioUrl
+    if (sectionId) {
+      await prisma.articleSection.update({
+        where: { id: parseInt(sectionId) },
+        data: { audioUrl: url },
+      }).catch(() => {})
+    } else if (articleId) {
       await prisma.article.update({
         where: { id: parseInt(articleId) },
         data: { audioUrl: url },
