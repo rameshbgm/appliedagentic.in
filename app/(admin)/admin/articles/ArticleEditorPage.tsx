@@ -198,6 +198,13 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const audioJobStatusRef = useRef<AudioJobStatus>('idle')
   const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
 
+  // Dirty refs — let the auto-save timer read current dirty state without re-running the effect
+  const headerDirtyRef      = useRef(false)
+  const seoDirtyRef         = useRef(false)
+  const navDirtyRef         = useRef(false)
+  const tagsDirtyRef        = useRef(false)
+  const dirtySectionIdsRef  = useRef<Set<string>>(new Set())
+
   // Individual panel save states
   const [headerSaving, setHeaderSaving] = useState(false)
   const [headerDirty,  setHeaderDirty]  = useState(false)
@@ -539,6 +546,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       if (data.success) {
         const label = meta.status.charAt(0) + meta.status.slice(1).toLowerCase()
         toast.success(`Saved as ${label}!`)
+        // Clear all dirty flags — full save covers everything
+        setHeaderDirty(false)
+        setSeoDirty(false)
+        setNavDirty(false)
+        setTagsDirty(false)
+        setDirtySectionIds(new Set())
         if (!initialArticle.id) {
           router.push(`/admin/articles/${data.data.id}/edit`)
         } else {
@@ -784,20 +797,36 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     await doSave()
   }, [doSave])
 
-  // Keep audioJobStatusRef in sync so the auto-save timer can read it without re-running
-  audioJobStatusRef.current = audioJob.status
+  // Keep refs in sync so the auto-save timer always sees current values
+  audioJobStatusRef.current     = audioJob.status
+  headerDirtyRef.current        = headerDirty
+  seoDirtyRef.current           = seoDirty
+  navDirtyRef.current           = navDirty
+  tagsDirtyRef.current          = tagsDirty
+  dirtySectionIdsRef.current    = dirtySectionIds
 
-  // Auto-save every 60s — skipped when only audio urls changed or while a job is active
+  // Auto-save every 60s — per-panel saves for existing articles (avoids full sections sync),
+  // full save only for brand-new articles that haven't been created yet.
+  // Skipped when only audioUrl changed (already in DB) or while a job is active.
   useEffect(() => {
     if (skipAutoSaveRef.current) {
       skipAutoSaveRef.current = false
       return // audio url changed — DB already has it, preserve existing timer
     }
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       const jobStatus = audioJobStatusRef.current
-      if (initialArticle.id && title.trim() && jobStatus !== 'pending' && jobStatus !== 'running') {
+      if (!title.trim() || jobStatus === 'pending' || jobStatus === 'running') return
+      if (!initialArticle.id) {
+        // New article — full save to create the DB record
         save()
+      } else {
+        // Existing article — only save dirty panels (no full section sync)
+        if (headerDirtyRef.current)   saveHeader()
+        if (seoDirtyRef.current)      saveSEO()
+        if (navDirtyRef.current)      saveNav()
+        if (tagsDirtyRef.current)     saveTags()
+        dirtySectionIdsRef.current.forEach((tempId) => saveSection(tempId))
       }
     }, 60000)
     setAutoSaveTimer(timer)
@@ -1224,12 +1253,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <button
                     type="button"
                     onClick={saveSEO}
-                    disabled={seoSaving}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
-                    style={{ background: 'var(--color-violet)', color: '#fff' }}
+                    disabled={seoSaving || !seoDirty}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                    style={{
+                      background: seoDirty ? 'var(--color-violet)' : 'var(--bg-elevated)',
+                      color: seoDirty ? '#fff' : 'var(--text-muted)',
+                      border: seoDirty ? 'none' : '1px solid var(--bg-border)',
+                    }}
                   >
                     {seoSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
-                    Save SEO
+                    {seoDirty ? 'Save SEO' : 'Saved'}
                   </button>
                 )}
               </div>
@@ -1285,7 +1318,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <input
                       value={meta.seoTitle}
-                      onChange={(e) => setMeta((m) => ({ ...m, seoTitle: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, seoTitle: e.target.value })); setSeoDirty(true) }}
                       placeholder={title || 'Override the page title for search engines...'}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
                       style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
@@ -1302,7 +1335,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <textarea
                       value={meta.seoDescription}
-                      onChange={(e) => setMeta((m) => ({ ...m, seoDescription: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, seoDescription: e.target.value })); setSeoDirty(true) }}
                       placeholder={summary || 'Describe this article for search engines and social sharing...'}
                       rows={3}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
@@ -1315,7 +1348,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Keywords</label>
                     <input
                       value={meta.seoKeywords}
-                      onChange={(e) => setMeta((m) => ({ ...m, seoKeywords: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, seoKeywords: e.target.value })); setSeoDirty(true) }}
                       placeholder="ai agents, langchain, machine learning, ..."
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
                       style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
@@ -1345,7 +1378,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <input
                       value={meta.ogTitle}
-                      onChange={(e) => setMeta((m) => ({ ...m, ogTitle: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, ogTitle: e.target.value })); setSeoDirty(true) }}
                       placeholder={meta.seoTitle || title || 'Facebook / LinkedIn / Discord title...'}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
                       style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
@@ -1360,7 +1393,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <textarea
                       value={meta.ogDescription}
-                      onChange={(e) => setMeta((m) => ({ ...m, ogDescription: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, ogDescription: e.target.value })); setSeoDirty(true) }}
                       placeholder={meta.seoDescription || 'Social sharing description...'}
                       rows={3}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
@@ -1394,7 +1427,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <input
                       value={meta.twitterTitle}
-                      onChange={(e) => setMeta((m) => ({ ...m, twitterTitle: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, twitterTitle: e.target.value })); setSeoDirty(true) }}
                       placeholder={meta.ogTitle || meta.seoTitle || title || 'Twitter / X title...'}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
                       style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
@@ -1409,7 +1442,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     </div>
                     <textarea
                       value={meta.twitterDescription}
-                      onChange={(e) => setMeta((m) => ({ ...m, twitterDescription: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, twitterDescription: e.target.value })); setSeoDirty(true) }}
                       placeholder={meta.ogDescription || meta.seoDescription || 'Twitter / X description...'}
                       rows={3}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
@@ -1440,7 +1473,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                     <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>Content Declaration</label>
                     <select
                       value={meta.aiContentDeclaration}
-                      onChange={(e) => setMeta((m) => ({ ...m, aiContentDeclaration: e.target.value }))}
+                      onChange={(e) => { setMeta((m) => ({ ...m, aiContentDeclaration: e.target.value })); setSeoDirty(true) }}
                       className="w-full px-3 py-2 rounded-xl border text-sm outline-none"
                       style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
                     >
@@ -1489,12 +1522,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 <button
                   type="button"
                   onClick={saveNav}
-                  disabled={navSaving}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
-                  style={{ background: 'var(--color-violet)', color: '#fff' }}
+                  disabled={navSaving || !navDirty}
+                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                  style={{
+                    background: navDirty ? 'var(--color-violet)' : 'var(--bg-elevated)',
+                    color: navDirty ? '#fff' : 'var(--text-muted)',
+                    border: navDirty ? 'none' : '1px solid var(--bg-border)',
+                  }}
                 >
                   {navSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
-                  Save Navigation
+                  {navDirty ? 'Save Navigation' : 'Saved'}
                 </button>
               )}
             </div>
@@ -1558,14 +1595,15 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                           className="shrink-0"
                           style={{ accentColor: '#059669' }}
                           checked={checked}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setMeta((m) => ({
                               ...m,
                               menuIds: e.target.checked
                                 ? [...m.menuIds, menu.id]
                                 : m.menuIds.filter((id) => id !== menu.id),
                             }))
-                          }
+                            setNavDirty(true)
+                          }}
                         />
                         <span className="truncate text-xs font-medium">{menu.title}</span>
                       </label>
@@ -1607,14 +1645,15 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                               type="checkbox"
                               className="accent-violet-600 shrink-0"
                               checked={checked}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setMeta((m) => ({
                                   ...m,
                                   subMenuIds: e.target.checked
                                     ? [...m.subMenuIds, sub.id]
                                     : m.subMenuIds.filter((id) => id !== sub.id),
                                 }))
-                              }
+                                setNavDirty(true)
+                              }}
                             />
                             <span className="truncate text-xs font-medium">{sub.title}</span>
                           </label>
@@ -1658,12 +1697,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <button
                     type="button"
                     onClick={saveTags}
-                    disabled={tagsSaving}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
-                    style={{ background: 'var(--color-violet)', color: '#fff' }}
+                    disabled={tagsSaving || !tagsDirty}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                    style={{
+                      background: tagsDirty ? 'var(--color-violet)' : 'var(--bg-elevated)',
+                      color: tagsDirty ? '#fff' : 'var(--text-muted)',
+                      border: tagsDirty ? 'none' : '1px solid var(--bg-border)',
+                    }}
                   >
                     {tagsSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
-                    Save Tags
+                    {tagsDirty ? 'Save Tags' : 'Saved'}
                   </button>
                 )}
               </div>
@@ -1674,6 +1717,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 onChange={(tags) => {
                   const names = tags.map((t) => t.name).slice(0, 10)
                   setMeta((m) => ({ ...m, tagNames: names }))
+                  setTagsDirty(true)
                 }}
                 suggestions={allTags}
               />
@@ -1688,7 +1732,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                       #{t}
                       <button
                         type="button"
-                        onClick={() => setMeta((m) => ({ ...m, tagNames: m.tagNames.filter((x) => x !== t) }))}
+                        onClick={() => { setMeta((m) => ({ ...m, tagNames: m.tagNames.filter((x) => x !== t) })); setTagsDirty(true) }}
                         className="opacity-50 hover:opacity-100 transition-opacity ml-0.5"
                         style={{ color: 'var(--text-muted)' }}
                       >

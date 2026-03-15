@@ -152,6 +152,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    // Partial save = no sections provided. Skip the heavy articleInclude JOIN and return only {id,slug}.
+    const isPartial = data.sections === undefined
+
     const article = await prisma.$transaction(async (tx) => {
       // Update topic relationships if provided
       if (data.topicIds !== undefined) {
@@ -245,65 +248,80 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
       }
 
+      const updateData = {
+        ...(data.title && { title: data.title }),
+        ...(data.slug && { slug: data.slug }),
+        ...(data.summary !== undefined && { summary: data.summary }),
+        ...(data.content !== undefined && { content: data.content }),
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
+        ...(resolvedCoverImageId !== undefined && (
+          resolvedCoverImageId === null
+            ? { coverImage: { disconnect: true } }
+            : { coverImage: { connect: { id: resolvedCoverImageId } } }
+        )),
+        ...(data.audioUrl !== undefined && { audioUrl: data.audioUrl }),
+        ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
+        ...(data.publishedAt !== undefined
+          ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }
+          : (data.status === ArticleStatus.PUBLISHED
+            ? { publishedAt: new Date() }
+            : {})
+        ),
+        ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
+        ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),
+        ...(data.seoKeywords !== undefined && { seoKeywords: data.seoKeywords }),
+        ...(data.seoCanonicalUrl !== undefined && { seoCanonicalUrl: data.seoCanonicalUrl }),
+        ...(data.ogTitle !== undefined && { ogTitle: data.ogTitle }),
+        ...(data.ogDescription !== undefined && { ogDescription: data.ogDescription }),
+        ...(data.ogImageUrl !== undefined && { ogImageUrl: data.ogImageUrl }),
+        ...(data.twitterTitle !== undefined && { twitterTitle: data.twitterTitle }),
+        ...(data.twitterDescription !== undefined && { twitterDescription: data.twitterDescription }),
+        ...(data.aiContentDeclaration !== undefined && { aiContentDeclaration: data.aiContentDeclaration }),
+        updatedBy: parseInt((session.user as { id: string }).id),
+      }
+
+      // Partial saves (no sections) get a minimal select — skips all the heavy JOINs.
+      // Full saves (sections provided) return the complete article so section IDs can be synced.
+      if (isPartial) {
+        await tx.article.update({ where: { id }, data: updateData })
+        return null
+      }
+
       return tx.article.update({
         where: { id },
-        data: {
-          ...(data.title && { title: data.title }),
-          ...(data.slug && { slug: data.slug }),
-          ...(data.summary !== undefined && { summary: data.summary }),
-          ...(data.content !== undefined && { content: data.content }),
-          ...(data.status !== undefined && { status: data.status }),
-          ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
-          ...(resolvedCoverImageId !== undefined && (
-            resolvedCoverImageId === null
-              ? { coverImage: { disconnect: true } }
-              : { coverImage: { connect: { id: resolvedCoverImageId } } }
-          )),
-          ...(data.audioUrl !== undefined && { audioUrl: data.audioUrl }),
-          ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
-          ...(data.publishedAt !== undefined
-            ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }
-            : (data.status === ArticleStatus.PUBLISHED
-              ? { publishedAt: new Date() }
-              : {})
-          ),
-          ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
-          ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),
-          ...(data.seoKeywords !== undefined && { seoKeywords: data.seoKeywords }),
-          ...(data.seoCanonicalUrl !== undefined && { seoCanonicalUrl: data.seoCanonicalUrl }),
-          ...(data.ogTitle !== undefined && { ogTitle: data.ogTitle }),
-          ...(data.ogDescription !== undefined && { ogDescription: data.ogDescription }),
-          ...(data.ogImageUrl !== undefined && { ogImageUrl: data.ogImageUrl }),
-          ...(data.twitterTitle !== undefined && { twitterTitle: data.twitterTitle }),
-          ...(data.twitterDescription !== undefined && { twitterDescription: data.twitterDescription }),
-          ...(data.aiContentDeclaration !== undefined && { aiContentDeclaration: data.aiContentDeclaration }),
-          updatedBy: parseInt((session.user as { id: string }).id),
-        },
+        data: updateData,
         include: articleInclude,
       })
     }, { timeout: 30000 })
 
-    // Revalidate cached pages affected by this update.
-    // Fetch the current submenu associations (after update) to get their paths.
-    const subMenuLinks = await prisma.subMenuArticle.findMany({
-      where: { articleId: id },
-      select: {
-        subMenu: {
-          select: {
-            slug: true,
-            menu: { select: { slug: true } },
-          },
-        },
-      },
-    })
-    revalidatePath(`/articles/${article.slug}`)
-    revalidatePath('/articles')
-    for (const { subMenu } of subMenuLinks) {
-      revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
-      revalidatePath(`/${subMenu.menu.slug}`)
+    // Revalidate only when public-facing content actually changed.
+    // Pure SEO/tags/nav panel saves don't need article-page revalidation.
+    const needsArticleRevalidate = !isPartial ||
+      data.title !== undefined || data.slug !== undefined ||
+      data.status !== undefined || data.coverImageUrl !== undefined
+    const needsNavRevalidate = data.subMenuIds !== undefined || data.menuIds !== undefined
+
+    if (needsArticleRevalidate) {
+      // For partial saves we don't have the full article back — fetch just the slug
+      const slugForPath = (article as { slug?: string } | null)?.slug
+        ?? (await prisma.article.findUnique({ where: { id }, select: { slug: true } }))?.slug
+      if (slugForPath) revalidatePath(`/articles/${slugForPath}`)
+      revalidatePath('/articles')
     }
 
-    return apiSuccess(article)
+    if (needsNavRevalidate) {
+      const subMenuLinks = await prisma.subMenuArticle.findMany({
+        where: { articleId: id },
+        select: { subMenu: { select: { slug: true, menu: { select: { slug: true } } } } },
+      })
+      for (const { subMenu } of subMenuLinks) {
+        revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
+        revalidatePath(`/${subMenu.menu.slug}`)
+      }
+    }
+
+    return apiSuccess(isPartial ? { id } : article)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update article', 500, err)
