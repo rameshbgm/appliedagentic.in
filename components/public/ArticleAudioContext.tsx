@@ -57,7 +57,7 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
   const [duration, setDuration] = useState(0)
   const [speed, setSpeedState] = useState(1)
   const [muted, setMuted] = useState(false)
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(() => sections.some((s) => s.audioUrl))
 
   // Keep a ref to sections so callbacks don't go stale
   const sectionsRef = useRef(sections)
@@ -156,10 +156,16 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
       setPlayState('paused')
     } else if (playState === 'paused') {
       audio.play().then(() => setPlayState('playing')).catch(() => {})
-    } else if (playState === 'idle' && currentSectionIdx !== null) {
-      audio.play().then(() => setPlayState('playing')).catch(() => {})
+    } else if (playState === 'idle') {
+      if (currentSectionIdx !== null) {
+        audio.play().then(() => setPlayState('playing')).catch(() => {})
+      } else {
+        // Nothing selected yet — start from first section with audio
+        const firstIdx = sectionsRef.current.findIndex((s) => s.audioUrl)
+        if (firstIdx >= 0) loadAndPlay(firstIdx)
+      }
     }
-  }, [playState, currentSectionIdx])
+  }, [playState, currentSectionIdx, loadAndPlay])
 
   const seek = useCallback((fraction: number) => {
     const audio = audioRef.current

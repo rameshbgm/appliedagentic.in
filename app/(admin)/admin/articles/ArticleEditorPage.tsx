@@ -188,6 +188,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   // Audio sync modal — shown when stale sections exist on save
   const [audioSyncModal, setAudioSyncModal] = useState(false)
   const [audioSyncProgress, setAudioSyncProgress] = useState<{ current: number; total: number } | null>(null)
+  const [genMissingLoading, setGenMissingLoading] = useState(false)
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -565,6 +566,30 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     await doSave()
   }
 
+  const generateMissingAudio = async () => {
+    if (!initialArticle.id) { toast.error('Save the article first'); return }
+    const missing = sections.filter((s) => !s.audioUrl && s.content?.trim())
+    if (!missing.length) { toast('All sections already have audio'); return }
+    setGenMissingLoading(true)
+    let generated = 0
+    for (const s of missing) {
+      try {
+        const res = await fetch('/api/ai/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ articleId: initialArticle.id, sectionId: s.id, text: s.content, preprocessMarkdown: true }),
+        })
+        const data = await res.json()
+        if (data.success) { updateSectionAudio(s.tempId, data.data.audioUrl); generated++ }
+        else toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
+      } catch {
+        toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
+      }
+    }
+    setGenMissingLoading(false)
+    if (generated > 0) toast.success(`Generated audio for ${generated} section${generated > 1 ? 's' : ''}`)
+  }
+
   const save = useCallback(async () => {
     if (!title.trim()) { toast.error('Title is required'); return }
     const staleSections = sections.filter((s) => s.audioUrl && s.audioStale)
@@ -663,6 +688,20 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <Wand2 size={13} />
             AI Generate
           </button>
+
+          {/* Generate missing audio */}
+          {initialArticle.id && (
+            <button
+              type="button"
+              onClick={generateMissingAudio}
+              disabled={genMissingLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90 bg-amber-600 text-white"
+              title="Generate audio for sections that don't have it yet"
+            >
+              {genMissingLoading ? <Loader2 size={13} className="animate-spin" /> : <Headphones size={13} />}
+              Gen Missing Audio
+            </button>
+          )}
 
           {/* Single Save button */}
           <button
