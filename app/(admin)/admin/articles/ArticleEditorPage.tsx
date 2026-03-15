@@ -199,9 +199,10 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
 
   // Voice picker for Gen Missing Audio
-  const TTS_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'] as const
+  const GEMINI_VOICES = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Schedar', 'Laomedeia'] as const
+  const OPENAI_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'] as const
   const [showVoicePicker, setShowVoicePicker] = useState(false)
-  const [selectedVoice, setSelectedVoice] = useState<string>('alloy')
+  const [selectedVoice, setSelectedVoice] = useState<string>('Kore') // default: Gemini
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -1831,24 +1832,29 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               <Headphones size={16} style={{ color: 'var(--color-violet)' }} />
               <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Select Voice</p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {TTS_VOICES.map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setSelectedVoice(v)}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl border text-sm font-medium transition-all capitalize"
-                  style={{
-                    borderColor: selectedVoice === v ? 'var(--color-violet)' : 'var(--bg-border)',
-                    background: selectedVoice === v ? 'rgba(124,58,237,0.08)' : 'var(--bg-surface)',
-                    color: selectedVoice === v ? 'var(--color-violet)' : 'var(--text-secondary)',
-                  }}
-                >
-                  {v}
-                  {selectedVoice === v && <span style={{ color: 'var(--color-violet)' }}>✓</span>}
-                </button>
-              ))}
-            </div>
+            {([['Gemini', GEMINI_VOICES] as const, ['OpenAI', OPENAI_VOICES] as const]).map(([label, voices]) => (
+              <div key={label}>
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {voices.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setSelectedVoice(v)}
+                      className="flex items-center justify-between px-3 py-1.5 rounded-xl border text-xs font-medium transition-all"
+                      style={{
+                        borderColor: selectedVoice === v ? 'var(--color-violet)' : 'var(--bg-border)',
+                        background: selectedVoice === v ? 'rgba(124,58,237,0.08)' : 'var(--bg-surface)',
+                        color: selectedVoice === v ? 'var(--color-violet)' : 'var(--text-secondary)',
+                      }}
+                    >
+                      {v}
+                      {selectedVoice === v && <span style={{ color: 'var(--color-violet)' }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
             <div className="flex items-center gap-2 justify-end pt-1">
               <button
                 type="button"

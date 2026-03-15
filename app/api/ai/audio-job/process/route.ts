@@ -7,7 +7,9 @@ import { getOpenAIClient } from '@/lib/openai'
 import { prisma } from '@/lib/prisma'
 import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 import { runAudioNarrator, ttsConfig } from '@/agents/audio-narrator/agent'
+import { geminiTextToSpeech, isGeminiVoice, GEMINI_TTS_MODEL } from '@/lib/gemini-tts'
 
 // Allow up to 5 min on Vercel Pro / self-hosted
 export const maxDuration = 300
@@ -50,7 +52,13 @@ export async function POST(req: NextRequest) {
       data: { total: sections.length, completed: 0, failed: 0 },
     })
 
-    const openai = getOpenAIClient()
+    // Determine provider from voice name — Gemini voices are Title-cased
+    const useGemini = isGeminiVoice(voice)
+    const ttsModel = useGemini ? GEMINI_TTS_MODEL : ttsConfig.openaiModel
+    const openai = useGemini ? null : getOpenAIClient()
+
+    logger.info(`[audio-job] articleId=${articleId} voice="${voice}" provider=${useGemini ? 'gemini' : 'openai'} sections=${sections.length}`)
+
     let completed = 0
     let failed = 0
     let sectionsSinceLastProgressUpdate = 0
@@ -62,22 +70,38 @@ export async function POST(req: NextRequest) {
         sectionsSinceLastProgressUpdate++
       } else {
         try {
-          // Clean markdown → TTS-ready prose, split into safe chunks
+          // Step 1: Clean markdown → TTS-ready prose via LangChain/Gemini LLM
           const narratorResult = await runAudioNarrator({ prompt: section.content })
 
-          const audioBuffers: Buffer[] = []
-          for (const chunk of narratorResult.chunks) {
-            const mp3 = await openai.audio.speech.create({
-              model: ttsConfig.model,
-              voice: voice as Parameters<typeof openai.audio.speech.create>[0]['voice'],
-              input: chunk,
-              speed: 1.0,
-            })
-            audioBuffers.push(Buffer.from(await mp3.arrayBuffer()))
+          // Step 2: Synthesise audio — Gemini TTS or OpenAI TTS
+          let combined: Buffer
+          let mimeType: string
+
+          if (useGemini) {
+            // Gemini TTS: returns a WAV buffer directly (PCM wrapped in RIFF header)
+            const wavBuffers: Buffer[] = []
+            for (const chunk of narratorResult.chunks) {
+              wavBuffers.push(await geminiTextToSpeech(chunk, voice))
+            }
+            combined = Buffer.concat(wavBuffers)
+            mimeType = 'audio/wav'
+          } else {
+            // OpenAI TTS: returns MP3
+            const mp3Buffers: Buffer[] = []
+            for (const chunk of narratorResult.chunks) {
+              const mp3 = await openai!.audio.speech.create({
+                model: ttsConfig.openaiModel,
+                voice: voice as 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse',
+                input: chunk,
+                speed: 1.0,
+              })
+              mp3Buffers.push(Buffer.from(await mp3.arrayBuffer()))
+            }
+            combined = Buffer.concat(mp3Buffers)
+            mimeType = 'audio/mpeg'
           }
 
-          const combined = Buffer.concat(audioBuffers)
-          const { url, filename } = prepareAsset({ mimeType: 'audio/mpeg', subDir: 'audio' })
+          const { url, filename } = prepareAsset({ mimeType, subDir: 'audio' })
 
           // Save binary to DB
           await prisma.mediaAsset.create({
@@ -86,7 +110,7 @@ export async function POST(req: NextRequest) {
               url,
               data: new Uint8Array(combined) as Uint8Array<ArrayBuffer>,
               type: 'AUDIO',
-              mimeType: 'audio/mpeg',
+              mimeType,
               aiPrompt: section.content.slice(0, 200),
               sizeBytes: combined.length,
               createdByUserId: userId,
@@ -105,7 +129,7 @@ export async function POST(req: NextRequest) {
               userId,
               articleId,
               type: 'AUDIO_GENERATION',
-              model: ttsConfig.model,
+              model: ttsModel,
               promptSnippet: section.content.slice(0, 200),
               status: 'success',
             },
@@ -113,9 +137,15 @@ export async function POST(req: NextRequest) {
 
           completed++
           sectionsSinceLastProgressUpdate++
-        } catch {
+        } catch (err) {
           failed++
           sectionsSinceLastProgressUpdate++
+          // Log the actual error so failures are debuggable in server logs
+          logger.error(
+            `[audio-job] section id=${section.id} order=${section.order} failed`,
+            err,
+            { articleId, voice, sectionTitle: section.title }
+          )
         }
       }
 
@@ -134,6 +164,7 @@ export async function POST(req: NextRequest) {
     const finalStatus = sections.length === 0 ? 'done' : completed === 0 ? 'error' : 'done'
     await prisma.audioJob.update({ where: { articleId }, data: { status: finalStatus } })
 
+    logger.info(`[audio-job] done articleId=${articleId} completed=${completed} failed=${failed}`)
     return apiSuccess({ completed, failed })
   } catch (err) {
     return apiError('[POST /api/ai/audio-job/process] ' + (err instanceof Error ? err.message : 'Unknown error'), 500, err)

@@ -26,20 +26,32 @@ export const config: AgentConfig = {
 /** TTS-specific config (used by the audio route, not by the LLM chain) */
 export const ttsConfig = {
   /**
-   * OpenAI TTS model.
-   * Options: tts-1 (faster, lower cost) | tts-1-hd (higher quality)
+   * Which TTS provider to use for voice synthesis.
+   * 'gemini' → Gemini 2.5 Flash TTS (via GOOGLE_GENAI_API_KEY, no extra package)
+   * 'openai' → OpenAI TTS (via OPENAI_API_KEY)
+   *
+   * Note: the voice picker in the editor auto-detects the provider from
+   * the voice name — Gemini voices are Title-cased (e.g. "Kore"),
+   * OpenAI voices are lowercase (e.g. "nova").
    */
-  model: 'tts-1' as string,
+  ttsProvider: 'gemini' as 'gemini' | 'openai',
 
   /**
-   * Voice for text-to-speech.
-   * Options: alloy | echo | fable | onyx | nova | shimmer
+   * Default voice.
+   * Gemini voices: Zephyr | Puck | Charon | Kore | Fenrir | Aoede | Leda | Orus | Schedar | Laomedeia
+   * OpenAI voices: alloy | ash | ballad | coral | echo | fable | nova | onyx | sage | shimmer | verse
    */
-  voice: 'nova' as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
+  voice: 'Kore' as string,
+
+  /**
+   * OpenAI TTS model (used only when ttsProvider === 'openai').
+   * Options: tts-1 (faster) | tts-1-hd (higher quality)
+   */
+  openaiModel: 'tts-1' as string,
 
   /**
    * Maximum characters per TTS chunk.
-   * OpenAI TTS API hard limit is 4096 chars per request.
+   * OpenAI hard limit: 4096. Gemini handles longer text but we keep parity.
    */
   maxCharsPerChunk: 4096,
 }

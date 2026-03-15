@@ -28,7 +28,13 @@
       "Bash(wc -l components/admin/editor/*.tsx app/api/ai/generate-audio/route.ts agents/audio-narrator/*.ts)",
       "Bash(grep -r \"audioUrl\\\\|audio\" /Users/laxmi/ramesh/code/appliedagentic.in/content/features.*)",
       "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/.env*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(python3 -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\(d[''''version'''']\\)\")",
+      "Bash(npm install:*)",
+      "Bash(node -e \"const {GoogleGenAI}=require\\(''@google/genai''\\);console.log\\(''ok'',typeof GoogleGenAI\\)\")",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e \"const {GoogleGenerativeAI}=require\\(''@google/generative-ai''\\);const m=new GoogleGenerativeAI\\(''x''\\).getGenerativeModel\\({model:''test''}\\);console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const m=require\\(''@google/generative-ai''\\);console.log\\(Object.keys\\(m\\)\\)\")"
     ]
   }
 }
