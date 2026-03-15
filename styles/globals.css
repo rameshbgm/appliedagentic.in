@@ -295,17 +295,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 @media (max-width: 640px) {
   .article-content {
     font-size: var(--article-font-size, 16px);
-    line-height: 1.85;
-    text-align: left; /* Left-align on mobile — justify causes ugly gaps on narrow screens */
+    line-height: 1.9;  /* was 1.85 — slightly more air between lines on narrow screens */
+    text-align: justify;
+    -webkit-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
     letter-spacing: 0;
   }
 }
 /* Heading sizes on mobile */
 @media (max-width: 640px) {
-  .article-content h1 { font-size: 24px !important; margin-top: 1.5em; }
-  .article-content h2 { font-size: 20px !important; margin-top: 1.6em; }
-  .article-content h3 { font-size: 17px !important; margin-top: 1.4em; }
-  .article-content h4 { font-size: 15px !important; }
+  .article-content h1 { font-size: 24px !important; margin-top: 2em; }
+  .article-content h2 { font-size: 20px !important; margin-top: 2em; margin-bottom: 0.6em; border-bottom: none !important; padding-bottom: 0 !important; }
+  .article-content h3 { font-size: 17px !important; margin-top: 1.75em; margin-bottom: 0.5em; }
+  .article-content h4 { font-size: 15px !important; margin-top: 1.5em; }
 }
 /* ── Headings — fixed sizes with !important to override any inline editor styles ── */
 .article-content h1,
@@ -448,19 +451,37 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content iframe,
 .article-content video { width: 100%; border-radius: 10px; margin: 1.5em 0; aspect-ratio: 16/9; }
 
-/* Mobile: tighter spacing for comfortable reading */
+/* Mobile: refined spacing for comfortable reading */
 @media (max-width: 640px) {
+  /* More breathing room between paragraphs */
+  .article-content p {
+    margin-bottom: 1.35em; /* was 1.1em */
+  }
+  /* Disable italic lead on mobile — short italic lines look awkward on narrow screens */
+  .article-content > p:first-of-type,
+  .article-content .article-lead {
+    font-style: normal;
+    font-size: 1em;
+    line-height: inherit;
+    margin-bottom: 1.35em;
+  }
+  /* Links: better touch affordance */
+  .article-content a {
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1.5px;
+    padding: 2px 0;
+  }
   .article-content blockquote {
-    padding: 0.85em 1em 0.85em 1.2em;
-    margin: 1.25em 0;
-    font-size: 0.95em;
+    padding: 1em 1em 1em 1.25em;
+    margin: 1.5em 0;
+    font-size: 0.97em;
   }
   .article-content pre {
     padding: 0.85em 1em;
     /* Bleed to edges on mobile; account for notch in landscape via safe-area-inset */
     margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
     border-radius: 0;
-    font-size: 12.5px;
+    font-size: 13.5px; /* was 12.5px — matches desktop for readability on high-DPI */
   }
   .article-content img {
     margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
@@ -475,14 +496,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   }
   .article-content th,
   .article-content td {
-    padding: 0.5em 0.75em;
+    padding: 0.6em 0.85em; /* was 0.5em 0.75em */
   }
   .article-content ul,
   .article-content ol {
     padding-left: 1.25em;
   }
   .article-content li {
-    line-height: 1.75;
+    line-height: 1.85; /* was 1.75 — closer to body rhythm */
+    margin-bottom: 0.5em;
   }
   .article-content iframe,
   .article-content video {
@@ -625,7 +647,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     z-index: 10;
   }
   .section-optional-body {
-    padding: 1rem 16px;
+    padding: 1.15rem 16px;
   }
   .section-optional-title {
     font-size: 12px;
