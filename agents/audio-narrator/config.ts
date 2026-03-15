@@ -41,5 +41,5 @@ export const ttsConfig = {
    * Maximum characters per TTS chunk.
    * OpenAI TTS API hard limit is 4096 chars per request.
    */
-  maxCharsPerChunk: 3800,
+  maxCharsPerChunk: 4096,
 }
