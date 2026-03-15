@@ -43,10 +43,10 @@ export default function ArticleReaderTools({ content, mobile = false, inline = f
   }, [])
 
   // ── Article theme (dark / light) — scoped to .article-page only ──────────
-  const [articleTheme, setArticleTheme] = useState<'dark' | 'light'>('dark')
+  const [articleTheme, setArticleTheme] = useState<'dark' | 'light'>('light')
 
   useEffect(() => {
-    const stored = (localStorage.getItem('aa-article-theme') ?? 'dark') as 'dark' | 'light'
+    const stored = (localStorage.getItem('aa-article-theme') ?? 'light') as 'dark' | 'light'
     setArticleTheme(stored)
     const page = document.querySelector('.article-page')
     if (stored === 'light') page?.classList.add('article-theme-light')

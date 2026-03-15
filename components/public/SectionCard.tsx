@@ -104,6 +104,7 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
       style={{
         // @ts-expect-error CSS custom properties
         '--section-color': accentColor,
+        '--section-gradient-v': gradient.replace('90deg', 'to bottom'),
       }}
     >
 

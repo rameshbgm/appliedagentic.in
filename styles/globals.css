@@ -397,8 +397,8 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   left: 0;
   top: 0;
   bottom: 0;
-  width: 3px;
-  border-radius: 2px 0 0 2px;
+  width: 1px;
+  border-radius: 0;
   background: linear-gradient(
     to bottom,
     var(--green) 0%,
@@ -579,15 +579,29 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .section-optional {
   position: relative;
   border: 1px solid var(--bg-border);
-  border-left: 4px solid var(--section-color, var(--bg-border));
+  border-left: none; /* gradient bar via ::before */
   border-right: none;
   overflow: visible;
   margin-bottom: 1.75rem;
   background: var(--bg-elevated);
   border-radius: 0 8px 8px 0;
 }
-/* No ::before left bar */
+/* ::before kept free for theme-specific use (e.g. dark terminal dots) */
 .section-optional::before { display: none; }
+
+/* Thin gradient left bar via ::after — uses section gradient top→bottom, fades toward bottom */
+.section-optional::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  border-radius: 1px 0 0 1px;
+  background: var(--section-gradient-v, linear-gradient(to bottom, #7C3AED, #3B82F6));
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+}
 /* Section header — sticky within its section while reading */
 .section-optional-header {
   display: flex;
@@ -636,7 +650,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 @media (max-width: 640px) {
   .section-optional {
     margin-bottom: 1rem;
-    border-left: 4px solid var(--section-color, var(--bg-border));
+    border-left: none; /* gradient bar via ::before */
     border-right: none;
     border-radius: 0 6px 6px 0;
   }
@@ -2328,6 +2342,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-left: none;
   border-radius: 12px;
 }
+.article-page .section-optional::after { display: none; } /* gradient bar off in dark — uses ::before for terminal dots */
 .article-page .section-optional::before {
   display: flex;
   align-items: center;
@@ -2688,10 +2703,14 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-page.article-theme-light .section-optional {
   background: #F8FAFC;
   border-color: rgba(0, 0, 0, 0.10);
-  border-left: 4px solid var(--section-color, rgba(0,0,0,0.15));
+  border-left: none;
   border-radius: 0 8px 8px 0;
 }
-.article-page.article-theme-light .section-optional::before { display: none; }
+/* Let the ::after gradient bar render in light theme */
+.article-page.article-theme-light .section-optional::after {
+  content: '';
+  display: block;
+}
 .article-page.article-theme-light .section-optional-header {
   background: #FFFFFF;
   border-bottom-color: rgba(0, 0, 0, 0.08);
