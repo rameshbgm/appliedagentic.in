@@ -198,6 +198,11 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const audioJobStatusRef = useRef<AudioJobStatus>('idle')
   const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
 
+  // Voice picker for Gen Missing Audio
+  const TTS_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'] as const
+  const [showVoicePicker, setShowVoicePicker] = useState(false)
+  const [selectedVoice, setSelectedVoice] = useState<string>('alloy')
+
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
   // Sanitise a single-line text field: collapse any newlines / excess whitespace to a space
@@ -614,8 +619,9 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     return () => stopPolling()
   }, [initialArticle.id]) // eslint-disable-line
 
-  const generateMissingAudio = async () => {
+  const generateMissingAudio = async (voice: string) => {
     if (!initialArticle.id) { toast.error('Save the article first'); return }
+    setShowVoicePicker(false)
     // Create/reset the DB job
     const res = await fetch('/api/ai/audio-job', {
       method: 'POST',
@@ -632,7 +638,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     fetch('/api/ai/audio-job/process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleId: initialArticle.id }),
+      body: JSON.stringify({ articleId: initialArticle.id, voice }),
       keepalive: true,
     }).catch(() => {})
     startPolling(initialArticle.id)
@@ -751,9 +757,13 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           {initialArticle.id && (
             <button
               type="button"
-              onClick={audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error' ? generateMissingAudio : undefined}
-              disabled={audioJob.status === 'pending' || audioJob.status === 'running'}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:cursor-default ${
+              onClick={audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error' ? () => setShowVoicePicker(true) : undefined}
+              disabled={
+                audioJob.status === 'pending' || audioJob.status === 'running' ||
+                ((audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error') &&
+                  !sections.some((s) => !s.audioUrl && s.content?.trim()))
+              }
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:cursor-default disabled:opacity-40 ${
                 audioJob.status === 'done' ? 'bg-green-600 text-white' :
                 audioJob.status === 'error' ? 'bg-red-600 text-white' :
                 'bg-amber-600 text-white hover:opacity-90'
@@ -1785,6 +1795,63 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
                 {aiGenLoading ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
                 {aiGenLoading ? 'Generating & Saving…' : 'Generate & Save Draft'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Voice Picker Modal ───────────────────────────────────────────────── */}
+      {showVoicePicker && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowVoicePicker(false)}
+        >
+          <div
+            className="relative w-full max-w-sm mx-4 rounded-2xl shadow-2xl p-6 flex flex-col gap-4"
+            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2">
+              <Headphones size={16} style={{ color: 'var(--color-violet)' }} />
+              <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Select Voice</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {TTS_VOICES.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setSelectedVoice(v)}
+                  className="flex items-center justify-between px-3 py-2 rounded-xl border text-sm font-medium transition-all capitalize"
+                  style={{
+                    borderColor: selectedVoice === v ? 'var(--color-violet)' : 'var(--bg-border)',
+                    background: selectedVoice === v ? 'rgba(124,58,237,0.08)' : 'var(--bg-surface)',
+                    color: selectedVoice === v ? 'var(--color-violet)' : 'var(--text-secondary)',
+                  }}
+                >
+                  {v}
+                  {selectedVoice === v && <span style={{ color: 'var(--color-violet)' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setShowVoicePicker(false)}
+                className="px-3 py-1.5 rounded-lg text-xs border transition-colors hover:bg-gray-50"
+                style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => generateMissingAudio(selectedVoice)}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white hover:opacity-90 transition-opacity"
+                style={{ background: 'var(--color-violet)' }}
+              >
+                <Headphones size={12} />
+                Generate Audio
               </button>
             </div>
           </div>

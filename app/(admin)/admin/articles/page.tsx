@@ -198,8 +198,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <SortIcon col="title" />
                 </Link>
               </th>
-              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Module / Topic</th>
-              <th className="text-left px-4 py-3 font-medium hidden xl:table-cell">Navigation</th>
+              <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Navigation</th>
+              <th className="text-left px-4 py-3 font-medium hidden xl:table-cell">Module / Topic</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
               <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Views</th>
               {/* Sortable: Updated */}
@@ -232,24 +232,11 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    {firstTopic && (
-                      <span
-                        className="inline-flex text-xs px-2 py-1 rounded-lg font-medium"
-                        style={{
-                          background: (firstTopic.module.color ?? '#6C3DFF') + '25',
-                          color: firstTopic.module.color ?? '#6C3DFF',
-                        }}
-                      >
-                        {firstTopic.module.name}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 hidden xl:table-cell">
                     <div className="flex flex-col gap-0.5">
                       {(a.subMenuArticles as any[]).slice(0, 3).map((sma: any) => (
                         <span
                           key={sma.subMenu.title}
-                          className="text-[11px] truncate max-w-[160px]"
+                          className="text-[11px] truncate max-w-[180px]"
                           style={{ color: 'var(--text-muted)' }}
                           title={`${sma.subMenu.menu.title} › ${sma.subMenu.title}`}
                         >
@@ -260,6 +247,39 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       ))}
                       {(a.subMenuArticles as any[]).length > 3 && (
                         <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>+{(a.subMenuArticles as any[]).length - 3} more</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 hidden xl:table-cell">
+                    <div className="flex flex-col gap-1">
+                      {firstTopic && (
+                        <>
+                          <span
+                            className="inline-flex text-xs px-2 py-1 rounded-lg font-medium w-fit"
+                            style={{
+                              background: (firstTopic.module.color ?? '#6C3DFF') + '25',
+                              color: firstTopic.module.color ?? '#6C3DFF',
+                            }}
+                          >
+                            {firstTopic.module.name}
+                          </span>
+                          <span className="text-[11px] truncate max-w-[160px]" style={{ color: 'var(--text-muted)' }}>
+                            {firstTopic.name}
+                          </span>
+                        </>
+                      )}
+                      {(a.subMenuArticles as any[]).slice(0, 2).map((sma: any) => (
+                        <span
+                          key={sma.subMenu.title}
+                          className="text-[11px] truncate max-w-[160px]"
+                          style={{ color: 'var(--text-muted)' }}
+                          title={`${sma.subMenu.menu.title} › ${sma.subMenu.title}`}
+                        >
+                          {sma.subMenu.title}
+                        </span>
+                      ))}
+                      {!firstTopic && (a.subMenuArticles as any[]).length === 0 && (
+                        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>—</span>
                       )}
                     </div>
                   </td>

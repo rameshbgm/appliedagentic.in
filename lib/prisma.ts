@@ -42,8 +42,15 @@ if (!process.env.DATABASE_URL) {
   }
 
   if (!globalForPrisma.prismaBase) {
+    // Increase connection pool from the default (3) to handle concurrent
+    // long-running jobs + polling without connection timeout (P2024).
+    const rawUrl = process.env.DATABASE_URL ?? ''
+    const dbUrl = rawUrl.includes('connection_limit')
+      ? rawUrl
+      : `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}connection_limit=10&pool_timeout=60`
+
     const base = new PrismaClient({
-      // In verbose mode log every query; in production log only errors
+      datasources: { db: { url: dbUrl } },
       log: isVerbose ? ['query', 'info', 'warn', 'error'] : ['error'],
     })
 

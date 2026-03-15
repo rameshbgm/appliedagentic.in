@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     // Always coerce to number — JSON can preserve type but we want to be certain
     const articleId = parseInt(String(body.articleId), 10)
     if (!articleId || isNaN(articleId)) return apiError('articleId required', 400)
+    const voice: string = typeof body.voice === 'string' && body.voice ? body.voice : ttsConfig.voice
 
     const userId = parseInt((session.user as { id: string }).id)
 
@@ -52,70 +53,81 @@ export async function POST(req: NextRequest) {
     const openai = getOpenAIClient()
     let completed = 0
     let failed = 0
+    let sectionsSinceLastProgressUpdate = 0
+    const PROGRESS_UPDATE_EVERY = 3 // write progress to DB every N sections to reduce connections
 
     for (const section of sections) {
       if (!section.content?.trim()) {
         failed++
-        await prisma.audioJob.update({ where: { articleId }, data: { completed, failed } })
-        continue
-      }
+        sectionsSinceLastProgressUpdate++
+      } else {
+        try {
+          // Clean markdown → TTS-ready prose, split into safe chunks
+          const narratorResult = await runAudioNarrator({ prompt: section.content })
 
-      try {
-        // Clean markdown → TTS-ready prose, split into safe chunks
-        const narratorResult = await runAudioNarrator({ prompt: section.content })
+          const audioBuffers: Buffer[] = []
+          for (const chunk of narratorResult.chunks) {
+            const mp3 = await openai.audio.speech.create({
+              model: ttsConfig.model,
+              voice: voice as Parameters<typeof openai.audio.speech.create>[0]['voice'],
+              input: chunk,
+              speed: 1.0,
+            })
+            audioBuffers.push(Buffer.from(await mp3.arrayBuffer()))
+          }
 
-        const audioBuffers: Buffer[] = []
-        for (const chunk of narratorResult.chunks) {
-          const mp3 = await openai.audio.speech.create({
-            model: ttsConfig.model,
-            voice: ttsConfig.voice,
-            input: chunk,
-            speed: 1.0,
+          const combined = Buffer.concat(audioBuffers)
+          const { url, filename } = prepareAsset({ mimeType: 'audio/mpeg', subDir: 'audio' })
+
+          // Save binary to DB
+          await prisma.mediaAsset.create({
+            data: {
+              filename,
+              url,
+              data: new Uint8Array(combined) as Uint8Array<ArrayBuffer>,
+              type: 'AUDIO',
+              mimeType: 'audio/mpeg',
+              aiPrompt: section.content.slice(0, 200),
+              sizeBytes: combined.length,
+              createdByUserId: userId,
+            },
           })
-          audioBuffers.push(Buffer.from(await mp3.arrayBuffer()))
+
+          // Use updateMany — never throws P2025 if section was concurrently deleted
+          await prisma.articleSection.updateMany({
+            where: { id: section.id, articleId },
+            data: { audioUrl: url },
+          })
+
+          // Fire-and-forget usage log — don't hold a connection for this
+          prisma.aIUsageLog.create({
+            data: {
+              userId,
+              articleId,
+              type: 'AUDIO_GENERATION',
+              model: ttsConfig.model,
+              promptSnippet: section.content.slice(0, 200),
+              status: 'success',
+            },
+          }).catch(() => {})
+
+          completed++
+          sectionsSinceLastProgressUpdate++
+        } catch {
+          failed++
+          sectionsSinceLastProgressUpdate++
         }
-
-        const combined = Buffer.concat(audioBuffers)
-        const { url, filename } = prepareAsset({ mimeType: 'audio/mpeg', subDir: 'audio' })
-
-        // Save binary to DB
-        await prisma.mediaAsset.create({
-          data: {
-            filename,
-            url,
-            data: new Uint8Array(combined) as Uint8Array<ArrayBuffer>,
-            type: 'AUDIO',
-            mimeType: 'audio/mpeg',
-            aiPrompt: section.content.slice(0, 200),
-            sizeBytes: combined.length,
-            createdByUserId: userId,
-          },
-        })
-
-        // Use updateMany — never throws P2025 if the section was concurrently deleted
-        await prisma.articleSection.updateMany({
-          where: { id: section.id, articleId },
-          data: { audioUrl: url },
-        })
-
-        // Log usage
-        await prisma.aIUsageLog.create({
-          data: {
-            userId,
-            articleId,
-            type: 'AUDIO_GENERATION',
-            model: ttsConfig.model,
-            promptSnippet: section.content.slice(0, 200),
-            status: 'success',
-          },
-        }).catch(() => {})
-
-        completed++
-      } catch {
-        failed++
       }
 
-      // Update progress after every section
+      // Write progress every PROGRESS_UPDATE_EVERY sections to reduce DB connections
+      if (sectionsSinceLastProgressUpdate >= PROGRESS_UPDATE_EVERY) {
+        await prisma.audioJob.update({ where: { articleId }, data: { completed, failed } })
+        sectionsSinceLastProgressUpdate = 0
+      }
+    }
+
+    // Final progress flush
+    if (sectionsSinceLastProgressUpdate > 0) {
       await prisma.audioJob.update({ where: { articleId }, data: { completed, failed } })
     }
 
