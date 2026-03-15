@@ -1,6 +1,5 @@
 // lib/prisma.ts
 import { PrismaClient } from '@prisma/client'
-import { logger } from '@/lib/logger'
 
 const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
@@ -46,6 +45,10 @@ if (!process.env.DATABASE_URL) {
 
   // ── Database connection health-check ──────────────────────────────────────────
   async function testDatabaseConnection() {
+    // Dynamic import keeps logger.ts out of the Edge Runtime bundle.
+    // (proxy.ts → auth.ts → prisma.ts is statically analysed for Edge;
+    //  dynamic imports are excluded from that analysis.)
+    const { logger } = await import('@/lib/logger')
     try {
       await _prisma.$queryRaw`SELECT 1`
       logger.info('[Database] Connection OK')

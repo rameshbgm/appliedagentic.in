@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import LazyImage from '@/components/shared/LazyImage'
 import Link from 'next/link'
 import ArticleContent from '@/components/public/ArticleContent'
+import ArticleScrollReveal from '@/components/public/ArticleScrollReveal'
 import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
 import RelatedArticles from '@/components/public/RelatedArticles'
 import ReadingProgressBar from '@/components/public/ReadingProgressBar'
@@ -216,6 +217,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   return (
     <>
       <ReadingProgressBar />
+      <ArticleScrollReveal />
 
       <div className="min-h-screen article-page">
 
