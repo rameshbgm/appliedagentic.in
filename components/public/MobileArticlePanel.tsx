@@ -1,9 +1,9 @@
 'use client'
 // components/public/MobileArticlePanel.tsx
-// Floating icon on the right → slide-in panel with TOC + Reader Tools
+// Hamburger on the LEFT → slide-in panel from left with Reader Tools (top) + TOC
 
 import { useState, useEffect } from 'react'
-import { AlignLeft, X } from 'lucide-react'
+import { AlignLeft, ArrowRight, X } from 'lucide-react'
 import TableOfContents from './TableOfContents'
 import ArticleReaderTools from './ArticleReaderTools'
 
@@ -38,39 +38,33 @@ export default function MobileArticlePanel({ sections, content }: Props) {
 
   return (
     <>
-      {/* ── Floating icon button (top-right, just below navbar) ── */}
+      {/* ── Hamburger button — left side, just below navbar ── */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Open Table of Contents and Reader Tools"
+          aria-label="Open Reader Tools and Table of Contents"
           style={{
             position: 'fixed',
-            right: 0,
-            // Align exactly with the sticky section header which sticks at var(--nav-h)
+            left: 0,
             top: 'var(--nav-h, 64px)',
             zIndex: 45,
             background: 'var(--bg-surface)',
             border: '1px solid var(--bg-border)',
-            borderRight: 'none',
+            borderLeft: 'none',
             borderTop: 'none',
             borderBottom: 'none',
-            // Match the section header height — min 44px for touch target
-            height: '44px',
-            borderRadius: '0 0 0 10px',
-            boxShadow: '-2px 4px 18px rgba(0,0,0,0.10)',
-            padding: '0 11px',
+            height: '32px',
+            borderRadius: '0 8px 8px 0',
+            boxShadow: '2px 4px 12px rgba(0,0,0,0.08)',
+            padding: '0 8px',
             display: 'flex',
-            flexDirection: 'row',
             alignItems: 'center',
-            gap: 5,
             cursor: 'pointer',
-            color: 'var(--text-secondary)',
-            minWidth: '44px',
+            color: 'var(--text-muted)',
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <AlignLeft size={16} />
-         
+          <ArrowRight size={13} />
         </button>
       )}
 
@@ -89,28 +83,27 @@ export default function MobileArticlePanel({ sections, content }: Props) {
         />
       )}
 
-      {/* ── Slide-in panel from right ── */}
+      {/* ── Slide-in panel from LEFT ── */}
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Table of Contents and Reader Tools"
+        aria-label="Reader Tools and Table of Contents"
         style={{
           position: 'fixed',
           top: 0,
-          right: 0,
+          left: 0,
           bottom: 0,
           zIndex: 47,
           width: 'min(88vw, 320px)',
           background: 'var(--bg-surface)',
-          borderLeft: '1px solid var(--bg-border)',
-          boxShadow: '-8px 0 40px rgba(0,0,0,0.18)',
+          borderRight: '1px solid var(--bg-border)',
+          boxShadow: '8px 0 40px rgba(0,0,0,0.18)',
           display: 'flex',
           flexDirection: 'column',
-          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transform: open ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.28s cubic-bezier(0.32, 0, 0.14, 1)',
           overflowY: 'auto',
           overscrollBehavior: 'contain',
-          // Respect safe-area on notched devices
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
@@ -139,7 +132,7 @@ export default function MobileArticlePanel({ sections, content }: Props) {
             }}
           >
             <AlignLeft size={14} style={{ color: 'var(--text-muted)' }} />
-            Navigation
+            Reader Tools
           </span>
           <button
             onClick={() => setOpen(false)}
@@ -161,33 +154,19 @@ export default function MobileArticlePanel({ sections, content }: Props) {
           </button>
         </div>
 
-        {/* TOC — flat mobile render */}
+        {/* Reader Tools — top */}
+        <div style={{ padding: '8px 0 4px', borderBottom: '1px solid var(--bg-border)' }}>
+          <ArticleReaderTools content={content} inline />
+        </div>
+
+        {/* TOC — below reader tools, no "Contents" header */}
         <div style={{ flex: 1 }}>
           <TableOfContents
             mobileFlat
             sections={sections.length > 0 ? sections : undefined}
             content={sections.length === 0 ? content : undefined}
+            onSelect={() => setOpen(false)}
           />
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: 1, background: 'var(--bg-border)', margin: '0 16px' }} />
-
-        {/* Reader Tools */}
-        <div style={{ padding: '8px 0 4px' }}>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.09em',
-              textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-              padding: '6px 20px 4px',
-            }}
-          >
-            Reader Tools
-          </p>
-          <ArticleReaderTools content={content} inline />
         </div>
       </div>
     </>

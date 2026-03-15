@@ -34,6 +34,7 @@ interface Props {
   sections?: SectionLike[]
   content?: string
   mobileFlat?: boolean
+  onSelect?: () => void
 }
 
 const toSlug = (text: string) =>
@@ -135,7 +136,7 @@ function groupUnderH1(headings: Heading[]): HeadingGroup[] {
   return groups
 }
 
-export default function TableOfContents({ sections, content, mobileFlat = false }: Props) {
+export default function TableOfContents({ sections, content, mobileFlat = false, onSelect }: Props) {
   const [activeId, setActiveId] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [headings, setHeadings] = useState<Heading[]>([])
@@ -163,7 +164,8 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     setActiveId(id)
     setMobileOpen(false)
-  }, [])
+    onSelect?.()
+  }, [onSelect])
 
   // ── Sync active item into view inside the TOC scroll container ────────────
   useEffect(() => {
@@ -378,25 +380,9 @@ export default function TableOfContents({ sections, content, mobileFlat = false 
       {/* Mobile: flat mode (inside slide-in panel) */}
       {mobileFlat && (
         <div className="lg:hidden">
-          <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="toc-mobile-toggle"
-          >
-            <span className="flex items-center gap-2">
-              <List size={13} style={{ color: 'var(--text-muted)' }} />
-              Contents
-            </span>
-            <ChevronDown
-              size={13}
-              className={`transition-transform duration-200 ${mobileOpen ? 'rotate-180' : ''}`}
-              style={{ color: 'var(--text-muted)' }}
-            />
-          </button>
-          {mobileOpen && (
-            <div ref={mobileScrollRef} className="toc-mobile-body">
-              {listEl}
-            </div>
-          )}
+          <div ref={mobileScrollRef} className="toc-mobile-body">
+            {listEl}
+          </div>
         </div>
       )}
     </>
