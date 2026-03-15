@@ -317,3 +317,16 @@ model MenuArticle {
   @@index([menuId])
   @@index([articleId])
 }
+
+model AudioJob {
+  id        Int      @id @default(autoincrement())
+  articleId Int      @unique
+  status    String   @default("pending") // pending | running | done | error
+  total     Int      @default(0)
+  completed Int      @default(0)
+  failed    Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId])
+  @@index([status])
+}

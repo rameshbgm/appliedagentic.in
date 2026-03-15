@@ -56,21 +56,8 @@ export function apiSuccess<T>(data: T, status = 200) {
   return Response.json({ success: true, data }, { status })
 }
 
-/**
- * Standard API error response.
- * Optionally pass the caught `err` object so the full error (including stack
- * trace in dev / verbose mode) is written to the server logs.
- *
- * @param message – client-facing error message
- * @param status  – HTTP status code (default 400)
- * @param err     – original caught error for server-side logging (never sent to client)
- */
+/** Standard API error response */
 export function apiError(message: string, status = 400, err?: unknown) {
-  if (err !== undefined) {
-    // Dynamic import keeps logger (and its `fs` dependency) out of client bundles.
-    // apiError is only ever called in API route handlers (server-side), so the
-    // async import resolves before the response is returned.
-    import('@/lib/logger').then(({ logger }) => logger.error(message, err)).catch(() => {})
-  }
+  if (err !== undefined) console.error('[apiError]', message, err)
   return Response.json({ success: false, error: message }, { status })
 }

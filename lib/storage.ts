@@ -1,6 +1,6 @@
 // lib/storage.ts
-// File metadata helpers - binary data is now stored in the database (MediaAsset.data).
-// Disk I/O has been removed. All image/audio bytes live in the DB LONGBLOB column.
+// File metadata helpers - binary data is stored in the database (MediaAsset.data).
+// All image/audio bytes live in the DB LONGBLOB column.
 import { nanoid } from 'nanoid'
 
 const MAX_SIZE_MB = parseInt(process.env.MAX_UPLOAD_SIZE_MB ?? '10')
@@ -45,15 +45,15 @@ export function validateMimeType(mimeType: string): { valid: boolean; error?: st
   return { valid: true }
 }
 
-/**
- * Generate a stable virtual URL and filename for a DB-stored asset.
- * No disk writes occur - callers store the buffer in MediaAsset.data.
- */
 export interface PreparedAsset {
   url: string
   filename: string
 }
 
+/**
+ * Generate a stable virtual URL and filename for a DB-stored asset.
+ * No disk writes occur — callers store the buffer in MediaAsset.data.
+ */
 export function prepareAsset(opts: { mimeType: string; subDir?: string }): PreparedAsset {
   const { mimeType, subDir = 'images' } = opts
   const ext = getExtension(mimeType)

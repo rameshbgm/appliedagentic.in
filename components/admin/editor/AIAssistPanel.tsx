@@ -20,7 +20,7 @@ interface Props {
 const textModes = ['generate', 'expand', 'summarize', 'rewrite', 'improve', 'outline']
 const textTones = ['informative', 'casual', 'professional', 'engaging', 'technical', 'simplified']
 const textLengths = ['short', 'medium', 'long']
-const ttsVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+const ttsVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse']
 
 export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, articleId, sectionId, sectionContent, onAudioGenerated }: Props) {
   const [open, setOpen] = useState(false)
@@ -38,7 +38,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
   const [audioSource, setAudioSource] = useState<'content' | 'custom'>('content')
   const [audioText, setAudioText] = useState('')
   const [audioVoice, setAudioVoice] = useState('alloy')
-  const [audioSpeed, setAudioSpeed] = useState(1.0)
 
   const generateText = async (action: 'insert' | 'replace') => {
     if (!textPrompt.trim()) { toast.error('Enter a topic or text'); return }
@@ -90,7 +89,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
           text,
           preprocessMarkdown: true,
           voice: audioVoice,
-          speed: audioSpeed,
         }),
       })
       const data = await res.json()
@@ -254,13 +252,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
                   />
                 )}
-                <div className="grid grid-cols-2 gap-3">
-                  <Sel label="Voice" value={audioVoice} onChange={setAudioVoice} options={ttsVoices} />
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1.5" style={{ color: 'var(--text-muted)' }}>Speed — {audioSpeed}x</label>
-                    <input type="range" min={0.25} max={4.0} step={0.25} value={audioSpeed} onChange={(e) => setAudioSpeed(parseFloat(e.target.value))} className="w-full mt-1" />
-                  </div>
-                </div>
+                <Sel label="Voice" value={audioVoice} onChange={setAudioVoice} options={ttsVoices} />
                 <button
                   type="button"
                   onClick={generateAudio}

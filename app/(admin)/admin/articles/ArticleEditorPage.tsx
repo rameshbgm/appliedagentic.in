@@ -1,6 +1,6 @@
 'use client'
 // app/(admin)/articles/ArticleEditorPage.tsx  (used by new & edit pages)
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon, Headphones } from 'lucide-react'
@@ -182,13 +182,21 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   }, [])
 
   const updateSectionAudio = useCallback((tempId: string, audioUrl: string | null) => {
+    skipAutoSaveRef.current = true // audio url is already in DB — don't restart the auto-save timer
     setSections((prev) => prev.map((s) => s.tempId === tempId ? { ...s, audioUrl: audioUrl ?? undefined, audioStale: false } : s))
   }, [])
 
   // Audio sync modal — shown when stale sections exist on save
   const [audioSyncModal, setAudioSyncModal] = useState(false)
   const [audioSyncProgress, setAudioSyncProgress] = useState<{ current: number; total: number } | null>(null)
-  const [genMissingLoading, setGenMissingLoading] = useState(false)
+
+  // Background audio job state (persists across refresh/close via DB polling)
+  type AudioJobStatus = 'idle' | 'pending' | 'running' | 'done' | 'error'
+  const [audioJob, setAudioJob] = useState<{ status: AudioJobStatus; total: number; completed: number; failed: number }>({ status: 'idle', total: 0, completed: 0, failed: 0 })
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Refs used by auto-save timer to always see current values without restarting the timer
+  const audioJobStatusRef = useRef<AudioJobStatus>('idle')
+  const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -566,28 +574,68 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     await doSave()
   }
 
+  // ── Background audio job helpers ──────────────────────────────────────────
+  const stopPolling = () => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+  }
+
+  const startPolling = useCallback((artId: number) => {
+    stopPolling()
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/ai/audio-job?articleId=${artId}`)
+        const data = await res.json()
+        const job = data.data as { status: string; total: number; completed: number; failed: number }
+        setAudioJob({ status: job.status as AudioJobStatus, total: job.total, completed: job.completed, failed: job.failed })
+        if (job.status === 'done' || job.status === 'error' || job.status === 'idle') {
+          stopPolling()
+          if (job.status === 'done') {
+            toast.success(`Audio generated for ${job.completed} section${job.completed !== 1 ? 's' : ''}! Reloading…`)
+            setTimeout(() => window.location.reload(), 1800)
+          }
+        }
+      } catch { stopPolling() }
+    }, 2000)
+  }, []) // eslint-disable-line
+
+  // On mount: resume any in-progress job for this article
+  useEffect(() => {
+    if (!initialArticle.id) return
+    fetch(`/api/ai/audio-job?articleId=${initialArticle.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const job = data.data as { status: string; total: number; completed: number; failed: number }
+        if (job && (job.status === 'pending' || job.status === 'running')) {
+          setAudioJob({ status: job.status as AudioJobStatus, total: job.total, completed: job.completed, failed: job.failed })
+          startPolling(initialArticle.id!)
+        }
+      })
+      .catch(() => {})
+    return () => stopPolling()
+  }, [initialArticle.id]) // eslint-disable-line
+
   const generateMissingAudio = async () => {
     if (!initialArticle.id) { toast.error('Save the article first'); return }
-    const missing = sections.filter((s) => !s.audioUrl && s.content?.trim())
-    if (!missing.length) { toast('All sections already have audio'); return }
-    setGenMissingLoading(true)
-    let generated = 0
-    for (const s of missing) {
-      try {
-        const res = await fetch('/api/ai/generate-audio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ articleId: initialArticle.id, sectionId: s.id, text: s.content, preprocessMarkdown: true }),
-        })
-        const data = await res.json()
-        if (data.success) { updateSectionAudio(s.tempId, data.data.audioUrl); generated++ }
-        else toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
-      } catch {
-        toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
-      }
-    }
-    setGenMissingLoading(false)
-    if (generated > 0) toast.success(`Generated audio for ${generated} section${generated > 1 ? 's' : ''}`)
+    // Create/reset the DB job
+    const res = await fetch('/api/ai/audio-job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: initialArticle.id }),
+    })
+    const text = await res.text()
+    let data: Record<string, unknown>
+    try { data = JSON.parse(text) } catch { toast.error(`Server error (${res.status})`); return }
+    if (!res.ok) { toast.error((data.error as string) ?? 'Could not start job'); return }
+    const jobData = data.data as { total: number }
+    setAudioJob({ status: 'pending', total: jobData.total, completed: 0, failed: 0 })
+    // Fire-and-forget: keepalive keeps the request alive even after browser close
+    fetch('/api/ai/audio-job/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: initialArticle.id }),
+      keepalive: true,
+    }).catch(() => {})
+    startPolling(initialArticle.id)
   }
 
   const save = useCallback(async () => {
@@ -600,11 +648,21 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     await doSave()
   }, [title, sections, doSave]) // eslint-disable-line
 
-  // Auto-save every 60s
+  // Keep audioJobStatusRef in sync so the auto-save timer can read it without re-running
+  audioJobStatusRef.current = audioJob.status
+
+  // Auto-save every 60s — skipped when only audio urls changed or while a job is active
   useEffect(() => {
+    if (skipAutoSaveRef.current) {
+      skipAutoSaveRef.current = false
+      return // audio url changed — DB already has it, preserve existing timer
+    }
     if (autoSaveTimer) clearTimeout(autoSaveTimer)
     const timer = setTimeout(() => {
-      if (initialArticle.id && title.trim()) save()
+      const jobStatus = audioJobStatusRef.current
+      if (initialArticle.id && title.trim() && jobStatus !== 'pending' && jobStatus !== 'running') {
+        save()
+      }
     }, 60000)
     setAutoSaveTimer(timer)
     return () => clearTimeout(timer)
@@ -689,17 +747,27 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             AI Generate
           </button>
 
-          {/* Generate missing audio */}
+          {/* Generate missing audio — background job with live progress */}
           {initialArticle.id && (
             <button
               type="button"
-              onClick={generateMissingAudio}
-              disabled={genMissingLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90 bg-amber-600 text-white"
-              title="Generate audio for sections that don't have it yet"
+              onClick={audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error' ? generateMissingAudio : undefined}
+              disabled={audioJob.status === 'pending' || audioJob.status === 'running'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:cursor-default ${
+                audioJob.status === 'done' ? 'bg-green-600 text-white' :
+                audioJob.status === 'error' ? 'bg-red-600 text-white' :
+                'bg-amber-600 text-white hover:opacity-90'
+              }`}
+              title={audioJob.status === 'running' ? `Generating… ${audioJob.completed}/${audioJob.total}` : 'Generate audio for sections that don\'t have it yet'}
             >
-              {genMissingLoading ? <Loader2 size={13} className="animate-spin" /> : <Headphones size={13} />}
-              Gen Missing Audio
+              {audioJob.status === 'pending' || audioJob.status === 'running'
+                ? <><Loader2 size={13} className="animate-spin" />{audioJob.completed}/{audioJob.total}</>
+                : audioJob.status === 'done'
+                  ? <><Headphones size={13} />Audio Done</>
+                  : audioJob.status === 'error'
+                    ? <><Headphones size={13} />Audio Failed</>
+                    : <><Headphones size={13} />Gen Missing Audio</>
+              }
             </button>
           )}
 
