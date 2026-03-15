@@ -34,7 +34,9 @@
       "Bash(node -e \"const {GoogleGenAI}=require\\(''@google/genai''\\);console.log\\(''ok'',typeof GoogleGenAI\\)\")",
       "Bash(npm uninstall:*)",
       "Bash(node -e \"const {GoogleGenerativeAI}=require\\(''@google/generative-ai''\\);const m=new GoogleGenerativeAI\\(''x''\\).getGenerativeModel\\({model:''test''}\\);console.log\\(Object.keys\\(m\\)\\)\")",
-      "Bash(node -e \"const m=require\\(''@google/generative-ai''\\);console.log\\(Object.keys\\(m\\)\\)\")"
+      "Bash(node -e \"const m=require\\(''@google/generative-ai''\\);console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(xargs ls:*)",
+      "Bash(ls /Users/laxmi/ramesh/code/appliedagentic.in/app/api/articles/[id]/)"
     ]
   }
 }

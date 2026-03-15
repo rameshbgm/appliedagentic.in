@@ -37,7 +37,7 @@ interface ArticleEditorProps {
   content: string
   onChange: (html: string) => void
   articleId?: number
-  onAudioGenerated?: (url: string) => void
+  onAudioGenerated?: (url: string | null) => void
 }
 
 export default function ArticleEditor({ content, onChange, articleId, onAudioGenerated }: ArticleEditorProps) {
