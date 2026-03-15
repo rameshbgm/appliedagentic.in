@@ -185,44 +185,9 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     setSections((prev) => prev.map((s) => s.tempId === tempId ? { ...s, audioUrl: audioUrl ?? undefined, audioStale: false } : s))
   }, [])
 
-  const [allAudioLoading, setAllAudioLoading] = useState(false)
-
   // Audio sync modal — shown when stale sections exist on save
   const [audioSyncModal, setAudioSyncModal] = useState(false)
   const [audioSyncProgress, setAudioSyncProgress] = useState<{ current: number; total: number } | null>(null)
-
-  const generateAllAudio = async () => {
-    if (!initialArticle.id) { toast.error('Save the article first'); return }
-    const sectionsWithContent = sections.filter((s) => s.content?.trim())
-    if (!sectionsWithContent.length) { toast.error('No sections with content'); return }
-    setAllAudioLoading(true)
-    let success = 0
-    for (const s of sectionsWithContent) {
-      try {
-        const res = await fetch('/api/ai/generate-audio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            articleId: initialArticle.id,
-            sectionId: s.id,
-            text: s.content,
-            preprocessMarkdown: true,
-          }),
-        })
-        const data = await res.json()
-        if (data.success) {
-          updateSectionAudio(s.tempId, data.data.audioUrl)
-          success++
-        } else {
-          toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}": ${data.error ?? 'Unknown error'}`)
-        }
-      } catch {
-        toast.error(`Audio failed for "${s.title || `Section ${s.order + 1}`}"`)
-      }
-    }
-    setAllAudioLoading(false)
-    if (success > 0) toast.success(`Audio generated for ${success} section${success !== 1 ? 's' : ''}!`)
-  }
 
   const autoSlug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
@@ -698,21 +663,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <Wand2 size={13} />
             AI Generate
           </button>
-
-          {/* Gen All Audio button */}
-          {initialArticle.id && (
-            <button
-              type="button"
-              onClick={generateAllAudio}
-              disabled={allAudioLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, #059669, #0891B2)', color: '#fff' }}
-              title="Generate audio for all sections"
-            >
-              {allAudioLoading ? <Loader2 size={13} className="animate-spin" /> : <Headphones size={13} />}
-              Gen All Audio
-            </button>
-          )}
 
           {/* Single Save button */}
           <button

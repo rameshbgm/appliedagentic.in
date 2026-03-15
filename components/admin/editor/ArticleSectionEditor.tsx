@@ -2,8 +2,7 @@
 // components/admin/editor/ArticleSectionEditor.tsx
 import { useRef, useCallback, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { ChevronUp, ChevronDown, Trash2, GripVertical, Headphones, X, Play, Pause, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { ChevronUp, ChevronDown, Trash2, GripVertical, Headphones, X, Play, Pause } from 'lucide-react'
 import AIAssistPanel from './AIAssistPanel'
 
 const MarkdownEditor = dynamic(() => import('./MarkdownEditor'), {
@@ -171,7 +170,6 @@ export default function ArticleSectionEditor({
 }: Props) {
   const insertRef = useRef<(md: string) => void>(() => {})
   const replaceRef = useRef<(md: string) => void>(() => {})
-  const [audioLoading, setAudioLoading] = useState(false)
 
   const onInsertRef = useCallback((fn: (md: string) => void) => {
     insertRef.current = fn
@@ -179,35 +177,6 @@ export default function ArticleSectionEditor({
   const onReplaceRef = useCallback((fn: (md: string) => void) => {
     replaceRef.current = fn
   }, [])
-
-  const generateSectionAudio = async () => {
-    if (!articleId) { toast.error('Save the article first to attach audio'); return }
-    if (!section.content?.trim()) { toast.error('Section has no content'); return }
-    setAudioLoading(true)
-    try {
-      const res = await fetch('/api/ai/generate-audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          articleId,
-          sectionId: section.id,
-          text: section.content,
-          preprocessMarkdown: true,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        onAudioGenerated?.(data.data.audioUrl)
-        toast.success('Audio generated!')
-      } else {
-        toast.error(data.error ?? 'Audio generation failed')
-      }
-    } catch {
-      toast.error('Audio generation failed')
-    } finally {
-      setAudioLoading(false)
-    }
-  }
 
   return (
     <div
@@ -257,21 +226,6 @@ export default function ArticleSectionEditor({
             <Headphones size={11} />
             Out of sync
           </span>
-        )}
-
-        {/* Gen Audio button */}
-        {articleId && (
-          <button
-            type="button"
-            onClick={generateSectionAudio}
-            disabled={audioLoading}
-            title="Generate audio for this section"
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium disabled:opacity-50 transition-opacity hover:opacity-80 shrink-0"
-            style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e' }}
-          >
-            {audioLoading ? <Loader2 size={11} className="animate-spin" /> : <Headphones size={11} />}
-            {section.audioUrl ? 'Regen' : 'Gen Audio'}
-          </button>
         )}
 
         <div className="flex items-center gap-0.5 shrink-0">

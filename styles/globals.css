@@ -711,6 +711,20 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .section-ai-header-btn:hover {
   opacity: 1 !important;
 }
+/* Speaker audio button in section header */
+.section-audio-header-btn {
+  opacity: 0.45 !important;
+  flex-shrink: 0;
+  color: var(--green, #22c55e);
+  transition: opacity 0.15s;
+}
+.section-audio-header-btn:hover {
+  opacity: 1 !important;
+}
+.section-audio-header-btn[data-playing="true"] {
+  opacity: 1 !important;
+  color: var(--green, #22c55e);
+}
 .section-optional-badge {
   display: inline-flex;
   align-items: center;

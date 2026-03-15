@@ -3,11 +3,12 @@
 
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Volume2, Loader2, Pause, Play } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import ArticleContent from './ArticleContent'
 import { featureFlags } from '@/content/features'
+import { useArticleAudio } from './ArticleAudioContext'
 
 // 10 entrance variants — cycled per section index
 const ENTRANCES = [
@@ -67,6 +68,10 @@ interface Props {
 type SummaryState = 'idle' | 'loading' | 'done' | 'error'
 
 export default function SectionCard({ section, index, gradientIndex, totalSections = 1 }: Props) {
+  const audio = useArticleAudio()
+  const isThisSection = audio.currentSectionIdx === index
+  const sectionPlayState = isThisSection ? audio.playState : 'idle'
+
   const hasTitle = Boolean(section.title?.trim())
   // Use the section's DB id for the anchor so that duplicate title text across
   // sections (e.g. two "Conclusion" sections) never collides.
@@ -170,6 +175,31 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
               onClick={openSummary}
               dangerouslySetInnerHTML={{ __html: BOT_SVG }}
             />
+          )}
+
+          {/* Section audio speaker icon */}
+          {section.audioUrl && (
+            <button
+              type="button"
+              className="section-ai-btn section-audio-header-btn"
+              data-playing={sectionPlayState === 'playing' ? 'true' : undefined}
+              title={sectionPlayState === 'playing' ? 'Pause audio' : 'Play section audio'}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (isThisSection && audio.playState === 'playing') {
+                  audio.pause()
+                } else if (isThisSection && audio.playState === 'paused') {
+                  audio.togglePlayPause()
+                } else {
+                  audio.playSectionAudio(index)
+                }
+              }}
+            >
+              {sectionPlayState === 'loading' && <Loader2 size={13} className="animate-spin" />}
+              {sectionPlayState === 'idle' && <Volume2 size={13} />}
+              {sectionPlayState === 'playing' && <Pause size={13} />}
+              {sectionPlayState === 'paused' && <Play size={13} />}
+            </button>
           )}
         </div>
       )}

@@ -2,11 +2,10 @@
 // components/admin/editor/AIAssistPanel.tsx
 // Top-bar AI assistant — generates proper markdown from a topic or raw text.
 import { useState } from 'react'
-import { Sparkles, ChevronDown, ChevronUp, Loader2, Image as ImageIcon, Music } from 'lucide-react'
-import LazyImage from '@/components/shared/LazyImage'
+import { Sparkles, ChevronDown, ChevronUp, Loader2, Music } from 'lucide-react'
 import { toast } from 'sonner'
 
-type Tab = 'text' | 'image' | 'audio'
+type Tab = 'text' | 'audio'
 
 interface Props {
   onInsert: (md: string) => void
@@ -34,12 +33,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
   const [textLength, setTextLength] = useState('medium')
   const [textPrompt, setTextPrompt] = useState('')
   const [withTitle, setWithTitle] = useState(false)
-
-  // Image
-  const [imagePrompt, setImagePrompt] = useState('')
-  const [imageStyle, setImageStyle] = useState('vivid')
-  const [imageSize, setImageSize] = useState('1024x1024')
-  const [generatedImageUrl, setGeneratedImageUrl] = useState('')
 
   // Audio
   const [audioSource, setAudioSource] = useState<'content' | 'custom'>('content')
@@ -76,27 +69,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
         }
       } else {
         toast.error(data.error ?? 'Generation failed')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const generateImage = async () => {
-    if (!imagePrompt.trim()) { toast.error('Enter an image prompt'); return }
-    setLoading(true)
-    try {
-      const res = await fetch('/api/ai/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: imagePrompt, style: imageStyle, size: imageSize }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        setGeneratedImageUrl(data.data.url)
-        toast.success('Image generated!')
-      } else {
-        toast.error(data.error ?? 'Image generation failed')
       }
     } finally {
       setLoading(false)
@@ -166,7 +138,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
         <div className="border-t" style={{ borderColor: 'var(--bg-border)' }}>
           {/* Tabs */}
           <div className="flex border-b" style={{ borderColor: 'var(--bg-border)' }}>
-            {([['text', Sparkles, 'Content'], ['image', ImageIcon, 'Image'], ['audio', Music, 'Audio']] as [Tab, React.ElementType, string][]).map(([t, Icon, label]) => (
+            {([['text', Sparkles, 'Content'], ['audio', Music, 'Audio']] as [Tab, React.ElementType, string][]).map(([t, Icon, label]) => (
               <button
                 key={t}
                 type="button"
@@ -250,59 +222,6 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                 <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                   Generates formatted Markdown. Press ⌘+Enter to insert.{withTitle ? ' Section title will be set automatically.' : ''}
                 </p>
-              </div>
-            )}
-
-            {tab === 'image' && (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest font-semibold block mb-1.5" style={{ color: 'var(--text-muted)' }}>Image prompt</label>
-                  <textarea
-                    value={imagePrompt}
-                    onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="A futuristic AI neural network..."
-                    rows={2}
-                    className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
-                    style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Sel label="Style" value={imageStyle} onChange={setImageStyle} options={['vivid', 'natural']} />
-                  <Sel label="Size" value={imageSize} onChange={setImageSize} options={['1024x1024', '1792x1024', '1024x1792']} />
-                </div>
-                <button
-                  type="button"
-                  onClick={generateImage}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50"
-                  style={{ background: '#1E293B' }}
-                >
-                  {loading ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
-                  Generate Image
-                </button>
-                {generatedImageUrl && (
-                  <div className="space-y-2">
-                    <LazyImage src={generatedImageUrl} alt="AI generated" aspectClass="aspect-video" className="object-contain rounded-xl border" />
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onInsert(`![${imagePrompt}](${generatedImageUrl})`)}
-                        className="py-2 rounded-xl text-xs font-medium border"
-                        style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
-                      >
-                        Insert in Article
-                      </button>
-                      <a
-                        href={generatedImageUrl}
-                        download
-                        className="py-2 rounded-xl text-xs font-medium text-center border"
-                        style={{ borderColor: 'var(--bg-border)', color: 'var(--text-secondary)' }}
-                      >
-                        Download
-                      </a>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 

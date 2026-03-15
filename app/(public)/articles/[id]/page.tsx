@@ -6,6 +6,7 @@ import LazyImage from '@/components/shared/LazyImage'
 import Link from 'next/link'
 import ArticleContent from '@/components/public/ArticleContent'
 import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
+import { ArticleAudioProvider } from '@/components/public/ArticleAudioContext'
 import RelatedArticles from '@/components/public/RelatedArticles'
 import ReadingProgressBar from '@/components/public/ReadingProgressBar'
 import TableOfContents from '@/components/public/TableOfContents'
@@ -407,32 +408,32 @@ export default async function ArticleDetailPage({ params }: Props) {
 
               {/* Article body — multi-section or legacy single content */}
               {sections.length > 0 ? (
-                <div className="article-sections-container">
-                  {sections.map((section, idx) => (
-                    <SectionCard
-                      key={section.id}
-                      section={section}
-                      index={idx}
-                      gradientIndex={idx % 8}
-                      totalSections={sections.length}
-                    />
-                  ))}
-                </div>
+                <ArticleAudioProvider
+                  sections={
+                    sections.some((s) => s.audioUrl)
+                      ? sections.map((s) => ({ id: s.id, title: s.title, audioUrl: s.audioUrl }))
+                      : article.audioUrl
+                        ? [{ id: 0, title: article.title, audioUrl: article.audioUrl }]
+                        : []
+                  }
+                >
+                  <div className="article-sections-container">
+                    {sections.map((section, idx) => (
+                      <SectionCard
+                        key={section.id}
+                        section={section}
+                        index={idx}
+                        gradientIndex={idx % 8}
+                        totalSections={sections.length}
+                      />
+                    ))}
+                  </div>
+                  <ArticleAudioPlayer />
+                </ArticleAudioProvider>
               ) : (
                 article.content && (
                   <ArticleContent content={article.content} />
                 )
-              )}
-
-              {/* Audio player — article-level or first available section audio */}
-              {(article.audioUrl || sections.some(s => s.audioUrl)) && (
-                <div className="mt-8">
-                  <ArticleAudioPlayer
-                    audioUrl={article.audioUrl ?? sections.find(s => s.audioUrl)!.audioUrl!}
-                    title={article.title}
-                    sections={sections.map((s) => ({ id: s.id, title: s.title }))}
-                  />
-                </div>
               )}
 
               {/* Prev / Next */}

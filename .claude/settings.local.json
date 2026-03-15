@@ -23,7 +23,11 @@
       "Bash(grep -r \"ArticleContent\\\\|react-markdown\\\\|markdown-it\" /Users/laxmi/ramesh/code/appliedagentic.in/app /Users/laxmi/ramesh/code/appliedagentic.in/components --include=*.tsx --include=*.ts)",
       "Bash(npx dotenv:*)",
       "Bash(npx tsc:*)",
-      "Bash(wc -l \"/Users/laxmi/ramesh/code/appliedagentic.in/app/\\(admin\\)/admin/articles/ArticleEditorPage.tsx\")"
+      "Bash(wc -l \"/Users/laxmi/ramesh/code/appliedagentic.in/app/\\(admin\\)/admin/articles/ArticleEditorPage.tsx\")",
+      "Bash(cat \"/Users/laxmi/ramesh/code/appliedagentic.in/app/\\(public\\)/articles/[id]/page.tsx\")",
+      "Bash(wc -l components/admin/editor/*.tsx app/api/ai/generate-audio/route.ts agents/audio-narrator/*.ts)",
+      "Bash(grep -r \"audioUrl\\\\|audio\" /Users/laxmi/ramesh/code/appliedagentic.in/content/features.*)",
+      "Bash(ls -la /Users/laxmi/ramesh/code/appliedagentic.in/.env*)"
     ]
   }
 }

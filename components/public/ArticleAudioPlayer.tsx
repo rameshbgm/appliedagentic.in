@@ -1,13 +1,9 @@
 'use client'
 // components/public/ArticleAudioPlayer.tsx
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Play, Pause, Volume2, VolumeX, X, SkipBack, SkipForward } from 'lucide-react'
-
-interface Props {
-  audioUrl: string
-  title: string
-  sections?: { id: number; title: string }[]
-}
+// Fixed bottom audio player — reads all state from ArticleAudioContext.
+import { useState, useRef, useCallback } from 'react'
+import { Play, Pause, Volume2, VolumeX, X, SkipBack, SkipForward, Loader2 } from 'lucide-react'
+import { useArticleAudio } from './ArticleAudioContext'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
@@ -18,64 +14,27 @@ const fmt = (s: number) => {
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
-export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: Props) {
-  const audioRef    = useRef<HTMLAudioElement>(null)
-  const barRef      = useRef<HTMLDivElement>(null)
-  const dragging    = useRef(false)
+export default function ArticleAudioPlayer() {
+  const {
+    playState, currentSectionIdx, progress, currentTime, duration,
+    speed, muted, visible, sections,
+    togglePlayPause, seek, setSpeed, toggleMute, goToSection, close,
+  } = useArticleAudio()
 
-  const [playing,     setPlaying]     = useState(false)
-  const [progress,    setProgress]    = useState(0)   // 0–100
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration,    setDuration]    = useState(0)
-  const [muted,       setMuted]       = useState(false)
-  const [speed,       setSpeed]       = useState(1)
-  const [showSpeed,   setShowSpeed]   = useState(false)
-  const [visible,     setVisible]     = useState(true)
-  const [sectionIdx,  setSectionIdx]  = useState(0)
+  const barRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+  const [showSpeed, setShowSpeed] = useState(false)
 
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    const onTime  = () => {
-      if (!dragging.current) {
-        setCurrentTime(audio.currentTime)
-        setProgress(isFinite(audio.duration) ? (audio.currentTime / audio.duration) * 100 : 0)
-      }
-    }
-    const onMeta  = () => setDuration(audio.duration)
-    const onEnd   = () => setPlaying(false)
-    audio.addEventListener('timeupdate',    onTime)
-    audio.addEventListener('loadedmetadata', onMeta)
-    audio.addEventListener('ended',         onEnd)
-    return () => {
-      audio.removeEventListener('timeupdate',    onTime)
-      audio.removeEventListener('loadedmetadata', onMeta)
-      audio.removeEventListener('ended',         onEnd)
-    }
-  }, [])
+  // Check if any section has audio
+  const hasAudio = sections.some((s) => s.audioUrl)
+  if (!visible || !hasAudio) return null
 
-  // Sync speed to audio element
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.playbackRate = speed
-  }, [speed])
+  const hasSections = sections.filter((s) => s.audioUrl).length > 1
+  const currentTitle = currentSectionIdx !== null
+    ? sections[currentSectionIdx]?.title || 'Untitled'
+    : ''
 
-  const toggle = () => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (playing) { audio.pause(); setPlaying(false) }
-    else { audio.play(); setPlaying(true) }
-  }
-
-  // Shared seek-by-fraction logic
-  const seekToFraction = useCallback((fraction: number) => {
-    const audio = audioRef.current
-    if (!audio || !isFinite(audio.duration)) return
-    const clamped = Math.max(0, Math.min(1, fraction))
-    audio.currentTime = clamped * audio.duration
-    setCurrentTime(audio.currentTime)
-    setProgress(clamped * 100)
-  }, [])
-
+  // ── Scrub helpers ──
   const fractionFromEvent = (clientX: number) => {
     const bar = barRef.current
     if (!bar) return 0
@@ -83,50 +42,52 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
     return (clientX - rect.left) / rect.width
   }
 
-  // Mouse events for click + drag on progress bar
+  const seekFromClientX = (clientX: number) => {
+    seek(fractionFromEvent(clientX))
+  }
+
   const onBarMouseDown = (e: React.MouseEvent) => {
     dragging.current = true
-    seekToFraction(fractionFromEvent(e.clientX))
-    const onMove = (ev: MouseEvent) => seekToFraction(fractionFromEvent(ev.clientX))
-    const onUp   = (ev: MouseEvent) => { seekToFraction(fractionFromEvent(ev.clientX)); dragging.current = false; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    seekFromClientX(e.clientX)
+    const onMove = (ev: MouseEvent) => seekFromClientX(ev.clientX)
+    const onUp = (ev: MouseEvent) => {
+      seekFromClientX(ev.clientX)
+      dragging.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
     window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup',   onUp)
+    window.addEventListener('mouseup', onUp)
   }
 
-  // Touch events for mobile scrubbing
   const onBarTouchStart = (e: React.TouchEvent) => {
     dragging.current = true
-    seekToFraction(fractionFromEvent(e.touches[0].clientX))
-    const onMove = (ev: TouchEvent) => seekToFraction(fractionFromEvent(ev.touches[0].clientX))
-    const onEnd  = (ev: TouchEvent) => { seekToFraction(fractionFromEvent(ev.changedTouches[0].clientX)); dragging.current = false; window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd) }
+    seekFromClientX(e.touches[0].clientX)
+    const onMove = (ev: TouchEvent) => seekFromClientX(ev.touches[0].clientX)
+    const onEnd = (ev: TouchEvent) => {
+      seekFromClientX(ev.changedTouches[0].clientX)
+      dragging.current = false
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
     window.addEventListener('touchmove', onMove, { passive: true })
-    window.addEventListener('touchend',  onEnd)
+    window.addEventListener('touchend', onEnd)
   }
 
-  const goToSection = (dir: 1 | -1) => {
-    const next = Math.max(0, Math.min(sections.length - 1, sectionIdx + dir))
-    setSectionIdx(next)
-    const el = document.getElementById(`section-${next + 1}`)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  // Find if we can go prev/next (sections with audio)
+  const audioSectionIndices = sections.map((s, i) => s.audioUrl ? i : -1).filter((i) => i >= 0)
+  const currentAudioPos = currentSectionIdx !== null ? audioSectionIndices.indexOf(currentSectionIdx) : -1
+  const canGoPrev = currentAudioPos > 0
+  const canGoNext = currentAudioPos >= 0 && currentAudioPos < audioSectionIndices.length - 1
 
-  const cycleSpeed = () => {
-    const idx = SPEEDS.indexOf(speed)
-    const next = SPEEDS[(idx + 1) % SPEEDS.length]
-    setSpeed(next)
-  }
-
-  if (!visible) return null
-
-  const hasSections = sections.length > 1
+  const isPlaying = playState === 'playing'
+  const isLoading = playState === 'loading'
 
   return (
     <div
       className="fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl rounded-xl px-3 py-2 shadow-2xl"
       style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(108,61,255,0.35)', bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}
     >
-      <audio ref={audioRef} src={audioUrl} />
-
       {/* ── Single compact row ── */}
       <div className="flex items-center gap-2">
 
@@ -135,7 +96,7 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
           <button
             type="button"
             onClick={() => goToSection(-1)}
-            disabled={sectionIdx === 0}
+            disabled={!canGoPrev}
             className="shrink-0 p-1.5 rounded-lg transition-opacity disabled:opacity-30 hover:bg-white/10"
             style={{ color: 'var(--text-muted)' }}
             title="Previous section"
@@ -144,13 +105,16 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
           </button>
         )}
 
-        {/* Play / Pause */}
+        {/* Play / Pause / Loading */}
         <button
-          onClick={toggle}
-          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+          type="button"
+          onClick={togglePlayPause}
+          disabled={isLoading}
+          title={isPlaying ? 'Pause' : 'Play'}
+          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-60"
           style={{ background: 'var(--green)', color: '#fff', WebkitTapHighlightColor: 'transparent' }}
         >
-          {playing ? <Pause size={12} /> : <Play size={12} />}
+          {isLoading ? <Loader2 size={12} className="animate-spin" /> : isPlaying ? <Pause size={12} /> : <Play size={12} />}
         </button>
 
         {/* Next section */}
@@ -158,7 +122,7 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
           <button
             type="button"
             onClick={() => goToSection(1)}
-            disabled={sectionIdx === sections.length - 1}
+            disabled={!canGoNext}
             className="shrink-0 p-1.5 rounded-lg transition-opacity disabled:opacity-30 hover:bg-white/10"
             style={{ color: 'var(--text-muted)' }}
             title="Next section"
@@ -168,13 +132,15 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
         )}
 
         {/* Title — hidden on very small screens */}
-        <span
-          className="hidden sm:block shrink-0 text-xs font-medium truncate max-w-30"
-          style={{ color: 'var(--text-secondary)' }}
-          title={title}
-        >
-          🎧 {title}
-        </span>
+        {currentTitle && (
+          <span
+            className="hidden sm:block shrink-0 text-xs font-medium truncate max-w-30"
+            style={{ color: 'var(--text-secondary)' }}
+            title={currentTitle}
+          >
+            {currentTitle}
+          </span>
+        )}
 
         {/* Current time */}
         <span className="shrink-0 text-xs tabular-nums" style={{ color: 'var(--text-muted)', minWidth: 32 }}>
@@ -239,7 +205,9 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
 
         {/* Mute */}
         <button
-          onClick={() => { setMuted((v) => !v); if (audioRef.current) audioRef.current.muted = !muted }}
+          type="button"
+          onClick={toggleMute}
+          title={muted ? 'Unmute' : 'Mute'}
           className="shrink-0 p-1.5 rounded-lg hover:bg-white/10"
           style={{ color: 'var(--text-muted)' }}
         >
@@ -248,7 +216,9 @@ export default function ArticleAudioPlayer({ audioUrl, title, sections = [] }: P
 
         {/* Close */}
         <button
-          onClick={() => { setVisible(false); audioRef.current?.pause() }}
+          type="button"
+          onClick={close}
+          title="Close player"
           className="shrink-0 p-1.5 rounded-lg hover:bg-white/10"
           style={{ color: 'var(--text-muted)' }}
         >
