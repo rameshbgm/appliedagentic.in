@@ -42,8 +42,8 @@ export async function runSummarizer(
 ): Promise<SummarizerOutput> {
   const scopeNote =
     input.scope === 'section'
-      ? 'SCOPE: section. Output ONLY 2–3 bullet lines starting with "- ". No intro, no heading, nothing else.'
-      : 'SCOPE: full article. Output ONLY 4–7 bullet lines starting with "- ". No intro, no heading, nothing else.'
+      ? 'SCOPE: section summary. Output EXACTLY 3 bullet lines — no more, no fewer. Each bullet must be a sharp, standalone insight a reader can act on or remember. Lead with a strong verb or key concept. 12–22 words per bullet. Start every line with "- ". No intro text, no heading, no blank lines.'
+      : 'SCOPE: full article summary. Output EXACTLY 7 bullet lines — no more, no fewer. Each bullet must capture a distinct, meaningful insight from the article — not a vague overview. Cover the core argument, key concepts, practical takeaways, and any surprising or important details. Lead with a strong verb or key concept. 18–32 words per bullet. Start every line with "- ". No intro text, no heading, no blank lines.'
 
   const enrichedPrompt = `${scopeNote}\n\n${input.prompt}`
 

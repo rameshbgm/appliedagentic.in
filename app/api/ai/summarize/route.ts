@@ -35,16 +35,19 @@ export async function POST(req: NextRequest) {
 
     const plainText = htmlToText(content).slice(0, 12000)
 
+    const isSection = type === 'section'
+    const targetPoints = Number(maxPoints) || (isSection ? 3 : 7)
+
     const result = await runSummarizer({
-      prompt: 'Summarize the following content.',
+      prompt: isSection
+        ? `Summarize the following section content into exactly 3 sharp bullet points.`
+        : `Summarize the following article into exactly 7 insightful bullet points that capture the full scope of the content.`,
       context: plainText,
-      scope: type === 'section' ? 'section' : 'article',
-      maxTokens: maxPoints ? maxPoints * 50 : undefined,
+      scope: isSection ? 'section' : 'article',
+      maxTokens: targetPoints * 60,
     })
 
-    // Apply optional maxPoints cap
-    const points = Math.min(Math.max(Number(maxPoints) || (type === 'section' ? 3 : 5), 2), 20)
-    const bullets = result.bullets.slice(0, points)
+    const bullets = result.bullets.slice(0, targetPoints)
 
     return apiSuccess({ bullets })
   } catch (err: unknown) {
