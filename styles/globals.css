@@ -1095,7 +1095,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 @media (min-width: 1024px) {
   .article-body-wrapper {
-    padding: 0 3%;
+    padding: 0 20% 0 3%;
   }
 }
 
