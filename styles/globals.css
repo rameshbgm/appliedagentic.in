@@ -424,8 +424,23 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   word-break: break-word;
 }
 .article-content pre code { background: none; padding: 0; color: inherit; word-break: normal; }
-.article-content table  { width: 100%; border-collapse: collapse; margin: 1.5em 0; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.article-content th { background: var(--bg-elevated); padding: .65em 1em; text-align: left; font-weight: 600; border-bottom: 1px solid var(--bg-border); white-space: nowrap; }
+.article-content .table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  border: 1px solid var(--bg-border);
+  /* Always show a thin scrollbar so users know the table is scrollable */
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-border) transparent;
+}
+.article-content .table-scroll-wrapper::-webkit-scrollbar { height: 6px; }
+.article-content .table-scroll-wrapper::-webkit-scrollbar-track { background: transparent; }
+.article-content .table-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 3px; }
+.article-content .table-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: var(--text-muted, #64748b); }
+.article-content table  { width: 100%; border-collapse: collapse; margin: 0; }
+.article-content th { background: var(--bg-elevated); padding: .65em 1em; text-align: left; font-weight: 600; border-bottom: 2px solid var(--bg-border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
 .article-content td { padding: .65em 1em; border-bottom: 1px solid var(--bg-border); }
 .article-content ul, .article-content ol { padding-left: 1.5em; margin-bottom: 1em; }
 .article-content li { margin-bottom: .4em; color: var(--text-secondary); line-height: 1.85; }
@@ -453,10 +468,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     max-width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
     border-radius: 0;
   }
-  .article-content table {
-    margin: 1.25em calc(-16px - env(safe-area-inset-left, 0px));
-    width: calc(100% + 32px + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
+  .article-content .table-scroll-wrapper {
+    margin: 1.25em 0;
     font-size: 13px;
+    border-radius: 0;
   }
   .article-content th,
   .article-content td {
@@ -2394,6 +2409,11 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   padding: 0.15em 0.4em;
   font-size: 0.88em;
 }
+.article-page .article-content .table-scroll-wrapper {
+  border-color: rgba(255, 255, 255, 0.07);
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.article-page .article-content .table-scroll-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
 .article-page .article-content table {
   border-color: rgba(255, 255, 255, 0.07);
 }
@@ -2693,6 +2713,11 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   background: rgba(30, 41, 59, 0.07);
   color: #1e293b;
 }
+.article-page.article-theme-light .article-content .table-scroll-wrapper {
+  border-color: rgba(0,0,0,0.10);
+  scrollbar-color: rgba(0,0,0,0.15) transparent;
+}
+.article-page.article-theme-light .article-content .table-scroll-wrapper::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
 .article-page.article-theme-light .article-content th {
   background: rgba(30, 41, 59, 0.07);
   color: #1E293B;

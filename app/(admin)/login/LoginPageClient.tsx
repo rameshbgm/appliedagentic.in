@@ -22,7 +22,10 @@ export default function LoginPage() {
         toast.success('Welcome back!')
         window.location.href = '/admin/dashboard'
       } else {
-        toast.error('Invalid email or password')
+        const msg = res?.error === 'CredentialsSignin'
+          ? 'Invalid email or password'
+          : (res?.error ?? 'Login failed — please try again')
+        toast.error(msg)
       }
     } finally {
       setLoading(false)
