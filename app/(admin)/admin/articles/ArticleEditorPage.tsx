@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon, Headphones } from 'lucide-react'
+import { Save, Eye, Loader2, ImagePlus, X as XIcon, BookOpen, Clock, Globe, Tag, Navigation2, PlusCircle, Star, Sparkles, Wand2, Image as ImageIcon, Crop as CropIcon, Headphones, RefreshCw } from 'lucide-react'
 import MediaPickerModal from '@/components/admin/MediaPickerModal'
 import ImageCropModal from '@/components/admin/ImageCropModal'
 import LazyImage from '@/components/shared/LazyImage'
@@ -193,7 +193,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   // Background audio job state (persists across refresh/close via DB polling)
   type AudioJobStatus = 'idle' | 'pending' | 'running' | 'done' | 'error'
   const [audioJob, setAudioJob] = useState<{ status: AudioJobStatus; total: number; completed: number; failed: number }>({ status: 'idle', total: 0, completed: 0, failed: 0 })
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [refreshingJob, setRefreshingJob] = useState(false)
   // Refs used by auto-save timer to always see current values without restarting the timer
   const audioJobStatusRef = useRef<AudioJobStatus>('idle')
   const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
@@ -581,57 +581,40 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   }
 
   // ── Background audio job helpers ──────────────────────────────────────────
-  const stopPolling = () => {
-    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
-  }
 
-  const startPolling = useCallback((artId: number) => {
-    stopPolling()
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/ai/audio-job?articleId=${artId}`)
-        const data = await res.json()
-        const job = data.data as { status: string; total: number; completed: number; failed: number }
-        setAudioJob({ status: job.status as AudioJobStatus, total: job.total, completed: job.completed, failed: job.failed })
-        if (job.status === 'done' || job.status === 'error' || job.status === 'idle') {
-          stopPolling()
-          if (job.status === 'done') {
-            // Fetch fresh section audio URLs from DB and update state in-place
-            // (avoids a hard page reload and works even if sections were re-saved
-            //  with new IDs during the job — the API returns current DB state)
-            try {
-              const artRes = await fetch(`/api/articles/${artId}`)
-              const artData = await artRes.json()
-              if (artData.success && artData.data?.sections) {
-                const freshSections = artData.data.sections as { id: number; audioUrl?: string | null }[]
-                skipAutoSaveRef.current = true
-                setSections((prev) => prev.map((s) => {
-                  const fresh = freshSections.find((f) => f.id === s.id)
-                  return fresh?.audioUrl ? { ...s, audioUrl: fresh.audioUrl, audioStale: false } : s
-                }))
-              }
-            } catch { /* fall back silently */ }
-            toast.success(`Audio generated for ${job.completed} section${job.completed !== 1 ? 's' : ''}!`)
+  // Single status fetch — used on mount and on manual refresh.
+  // Pulling fresh section audio URLs from DB when job is done.
+  const checkJobStatus = useCallback(async (artId: number, quiet = false) => {
+    if (!quiet) setRefreshingJob(true)
+    try {
+      const res = await fetch(`/api/ai/audio-job?articleId=${artId}`)
+      const data = await res.json()
+      const job = data.data as { status: string; total: number; completed: number; failed: number }
+      setAudioJob({ status: job.status as AudioJobStatus, total: job.total, completed: job.completed, failed: job.failed })
+      if (job.status === 'done') {
+        try {
+          const artRes = await fetch(`/api/articles/${artId}`)
+          const artData = await artRes.json()
+          if (artData.success && artData.data?.sections) {
+            const freshSections = artData.data.sections as { id: number; audioUrl?: string | null }[]
+            skipAutoSaveRef.current = true
+            setSections((prev) => prev.map((s) => {
+              const fresh = freshSections.find((f) => f.id === s.id)
+              return fresh?.audioUrl ? { ...s, audioUrl: fresh.audioUrl, audioStale: false } : s
+            }))
           }
-        }
-      } catch { stopPolling() }
-    }, 2000)
+        } catch { /* fall back silently */ }
+        if (!quiet) toast.success(`Audio done — ${job.completed} section${job.completed !== 1 ? 's' : ''} generated!`)
+      }
+    } catch { /* ignore network errors */ } finally {
+      if (!quiet) setRefreshingJob(false)
+    }
   }, []) // eslint-disable-line
 
-  // On mount: resume any in-progress job for this article
+  // On mount: load current job status (no polling)
   useEffect(() => {
     if (!initialArticle.id) return
-    fetch(`/api/ai/audio-job?articleId=${initialArticle.id}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const job = data.data as { status: string; total: number; completed: number; failed: number }
-        if (job && (job.status === 'pending' || job.status === 'running')) {
-          setAudioJob({ status: job.status as AudioJobStatus, total: job.total, completed: job.completed, failed: job.failed })
-          startPolling(initialArticle.id!)
-        }
-      })
-      .catch(() => {})
-    return () => stopPolling()
+    checkJobStatus(initialArticle.id, true /* quiet */)
   }, [initialArticle.id]) // eslint-disable-line
 
   const generateMissingAudio = async (voice: string) => {
@@ -656,7 +639,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       body: JSON.stringify({ articleId: initialArticle.id, voice }),
       keepalive: true,
     }).catch(() => {})
-    startPolling(initialArticle.id)
+    toast.info('Audio generation running in background. Use the refresh button to check progress.')
   }
 
   const save = useCallback(async () => {
@@ -768,32 +751,48 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             AI Generate
           </button>
 
-          {/* Generate missing audio — background job with live progress */}
+          {/* Generate missing audio — background job */}
           {initialArticle.id && (
-            <button
-              type="button"
-              onClick={audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error' ? () => setShowVoicePicker(true) : undefined}
-              disabled={
-                audioJob.status === 'pending' || audioJob.status === 'running' ||
-                ((audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error') &&
-                  !sections.some((s) => !s.audioUrl && s.content?.trim()))
-              }
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:cursor-default disabled:opacity-40 ${
-                audioJob.status === 'done' ? 'bg-green-600 text-white' :
-                audioJob.status === 'error' ? 'bg-red-600 text-white' :
-                'bg-amber-600 text-white hover:opacity-90'
-              }`}
-              title={audioJob.status === 'running' ? `Generating… ${audioJob.completed}/${audioJob.total}` : 'Generate audio for sections that don\'t have it yet'}
-            >
-              {audioJob.status === 'pending' || audioJob.status === 'running'
-                ? <><Loader2 size={13} className="animate-spin" />{audioJob.completed}/{audioJob.total}</>
-                : audioJob.status === 'done'
-                  ? <><Headphones size={13} />Audio Done</>
-                  : audioJob.status === 'error'
-                    ? <><Headphones size={13} />Audio Failed</>
-                    : <><Headphones size={13} />Gen Missing Audio</>
-              }
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error' ? () => setShowVoicePicker(true) : undefined}
+                disabled={
+                  audioJob.status === 'pending' || audioJob.status === 'running' ||
+                  ((audioJob.status === 'idle' || audioJob.status === 'done' || audioJob.status === 'error') &&
+                    !sections.some((s) => !s.audioUrl && s.content?.trim()))
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:cursor-default disabled:opacity-40 ${
+                  audioJob.status === 'done' ? 'bg-green-600 text-white' :
+                  audioJob.status === 'error' ? 'bg-red-600 text-white' :
+                  'bg-amber-600 text-white hover:opacity-90'
+                }`}
+                title={audioJob.status === 'running' ? `Generating… ${audioJob.completed}/${audioJob.total}` : 'Generate audio for sections without audio'}
+              >
+                {audioJob.status === 'pending' || audioJob.status === 'running'
+                  ? <><Loader2 size={13} className="animate-spin" />{audioJob.completed}/{audioJob.total}</>
+                  : audioJob.status === 'done'
+                    ? <><Headphones size={13} />Audio Done</>
+                    : audioJob.status === 'error'
+                      ? <><Headphones size={13} />Audio Failed</>
+                      : <><Headphones size={13} />Gen Missing Audio</>
+                }
+              </button>
+
+              {/* Manual refresh — visible whenever a job exists */}
+              {audioJob.status !== 'idle' && (
+                <button
+                  type="button"
+                  onClick={() => checkJobStatus(initialArticle.id!)}
+                  disabled={refreshingJob}
+                  title="Refresh audio job status"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-lg border transition-colors hover:bg-gray-100 disabled:opacity-40"
+                  style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                >
+                  <RefreshCw size={12} className={refreshingJob ? 'animate-spin' : ''} />
+                </button>
+              )}
+            </>
           )}
 
           {/* Single Save button */}

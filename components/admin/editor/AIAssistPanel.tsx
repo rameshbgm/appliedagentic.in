@@ -1,11 +1,12 @@
 'use client'
 // components/admin/editor/AIAssistPanel.tsx
-// Top-bar AI assistant — generates proper markdown from a topic or raw text.
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Loader2, Music } from 'lucide-react'
 import { toast } from 'sonner'
 
 type Tab = 'text' | 'audio'
+type TextProvider = 'gemini' | 'openai'
+type AudioProvider = 'gemini' | 'openai'
 
 interface Props {
   onInsert: (md: string) => void
@@ -20,7 +21,21 @@ interface Props {
 const textModes = ['generate', 'expand', 'summarize', 'rewrite', 'improve', 'outline']
 const textTones = ['informative', 'casual', 'professional', 'engaging', 'technical', 'simplified']
 const textLengths = ['short', 'medium', 'long']
-const ttsVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse']
+
+const TEXT_MODELS: Record<TextProvider, string[]> = {
+  gemini: ['gemini-2.5-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+  openai: ['gpt-4o-mini', 'gpt-4o'],
+}
+
+const VOICES: Record<AudioProvider, string[]> = {
+  gemini: ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Schedar', 'Laomedeia'],
+  openai: ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'],
+}
+
+const PROVIDER_LABELS: Record<TextProvider | AudioProvider, string> = {
+  gemini: 'Gemini',
+  openai: 'OpenAI',
+}
 
 export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, articleId, sectionId, sectionContent, onAudioGenerated }: Props) {
   const [open, setOpen] = useState(false)
@@ -33,11 +48,24 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
   const [textLength, setTextLength] = useState('medium')
   const [textPrompt, setTextPrompt] = useState('')
   const [withTitle, setWithTitle] = useState(false)
+  const [textProvider, setTextProvider] = useState<TextProvider>('gemini')
+  const [textModel, setTextModel] = useState(TEXT_MODELS.gemini[0])
+
+  const handleTextProviderChange = (p: TextProvider) => {
+    setTextProvider(p)
+    setTextModel(TEXT_MODELS[p][0])
+  }
 
   // Audio
   const [audioSource, setAudioSource] = useState<'content' | 'custom'>('content')
   const [audioText, setAudioText] = useState('')
-  const [audioVoice, setAudioVoice] = useState('alloy')
+  const [audioProvider, setAudioProvider] = useState<AudioProvider>('gemini')
+  const [audioVoice, setAudioVoice] = useState(VOICES.gemini[3]) // 'Kore'
+
+  const handleProviderChange = (p: AudioProvider) => {
+    setAudioProvider(p)
+    setAudioVoice(VOICES[p][0])
+  }
 
   const generateText = async (action: 'insert' | 'replace') => {
     if (!textPrompt.trim()) { toast.error('Enter a topic or text'); return }
@@ -53,6 +81,8 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
           length: textLength,
           format: 'markdown',
           generateTitle: withTitle,
+          provider: textProvider,
+          model: textModel,
         }),
       })
       const data = await res.json()
@@ -62,7 +92,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
         action === 'insert' ? onInsert(md) : onReplace(md)
         if (withTitle && generatedTitle && onSetTitle) {
           onSetTitle(generatedTitle)
-          toast.success(`Content + title generated!`)
+          toast.success('Content + title generated!')
         } else {
           toast.success('Content generated!')
         }
@@ -109,10 +139,10 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-2.5 py-1.5 rounded-lg border text-xs outline-none capitalize"
+        className="px-2.5 py-1.5 rounded-lg border text-xs outline-none"
         style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
       >
-        {options.map((o) => <option key={o} value={o} className="capitalize">{o}</option>)}
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
   )
@@ -154,6 +184,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
           </div>
 
           <div className="p-4">
+            {/* ── Content tab ── */}
             {tab === 'text' && (
               <div className="space-y-3">
                 <div>
@@ -163,7 +194,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                   <textarea
                     value={textPrompt}
                     onChange={(e) => setTextPrompt(e.target.value)}
-                    placeholder="Enter a topic (e.g. 'Introduction to AI Agents') or paste raw content to rewrite/expand..."
+                    placeholder="Enter a topic or paste raw content to rewrite/expand…"
                     rows={3}
                     className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none resize-none"
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
@@ -175,27 +206,39 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                     }}
                   />
                 </div>
-
                 <div className="grid grid-cols-3 gap-3">
-                  <Sel label="Mode" value={textMode} onChange={setTextMode} options={textModes} />
-                  <Sel label="Tone" value={textTone} onChange={setTextTone} options={textTones} />
+                  <Sel label="Mode"   value={textMode}   onChange={setTextMode}   options={textModes} />
+                  <Sel label="Tone"   value={textTone}   onChange={setTextTone}   options={textTones} />
                   <Sel label="Length" value={textLength} onChange={setTextLength} options={textLengths} />
                 </div>
+                {/* Provider + Model row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--text-muted)' }}>Provider</label>
+                    <div className="flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--bg-border)' }}>
+                      {(['gemini', 'openai'] as TextProvider[]).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handleTextProviderChange(p)}
+                          className="flex-1 py-1.5 text-xs font-medium transition-colors"
+                          style={{
+                            background: textProvider === p ? 'var(--color-violet)' : 'var(--bg-surface)',
+                            color: textProvider === p ? '#fff' : 'var(--text-muted)',
+                          }}
+                        >
+                          {PROVIDER_LABELS[p]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Sel label="Model" value={textModel} onChange={setTextModel} options={TEXT_MODELS[textProvider]} />
+                </div>
 
-                {/* Generate section title toggle */}
-                <label
-                  className="flex items-center gap-2 cursor-pointer select-none"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={withTitle}
-                    onChange={(e) => setWithTitle(e.target.checked)}
-                    className="rounded"
-                  />
+                <label className="flex items-center gap-2 cursor-pointer select-none" style={{ color: 'var(--text-secondary)' }}>
+                  <input type="checkbox" checked={withTitle} onChange={(e) => setWithTitle(e.target.checked)} className="rounded" />
                   <span className="text-xs">Also generate section title</span>
                 </label>
-
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -218,20 +261,22 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                   </button>
                 </div>
                 <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  Generates formatted Markdown. Press ⌘+Enter to insert.{withTitle ? ' Section title will be set automatically.' : ''}
+                  Generates formatted Markdown. Press ⌘+Enter to insert.
                 </p>
               </div>
             )}
 
+            {/* ── Audio tab ── */}
             {tab === 'audio' && (
               <div className="space-y-3">
+                {/* Source toggle */}
                 <div className="flex gap-2">
                   {(['content', 'custom'] as const).map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => setAudioSource(s)}
-                      className="flex-1 py-1.5 rounded-xl text-xs font-medium capitalize border transition-colors"
+                      className="flex-1 py-1.5 rounded-xl text-xs font-medium border transition-colors"
                       style={{
                         borderColor: audioSource === s ? 'var(--color-violet)' : 'var(--bg-border)',
                         color: audioSource === s ? 'var(--color-violet)' : 'var(--text-muted)',
@@ -242,27 +287,63 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                     </button>
                   ))}
                 </div>
+
                 {audioSource === 'custom' && (
                   <textarea
                     value={audioText}
                     onChange={(e) => setAudioText(e.target.value)}
-                    placeholder="Text to convert to speech..."
+                    placeholder="Text to convert to speech…"
                     rows={3}
                     className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
                     style={{ background: 'var(--bg-surface)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
                   />
                 )}
-                <Sel label="Voice" value={audioVoice} onChange={setAudioVoice} options={ttsVoices} />
+
+                {/* Provider + Voice row */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Provider */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--text-muted)' }}>
+                      Provider
+                    </label>
+                    <div className="flex rounded-lg border overflow-hidden" style={{ borderColor: 'var(--bg-border)' }}>
+                      {(['gemini', 'openai'] as AudioProvider[]).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handleProviderChange(p)}
+                          className="flex-1 py-1.5 text-xs font-medium transition-colors"
+                          style={{
+                            background: audioProvider === p ? 'var(--color-violet)' : 'var(--bg-surface)',
+                            color: audioProvider === p ? '#fff' : 'var(--text-muted)',
+                          }}
+                        >
+                          {PROVIDER_LABELS[p]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Voice — filtered by selected provider */}
+                  <Sel
+                    label="Voice"
+                    value={audioVoice}
+                    onChange={setAudioVoice}
+                    options={VOICES[audioProvider]}
+                  />
+                </div>
+
                 <button
                   type="button"
                   onClick={generateAudio}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
                   style={{ background: '#1E293B' }}
                 >
                   {loading ? <Loader2 size={12} className="animate-spin" /> : <Music size={12} />}
                   Generate Audio
                 </button>
+
                 {!articleId && (
                   <p className="text-xs" style={{ color: '#f59e0b' }}>Save the article first to attach audio.</p>
                 )}

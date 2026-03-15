@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runContentWriter } from '@/agents/content-writer/agent'
+import type { LLMProvider } from '@/agents/types'
 
 const LENGTH_TOKENS: Record<string, number> = {
   short: 600,
@@ -24,12 +25,18 @@ export async function POST(req: NextRequest) {
       context,
       maxTokens: reqMaxTokens,
       generateTitle = false,
+      provider,
+      model,
     } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
 
     // ── Content generation mode ──────────────────────────────────────────────
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200
+    const VALID_PROVIDERS: LLMProvider[] = ['gemini', 'openai']
+    const providerOverride = provider && model && VALID_PROVIDERS.includes(provider as LLMProvider)
+      ? { provider: provider as LLMProvider, textModel: model as string }
+      : undefined
 
     if (generateTitle) {
       // Generate markdown content normally (content-writer system prompt enforces RAW MARKDOWN).
@@ -40,6 +47,7 @@ export async function POST(req: NextRequest) {
         context,
         tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
         maxTokens,
+        providerOverride,
       })
 
       const markdown = result.text.trim()
@@ -60,6 +68,7 @@ export async function POST(req: NextRequest) {
       context,
       tone: tone as 'professional' | 'conversational' | 'technical' | 'inspirational',
       maxTokens,
+      providerOverride,
     })
 
     return apiSuccess({ text: result.text })

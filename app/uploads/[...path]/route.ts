@@ -2,6 +2,7 @@
 // Serves user-uploaded media from the database (MediaAsset.data column).
 // Images/audio are stored as LONGBLOB in MySQL — no filesystem required.
 // URL format: /uploads/{subDir}/{filename}
+// Supports HTTP Range requests so browsers can seek audio/video and read duration.
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -23,7 +24,7 @@ const CONTENT_TYPES: Record<string, string> = {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
@@ -48,11 +49,44 @@ export async function GET(
     // Prisma v6 returns Uint8Array<ArrayBuffer> which may reference a pooled/shared
     // buffer — passing it directly to NextResponse can cause a silent 500.
     const body = Buffer.from(asset.data as Uint8Array)
+    const totalBytes = body.length
 
+    // ── Range request support (required for audio/video seeking + duration) ──
+    const rangeHeader = req.headers.get('range')
+    if (rangeHeader) {
+      const match = rangeHeader.match(/bytes=(\d*)-(\d*)/)
+      if (match) {
+        const start = match[1] ? parseInt(match[1], 10) : 0
+        const end   = match[2] ? Math.min(parseInt(match[2], 10), totalBytes - 1) : totalBytes - 1
+
+        if (start > end || start >= totalBytes) {
+          return new NextResponse('Range Not Satisfiable', {
+            status: 416,
+            headers: { 'Content-Range': `bytes */${totalBytes}` },
+          })
+        }
+
+        const chunk = body.subarray(start, end + 1)
+        return new NextResponse(chunk, {
+          status: 206,
+          headers: {
+            'Content-Type':   contentType,
+            'Content-Length': String(chunk.length),
+            'Content-Range':  `bytes ${start}-${end}/${totalBytes}`,
+            'Accept-Ranges':  'bytes',
+            'Cache-Control':  'public, max-age=31536000, immutable',
+          },
+        })
+      }
+    }
+
+    // ── Full response ──────────────────────────────────────────────────────
     return new NextResponse(body, {
       headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type':   contentType,
+        'Content-Length': String(totalBytes),
+        'Accept-Ranges':  'bytes',
+        'Cache-Control':  'public, max-age=31536000, immutable',
       },
     })
   } catch (err) {

@@ -6,7 +6,7 @@ import { runAgent } from '../base'
 import { config }       from './config'
 import { systemPrompt } from './system-prompt'
 import { guardrails }   from './guardrails'
-import type { AgentInput, AgentOutput } from '../types'
+import type { AgentInput, AgentOutput, LLMProvider } from '../types'
 
 export interface ContentWriterInput extends AgentInput {
   /**
@@ -23,6 +23,8 @@ export interface ContentWriterInput extends AgentInput {
   targetWordCount?: number
   /** Tone override: 'professional' | 'conversational' | 'technical' | 'inspirational' */
   tone?: 'professional' | 'conversational' | 'technical' | 'inspirational'
+  /** Optional per-request provider + model override (e.g. from UI picker) */
+  providerOverride?: { provider: LLMProvider; textModel: string }
 }
 
 export interface ContentWriterOutput extends AgentOutput {
@@ -64,7 +66,11 @@ export async function runContentWriter(
     .filter(Boolean)
     .join('\n\n')
 
-  const result = await runAgent(config, systemPrompt, guardrails, {
+  const effectiveConfig = input.providerOverride
+    ? { ...config, ...input.providerOverride }
+    : config
+
+  const result = await runAgent(effectiveConfig, systemPrompt, guardrails, {
     ...input,
     prompt: enrichedPrompt,
   })

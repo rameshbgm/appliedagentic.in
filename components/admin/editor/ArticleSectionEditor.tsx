@@ -106,7 +106,8 @@ function SectionAudioPreview({ url, onRemove }: { url: string; onRemove: () => v
       className="flex items-center gap-2 px-3 py-2 border-b"
       style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)' }}
     >
-      <audio ref={audioRef} src={url} />
+      {/* preload="metadata" fetches just enough to get duration on mount */}
+      <audio ref={audioRef} src={url} preload="metadata" />
 
       <Headphones size={12} style={{ color: '#22c55e', flexShrink: 0 }} />
 
