@@ -199,19 +199,49 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
       }
 
-      // Sync sections if provided
+      // Sync sections if provided — upsert by ID to keep section IDs stable.
+      // Stable IDs are critical: background audio jobs reference section IDs
+      // written at job-start; delete-recreate would give new IDs and the
+      // job's updateMany would silently match nothing (audio saved to
+      // MediaAsset but never linked to the section).
       if (data.sections !== undefined) {
-        await tx.articleSection.deleteMany({ where: { articleId: id } })
-        if (data.sections.length > 0) {
-          await tx.articleSection.createMany({
-            data: data.sections.map((s, i) => ({
-              articleId: id,
-              title: s.title,
-              content: s.content,
-              audioUrl: s.audioUrl ?? null,
-              order: s.order ?? i,
-            })),
-          })
+        const keptIds = data.sections
+          .map((s) => s.id)
+          .filter((sid): sid is number => sid != null)
+
+        // Delete sections that are no longer in the incoming list
+        await tx.articleSection.deleteMany({
+          where: {
+            articleId: id,
+            ...(keptIds.length > 0 ? { id: { notIn: keptIds } } : {}),
+          },
+        })
+
+        for (const [i, s] of data.sections.entries()) {
+          if (s.id != null) {
+            // Update existing — omit audioUrl from the update when not provided
+            // so any audioUrl written by a background job is preserved.
+            await tx.articleSection.updateMany({
+              where: { id: s.id, articleId: id },
+              data: {
+                title: s.title,
+                content: s.content,
+                order: s.order ?? i,
+                ...(s.audioUrl !== undefined && { audioUrl: s.audioUrl }),
+              },
+            })
+          } else {
+            // Create new section (no existing DB id)
+            await tx.articleSection.create({
+              data: {
+                articleId: id,
+                title: s.title,
+                content: s.content,
+                audioUrl: s.audioUrl ?? null,
+                order: s.order ?? i,
+              },
+            })
+          }
         }
       }
 

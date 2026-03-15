@@ -595,8 +595,22 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         if (job.status === 'done' || job.status === 'error' || job.status === 'idle') {
           stopPolling()
           if (job.status === 'done') {
-            toast.success(`Audio generated for ${job.completed} section${job.completed !== 1 ? 's' : ''}! Reloading…`)
-            setTimeout(() => window.location.reload(), 1800)
+            // Fetch fresh section audio URLs from DB and update state in-place
+            // (avoids a hard page reload and works even if sections were re-saved
+            //  with new IDs during the job — the API returns current DB state)
+            try {
+              const artRes = await fetch(`/api/articles/${artId}`)
+              const artData = await artRes.json()
+              if (artData.success && artData.data?.sections) {
+                const freshSections = artData.data.sections as { id: number; audioUrl?: string | null }[]
+                skipAutoSaveRef.current = true
+                setSections((prev) => prev.map((s) => {
+                  const fresh = freshSections.find((f) => f.id === s.id)
+                  return fresh?.audioUrl ? { ...s, audioUrl: fresh.audioUrl, audioStale: false } : s
+                }))
+              }
+            } catch { /* fall back silently */ }
+            toast.success(`Audio generated for ${job.completed} section${job.completed !== 1 ? 's' : ''}!`)
           }
         }
       } catch { stopPolling() }
