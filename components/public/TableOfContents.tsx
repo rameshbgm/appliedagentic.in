@@ -1,8 +1,7 @@
 'use client'
 // components/public/TableOfContents.tsx
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ChevronDown, List, Zap } from 'lucide-react'
-import Link from 'next/link'
+import { ChevronDown, List } from 'lucide-react'
 
 // Must stay in sync with SECTION_COLORS in SectionCard.tsx
 const TOC_SECTION_COLORS = [
@@ -337,16 +336,6 @@ export default function TableOfContents({ sections, content, mobileFlat = false,
         </div>
         <div ref={desktopScrollRef} className="toc-scroll no-scrollbar">
           {listEl}
-        </div>
-        <div className="toc-card-footer">
-          <Link
-            href="/modules"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-            style={{ background: 'var(--green)', color: '#fff' }}
-          >
-            <Zap size={13} />
-            Explore all Modules
-          </Link>
         </div>
       </div>
 

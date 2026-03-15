@@ -5,8 +5,23 @@ import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 import ArticleContent from './ArticleContent'
 import { featureFlags } from '@/content/features'
+
+// 10 entrance variants — cycled per section index
+const ENTRANCES = [
+  { initial: { opacity: 0, rotateX: 10, y: 18 },      animate: { opacity: 1, rotateX: 0, y: 0 },      transition: { duration: 0.76, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, filter: 'blur(6px)', y: 8 }, animate: { opacity: 1, filter: 'blur(0px)', y: 0 }, transition: { duration: 0.82, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, scale: 0.96, y: 10 },       animate: { opacity: 1, scale: 1, y: 0 },           transition: { duration: 0.60, ease: [0.34, 1.12, 0.64, 1] } },
+  { initial: { opacity: 0, x: -26 },                   animate: { opacity: 1, x: 0 },                     transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, y: 36 },                    animate: { opacity: 1, y: 0 },                     transition: { duration: 0.92, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, x: 26 },                    animate: { opacity: 1, x: 0 },                     transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, y: 14, scale: 0.984 },      animate: { opacity: 1, y: 0, scale: 1 },           transition: { duration: 0.56, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, scale: 1.04, filter: 'blur(4px)' }, animate: { opacity: 1, scale: 1, filter: 'blur(0px)' }, transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, y: -14 },                   animate: { opacity: 1, y: 0 },                     transition: { duration: 0.60, ease: [0.22, 1, 0.36, 1] } },
+  { initial: { opacity: 0, y: 22 },                    animate: { opacity: 1, y: 0 },                     transition: { duration: 0.68, ease: [0.22, 1, 0.36, 1] } },
+] as const
 
 const BOT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`
 
@@ -97,8 +112,10 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
 
   const closeSummary = () => setSummaryOpen(false)
 
+  const entrance = ENTRANCES[gradientIndex % ENTRANCES.length]
+
   return (
-    <div
+    <motion.div
       className="section-optional"
       id={`section-${index + 1}`}
       style={{
@@ -106,6 +123,10 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
         '--section-color': accentColor,
         '--section-gradient-v': gradient.replace('90deg', 'to bottom'),
       }}
+      initial={entrance.initial}
+      whileInView={entrance.animate}
+      viewport={{ once: true, margin: '-60px 0px' }}
+      transition={{ ...entrance.transition, delay: Math.min(index * 0.05, 0.2) }}
     >
 
       {hasTitle && (
@@ -234,6 +255,6 @@ export default function SectionCard({ section, index, gradientIndex, totalSectio
         </div>,
         document.body
       )}
-    </div>
+    </motion.div>
   )
 }
