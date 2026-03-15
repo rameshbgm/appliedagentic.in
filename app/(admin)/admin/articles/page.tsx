@@ -98,6 +98,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
         subMenuArticles: {
           include: { subMenu: { select: { title: true, menu: { select: { title: true } } } } },
         },
+        sections: { select: { id: true, audioUrl: true } },
       },
     }),
     prisma.article.count({ where }),
@@ -201,23 +202,32 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
               <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Navigation</th>
               <th className="text-left px-4 py-3 font-medium hidden xl:table-cell">Module / Topic</th>
               <th className="text-left px-4 py-3 font-medium">Status</th>
-              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Views</th>
+              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell whitespace-nowrap">Views</th>
               {/* Sortable: Updated */}
-              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
+              <th className="text-left px-4 py-3 font-medium hidden lg:table-cell whitespace-nowrap">
                 <Link
                   href={sortHref('updatedAt')}
                   className="inline-flex items-center gap-1 hover:text-gray-700 transition-colors"
                 >
-                  Updated
+                  Dates
                   <SortIcon col="updatedAt" />
                 </Link>
               </th>
-              <th className="px-4 py-3 sticky right-0" style={{ background: 'var(--bg-card)' }} />
+              <th className="px-4 py-3 w-32 sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }} />
             </tr>
           </thead>
           <tbody>
             {articles.map((a: any) => {
               const firstTopic = a.topicArticles[0]?.topic
+              const totalSec = (a.sections as any[]).length
+              const audioSec = (a.sections as any[]).filter((s: any) => s.audioUrl).length
+              const audioStatus = totalSec === 0 ? null : audioSec === totalSec ? 'all' : audioSec > 0 ? 'partial' : 'none'
+              const audioColor = audioStatus === 'all' ? '#22c55e' : audioStatus === 'partial' ? '#f59e0b' : '#ef4444'
+              const audioTitle = audioStatus === 'all'
+                ? `All ${totalSec} sections have audio`
+                : audioStatus === 'partial'
+                ? `${audioSec} of ${totalSec} sections have audio`
+                : `No audio generated (${totalSec} sections)`
               return (
                 <tr key={a.id} className="group border-t" style={{ borderColor: 'var(--bg-border)' }}>
                   <td className="px-4 py-3">
@@ -225,8 +235,17 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       {a.isFeatured && (
                         <Star size={12} fill="#f59e0b" style={{ color: '#f59e0b', marginTop: '3px', flexShrink: 0 }} />
                       )}
-                      <div className="min-w-0">
-                        <p className="font-medium truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>{a.title}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>{a.title}</p>
+                          {audioStatus && (
+                            <span
+                              className="inline-block w-2 h-2 rounded-full shrink-0"
+                              style={{ background: audioColor }}
+                              title={audioTitle}
+                            />
+                          )}
+                        </div>
                         <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>/{a.slug}</p>
                       </div>
                     </div>
@@ -291,18 +310,25 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       {a.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 hidden lg:table-cell" style={{ color: 'var(--text-secondary)' }}>
+                  <td className="px-4 py-3 hidden lg:table-cell whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>
                     {a.viewCount.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {new Date(a.updatedAt).toLocaleDateString()}
+                  <td className="px-4 py-3 hidden lg:table-cell whitespace-nowrap">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span className="opacity-60">↑</span> {new Date(a.updatedAt).toLocaleDateString()}
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+                        <span className="opacity-60">+</span> {new Date(a.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 sticky right-0" style={{ background: 'var(--bg-card)' }}>
+                  <td className="px-4 py-3 w-32 sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }}>
                     <div className="flex items-center justify-end gap-1">
-                      <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100">
+                      <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100" title="Preview">
                         <Eye size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
-                      <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100">
+                      <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100" title="Edit">
                         <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
                       <ArticleActions id={a.id} title={a.title} status={a.status} />

@@ -74,7 +74,6 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   // Cover image AI
   const [showCoverAI, setShowCoverAI] = useState(false)
   const [coverAIPrompt, setCoverAIPrompt] = useState('')
-  const [coverAILoading, setCoverAILoading] = useState(false)
 
   // Full article AI generator
   const [showAIGenerator, setShowAIGenerator] = useState(false)
@@ -151,6 +150,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       const audioStale = s.audioUrl && updated.content !== s.content ? true : updated.audioStale
       return { ...updated, audioStale: !!audioStale }
     }))
+    setDirtySectionIds((prev) => new Set([...prev, tempId]))
   }, [])
 
   const deleteSection = useCallback((tempId: string) => {
@@ -198,6 +198,19 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const audioJobStatusRef = useRef<AudioJobStatus>('idle')
   const skipAutoSaveRef = useRef(false) // set true when only audioUrl changes (already in DB)
 
+  // Individual panel save states
+  const [headerSaving, setHeaderSaving] = useState(false)
+  const [headerDirty,  setHeaderDirty]  = useState(false)
+  const [seoSaving,    setSeoSaving]    = useState(false)
+  const [seoDirty,     setSeoDirty]     = useState(false)
+  const [navSaving,    setNavSaving]    = useState(false)
+  const [navDirty,     setNavDirty]     = useState(false)
+  const [tagsSaving,   setTagsSaving]   = useState(false)
+  const [tagsDirty,    setTagsDirty]    = useState(false)
+  const [dirtySectionIds,  setDirtySectionIds]  = useState<Set<string>>(new Set())
+  const [savingSectionIds, setSavingSectionIds] = useState<Set<string>>(new Set())
+  const [imageGenerating,  setImageGenerating]  = useState(false)
+
   // Voice picker for Gen Missing Audio
   const GEMINI_VOICES = ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Schedar', 'Laomedeia'] as const
   const OPENAI_VOICES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'] as const
@@ -211,8 +224,11 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
 
   const handleTitleChange = (v: string) => {
     setTitle(v)
+    setHeaderDirty(true)
     if (!initialArticle.id) setSlug(autoSlug(v))
   }
+  const handleSlugChange = (v: string) => { setSlug(v); setHeaderDirty(true) }
+  const handleSummaryChange = (v: string) => { setSummary(v); setHeaderDirty(true) }
 
   const generateMeta = async () => {
     setMetaLoading(true)
@@ -237,7 +253,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           ogDescription:       cleanLine(d.ogDescription       ?? m.ogDescription).slice(0, 200),
           twitterTitle:        cleanLine(d.twitterTitle        ?? m.twitterTitle).slice(0, 70),
           twitterDescription:  cleanLine(d.twitterDescription  ?? m.twitterDescription).slice(0, 200),
-          tagNames:            d.tags?.length > 0 ? d.tags.slice(0, 10) : m.tagNames,
+
         }))
         toast.success('SEO metadata generated!')
       } else {
@@ -276,30 +292,36 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     }
   }
 
-  const generateCoverImage = async () => {
+  const generateCoverImage = () => {
     if (!coverAIPrompt.trim()) { toast.error('Enter an image prompt'); return }
-    setCoverAILoading(true)
-    try {
-      const res = await fetch('/api/ai/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: coverAIPrompt, size: '1792x1024', style: 'vivid' }),
+    setImageGenerating(true)
+    setShowCoverAI(false)
+    const prompt = coverAIPrompt
+    setCoverAIPrompt('')
+    // Fire-and-forget — UI stays fully responsive while the image generates
+    fetch('/api/ai/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        size: '1792x1024',
+        style: 'vivid',
+        ...(initialArticle.id && { articleId: initialArticle.id }),
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setCoverImageUrl(data.data.url)
+          setCoverImageId(data.data.mediaAssetId ?? null)
+          toast.success('Cover image generated and attached!')
+        } else {
+          toast.error(data.error ?? 'Image generation failed')
+        }
       })
-      const data = await res.json()
-      if (data.success) {
-        setCoverImageUrl(data.data.url)
-        setCoverImageId(data.data.mediaAssetId ?? null)
-        setShowCoverAI(false)
-        setCoverAIPrompt('')
-        toast.success('Cover image generated!')
-      } else {
-        toast.error(data.error ?? 'Image generation failed')
-      }
-    } catch {
-      toast.error('Failed to generate cover image')
-    } finally {
-      setCoverAILoading(false)
-    }
+      .catch(() => toast.error('Failed to generate cover image'))
+      .finally(() => setImageGenerating(false))
+    toast.info('Cover image generating in background…')
   }
 
 
@@ -546,6 +568,106 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       setSaving(false)
     }
   }, [title, slug, summary, sections, coverImageUrl, meta, initialArticle.id]) // eslint-disable-line
+
+  // ── Individual panel save functions ─────────────────────────────────────
+
+  const saveHeader = useCallback(async () => {
+    if (!initialArticle.id) { await save(); return }
+    if (!title.trim()) { toast.error('Title is required'); return }
+    setHeaderSaving(true)
+    try {
+      const res = await fetch(`/api/articles/${initialArticle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, slug: slug || autoSlug(title), summary }),
+      })
+      const data = await res.json()
+      if (data.success) { toast.success('Article info saved!'); setHeaderDirty(false) }
+      else toast.error(data.error ?? 'Save failed')
+    } finally { setHeaderSaving(false) }
+  }, [initialArticle.id, title, slug, summary]) // eslint-disable-line
+
+  const saveSection = useCallback(async (tempId: string) => {
+    if (!initialArticle.id) { await doSave(); return }
+    const section = sections.find((s) => s.tempId === tempId)
+    if (!section) return
+    if (!section.id) {
+      // New section without a DB id — full save creates it
+      await doSave()
+      return
+    }
+    setSavingSectionIds((prev) => new Set([...prev, tempId]))
+    try {
+      const res = await fetch(`/api/articles/${initialArticle.id}/sections/${section.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: section.title, content: section.content, order: section.order }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Section saved!')
+        setDirtySectionIds((prev) => { const next = new Set(prev); next.delete(tempId); return next })
+      } else {
+        toast.error(data.error ?? 'Save failed')
+      }
+    } finally {
+      setSavingSectionIds((prev) => { const next = new Set(prev); next.delete(tempId); return next })
+    }
+  }, [initialArticle.id, sections, doSave]) // eslint-disable-line
+
+  const saveSEO = useCallback(async () => {
+    if (!initialArticle.id) { await save(); return }
+    setSeoSaving(true)
+    try {
+      const res = await fetch(`/api/articles/${initialArticle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seoTitle: meta.seoTitle,
+          seoDescription: meta.seoDescription,
+          seoKeywords: meta.seoKeywords,
+          ogTitle: meta.ogTitle,
+          ogDescription: meta.ogDescription,
+          twitterTitle: meta.twitterTitle,
+          twitterDescription: meta.twitterDescription,
+          aiContentDeclaration: meta.aiContentDeclaration,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) { toast.success('SEO & Social saved!'); setSeoDirty(false) }
+      else toast.error(data.error ?? 'Save failed')
+    } finally { setSeoSaving(false) }
+  }, [initialArticle.id, meta]) // eslint-disable-line
+
+  const saveNav = useCallback(async () => {
+    if (!initialArticle.id) { await save(); return }
+    setNavSaving(true)
+    try {
+      const res = await fetch(`/api/articles/${initialArticle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subMenuIds: meta.subMenuIds, menuIds: meta.menuIds }),
+      })
+      const data = await res.json()
+      if (data.success) { toast.success('Navigation saved!'); setNavDirty(false) }
+      else toast.error(data.error ?? 'Save failed')
+    } finally { setNavSaving(false) }
+  }, [initialArticle.id, meta.subMenuIds, meta.menuIds]) // eslint-disable-line
+
+  const saveTags = useCallback(async () => {
+    if (!initialArticle.id) { await save(); return }
+    setTagsSaving(true)
+    try {
+      const res = await fetch(`/api/articles/${initialArticle.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagNames: meta.tagNames }),
+      })
+      const data = await res.json()
+      if (data.success) { toast.success('Tags saved!'); setTagsDirty(false) }
+      else toast.error(data.error ?? 'Save failed')
+    } finally { setTagsSaving(false) }
+  }, [initialArticle.id, meta.tagNames]) // eslint-disable-line
 
   const regenerateStaleAndSave = async () => {
     if (!initialArticle.id) return
@@ -855,7 +977,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>/articles/</span>
           <input
             value={slug}
-            onChange={(e) => setSlug(e.target.value)}
+            onChange={(e) => handleSlugChange(e.target.value)}
             placeholder="article-slug"
             className="flex-1 text-xs bg-transparent outline-none border-b border-dashed"
             style={{ borderColor: 'var(--bg-border)', color: 'var(--color-violet)' }}
@@ -863,12 +985,30 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         </div>
         <textarea
           value={summary}
-          onChange={(e) => setSummary(e.target.value)}
+          onChange={(e) => handleSummaryChange(e.target.value)}
           placeholder="Brief summary / excerpt (shown in cards and search)..."
           rows={2}
           className="w-full bg-transparent outline-none text-base resize-none"
           style={{ color: 'var(--text-secondary)' }}
         />
+        {initialArticle.id && (
+          <div className="flex justify-end pt-1">
+            <button
+              type="button"
+              onClick={saveHeader}
+              disabled={headerSaving || !headerDirty}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+              style={{
+                background: headerDirty ? 'var(--color-violet)' : 'var(--bg-elevated)',
+                color: headerDirty ? '#fff' : 'var(--text-muted)',
+                border: headerDirty ? 'none' : '1px solid var(--bg-border)',
+              }}
+            >
+              {headerSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+              {headerDirty ? 'Save Info' : 'Saved'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Editor + Sections ── */}
@@ -888,6 +1028,9 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 onMoveUp={() => moveSection(idx, idx - 1)}
                 onMoveDown={() => moveSection(idx, idx + 1)}
                 onAudioGenerated={(url) => updateSectionAudio(section.tempId, url)}
+                onSave={initialArticle.id ? () => saveSection(section.tempId) : undefined}
+                isSaving={savingSectionIds.has(section.tempId)}
+                isDirty={dirtySectionIds.has(section.tempId)}
               />
             ))}
 
@@ -942,15 +1085,37 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   </button>
                 )}
                 {/* AI Generate cover image */}
-                <button
-                  type="button"
-                  onClick={() => setShowCoverAI((v) => !v)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
-                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
-                >
-                  <Sparkles size={12} />
-                  Generate with AI
-                </button>
+                {imageGenerating ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                  >
+                    <Loader2 size={12} className="animate-spin" />
+                    Generating…
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverAI((v) => !v)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
+                    style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                  >
+                    <Sparkles size={12} />
+                    Generate with AI
+                  </button>
+                )}
+                {/* Manual refresh — checks if a background image was attached */}
+                {initialArticle.id && (
+                  <button
+                    type="button"
+                    onClick={() => router.refresh()}
+                    title="Refresh to load newly generated image"
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-lg border transition-colors hover:bg-gray-50"
+                    style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
+                  >
+                    <RefreshCw size={12} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowCoverPicker(true)}
@@ -981,12 +1146,12 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   <button
                     type="button"
                     onClick={generateCoverImage}
-                    disabled={coverAILoading || !coverAIPrompt.trim()}
+                    disabled={imageGenerating || !coverAIPrompt.trim()}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50 transition-opacity"
                     style={{ background: 'var(--color-violet)' }}
                   >
-                    {coverAILoading ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
-                    {coverAILoading ? 'Generating…' : 'Generate Cover Image'}
+                    {imageGenerating ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                    {imageGenerating ? 'Generating…' : 'Generate Cover Image'}
                   </button>
                   <button
                     type="button"
@@ -1044,16 +1209,30 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderColor: 'var(--bg-border)' }}>
               <Globe size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>SEO &amp; Social</span>
-              <button
-                type="button"
-                onClick={generateMeta}
-                disabled={metaLoading || !title.trim()}
-                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
-                style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
-              >
-                {metaLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                Generate All with AI
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={generateMeta}
+                  disabled={metaLoading || !title.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
+                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                >
+                  {metaLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                  Generate All with AI
+                </button>
+                {initialArticle.id && (
+                  <button
+                    type="button"
+                    onClick={saveSEO}
+                    disabled={seoSaving}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
+                    style={{ background: 'var(--color-violet)', color: '#fff' }}
+                  >
+                    {seoSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+                    Save SEO
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Tab bar */}
@@ -1302,9 +1481,21 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
               <Navigation2 size={15} style={{ color: 'var(--color-violet)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Navigation</span>
               {(meta.subMenuIds.length + meta.menuIds.length) > 0 && (
-                <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'var(--color-violet)', color: '#fff' }}>
                   {meta.subMenuIds.length + meta.menuIds.length} assigned
                 </span>
+              )}
+              {initialArticle.id && (
+                <button
+                  type="button"
+                  onClick={saveNav}
+                  disabled={navSaving}
+                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--color-violet)', color: '#fff' }}
+                >
+                  {navSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+                  Save Navigation
+                </button>
               )}
             </div>
             <div className="p-4 space-y-5">
@@ -1452,16 +1643,30 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   {meta.tagNames.length}/10
                 </span>
               )}
-              <button
-                type="button"
-                onClick={generateTags}
-                disabled={tagsLoading || !title.trim()}
-                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
-                style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
-              >
-                {tagsLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                Generate tags
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={generateTags}
+                  disabled={tagsLoading || !title.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity hover:opacity-80"
+                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                >
+                  {tagsLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                  Generate tags
+                </button>
+                {initialArticle.id && (
+                  <button
+                    type="button"
+                    onClick={saveTags}
+                    disabled={tagsSaving}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
+                    style={{ background: 'var(--color-violet)', color: '#fff' }}
+                  >
+                    {tagsSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+                    Save Tags
+                  </button>
+                )}
+              </div>
             </div>
             <div className="p-4">
               <TagInput

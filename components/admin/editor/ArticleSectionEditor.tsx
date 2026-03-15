@@ -2,7 +2,7 @@
 // components/admin/editor/ArticleSectionEditor.tsx
 import { useRef, useCallback, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { ChevronUp, ChevronDown, Trash2, GripVertical, Headphones, X, Play, Pause } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, GripVertical, Headphones, X, Play, Pause, Save, Loader2 } from 'lucide-react'
 import AIAssistPanel from './AIAssistPanel'
 
 const MarkdownEditor = dynamic(() => import('./MarkdownEditor'), {
@@ -30,6 +30,9 @@ interface Props {
   onMoveUp: () => void
   onMoveDown: () => void
   onAudioGenerated?: (url: string | null) => void
+  onSave?: () => void
+  isSaving?: boolean
+  isDirty?: boolean
 }
 
 const fmt = (s: number) => {
@@ -168,6 +171,7 @@ function SectionAudioPreview({ url, onRemove }: { url: string; onRemove: () => v
 export default function ArticleSectionEditor({
   section, index, total, articleId,
   onChange, onDelete, onMoveUp, onMoveDown, onAudioGenerated,
+  onSave, isSaving, isDirty,
 }: Props) {
   const insertRef = useRef<(md: string) => void>(() => {})
   const replaceRef = useRef<(md: string) => void>(() => {})
@@ -227,6 +231,24 @@ export default function ArticleSectionEditor({
             <Headphones size={11} />
             Out of sync
           </span>
+        )}
+
+        {onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isSaving}
+            title="Save this section"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium disabled:opacity-50 transition-all shrink-0"
+            style={{
+              background: isDirty ? 'var(--color-violet)' : 'var(--bg-surface)',
+              color: isDirty ? '#fff' : 'var(--text-muted)',
+              border: isDirty ? 'none' : '1px solid var(--bg-border)',
+            }}
+          >
+            {isSaving ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />}
+            Save
+          </button>
         )}
 
         <div className="flex items-center gap-0.5 shrink-0">

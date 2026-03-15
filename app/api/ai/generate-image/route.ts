@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       style,
       model: reqModel,
       enhancePrompt = true, // set to false to skip LangChain image-prompter step
+      articleId,            // optional — when provided, auto-attaches as article cover image
     } = body
 
     if (!prompt) return apiError('Prompt is required', 422)
@@ -82,6 +83,14 @@ export async function POST(req: NextRequest) {
         createdByUserId: userId,
       },
     })
+
+    // Auto-attach as article cover image when articleId is provided
+    if (articleId && !isNaN(parseInt(String(articleId), 10))) {
+      await prisma.article.update({
+        where: { id: parseInt(String(articleId), 10) },
+        data: { coverImage: { connect: { id: asset.id } } },
+      }).catch(() => {}) // non-fatal — image is already saved in media library
+    }
 
     // Log usage
     await prisma.aIUsageLog.create({
