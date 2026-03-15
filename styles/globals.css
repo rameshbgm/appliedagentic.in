@@ -985,12 +985,6 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 }
 .article-breadcrumb-current {
   color: var(--text-secondary);
-  max-width: 200px;
-}
-@media (min-width: 640px) {
-  .article-breadcrumb-current {
-    max-width: 400px;
-  }
 }
 
 /* Title */
@@ -2344,21 +2338,11 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-left: none;
   border-radius: 12px;
 }
-.article-page .section-optional::after { display: none; } /* gradient bar off in dark — uses ::before for terminal dots */
-.article-page .section-optional::before {
-  display: flex;
-  align-items: center;
-  content: '● ○ ○';
-  background: #161b22;
-  color: #444466;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 2px;
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(118, 185, 0, 0.12);
-}
+.article-page .section-optional::after { display: none; }
+.article-page .section-optional::before { display: none; } /* dots moved into header row */
+.article-page .section-optional-header::before { display: none; }
 .article-page .section-optional-header {
-  background: #0d1117;
+  background: #161b22;
   border-bottom-color: rgba(118, 185, 0, 0.15);
 }
 .article-page .section-optional-title {

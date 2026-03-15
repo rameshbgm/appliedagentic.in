@@ -207,6 +207,8 @@ export default async function ArticleDetailPage({ params }: Props) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
   const articleUrl = `${siteUrl}/articles/${article.slug}`
+  const truncate = (text: string, max = 15) => text.length > max ? `${text.slice(0, max)}…` : text
+  const firstNav = navAssignments[0] ?? null
   const fullContent = sections.length > 0
     ? sections.map(s => s.content).join('\n')
     : article.content
@@ -248,10 +250,38 @@ export default async function ArticleDetailPage({ params }: Props) {
             {/* Breadcrumb */}
             <nav className="article-breadcrumb">
               <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
+              {firstNav ? (
+                <>
+                  <ChevronRight size={12} className="opacity-40" />
+                  <Link
+                    href={`/${firstNav.menuSlug}`}
+                    title={firstNav.menuTitle.length > 15 ? firstNav.menuTitle : undefined}
+                    className="hover:text-(--green) transition-colors"
+                  >
+                    {truncate(firstNav.menuTitle)}
+                  </Link>
+                  <ChevronRight size={12} className="opacity-40" />
+                  <Link
+                    href={`/${firstNav.menuSlug}/${firstNav.subMenuSlug}`}
+                    title={firstNav.subMenuTitle.length > 15 ? firstNav.subMenuTitle : undefined}
+                    className="hover:text-(--green) transition-colors"
+                  >
+                    {truncate(firstNav.subMenuTitle)}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <ChevronRight size={12} className="opacity-40" />
+                  <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
+                </>
+              )}
               <ChevronRight size={12} className="opacity-40" />
-              <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
-              <ChevronRight size={12} className="opacity-40" />
-              <span className="line-clamp-1 article-breadcrumb-current">{article.title}</span>
+              <span
+                className="article-breadcrumb-current"
+                title={article.title.length > 15 ? article.title : undefined}
+              >
+                {truncate(article.title)}
+              </span>
             </nav>
 
             {/* Module badge */}
