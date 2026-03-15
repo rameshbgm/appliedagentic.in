@@ -443,8 +443,10 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .article-content .table-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 3px; }
 .article-content .table-scroll-wrapper::-webkit-scrollbar-thumb:hover { background: var(--text-muted, #64748b); }
 .article-content table  { width: 100%; border-collapse: collapse; margin: 0; }
-.article-content th { background: var(--bg-elevated); padding: .65em 1em; text-align: left; font-weight: 600; border-bottom: 2px solid var(--bg-border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-.article-content td { padding: .65em 1em; border-bottom: 1px solid var(--bg-border); }
+.article-content th { background: var(--bg-elevated); padding: .65em 1em; text-align: left; font-weight: 600; border-bottom: 2px solid var(--bg-border); border-right: 1px solid var(--bg-border); white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+.article-content th:last-child { border-right: none; }
+.article-content td { padding: .65em 1em; border-bottom: 1px solid var(--bg-border); border-right: 1px solid var(--bg-border); }
+.article-content td:last-child { border-right: none; }
 .article-content ul, .article-content ol { padding-left: 1.5em; margin-bottom: 1em; }
 .article-content li { margin-bottom: .4em; color: var(--text-secondary); line-height: 1.85; }
 .article-content hr { border: none; height: 1px; background: var(--bg-border); margin: 2em 0; }
