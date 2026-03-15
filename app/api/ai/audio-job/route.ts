@@ -33,12 +33,34 @@ export async function POST(req: NextRequest) {
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const { articleId } = await req.json()
+    const { articleId, sectionId } = await req.json()
     if (!articleId) return apiError('articleId required', 400)
 
-    // Count sections that still need audio (non-empty content, no audioUrl)
+    // When regenerating a specific section: clear its old audio first
+    if (sectionId) {
+      const section = await prisma.articleSection.findFirst({
+        where: { id: parseInt(String(sectionId)), articleId },
+        select: { audioUrl: true },
+      })
+      if (section?.audioUrl) {
+        // Delete old MediaAsset to avoid orphaned records
+        await prisma.mediaAsset.deleteMany({ where: { url: section.audioUrl } })
+        // Clear section audioUrl so the process route picks it up
+        await prisma.articleSection.updateMany({
+          where: { id: parseInt(String(sectionId)), articleId },
+          data: { audioUrl: null },
+        })
+      }
+    }
+
+    // Count sections that need audio — scoped to the target section when provided
     const total = await prisma.articleSection.count({
-      where: { articleId, audioUrl: null, content: { not: '' } },
+      where: {
+        articleId,
+        ...(sectionId ? { id: parseInt(String(sectionId)) } : {}),
+        audioUrl: null,
+        content: { not: '' },
+      },
     })
     if (total === 0) return apiError('No sections need audio', 400)
 

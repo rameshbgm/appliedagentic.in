@@ -13,7 +13,7 @@ const SectionInput = z.object({
   id: z.number().int().optional(),
   title: z.string().default(''),
   content: z.string().default(''),
-  audioUrl: z.string().optional(),
+  audioUrl: z.string().optional().nullable(),
   order: z.number().int().default(0),
 })
 

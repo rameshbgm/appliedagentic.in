@@ -15,7 +15,7 @@ interface Props {
   articleId?: number
   sectionId?: number
   sectionContent?: string
-  onAudioGenerated?: (url: string) => void
+  onAudioGenerated?: (url: string | null) => void
 }
 
 const textModes = ['generate', 'expand', 'summarize', 'rewrite', 'improve', 'outline']
@@ -106,28 +106,56 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
 
   const generateAudio = async () => {
     if (!articleId) { toast.error('Save the article first to attach audio'); return }
-    const text = audioSource === 'custom' ? audioText : sectionContent
-    if (!text?.trim()) { toast.error(audioSource === 'custom' ? 'Enter text to convert' : 'Section has no content'); return }
+    // For custom text without a sectionId we still use the direct endpoint (no job to scope)
+    const isCustomText = audioSource === 'custom'
+    const text = isCustomText ? audioText : sectionContent
+    if (!text?.trim()) { toast.error(isCustomText ? 'Enter text to convert' : 'Section has no content'); return }
+
+    if (isCustomText) {
+      // Custom text doesn't map to a section — use synchronous endpoint
+      setLoading(true)
+      try {
+        const res = await fetch('/api/ai/generate-audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ articleId, sectionId, text, preprocessMarkdown: true, voice: audioVoice }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          onAudioGenerated?.(data.data.audioUrl)
+          toast.success('Audio generated and attached!')
+        } else {
+          toast.error(data.error ?? 'Audio generation failed')
+        }
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // Article content path — use background job so UI stays responsive
     setLoading(true)
     try {
-      const res = await fetch('/api/ai/generate-audio', {
+      const jobRes = await fetch('/api/ai/audio-job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          articleId,
-          sectionId,
-          text,
-          preprocessMarkdown: true,
-          voice: audioVoice,
-        }),
+        body: JSON.stringify({ articleId, sectionId }),
       })
-      const data = await res.json()
-      if (data.success) {
-        onAudioGenerated?.(data.data.audioUrl)
-        toast.success('Audio generated and attached!')
-      } else {
-        toast.error(data.error ?? 'Audio generation failed')
-      }
+      const jobData = await jobRes.json()
+      if (!jobRes.ok) { toast.error(jobData.error ?? 'Could not start audio job'); return }
+
+      // Clear old audio in UI immediately (old MediaAsset deleted server-side above)
+      onAudioGenerated?.(null)
+
+      // Fire-and-forget: request survives even if user navigates away
+      fetch('/api/ai/audio-job/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ articleId, sectionId, voice: audioVoice }),
+        keepalive: true,
+      }).catch(() => {})
+
+      toast.info('Audio generating in background. Use the refresh button to check progress.')
     } finally {
       setLoading(false)
     }

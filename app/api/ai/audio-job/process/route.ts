@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
     const articleId = parseInt(String(body.articleId), 10)
     if (!articleId || isNaN(articleId)) return apiError('articleId required', 400)
     const voice: string = typeof body.voice === 'string' && body.voice ? body.voice : ttsConfig.voice
+    const sectionId: number | null = body.sectionId ? parseInt(String(body.sectionId), 10) : null
 
     const userId = parseInt((session.user as { id: string }).id)
 
@@ -39,9 +40,14 @@ export async function POST(req: NextRequest) {
       data: { status: 'running' },
     })
 
-    // Re-count and fetch fresh — use the same filter as the job creation route
+    // Re-count and fetch fresh — scoped to a single section when sectionId is provided
     const sections = await prisma.articleSection.findMany({
-      where: { articleId, audioUrl: null, content: { not: '' } },
+      where: {
+        articleId,
+        ...(sectionId ? { id: sectionId } : {}),
+        audioUrl: null,
+        content: { not: '' },
+      },
       orderBy: { order: 'asc' },
       select: { id: true, content: true, order: true, title: true },
     })

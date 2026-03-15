@@ -15,7 +15,7 @@ export interface SectionData {
   id?: number      // DB id once saved
   title: string
   content: string
-  audioUrl?: string
+  audioUrl?: string | null
   audioStale?: boolean  // true when content changed after audio was generated
   order: number
 }
@@ -29,7 +29,7 @@ interface Props {
   onDelete: () => void
   onMoveUp: () => void
   onMoveDown: () => void
-  onAudioGenerated?: (url: string) => void
+  onAudioGenerated?: (url: string | null) => void
 }
 
 const fmt = (s: number) => {

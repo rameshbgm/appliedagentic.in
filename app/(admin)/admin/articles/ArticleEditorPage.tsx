@@ -522,15 +522,15 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         } else {
           // Sync saved section IDs back to state, preserving audioUrl and clearing audioStale
           if (data.data?.sections) {
-            setSections((prev) =>
-              data.data.sections.map((s: { id: number; title: string; content: string; audioUrl?: string; order: number }) => {
-                const existing = prev.find((p) => p.id === s.id || p.tempId === `existing-${s.id}`)
+            setSections(() =>
+              data.data.sections.map((s: { id: number; title: string; content: string; audioUrl?: string | null; order: number }) => {
                 return {
                   tempId: `existing-${s.id}`,
                   id: s.id,
                   title: s.title,
                   content: s.content,
-                  audioUrl: s.audioUrl ?? existing?.audioUrl,
+                  // null = explicitly cleared in DB → undefined (no audio preview)
+                  audioUrl: s.audioUrl ?? undefined,
                   audioStale: false,
                   order: s.order,
                 }
@@ -651,6 +651,16 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
     }
     await doSave()
   }, [title, sections, doSave]) // eslint-disable-line
+
+  // "Save Anyway" — clear stale audio URLs so saved content and audio stay consistent,
+  // then save. Old MediaAssets become orphaned (minor) but sections are no longer mis-linked.
+  const saveAndClearStaleAudio = useCallback(async () => {
+    setAudioSyncModal(false)
+    setSections((prev) => prev.map((s) =>
+      s.audioUrl && s.audioStale ? { ...s, audioUrl: null, audioStale: false } : s
+    ))
+    await doSave()
+  }, [doSave])
 
   // Keep audioJobStatusRef in sync so the auto-save timer can read it without re-running
   audioJobStatusRef.current = audioJob.status
@@ -1939,7 +1949,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                 </button>
                 <button
                   type="button"
-                  onClick={async () => { setAudioSyncModal(false); await doSave() }}
+                  onClick={saveAndClearStaleAudio}
                   className="px-3 py-1.5 rounded-lg text-xs border transition-colors hover:bg-gray-50"
                   style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}
                 >
