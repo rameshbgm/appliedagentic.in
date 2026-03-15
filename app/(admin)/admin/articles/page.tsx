@@ -186,7 +186,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
       {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[700px]">
+        <table className="w-full text-sm min-w-215">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--bg-border)', color: 'var(--text-muted)' }}>
               {/* Sortable: Title */}
@@ -213,7 +213,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                   <SortIcon col="updatedAt" />
                 </Link>
               </th>
-              <th className="px-4 py-3 w-32 sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }} />
+              <th className="px-4 py-3 w-px whitespace-nowrap sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }} />
             </tr>
           </thead>
           <tbody>
@@ -323,7 +323,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 w-32 sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }}>
+                  <td className="px-4 py-3 w-px whitespace-nowrap sticky right-0 z-10" style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--bg-border)' }}>
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/articles/${a.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100" title="Preview">
                         <Eye size={14} style={{ color: 'var(--text-muted)' }} />
