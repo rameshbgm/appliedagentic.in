@@ -6,10 +6,13 @@ import ArticleCard from '@/components/public/ArticleCard'
 import NewsletterSection from '@/components/public/NewsletterSection'
 import { StaggerContainer, FadeIn, ParallaxSection } from '@/components/public/ScrollAnimations'
 import Link from 'next/link'
-import { BookOpen, Sparkles } from 'lucide-react'
+import { BookOpen, Sparkles, FileText } from 'lucide-react'
+import fs from 'fs'
+import path from 'path'
 import type { Metadata } from 'next'
 import { browseTopicsContent, featuredArticlesContent, ctaBannerContent } from '@/content/home'
 import ModuleTileGrid from '@/components/public/ModuleTileGrid'
+import ScrollBorderWrapper from '@/components/public/ScrollBorderWrapper'
 
 export const metadata: Metadata = {
   title: 'Applied Agentic AI — Master AI Agents & LLMs',
@@ -55,8 +58,50 @@ async function getData() {
   }
 }
 
+const CARD_GRADIENTS = [
+  { gradient: 'linear-gradient(135deg, #34d399 0%, #38bdf8 100%)', icon: '#34d399', glow: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.25)',  label: '#34d399'  },
+  { gradient: 'linear-gradient(135deg, #818cf8 0%, #ec4899 100%)', icon: '#818cf8', glow: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.25)', label: '#818cf8' },
+  { gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', icon: '#f59e0b', glow: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.25)',  label: '#f59e0b' },
+  { gradient: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', icon: '#38bdf8', glow: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.25)',  label: '#38bdf8' },
+  { gradient: 'linear-gradient(135deg, #f472b6 0%, #fb923c 100%)', icon: '#f472b6', glow: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.25)', label: '#f472b6' },
+  { gradient: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 100%)', icon: '#4ade80', glow: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.25)',  label: '#4ade80' },
+]
+
+function getStaticFiles() {
+  try {
+    const publicDir = path.join(process.cwd(), 'public')
+    return fs
+      .readdirSync(publicDir)
+      .filter((f) => f.endsWith('.html') || f.endsWith('.htm'))
+      .map((f) => {
+        const fallbackName = f.replace(/\.(html|htm)$/, '').replace(/[-_]/g, ' ')
+        let title = fallbackName
+        let description: string | null = null
+
+        try {
+          const html = fs.readFileSync(path.join(publicDir, f), 'utf8')
+          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+          if (titleMatch) title = titleMatch[1].trim()
+
+          // match both single-line and multi-line description meta tags
+          const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+            ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
+            ?? html.match(/name="description"[\s\S]*?content="([^"]+)"/i)
+          if (descMatch) description = descMatch[1].trim()
+        } catch {
+          // if reading fails, use filename-based fallback
+        }
+
+        return { name: fallbackName, title, description, file: f, href: `/${f}` }
+      })
+  } catch {
+    return []
+  }
+}
+
 export default async function HomePage() {
   const { navMenus, featuredArticles } = await getData()
+  const staticFiles = getStaticFiles()
 
   return (
     <>
@@ -102,6 +147,131 @@ export default async function HomePage() {
 
         <ModuleTileGrid menus={navMenus} />
       </section>
+
+      {/* ── Static Resources ── */}
+      {staticFiles.length > 0 && (
+        <section className="py-16 sm:py-24 px-4 md:px-8 max-w-7xl mx-auto">
+          <ParallaxSection speed={0.25}>
+            <FadeIn>
+              <div className="mb-12 sm:mb-16">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileText size={15} style={{ color: '#34D399' }} />
+                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#34D399' }}>
+                    Presentations &amp; Guides
+                  </span>
+                </div>
+                <h2
+                  className="font-black leading-[1.08] tracking-tight mb-4"
+                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
+                >
+                  <span style={{ color: 'var(--text-primary)' }}>Explore our </span>
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, #34d399 0%, #38bdf8 50%, #818cf8 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    interactive slides
+                  </span>
+                </h2>
+                <p
+                  className="text-base sm:text-lg max-w-2xl"
+                  style={{ color: 'var(--text-secondary)', fontFamily: "'Literata', 'Source Serif 4', Georgia, serif", fontStyle: 'italic', lineHeight: '1.7' }}
+                >
+                  Hands-on presentations and visual guides covering agentic AI concepts, architectures, and real-world patterns.
+                </p>
+              </div>
+            </FadeIn>
+          </ParallaxSection>
+
+          {/* 2-row max: 2-col grid ~2×220px+gaps≈460px */}
+          <ScrollBorderWrapper
+            className="static-resources-scroll"
+            style={{
+              maxHeight: 'clamp(440px, 50vh, 500px)',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              padding: '12px',
+              borderRadius: '1.25rem',
+            }}
+          >
+          <StaggerContainer className="grid grid-cols-2 gap-3">
+            {staticFiles.map((item, idx) => {
+              const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
+              return (
+              <a
+                key={item.file}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col gap-3 p-4 sm:p-6 rounded-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--bg-border)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                {/* External link icon — top-right corner */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={palette.icon}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="absolute top-4 right-4 opacity-40 group-hover:opacity-100 transition-opacity"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+
+                {/* Icon area */}
+                <div
+                  className="flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl"
+                  style={{ background: `linear-gradient(135deg, ${palette.glow.replace('0.15', '0.18')} 0%, ${palette.glow.replace('0.15', '0.08')} 100%)`, border: `1px solid ${palette.border}` }}
+                >
+                  <FileText size={14} className="sm:hidden" style={{ color: palette.icon }} />
+                  <FileText size={20} className="hidden sm:block" style={{ color: palette.icon }} />
+                </div>
+
+                {/* Title */}
+                <span
+                  className="font-bold capitalize leading-snug pr-5 text-[0.78rem] sm:text-[0.95rem]"
+                  style={{ fontFamily: "'Inter', sans-serif", background: palette.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                >
+                  {item.title}
+                </span>
+
+                {/* Description */}
+                {item.description && (
+                  <p
+                    className="text-[0.7rem] sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3"
+                    style={{ color: 'var(--text-secondary)', fontFamily: "'Literata', 'Source Serif 4', Georgia, serif", fontStyle: 'italic' }}
+                  >
+                    {item.description}
+                  </p>
+                )}
+
+                {/* Open label */}
+                <span
+                  className="text-[0.6rem] sm:text-xs font-semibold uppercase tracking-widest mt-auto"
+                  style={{ color: palette.label }}
+                >
+                  Open →
+                </span>
+              </a>
+            )})
+            }
+          </StaggerContainer>
+          </ScrollBorderWrapper>
+        </section>
+      )}
 
       {/* ── Featured Articles ── */}
       {featuredArticles.length > 0 && (

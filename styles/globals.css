@@ -139,6 +139,21 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .mega-col-scroll::-webkit-scrollbar-thumb        { background: rgba(99,99,120,.2); border-radius: 99px; }
 .mega-col-scroll::-webkit-scrollbar-thumb:hover  { background: rgba(59,130,246,.45); }
 
+/* ─── Static resources scroll container ─────────────────────────────────────── */
+.static-resources-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99,99,120,.25) transparent;
+}
+.static-resources-scroll::-webkit-scrollbar              { width: 5px; }
+.static-resources-scroll::-webkit-scrollbar-track        { background: transparent; }
+.static-resources-scroll::-webkit-scrollbar-thumb        { background: rgba(99,99,120,.3); border-radius: 99px; }
+.static-resources-scroll::-webkit-scrollbar-thumb:hover  { background: rgba(52,211,153,.5); }
+/* On touch/mobile: hide the scrollbar chrome but keep scrolling */
+@media (hover: none) and (pointer: coarse) {
+  .static-resources-scroll { scrollbar-width: none; }
+  .static-resources-scroll::-webkit-scrollbar { display: none; }
+}
+
 /* ─── Module tile thin rotating gradient border ─────────────────────────────── */
 .module-tile-wrapper {
   /* overflow-hidden + rounded-2xl clips the spinning ring to a 1 px border */
