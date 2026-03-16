@@ -1,7 +1,7 @@
 'use client'
 // components/public/Navbar.tsx — 3-column mega-nav: Menu → SubMenu → Articles
 import Link from 'next/link'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Menu as MenuIcon, X, Search, Zap, ChevronRight, ChevronDown, ArrowRight } from 'lucide-react'
 import { useTheme } from '@/components/shared/ThemeProvider'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
@@ -99,6 +99,32 @@ export default function Navbar({ navMenus = [] }: Props) {
       .finally(() => setLoadingSubId(null))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleCache])
+
+  // Pre-fetch all sub-menu articles in the background on mount
+  useEffect(() => {
+    const allSubIds = navMenus.flatMap((m) => m.subMenus?.map((s) => s.id) ?? [])
+    allSubIds.forEach((subId, i) => {
+      // stagger requests slightly to avoid hammering the server
+      setTimeout(() => {
+        fetch(`/api/submenus/${subId}/articles`)
+          .then((r) => r.json())
+          .then((data) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const articles: PreviewArticle[] = (data.data ?? []).map((item: any) => ({
+              id: item.article.id,
+              title: item.article.title,
+              slug: item.article.slug,
+              summary: item.article.summary ?? null,
+              coverImage: item.article.coverImage ?? null,
+            }))
+            setArticleCache((prev) => ({ ...prev, [subId]: articles }))
+          })
+          .catch(() => setArticleCache((prev) => ({ ...prev, [subId]: [] })))
+      }, i * 120)
+    })
+  // run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const scheduleMegaClose = useCallback(() => {
     closeTimer.current = setTimeout(() => {
