@@ -153,6 +153,15 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   .static-resources-scroll { scrollbar-width: none; }
   .static-resources-scroll::-webkit-scrollbar { display: none; }
 }
+/* Responsive max-heights: mobile = 3 list rows; desktop (md+) = 3 tile rows */
+.static-resources-responsive {
+  max-height: clamp(234px, 38vh, 294px); /* mobile: ~3×78px rows */
+}
+@media (min-width: 768px) {
+  .static-resources-responsive {
+    max-height: clamp(480px, 60vh, 540px); /* desktop: ~3×160px rows + gap */
+  }
+}
 
 /* ─── Module tile thin rotating gradient border ─────────────────────────────── */
 .module-tile-wrapper {

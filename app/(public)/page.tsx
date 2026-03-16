@@ -58,13 +58,38 @@ async function getData() {
   }
 }
 
+// Rich multi-stop text-only gradients — picked by filename hash for variety
+const FILE_NAME_GRADIENTS = [
+  'linear-gradient(90deg, #34d399 0%, #38bdf8 50%, #818cf8 100%)',
+  'linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
+  'linear-gradient(90deg, #818cf8 0%, #ec4899 50%, #fb923c 100%)',
+  'linear-gradient(90deg, #38bdf8 0%, #34d399 50%, #4ade80 100%)',
+  'linear-gradient(90deg, #f472b6 0%, #a78bfa 50%, #38bdf8 100%)',
+  'linear-gradient(90deg, #4ade80 0%, #f59e0b 50%, #ef4444 100%)',
+  'linear-gradient(90deg, #a78bfa 0%, #38bdf8 50%, #34d399 100%)',
+  'linear-gradient(90deg, #fb923c 0%, #f59e0b 50%, #4ade80 100%)',
+  'linear-gradient(90deg, #ec4899 0%, #818cf8 50%, #38bdf8 100%)',
+  'linear-gradient(90deg, #34d399 0%, #a78bfa 50%, #ec4899 100%)',
+  'linear-gradient(90deg, #38bdf8 0%, #f472b6 50%, #fb923c 100%)',
+  'linear-gradient(90deg, #4ade80 0%, #38bdf8 50%, #a78bfa 100%)',
+  'linear-gradient(90deg, #fbbf24 0%, #f472b6 50%, #818cf8 100%)',
+  'linear-gradient(90deg, #34d399 0%, #fbbf24 50%, #f472b6 100%)',
+  'linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #fbbf24 100%)',
+  'linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #4ade80 100%)',
+]
+function getNameGradient(filename: string): string {
+  let h = 0
+  for (let i = 0; i < filename.length; i++) h = (h * 31 + filename.charCodeAt(i)) & 0xffffffff
+  return FILE_NAME_GRADIENTS[Math.abs(h) % FILE_NAME_GRADIENTS.length]
+}
+
 const CARD_GRADIENTS = [
-  { gradient: 'linear-gradient(135deg, #34d399 0%, #38bdf8 100%)', icon: '#34d399', glow: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.25)',  label: '#34d399'  },
-  { gradient: 'linear-gradient(135deg, #818cf8 0%, #ec4899 100%)', icon: '#818cf8', glow: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.25)', label: '#818cf8' },
-  { gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', icon: '#f59e0b', glow: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.25)',  label: '#f59e0b' },
-  { gradient: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', icon: '#38bdf8', glow: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.25)',  label: '#38bdf8' },
-  { gradient: 'linear-gradient(135deg, #f472b6 0%, #fb923c 100%)', icon: '#f472b6', glow: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.25)', label: '#f472b6' },
-  { gradient: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 100%)', icon: '#4ade80', glow: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.25)',  label: '#4ade80' },
+  { gradient: 'linear-gradient(135deg, #34d399 0%, #38bdf8 100%)', icon: '#34d399', glow: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.25)',  label: '#34d399',  colorA: '#34d399', colorB: '#38bdf8' },
+  { gradient: 'linear-gradient(135deg, #818cf8 0%, #ec4899 100%)', icon: '#818cf8', glow: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.25)', label: '#818cf8', colorA: '#818cf8', colorB: '#ec4899' },
+  { gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', icon: '#f59e0b', glow: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.25)',  label: '#f59e0b',  colorA: '#f59e0b', colorB: '#ef4444' },
+  { gradient: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', icon: '#38bdf8', glow: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.25)',  label: '#38bdf8',  colorA: '#38bdf8', colorB: '#818cf8' },
+  { gradient: 'linear-gradient(135deg, #f472b6 0%, #fb923c 100%)', icon: '#f472b6', glow: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.25)', label: '#f472b6', colorA: '#f472b6', colorB: '#fb923c' },
+  { gradient: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 100%)', icon: '#4ade80', glow: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.25)',  label: '#4ade80',  colorA: '#4ade80', colorB: '#38bdf8' },
 ]
 
 function getStaticFiles() {
@@ -186,90 +211,106 @@ export default async function HomePage() {
             </FadeIn>
           </ParallaxSection>
 
-          {/* 2-row max: 2-col grid ~2×220px+gaps≈460px */}
+          {/* Mobile: list rows (3 visible + scroll) | Desktop md+: 3-col tile grid (3 rows + scroll) */}
+          {/* Scroll container is narrowed; heading stays in full-width section */}
+          <div className="max-w-3xl">
           <ScrollBorderWrapper
-            className="static-resources-scroll"
+            className="static-resources-scroll static-resources-responsive"
             style={{
-              maxHeight: 'clamp(440px, 50vh, 500px)',
               overflowY: 'auto',
               overflowX: 'hidden',
-              padding: '12px',
-              borderRadius: '1.25rem',
+              borderRadius: '1rem',
             }}
           >
-          <StaggerContainer className="grid grid-cols-2 gap-3">
-            {staticFiles.map((item, idx) => {
-              const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
-              return (
-              <a
-                key={item.file}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative flex flex-col gap-3 p-4 sm:p-6 rounded-2xl transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
-                style={{
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--bg-border)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                {/* External link icon — top-right corner */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={palette.icon}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="absolute top-4 right-4 opacity-40 group-hover:opacity-100 transition-opacity"
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-
-                {/* Icon area */}
-                <div
-                  className="flex items-center justify-center w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl"
-                  style={{ background: `linear-gradient(135deg, ${palette.glow.replace('0.15', '0.18')} 0%, ${palette.glow.replace('0.15', '0.08')} 100%)`, border: `1px solid ${palette.border}` }}
-                >
-                  <FileText size={14} className="sm:hidden" style={{ color: palette.icon }} />
-                  <FileText size={20} className="hidden sm:block" style={{ color: palette.icon }} />
-                </div>
-
-                {/* Title */}
-                <span
-                  className="font-bold capitalize leading-snug pr-5 text-[0.78rem] sm:text-[0.95rem]"
-                  style={{ fontFamily: "'Inter', sans-serif", background: palette.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                >
-                  {item.title}
-                </span>
-
-                {/* Description */}
-                {item.description && (
-                  <p
-                    className="text-[0.7rem] sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3"
-                    style={{ color: 'var(--text-secondary)', fontFamily: "'Literata', 'Source Serif 4', Georgia, serif", fontStyle: 'italic' }}
+            {/* ── Mobile list (hidden on md+) ── */}
+            <div className="flex flex-col md:hidden">
+              {staticFiles.map((item, idx) => {
+                const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
+                return (
+                  <a
+                    key={item.file}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-white/5 first:rounded-t-xl last:rounded-b-xl"
+                    style={{ borderBottom: '1px solid var(--bg-border)' }}
                   >
-                    {item.description}
-                  </p>
-                )}
+                    <div
+                      className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg"
+                      style={{ background: `linear-gradient(135deg, ${palette.glow.replace('0.15','0.2')} 0%, ${palette.glow.replace('0.15','0.07')} 100%)`, border: `1px solid ${palette.border}` }}
+                    >
+                      <FileText size={14} style={{ color: palette.icon }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate text-[0.78rem] leading-tight"
+                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: "'Inter', sans-serif" }}>
+                        {item.title}
+                      </p>
+                      {item.description && (
+                        <p className="mt-0.5 truncate text-[0.65rem]"
+                          style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-40 group-hover:opacity-100 transition-opacity">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                )
+              })}
+            </div>
 
-                {/* Open label */}
-                <span
-                  className="text-[0.6rem] sm:text-xs font-semibold uppercase tracking-widest mt-auto"
-                  style={{ color: palette.label }}
-                >
-                  Open →
-                </span>
-              </a>
-            )})
-            }
-          </StaggerContainer>
+            {/* ── Desktop 3-col tile grid (hidden on mobile) ── */}
+            <div className="hidden md:grid grid-cols-3 gap-3 p-1">
+              {staticFiles.map((item, idx) => {
+                const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
+                return (
+                  <div
+                    key={item.file}
+                    className="module-tile-wrapper relative rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    {/* Spinning conic-gradient ring — clipped to 1 px by overflow-hidden + margin */}
+                    <div
+                      className="module-tile-ring"
+                      style={{ background: `conic-gradient(from 0deg, ${palette.colorA} 0%, ${palette.colorB} 50%, ${palette.colorA} 100%)` }}
+                    />
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative flex flex-col gap-0"
+                      style={{ background: 'var(--bg-surface)', display: 'flex', position: 'relative', zIndex: 1, margin: '1px', borderRadius: 'calc(0.75rem - 1px)', padding: '1rem' }}
+                    >
+                      {/* top-right external icon */}
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      <p className="font-bold text-[0.92rem] leading-snug pr-4 line-clamp-2 pb-3"
+                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: "'Inter', sans-serif" }}>
+                        {item.title}
+                      </p>
+                      <div style={{ height: '1px', background: `linear-gradient(90deg, ${palette.colorA}55, ${palette.colorB}33, transparent)` }} />
+                      {item.description && (
+                        <p className="text-[0.68rem] leading-relaxed line-clamp-2 pt-3"
+                          style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          {item.description}
+                        </p>
+                      )}
+                      <span className="text-[0.6rem] font-semibold uppercase tracking-widest mt-auto pt-3" style={{ color: palette.label }}>
+                        Open →
+                      </span>
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
           </ScrollBorderWrapper>
+          </div>
         </section>
       )}
 
