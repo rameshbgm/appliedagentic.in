@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#FFFFFF" />
       </head>
-      <body suppressHydrationWarning style={{ fontFamily: "'Inter', system-ui, sans-serif" }} className="antialiased">
+      <body suppressHydrationWarning style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }} className="antialiased">
         {children}
       </body>
     </html>
