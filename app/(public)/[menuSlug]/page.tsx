@@ -1,11 +1,10 @@
-// app/(public)/[menuSlug]/page.tsx
-// Public page for a top-level menu: lists its sub-menus and directly-assigned articles
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { BookOpen } from 'lucide-react'
 import type { Metadata } from 'next'
-import SubMenusView from './SubMenusView'
+import MenuContentLayout from './MenuContentLayout'
 import ArticlesView from './[subMenuSlug]/ArticlesView'
 
 interface Props {
@@ -54,6 +53,22 @@ export default async function MenuPage({ params }: Props) {
           orderBy: { order: 'asc' },
           include: {
             _count: { select: { articles: true } },
+            articles: {
+              orderBy: { orderIndex: 'asc' },
+              include: {
+                article: {
+                  select: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    summary: true,
+                    readingTimeMinutes: true,
+                    status: true,
+                    coverImage: { select: { url: true } },
+                  },
+                },
+              },
+            },
           },
         },
         menuArticles: {
@@ -92,31 +107,38 @@ export default async function MenuPage({ params }: Props) {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div
-        className="w-full px-4 md:px-8 pt-12 pb-14"
-        style={{ borderBottom: '1px solid var(--bg-border)' }}
-      >
-        <div className="max-w-5xl mx-auto">
+      <div className="relative overflow-hidden w-full px-4 md:px-8 pt-14 pb-16" style={{ borderBottom: '1px solid var(--bg-border)' }}>
+        {/* Decorative blobs */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }} aria-hidden>
+          <div style={{ position: 'absolute', top: '-20%', right: '0%', width: 560, height: 560, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)' }} />
+          <div style={{ position: 'absolute', bottom: '-30%', left: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%)' }} />
+        </div>
+        <div className="max-w-5xl mx-auto relative">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-colors hover:text-[var(--green)]"
+            className="inline-flex items-center gap-1.5 text-sm font-medium mb-5 transition-colors"
             style={{ color: 'var(--text-muted)' }}
           >
             ← Back to Home
           </Link>
-          <nav className="flex items-center gap-2 text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-            <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
+          <nav className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+            <Link href="/" className="hover:underline transition-colors">Home</Link>
             <span className="opacity-40">&rsaquo;</span>
             <span style={{ color: 'var(--text-primary)' }}>{menu.title}</span>
           </nav>
+          <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-[0.15em]" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.22)' }}>
+            <BookOpen size={12} /> Learning Path
+          </div>
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight mb-4"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-black leading-[1.06] tracking-tight mb-5"
+            style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontFamily: "'Inter', sans-serif" }}
           >
-            {menu.title}
+            <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 40%, #38bdf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              {menu.title}
+            </span>
           </h1>
           {menu.description && (
-            <p className="text-lg leading-relaxed max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-lg leading-relaxed max-w-2xl" style={{ color: 'var(--text-secondary)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic', lineHeight: 1.7 }}>
               {menu.description}
             </p>
           )}
@@ -125,12 +147,18 @@ export default async function MenuPage({ params }: Props) {
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 space-y-14">
 
-        {/* ── Sub-menus section ── */}
+        {/* ── Sub-menus + their articles (two-panel layout) ── */}
         {menu.subMenus.length > 0 && (
-          <SubMenusView subMenus={menu.subMenus} menuSlug={menu.slug} />
+          <MenuContentLayout
+            subMenus={menu.subMenus.map((sm) => ({
+              ...sm,
+              articles: sm.articles.filter((a) => a.article.status === 'PUBLISHED'),
+            }))}
+            menuSlug={menu.slug}
+          />
         )}
 
-        {/* ── Articles section (directly assigned to this menu) ── */}
+        {/* ── Articles directly assigned to this menu ── */}
         {articles.length > 0 && (
           <section>
             <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
