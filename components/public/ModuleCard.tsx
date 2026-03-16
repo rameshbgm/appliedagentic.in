@@ -23,7 +23,7 @@ export default function ModuleCard({
   return (
     <Link href={`/modules/${slug}`} className="block group h-full">
       <div
-        className="relative h-full rounded-2xl p-5 overflow-hidden transition-all duration-200 group-hover:-translate-y-1"
+        className="relative h-full rounded-2xl p-3 overflow-hidden transition-all duration-200 group-hover:-translate-y-1"
         style={{
           background: 'var(--bg-surface)',
           border: `1px solid ${c}28`,
@@ -37,9 +37,9 @@ export default function ModuleCard({
           ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-card)'
         }}
       >
-        {/* Module number */}
+        {/* Module number — subtle top-right */}
         <div
-          className="absolute top-4 right-4 text-[10px] font-bold opacity-20 group-hover:opacity-40 transition-opacity"
+          className="absolute top-3 right-3 text-[9px] font-bold opacity-20 group-hover:opacity-40 transition-opacity"
           style={{ color: c }}
         >
           {String(index + 1).padStart(2, '0')}
@@ -47,33 +47,33 @@ export default function ModuleCard({
 
         {/* Icon */}
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-4 relative z-10"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-base mb-2.5 relative z-10"
           style={{ background: `${c}20` }}
         >
           {icon ?? '📚'}
         </div>
 
         {/* Title */}
-        <h3 className="font-semibold text-[15px] mb-1.5 leading-snug relative z-10" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="card-title mb-1 relative z-10 line-clamp-3">
           {name}
         </h3>
 
         {/* Description */}
         {description && (
-          <p className="text-[13px] line-clamp-2 mb-4 relative z-10" style={{ color: 'var(--text-muted)' }}>
+          <p className="card-summary line-clamp-2 mb-3 relative z-10">
             {description}
           </p>
         )}
 
         {/* Footer meta */}
-        <div className="flex items-center justify-between relative z-10 mt-auto pt-3" style={{ borderTop: `1px solid ${c}18` }}>
-          <div className="flex items-center gap-2.5">
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style={{ background: `${c}18`, color: c }}>
+        <div className="flex items-center justify-between relative z-10 mt-auto pt-2.5" style={{ borderTop: `1px solid ${c}18` }}>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md" style={{ background: `${c}18`, color: c }}>
               {topicCount} {topicCount === 1 ? 'topic' : 'topics'}
             </span>
-            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{articleCount} articles</span>
+            <span className="card-meta-text text-[10px]">{articleCount} articles</span>
           </div>
-          <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" style={{ color: c }} />
+          <ArrowRight size={12} className="transition-transform duration-200 group-hover:translate-x-1" style={{ color: c }} />
         </div>
       </div>
     </Link>

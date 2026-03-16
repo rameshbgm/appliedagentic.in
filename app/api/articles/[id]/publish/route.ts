@@ -46,7 +46,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     // Revalidate the article page and list after status change
     revalidatePath(`/articles/${article.slug}`)
-    revalidatePath('/articles')
     invalidateCache('articles', 'articles-list', `article-${id}`)
 
     return apiSuccess(article)

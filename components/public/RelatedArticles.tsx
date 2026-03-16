@@ -29,12 +29,12 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
 
   return (
     <section className="mt-12">
-      <h2 className="text-lg font-bold mb-5" style={{ color: 'var(--text-primary)' }}>
+      <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
         {title}
       </h2>
 
       {/* Horizontal scroll on mobile, wrap on desktop */}
-      <div className="flex gap-4 overflow-x-auto pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0 snap-x snap-mandatory">
+      <div className="flex gap-3 overflow-x-auto pb-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0 snap-x snap-mandatory">
         {articles.map((a) => {
           const color = a.module?.color ?? '#1E293B'
           return (
@@ -42,51 +42,56 @@ export default function RelatedArticles({ articles, title = 'Related Articles' }
               key={a.id}
               href={`/articles/${a.slug}`}
               onClick={() => showLoading(`/articles/${a.slug}`)}
-              className="group shrink-0 w-72 sm:w-auto rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg snap-start"
+              className="group shrink-0 w-64 sm:w-auto rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg snap-start"
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--bg-border)',
               }}
             >
+              {/* Cover — thin banner */}
               {a.coverImage ? (
-                <LazyImage
-                  src={a.coverImage}
-                  alt={a.title}
-                  wrapperClassName="relative overflow-hidden w-full h-36"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                <div className="card-cover">
+                  <LazyImage
+                    src={a.coverImage}
+                    alt={a.title}
+                    wrapperClassName="relative overflow-hidden w-full"
+                    className="object-cover w-full group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
               ) : (
                 <div
-                  className="h-36 flex items-center justify-center text-3xl"
+                  className="h-10 flex items-center justify-center text-xl"
                   style={{ background: color + '15' }}
                 >
                   📄
                 </div>
               )}
 
-              <div className="p-4">
+              <div className="p-2.5">
                 {a.module && (
                   <span
-                    className="text-xs font-medium px-2 py-0.5 rounded-full inline-block mb-2"
+                    className="text-[9px] font-medium px-1.5 py-0.5 rounded-full inline-block mb-1.5"
                     style={{ background: color + '20', color }}
                   >
                     {a.module.name}
                   </span>
                 )}
-                <h3
-                  className="font-semibold text-sm leading-snug line-clamp-2 mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <h3 className="card-title line-clamp-2 mb-1.5">
                   {a.title}
                 </h3>
-                <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {a.summary && (
+                  <p className="card-summary line-clamp-1 mb-1.5">
+                    {a.summary}
+                  </p>
+                )}
+                <div className="card-meta-row flex items-center gap-2.5 text-[10px]">
                   {a.readingTime && (
                     <span className="flex items-center gap-1">
-                      <Clock size={11} /> {a.readingTime} min
+                      <Clock size={9} /> {a.readingTime} min
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    <Eye size={11} /> {a.viewCount}
+                    <Eye size={9} /> {a.viewCount}
                   </span>
                 </div>
               </div>

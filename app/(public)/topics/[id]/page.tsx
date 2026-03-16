@@ -47,6 +47,7 @@ export default async function TopicDetailPage({ params }: Props) {
           include: {
             article: {
               include: {
+                coverImage: { select: { url: true } },
                 articleTags: { include: { tag: { select: { name: true } } } },
                 topicArticles: {
                   take: 1,
@@ -123,13 +124,14 @@ export default async function TopicDetailPage({ params }: Props) {
       {/* Articles Grid */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-14">
         {articles.length > 0 ? (
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {articles.map((a) => (
               <ArticleCard
                 key={a.id}
                 title={a.title}
                 slug={a.slug}
                 summary={a.summary}
+                coverImageUrl={(a as any).coverImage?.url}
                 readingTime={a.readingTimeMinutes}
                 viewCount={a.viewCount}
                 createdAt={a.createdAt}

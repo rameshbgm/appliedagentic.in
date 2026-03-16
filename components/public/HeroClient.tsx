@@ -7,7 +7,7 @@
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Zap } from 'lucide-react'
-import { heroContent } from '@/content/home'
+import { heroContent, heroRotatingMessages } from '@/content/home'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Props {
@@ -53,7 +53,79 @@ function useTypewriter(words: string[], typingMs = 80, pauseMs = 1800, erasingMs
   return displayed
 }
 
-// ─── Animated dots overlay ──────────────────────────────────────────────────
+// ─── Rotating hero messages ────────────────────────────────────────────────────
+const HERO_MESSAGES = [
+  'Build, deploy, and reason about AI agents — from LLM fundamentals to production-ready agentic workflows.',
+  'Go beyond prompting — understand the architecture behind autonomous, tool-using AI systems.',
+  'From RAG pipelines to multi-agent orchestration — learn what actually works in production.',
+  'Master the patterns that power real AI agents: memory, planning, tools, and reflection.',
+  'The internet runs on APIs. The future runs on agents — learn to build both.',
+  'Structured paths from first principles to deployed, reasoning AI systems.',
+  'LLMs are the engine. Agents are the vehicle. Learn to drive.',
+  'Explore the full stack of agentic AI — models, memory, tools, and orchestration layers.',
+  'Every great AI product starts with understanding how language models reason and act.',
+  'Cut through the hype — deep, practical knowledge on agentic systems that ship.',
+  'From zero-shot prompts to autonomous agents that plan, act, and self-correct.',
+  'Learn to build AI that doesn\'t just respond — it decides, acts, and adapts.',
+  'The era of single-turn chatbots is over. Welcome to the age of agentic AI.',
+  'Understand how agents perceive, reason, and act — then build your own.',
+  'Production AI isn\'t about clever prompts — it\'s about robust, observable systems.',
+  'RAG, tool-calling, memory, planning — master every pillar of modern agentic design.',
+  'AI agents that work in the real world require more than a good model — learn what else.',
+  'From transformer internals to deployment pipelines — deep coverage, zero fluff.',
+  'Build agents that solve real problems, not just demos that impress for five minutes.',
+  'The shift from assistants to agents is the biggest platform transition in software.',
+  'Agentic AI is the new full-stack — understand the entire execution chain.',
+  'Practical, production-focused content on LLMs, agents, RAG, and beyond.',
+  'Learn how top teams are building reliable, observable, agentic AI systems today.',
+  'Not tutorials — mental models. Not demos — deployable patterns.',
+  'Go deep on the systems that will define how software is built for the next decade.',
+  'Every module here is built around what actually ships, not what just looks good in a notebook.',
+  'Understand why agents fail — and how to build ones that don\'t.',
+  'Context windows, tool use, multi-step reasoning — the building blocks of agentic AI.',
+  'AI agents that can browse, code, search, and synthesise — learn to orchestrate them.',
+  'The next generation of software engineers will build with, around, and on top of LLMs.',
+  'Grounding, retrieval, evaluation, and safety — the unglamorous parts that make AI real.',
+  'Move from prompt curiosity to agentic systems engineering.',
+  'Learn to design AI agents that are robust, auditable, and actually useful.',
+  'The best agentic systems feel like magic from the outside and rock-solid engineering inside.',
+  'Understand attention, embeddings, and reasoning chains — not just API calls.',
+  'From local models to cloud-scale multi-agent pipelines — cover the full spectrum.',
+  'Agentic AI rewards systems thinkers. Start thinking in systems.',
+  'The foundations aren\'t optional — every great agent engineer understands the model first.',
+  'Hands-on, structured, opinionated learning for serious AI builders.',
+  'Retrieval-augmented generation done right — architecture, evaluation, and tradeoffs.',
+  'Build agents with long-term memory, persistent state, and real-world tool access.',
+  'Not just what LLMs can do — but how to reliably make them do it at scale.',
+  'Every lesson here is written for engineers who want to ship, not just experiment.',
+  'Autonomous agents need more than intelligence — they need guardrails and observability.',
+  'From fine-tuning intuition to production RLHF — understand how models are shaped.',
+  'Multi-agent systems, role specialization, and coordination patterns — covered in depth.',
+  'The gap between AI demo and AI product is systems engineering. Bridge it here.',
+  'Real-world agentic AI is part software, part product, part cognitive architecture.',
+  'Knowledge graphs, vector stores, semantic search — the memory layer of modern AI.',
+  'Applied means usable. Learn agentic AI the way professionals actually build it.',
+]
+
+const NEON_COLORS = [
+  { color: '#60a5fa', glow1: 'rgba(96,165,250,0.85)',   glow2: 'rgba(96,165,250,0.4)'   },  // blue
+  { color: '#34d399', glow1: 'rgba(52,211,153,0.85)',   glow2: 'rgba(52,211,153,0.4)'   },  // emerald
+  { color: '#f472b6', glow1: 'rgba(244,114,182,0.85)',  glow2: 'rgba(244,114,182,0.4)'  },  // pink
+  { color: '#a78bfa', glow1: 'rgba(167,139,250,0.85)',  glow2: 'rgba(167,139,250,0.4)'  },  // violet
+  { color: '#fb923c', glow1: 'rgba(251,146,60,0.85)',   glow2: 'rgba(251,146,60,0.4)'   },  // orange
+  { color: '#38bdf8', glow1: 'rgba(56,189,248,0.85)',   glow2: 'rgba(56,189,248,0.4)'   },  // sky
+  { color: '#fbbf24', glow1: 'rgba(251,191,36,0.85)',   glow2: 'rgba(251,191,36,0.4)'   },  // amber
+  { color: '#e879f9', glow1: 'rgba(232,121,249,0.85)',  glow2: 'rgba(232,121,249,0.4)'  },  // fuchsia
+  { color: '#4ade80', glow1: 'rgba(74,222,128,0.85)',   glow2: 'rgba(74,222,128,0.4)'   },  // green
+  { color: '#f87171', glow1: 'rgba(248,113,113,0.85)',  glow2: 'rgba(248,113,113,0.4)'  },  // red
+]
+
+function pickRandom<T>(arr: T[], exclude?: T): T {
+  const filtered = exclude !== undefined ? arr.filter(x => x !== exclude) : arr
+  return filtered[Math.floor(Math.random() * filtered.length)]
+}
+
+
 const DOTS = [
   { left: '4%',  bottom: '10%', dur: 8,    delay: 0    },
   { left: '10%', bottom: '55%', dur: 10.5, delay: 2.2  },
@@ -92,11 +164,34 @@ function DotsLayer() {
 
 // ─── Hero Client ──────────────────────────────────────────────────────────────
 export default function HeroClient({ menuCount, articleCount }: Props) {
-  const { headline, typewriterTopics, subheadline, ctas, staticStats, dynamicStatLabels, badge } =
+  const { headline, typewriterTopics, ctas, staticStats, dynamicStatLabels, badge } =
     heroContent
 
   const { showLoading } = useArticleLoading()
   const typewritten = useTypewriter(typewriterTopics)
+
+  // Rotating message + neon color
+  const [msgIndex, setMsgIndex]   = useState(0)
+  const [neonIndex, setNeonIndex] = useState(0)
+  const [fade, setFade]           = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false)
+      setTimeout(() => {
+        setMsgIndex(prev  => {
+          const next = Math.floor(Math.random() * heroRotatingMessages.length)
+          return next === prev ? (next + 1) % heroRotatingMessages.length : next
+        })
+        setNeonIndex(prev => {
+          const next = Math.floor(Math.random() * NEON_COLORS.length)
+          return next === prev ? (next + 1) % NEON_COLORS.length : next
+        })
+        setFade(true)
+      }, 400)
+    }, 7000)
+    return () => clearInterval(interval)
+  }, [])
 
   const stats = [
     { value: String(menuCount    || '8'),   label: dynamicStatLabels.modules  },
@@ -140,35 +235,31 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
             The Applied AI<br />Knowledge Hub
           </h2>
 
-          {/* Description */}
+          {/* Description — rotates every 7s with random neon color */}
           <p
-            className="text-xs sm:text-sm leading-relaxed max-w-md"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
+            className="text-[13px] sm:text-[15px] max-w-md"
+            style={{
+              fontFamily: "'Literata', 'Source Serif 4', Georgia, serif",
+              fontStyle: 'italic',
+              lineHeight: '1.7',
+              color: NEON_COLORS[neonIndex].color,
+              textShadow: `0 0 8px ${NEON_COLORS[neonIndex].glow1}, 0 0 22px ${NEON_COLORS[neonIndex].glow2}`,
+              opacity: fade ? 1 : 0,
+              transition: 'opacity 0.4s ease',
+            }}
           >
-            {subheadline}
+            {heroRotatingMessages[msgIndex]}
           </p>
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
+            {/* Browse Topics */}
             <Link
-              href={ctas.primary.href}
-              onClick={() => showLoading(ctas.primary.href)}
+              href={ctas.secondary.href}
               className="inline-flex items-center gap-2 px-7 sm:px-9 py-3 sm:py-3.5 text-xs sm:text-sm font-bold uppercase tracking-widest text-neon bg-transparent border border-white/20 transition-all duration-200 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] active:translate-y-0"
             >
               <Zap size={13} />
-              {ctas.primary.label}
-            </Link>
-
-            <Link
-              href={ctas.secondary.href}
-              className="inline-flex items-center gap-2 rounded-full px-8 sm:px-10 py-3 sm:py-3.5 text-xs sm:text-sm font-bold uppercase tracking-widest transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: 'rgba(255,255,255,0.60)',
-              }}
-            >
               {ctas.secondary.label}
-              <ArrowRight size={13} />
             </Link>
           </div>
 

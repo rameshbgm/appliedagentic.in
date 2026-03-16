@@ -39,57 +39,41 @@ export default function ArticleCard({
   const { showLoading } = useArticleLoading()
   const router = useRouter()
   const [gA, gB] = CARD_GRADIENTS[(index - 1) % CARD_GRADIENTS.length]
-  const numLabel = String(index).padStart(2, '0')
 
   return (
     <Link href={`/articles/${slug}`} className="block group h-full" onClick={() => showLoading(`/articles/${slug}`)}>
       <article
-        className="relative h-full flex flex-col overflow-hidden rounded-2xl transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl"
+        className="relative h-full flex flex-col overflow-hidden rounded-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg"
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid var(--bg-border)',
           boxShadow: 'var(--shadow-card)',
         }}
       >
-        {/* Faded index watermark — top right */}
-        <span
-          aria-hidden
-          className="absolute top-2 right-3 font-black leading-none select-none pointer-events-none"
-          style={{
-            fontSize: '4.5rem',
-            background: `linear-gradient(135deg, ${gA}20, ${gB}10)`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            fontFamily: "'Inter', sans-serif",
-          }}
-        >
-          {numLabel}
-        </span>
-
-        {/* Cover image */}
+        {/* Cover image — capped at 72px */}
         {coverImageUrl && (
-          <LazyImage
-            src={coverImageUrl}
-            alt={title}
-            aspectClass="aspect-video"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <div className="card-cover">
+            <LazyImage
+              src={coverImageUrl}
+              alt={title}
+              aspectClass="aspect-[4/1]"
+              className="object-cover w-full transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
         )}
 
-        {/* Left gradient accent bar + content row */}
+        {/* Left gradient accent bar + content */}
         <div className="flex flex-1 min-h-0">
-          {/* Vertical gradient sidebar */}
           <div
-            className="w-[3px] shrink-0 my-3 ml-3 rounded-full"
+            className="w-[3px] shrink-0 my-2 ml-2 rounded-full"
             style={{ background: `linear-gradient(180deg, ${gA}, ${gB})` }}
           />
 
-          <div className="p-5 flex flex-col flex-1 gap-3">
+          <div className="px-2.5 py-2 flex flex-col flex-1 gap-1">
             {/* Module badge */}
             {moduleName && (
               <span
-                className="self-start text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full"
+                className="self-start text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
                 style={{
                   background: `linear-gradient(135deg, ${gA}18, ${gB}18)`,
                   color: gA,
@@ -100,7 +84,7 @@ export default function ArticleCard({
               </span>
             )}
 
-            {/* Submenu navigation chip — only when navChip is provided */}
+            {/* Submenu navigation chip */}
             {navChip && (() => {
               const sub = navChip.subMenuTitle
               const menu = navChip.menuTitle
@@ -112,7 +96,7 @@ export default function ArticleCard({
                   role="link"
                   tabIndex={0}
                   title={fullLabel}
-                  className="self-start inline-flex items-center gap-0.5 text-[10px] font-medium rounded-full px-2 py-0.5 transition-opacity hover:opacity-80 cursor-pointer"
+                  className="self-start inline-flex items-center gap-0.5 text-[9px] font-medium rounded-full px-1.5 py-0.5 transition-opacity hover:opacity-80 cursor-pointer"
                   style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); showLoading(navChip.href); router.push(navChip.href) }}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); showLoading(navChip.href); router.push(navChip.href) } }}
@@ -123,34 +107,23 @@ export default function ArticleCard({
               )
             })()}
 
-            {/* Title — gradient on hover */}
-            <h3
-              className="font-bold text-[15px] leading-snug line-clamp-2"
-              style={{ color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}
-            >
+            {/* Title */}
+            <h3 className="card-title line-clamp-4" style={{ color: gA }}>
               {title}
             </h3>
 
             {/* Summary */}
             {summary && (
-              <p className="text-[13px] line-clamp-2 flex-1" style={{ color: 'var(--text-muted)' }}>
+              <p className="card-summary line-clamp-2 flex-1">
                 {summary}
               </p>
             )}
 
             {/* Tags */}
             {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1">
                 {tags.slice(0, 3).map((tag) => (
-                  <span
-                    key={tag.name}
-                    className="text-[10px] px-2 py-0.5 rounded-full"
-                    style={{
-                      background: 'var(--bg-elevated)',
-                      color: 'var(--text-muted)',
-                      border: '1px solid var(--bg-border)',
-                    }}
-                  >
+                  <span key={tag.name} className="card-tag text-[9px] px-1.5 py-0.5 rounded-full">
                     {tag.name}
                   </span>
                 ))}
@@ -159,25 +132,21 @@ export default function ArticleCard({
 
             {/* Meta row */}
             <div
-              className="flex items-center gap-3 text-[11px] pt-2.5 mt-auto"
-              style={{ borderTop: `1px solid ${gA}18`, color: 'var(--text-muted)' }}
+              className="card-meta-row flex items-center gap-2 text-[10px] pt-1.5 mt-auto"
+              style={{ borderTop: `1px solid ${gA}18` }}
             >
               {readingTime && (
-                <span className="flex items-center gap-1"><Clock size={10} />{readingTime} min</span>
+                <span className="flex items-center gap-1"><Clock size={9} />{readingTime} min</span>
               )}
-              <span className="flex items-center gap-1"><Eye size={10} />{viewCount.toLocaleString()}</span>
-              <span className="ml-auto text-[11px]">
+              <span className="flex items-center gap-1"><Eye size={9} />{viewCount.toLocaleString()}</span>
+              <span className="ml-auto text-[10px]">
                 {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
               <span
-                className="flex items-center justify-center w-6 h-6 rounded-full transition-all group-hover:scale-110"
-                style={{
-                  background: `linear-gradient(135deg, ${gA}20, ${gB}20)`,
-                  color: gA,
-                  border: `1px solid ${gA}30`,
-                }}
+                className="flex items-center justify-center w-4 h-4 rounded-full transition-all group-hover:scale-110 shrink-0"
+                style={{ background: `linear-gradient(135deg, ${gA}20, ${gB}20)`, color: gA, border: `1px solid ${gA}30` }}
               >
-                <ArrowRight size={11} />
+                <ArrowRight size={9} />
               </span>
             </div>
           </div>

@@ -273,7 +273,7 @@ export default async function ArticleDetailPage({ params }: Props) {
               ) : (
                 <>
                   <ChevronRight size={12} className="opacity-40" />
-                  <Link href="/articles" className="hover:text-(--green) transition-colors">Articles</Link>
+                  <Link href="/modules" className="hover:text-(--green) transition-colors">Modules</Link>
                 </>
               )}
               <ChevronRight size={12} className="opacity-40" />
@@ -334,33 +334,14 @@ export default async function ArticleDetailPage({ params }: Props) {
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {tags.map((tag) => (
-                  <Link
-                    key={tag.id}
-                    href={`/articles?tag=${encodeURIComponent(tag.name)}`}
-                    className="article-tag-pill"
-                  >
+                  <span key={tag.id} className="article-tag-pill">
                     {tag.name}
-                  </Link>
+                  </span>
                 ))}
               </div>
             )}
 
-            {/* Navigation assignments: Main Menu > Sub Menu pills */}
-            {navAssignments.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {navAssignments.map((nav: { menuId: number; menuTitle: string; menuSlug: string; subMenuId: number; subMenuTitle: string; subMenuSlug: string }) => (
-                  <Link
-                    key={`${nav.menuId}-${nav.subMenuId}`}
-                    href={`/${nav.menuSlug}/${nav.subMenuSlug}`}
-                    className="article-nav-pill"
-                  >
-                    <span style={{ color: 'var(--text-secondary)' }}>{nav.menuTitle}</span>
-                    <ChevronRight size={10} className="opacity-40" />
-                    <span>{nav.subMenuTitle}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
+
 
             {/* Share buttons */}
             <ShareButtons url={articleUrl} title={article.title} />

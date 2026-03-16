@@ -2,7 +2,7 @@
 // components/public/ArticleAudioPlayer.tsx
 // Fixed bottom audio player — reads all state from ArticleAudioContext.
 import { useState, useRef, useCallback } from 'react'
-import { Play, Pause, Volume2, VolumeX, X, SkipBack, SkipForward, Loader2 } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, X, SkipBack, SkipForward, Loader2, RotateCcw, RotateCw } from 'lucide-react'
 import { useArticleAudio } from './ArticleAudioContext'
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -83,6 +83,11 @@ export default function ArticleAudioPlayer() {
   const isPlaying = playState === 'playing'
   const isLoading = playState === 'loading'
 
+  const skipSeconds = (delta: number) => {
+    if (!duration || !isFinite(duration)) return
+    seek(Math.max(0, Math.min(1, (currentTime + delta) / duration)))
+  }
+
   return (
     <div
       className="fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl rounded-xl px-3 py-2 shadow-2xl"
@@ -105,16 +110,40 @@ export default function ArticleAudioPlayer() {
           </button>
         )}
 
+        {/* Rewind 15s */}
+        <button
+          type="button"
+          onClick={() => skipSeconds(-15)}
+          disabled={!duration || currentTime <= 0}
+          className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-opacity hover:bg-white/10 disabled:opacity-30"
+          style={{ color: 'var(--text-muted)' }}
+          title="Rewind 15 seconds"
+        >
+          <RotateCcw size={15} />
+        </button>
+
         {/* Play / Pause / Loading */}
         <button
           type="button"
           onClick={togglePlayPause}
           disabled={isLoading}
           title={isPlaying ? 'Pause' : 'Play'}
-          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-60"
-          style={{ background: 'var(--green)', color: '#fff', WebkitTapHighlightColor: 'transparent' }}
+          className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-60 transition-opacity hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg, #6C3DFF, #9B59B6)', color: '#fff', WebkitTapHighlightColor: 'transparent', boxShadow: '0 2px 8px rgba(108,61,255,0.4)' }}
         >
           {isLoading ? <Loader2 size={12} className="animate-spin" /> : isPlaying ? <Pause size={12} /> : <Play size={12} />}
+        </button>
+
+        {/* Skip forward 15s */}
+        <button
+          type="button"
+          onClick={() => skipSeconds(15)}
+          disabled={!duration || currentTime >= duration}
+          className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-opacity hover:bg-white/10 disabled:opacity-30"
+          style={{ color: 'var(--text-muted)' }}
+          title="Skip forward 15 seconds"
+        >
+          <RotateCw size={15} />
         </button>
 
         {/* Next section */}
@@ -154,15 +183,15 @@ export default function ArticleAudioPlayer() {
           onMouseDown={onBarMouseDown}
           onTouchStart={onBarTouchStart}
         >
-          <div className="relative h-1 w-full rounded-full" style={{ background: 'var(--bg-border)' }}>
+          <div className="relative h-1.5 w-full rounded-full" style={{ background: 'rgba(108,61,255,0.15)' }}>
             <div
               className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${progress}%`, background: 'var(--green)' }}
+              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6C3DFF, #9B59B6)' }}
             />
             {/* Scrubber thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 shadow"
-              style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)', background: '#fff', borderColor: 'var(--green)' }}
+              className="absolute top-1/2 w-3.5 h-3.5 rounded-full shadow-md"
+              style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)', background: '#fff', border: '2px solid #6C3DFF', boxShadow: '0 0 6px rgba(108,61,255,0.5)' }}
             />
           </div>
         </div>
@@ -177,8 +206,8 @@ export default function ArticleAudioPlayer() {
           <button
             type="button"
             onClick={() => setShowSpeed((v) => !v)}
-            className="px-1.5 py-0.5 rounded text-xs font-semibold border hover:bg-white/10"
-            style={{ color: 'var(--text-secondary)', borderColor: 'var(--bg-border)', minWidth: 34 }}
+            className="px-1.5 py-0.5 rounded text-xs font-semibold border hover:bg-white/10 transition-colors"
+            style={{ color: '#6C3DFF', borderColor: 'rgba(108,61,255,0.4)', minWidth: 34 }}
             title="Playback speed"
           >
             {speed}×
@@ -194,7 +223,7 @@ export default function ArticleAudioPlayer() {
                   key={s}
                   onClick={() => { setSpeed(s); setShowSpeed(false) }}
                   className="block w-full px-3 py-1 text-xs text-left hover:bg-white/10 transition-colors"
-                  style={{ color: s === speed ? 'var(--green)' : 'var(--text-primary)', fontWeight: s === speed ? 700 : 400 }}
+                  style={{ color: s === speed ? '#6C3DFF' : 'var(--text-primary)', fontWeight: s === speed ? 700 : 400 }}
                 >
                   {s}×
                 </button>

@@ -292,7 +292,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (needsArticleRevalidate) {
       const slug = data.slug ?? currentSlug
       if (slug) revalidatePath(`/articles/${slug}`)
-      revalidatePath('/articles')
     }
 
     if (data.subMenuIds !== undefined || data.menuIds !== undefined) {
@@ -342,7 +341,6 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     await prisma.article.delete({ where: { id } })
 
     revalidatePath(`/articles/${article.slug}`)
-    revalidatePath('/articles')
     for (const { subMenu } of article.subMenuArticles) {
       revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
       revalidatePath(`/${subMenu.menu.slug}`)

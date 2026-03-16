@@ -40,7 +40,8 @@
       "Bash(find /Users/laxmi/ramesh/code/appliedagentic.in -type f -name *feature* -o -name *flag*)",
       "Bash(grep -r \"unstable_cache\\\\|cache\" /Users/laxmi/ramesh/code/appliedagentic.in/lib --include=*.ts --include=*.tsx)",
       "Bash(grep -r \"unstable_cache\\\\|cache\" /Users/laxmi/ramesh/code/appliedagentic.in/app --include=*.ts --include=*.tsx)",
-      "Bash(wc -l /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(admin\\\\\\)/admin/articles/ArticleEditorPage.tsx)"
+      "Bash(wc -l /Users/laxmi/ramesh/code/appliedagentic.in/app/\\\\\\(admin\\\\\\)/admin/articles/ArticleEditorPage.tsx)",
+      "Bash(ls -la \"/Users/laxmi/ramesh/code/appliedagentic.in/app/\\(public\\)/articles/[id]/\")"
     ]
   }
 }

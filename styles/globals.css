@@ -139,6 +139,31 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
 .mega-col-scroll::-webkit-scrollbar-thumb        { background: rgba(99,99,120,.2); border-radius: 99px; }
 .mega-col-scroll::-webkit-scrollbar-thumb:hover  { background: rgba(59,130,246,.45); }
 
+/* ─── Module tile thin rotating gradient border ─────────────────────────────── */
+.module-tile-wrapper {
+  /* overflow-hidden + rounded-2xl clips the spinning ring to a 1 px border */
+}
+.module-tile-ring {
+  position: absolute;
+  inset: -120%;         /* large enough so all 4 sides + corners stay covered */
+  animation: module-tile-spin 6s linear infinite;
+  transform-origin: center;
+  z-index: 0;
+}
+.module-tile-inner {
+  position: relative;
+  z-index: 1;
+  margin: 1px;          /* exposes only 1 px of the ring → thin border */
+  border-radius: calc(1rem - 1px);
+  padding: 1rem 1.125rem;
+}
+@keyframes module-tile-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .module-tile-ring { animation: none; }
+}
+
 /* ─── Tile chips — thin 3 × 3 px scrollbar ──────────────────────────────────── */
 .tile-chips-scroll {
   max-height: 96px;   /* ~3 rows of chips */
@@ -1068,8 +1093,13 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     padding: 0 3%;
   }
   .article-hero-inner {
-    max-width: 800px;
+    max-width: 900px;
     padding: 32px 0 36px;
+  }
+}
+@media (min-width: 1280px) {
+  .article-hero-inner {
+    max-width: 960px;
   }
 }
 
@@ -1096,7 +1126,6 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   letter-spacing: -0.02em;
   color: var(--text-primary);
   margin-bottom: 12px;
-  text-wrap: balance;
 }
 @media (min-width: 640px) {
   .article-title {
@@ -1113,6 +1142,42 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   }
 }
 
+/* Article card utilities */
+.card-title {
+  font-family: 'Newsreader', 'EB Garamond', Georgia, serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0.015em;
+  text-align: center;
+  color: var(--text-primary);
+}
+.card-summary {
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+.card-tag {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--bg-border);
+}
+.card-meta-row {
+  color: var(--text-muted);
+}
+.card-footer-row {
+  border-top: 1px solid var(--bg-border);
+}
+.card-meta-icon {
+  color: var(--text-muted);
+}
+.card-meta-text {
+  color: var(--text-muted);
+}
+
 /* Summary */
 .article-summary {
   font-family: 'Lora', Georgia, serif;
@@ -1121,7 +1186,6 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   line-height: 1.7;
   color: var(--text-muted);
   margin-bottom: 16px;
-  max-width: 640px;
 }
 @media (min-width: 640px) {
   .article-summary {
@@ -1164,23 +1228,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   color: var(--green);
 }
 
-/* Nav pills */
-.article-nav-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid var(--bg-border);
-  color: var(--text-muted);
-  transition: border-color 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.article-nav-pill:hover {
-  border-color: var(--green);
-}
+
 
 /* Body wrapper */
 .article-body-wrapper {
@@ -1742,6 +1790,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   transition: background 0.15s, color 0.15s, transform 0.12s;
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
   user-select: none;
   touch-action: manipulation;
 }
@@ -2351,14 +2400,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-color: #76b900;
   color: #76b900;
 }
-.article-page .article-nav-pill {
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #606088;
-}
-.article-page .article-nav-pill:hover {
-  border-color: #76b900;
-  color: #a0a0cc;
-}
+
 .article-page .article-meta-row {
   color: #606088;
 }
@@ -2749,10 +2791,7 @@ code, pre { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
   border-color: #1E293B;
   color: #1E293B;
 }
-.article-page.article-theme-light .article-nav-pill {
-  border-color: rgba(0, 0, 0, 0.10);
-  color: #6B7280;
-}
+
 
 /* Body wrapper */
 .article-page.article-theme-light .article-body-wrapper { background: #FFFFFF; }
