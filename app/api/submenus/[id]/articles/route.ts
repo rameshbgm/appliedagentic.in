@@ -29,6 +29,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
           select: {
             id: true, title: true, slug: true, summary: true,
             status: true, publishedAt: true, readingTimeMinutes: true, viewCount: true,
+            coverImage: { select: { url: true } },
             articleTags: { include: { tag: { select: { id: true, name: true } } } },
           },
         },
