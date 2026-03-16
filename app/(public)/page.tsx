@@ -383,7 +383,7 @@ export default async function HomePage() {
               {ctaBannerContent.headline}{' '}
               <span className="gradient-text">{ctaBannerContent.headlineAccent}</span>
             </h2>
-            <p className="relative text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            <p className="relative text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic' }}>
               {ctaBannerContent.subheadline}
             </p>
             <div className="relative flex flex-wrap gap-4 justify-center">

@@ -117,6 +117,6 @@ export const ctaBannerContent = {
   headlineAccent: 'Agentic AI?',
   subheadline:
     'Structured learning paths, practical examples, and comprehensive coverage of modern AI agent systems.',
-  primaryCta:   { label: 'Start Learning',   href: '/ai-foundations' },
-  secondaryCta: { label: 'Browse Articles',  href: '/modules'       },
+  primaryCta:   { label: 'Start Learning',   href: '#topics'        },
+  secondaryCta: { label: 'Browse Articles',  href: '/search'        },
 }
