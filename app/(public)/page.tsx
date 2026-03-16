@@ -270,9 +270,8 @@ export default async function HomePage() {
                 return (
                   <div
                     key={item.file}
-                    className="module-tile-wrapper relative rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                    className="module-tile-wrapper presentation-guide-tile relative rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                   >
-                    {/* Spinning conic-gradient ring — clipped to 1 px by overflow-hidden + margin */}
                     <div
                       className="module-tile-ring"
                       style={{ background: `conic-gradient(from 0deg, ${palette.colorA} 0%, ${palette.colorB} 50%, ${palette.colorA} 100%)` }}
@@ -281,29 +280,44 @@ export default async function HomePage() {
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group relative flex flex-col gap-0"
-                      style={{ background: 'var(--bg-surface)', display: 'flex', position: 'relative', zIndex: 1, margin: '1px', borderRadius: 'calc(0.75rem - 1px)', padding: '1rem' }}
+                      className="presentation-guide-tile__inner group relative flex flex-col"
                     >
-                      {/* top-right external icon */}
-                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute top-3 right-3 opacity-30 group-hover:opacity-100 transition-opacity">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                      </svg>
-                      <p className="font-bold text-[0.92rem] leading-snug pr-4 line-clamp-2 pb-3"
-                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: "'Inter', sans-serif" }}>
+                      <div className="presentation-guide-tile__top">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="presentation-guide-tile__icon">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </div>
+                      <p
+                        className="presentation-guide-tile__title font-bold text-[0.92rem] leading-snug line-clamp-2"
+                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      >
                         {item.title}
                       </p>
-                      <div style={{ height: '1px', background: `linear-gradient(90deg, ${palette.colorA}55, ${palette.colorB}33, transparent)` }} />
+                      <div
+                        className="presentation-guide-tile__divider"
+                        style={{ background: `linear-gradient(90deg, ${palette.colorA}66, ${palette.colorB}44, transparent)` }}
+                      />
                       {item.description && (
-                        <p className="text-[0.68rem] leading-relaxed line-clamp-2 pt-3"
-                          style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                        <p
+                          className="presentation-guide-tile__summary text-[0.68rem] leading-relaxed line-clamp-2"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
                           {item.description}
                         </p>
                       )}
-                      <span className="text-[0.6rem] font-semibold uppercase tracking-widest mt-auto pt-3" style={{ color: palette.label }}>
-                        Open →
-                      </span>
+                      <div className="presentation-guide-tile__footer">
+                        <span className="presentation-guide-tile__cta text-[0.6rem] font-semibold uppercase tracking-widest" style={{ color: palette.label }}>
+                          Open
+                        </span>
+                        <span
+                          className="presentation-guide-tile__ctaArrow"
+                          style={{ background: `linear-gradient(135deg, ${palette.colorA}18, ${palette.colorB}18)`, color: palette.icon, borderColor: `${palette.colorA}30` }}
+                        >
+                          →
+                        </span>
+                      </div>
                     </a>
                   </div>
                 )
@@ -316,19 +330,24 @@ export default async function HomePage() {
 
       {/* ── Featured Articles ── */}
       {featuredArticles.length > 0 && (
-        <section className="py-16 sm:py-20 px-4 md:px-8 max-w-7xl mx-auto">
+        <section className="relative py-12 sm:py-14 lg:py-16 px-4 md:px-8 max-w-7xl mx-auto">
           <ParallaxSection speed={0.2}>
             <FadeIn>
-              <div className="mb-10 sm:mb-12">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles size={14} style={{ color: '#A78BFA' }} />
-                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#A78BFA' }}>
+              <div className="mb-7 sm:mb-8 lg:mb-10 max-w-[44rem]">
+                <div className="flex items-center gap-3 mb-4">
+                  <span
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full"
+                    style={{ background: 'linear-gradient(135deg, rgba(251,146,60,.12), rgba(236,72,153,.12))', border: '1px solid rgba(236,72,153,.12)' }}
+                  >
+                    <Sparkles size={15} style={{ color: '#ec4899' }} />
+                  </span>
+                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.24em]" style={{ color: '#ec4899' }}>
                     {featuredArticlesContent.badge}
                   </span>
                 </div>
                 <h2
-                  className="font-black leading-[1.05] tracking-tight"
-                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
+                  className="font-black leading-[0.98] tracking-tight"
+                  style={{ fontSize: 'clamp(1.85rem, 4vw, 3.2rem)', fontFamily: "'DM Sans', sans-serif" }}
                 >
                   <span style={{ color: 'var(--text-primary)' }}>{featuredArticlesContent.headline}{' '}</span>
                   <span className="relative inline-block">
@@ -348,11 +367,17 @@ export default async function HomePage() {
                     />
                   </span>
                 </h2>
+                <p
+                  className="mt-3 max-w-xl text-[0.92rem] sm:text-[0.98rem]"
+                  style={{ color: 'var(--text-secondary)', fontFamily: "'Newsreader', serif", lineHeight: 1.75 }}
+                >
+                  A sharper reading experience with richer visual hierarchy, clearer metadata, and cards that feel deliberate on both mobile and desktop.
+                </p>
               </div>
             </FadeIn>
           </ParallaxSection>
 
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4.5 xl:gap-5 items-stretch max-w-[68rem]">
             {featuredArticles.map((article, idx) => (
               <ArticleCard
                 key={article.id}
