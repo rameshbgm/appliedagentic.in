@@ -56,160 +56,118 @@ export default async function SearchPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen py-16 px-4 md:px-8 max-w-7xl mx-auto">
-      <FadeIn>
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+    <div className="min-h-screen" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+      {/* ── Search hero ── */}
+      <div
+        className="pt-24 pb-10 px-4"
+        style={{ borderBottom: '1px solid var(--bg-border)' }}
+      >
+        <div className="max-w-2xl mx-auto">
+          <FadeIn>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] mb-3 text-center" style={{ color: 'var(--text-muted)' }}>
+              {q ? `${totalCount} result${totalCount !== 1 ? 's' : ''} for` : 'Search'}
+            </p>
             {q ? (
-              <>
-                Results for{' '}
-                <span className="gradient-text">"{q}"</span>
-              </>
+              <h1 className="text-3xl font-bold text-center mb-8 leading-tight" style={{ color: 'var(--text-primary)' }}>
+                &ldquo;{q}&rdquo;
+              </h1>
             ) : (
-              <>Search <span className="gradient-text">Articles</span></>
+              <h1 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>
+                What are you looking for?
+              </h1>
             )}
-          </h1>
-          <SearchBar placeholder="Search articles, topics, modules..." autoFocus fullPage />
+            <SearchBar placeholder="Search articles, topics, modules..." autoFocus fullPage />
+          </FadeIn>
         </div>
-      </FadeIn>
+      </div>
 
-      {q && (
-        <FadeIn>
-          <p className="text-sm mb-8" style={{ color: 'var(--text-muted)' }}>
-            {totalCount} result{totalCount !== 1 ? 's' : ''} found
-          </p>
-        </FadeIn>
-      )}
-
-      {articles.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          {articles.map((a) => {
-            const href = `/articles/${a.slug}`
-            const moduleName: string | undefined = a.topicArticles[0]?.topic?.module?.name
-            const moduleColor: string | undefined = a.topicArticles[0]?.topic?.module?.color
-            const tags: string[] = a.articleTags.map((at: { tag: { name: string } }) => at.tag.name)
-            return (
-              <NavLink
-                key={a.id}
-                href={href}
-                className="group flex gap-4 rounded-2xl p-4 transition-colors hover:bg-(--bg-elevated) border border-transparent hover:border-(--border)"
-                style={{ textDecoration: 'none' }}
-              >
-                {/* Cover image thumbnail */}
-                <div
-                  className="shrink-0 rounded-xl overflow-hidden"
-                  style={{ width: 120, height: 80, background: 'var(--bg-elevated)' }}
+      {/* ── Results ── */}
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {articles.length > 0 ? (
+          <div className="flex flex-col divide-y" style={{ borderTop: '1px solid var(--bg-border)', borderBottom: '1px solid var(--bg-border)' }}>
+            {articles.map((a) => {
+              const href = `/articles/${a.slug}`
+              const moduleName: string | undefined = a.topicArticles[0]?.topic?.module?.name
+              const moduleColor: string | undefined = a.topicArticles[0]?.topic?.module?.color
+              const tags: string[] = a.articleTags.map((at: { tag: { name: string } }) => at.tag.name)
+              return (
+                <NavLink
+                  key={a.id}
+                  href={href}
+                  className="group flex gap-4 py-5 transition-colors"
+                  style={{ textDecoration: 'none', borderColor: 'var(--bg-border)' }}
                 >
-                  {a.coverImage?.url ? (
-                    <LazyImage
-                      src={a.coverImage.url}
-                      alt={a.title}
-                      className="object-cover w-full h-full"
-                      wrapperClassName="w-full h-full"
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center text-3xl"
-                      style={{ background: 'var(--bg-elevated)' }}
-                    >
-                      📄
-                    </div>
-                  )}
-                </div>
+                  {/* Thumbnail */}
+                  <div className="shrink-0 rounded-xl overflow-hidden hidden sm:block" style={{ width: 96, height: 68, background: 'var(--bg-elevated)' }}>
+                    {a.coverImage?.url ? (
+                      <LazyImage src={a.coverImage.url} alt={a.title} className="object-cover w-full h-full" wrapperClassName="w-full h-full" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl" style={{ background: 'var(--bg-elevated)' }}>📄</div>
+                    )}
+                  </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  {/* Module badge */}
-                  {moduleName && (
-                    <span
-                      className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-1.5"
-                      style={{
-                        background: moduleColor ? `${moduleColor}22` : 'var(--bg-elevated)',
-                        color: moduleColor ?? 'var(--text-muted)',
-                        border: `1px solid ${moduleColor ?? 'var(--border)'}44`,
-                      }}
-                    >
-                      {moduleName}
-                    </span>
-                  )}
-
-                  {/* Title */}
-                  <h3
-                    className="font-semibold text-base leading-snug mb-1 group-hover:text-(--green) transition-colors line-clamp-2"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {a.title}
-                  </h3>
-
-                  {/* Summary */}
-                  {a.summary && (
-                    <p
-                      className="text-sm leading-relaxed mb-2 line-clamp-2"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
-                      {a.summary}
-                    </p>
-                  )}
-
-                  {/* Tags */}
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {tags.slice(0, 5).map((tag) => (
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      {moduleName && (
                         <span
-                          key={tag}
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: moduleColor ? `${moduleColor}18` : 'var(--bg-elevated)', color: moduleColor ?? 'var(--text-muted)' }}
                         >
+                          {moduleName}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-semibold text-[15px] leading-snug mb-1.5 line-clamp-2 transition-colors group-hover:text-[#3b82f6]" style={{ color: 'var(--text-primary)' }}>
+                      {a.title}
+                    </h3>
+
+                    {a.summary && (
+                      <p className="text-sm leading-relaxed line-clamp-2 mb-2" style={{ color: 'var(--text-muted)' }}>
+                        {a.summary}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: 'var(--text-muted)' }}>
+                      {tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}>
                           {tag}
                         </span>
                       ))}
+                      <span className="flex items-center gap-1 ml-auto">
+                        {a.readingTimeMinutes && <><Clock size={10} /> {a.readingTimeMinutes} min</>}
+                      </span>
+                      {a.viewCount > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Eye size={10} /> {a.viewCount.toLocaleString()}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#3b82f6' }}>
+                        Read <ArrowRight size={11} />
+                      </span>
                     </div>
-                  )}
-
-                  {/* Meta row */}
-                  <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-                    {a.readingTimeMinutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={11} />
-                        {a.readingTimeMinutes} min read
-                      </span>
-                    )}
-                    {a.viewCount > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Eye size={11} />
-                        {a.viewCount.toLocaleString()} views
-                      </span>
-                    )}
-                    {a.createdAt && (
-                      <span>{formatDate(a.createdAt)}</span>
-                    )}
-                    <span
-                      className="ml-auto flex items-center gap-1 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: 'var(--green)' }}
-                    >
-                      Read <ArrowRight size={12} />
-                    </span>
                   </div>
-                </div>
-              </NavLink>
-            )
-          })}
-        </div>
-      ) : q ? (
-        <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
-          <p className="text-5xl mb-4">🔍</p>
-          <p className="text-lg mb-2">No articles found for "{q}"</p>
-          <p className="text-sm mb-6">Try a different keyword or browse by module</p>
-          <Link href="/modules" className="text-sm font-medium underline" style={{ color: 'var(--green)' }}>
-            Browse learning modules →
-          </Link>
-        </div>
-      ) : (
-        <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
-          <p className="text-5xl mb-4">🔎</p>
-          <p className="text-lg">Start typing to search articles</p>
-        </div>
-      )}
+                </NavLink>
+              )
+            })}
+          </div>
+        ) : q ? (
+          <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-4xl mb-4">🔍</p>
+            <p className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>No results found</p>
+            <p className="text-sm mb-6">Try different keywords or browse by module</p>
+            <Link href="/modules" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: '#3b82f6' }}>
+              Browse learning modules <ArrowRight size={13} />
+            </Link>
+          </div>
+        ) : (
+          <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-4xl mb-4">🔎</p>
+            <p className="text-sm">Type above to find articles, topics &amp; modules</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

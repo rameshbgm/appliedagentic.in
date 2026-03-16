@@ -2,8 +2,10 @@
 // components/public/SearchBar.tsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Loader2, X, BookOpen } from 'lucide-react'
+import { Search, Loader2, X, BookOpen, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+
+const FONT = "'Space Grotesk', system-ui, sans-serif"
 
 interface SearchResult {
   id: string
@@ -18,7 +20,7 @@ interface SearchResult {
 interface Props {
   placeholder?: string
   autoFocus?: boolean
-  fullPage?: boolean // larger layout when used on /search page
+  fullPage?: boolean
 }
 
 export default function SearchBar({ placeholder = 'Search articles, topics...', autoFocus, fullPage }: Props) {
@@ -38,7 +40,6 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`)
       const data = await res.json()
       if (data.success) {
-        // Map raw API items → SearchResult (API returns articles with summary/articleTags)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mapped: SearchResult[] = (data.data?.items ?? []).map((item: any) => ({
           id: String(item.id),
@@ -74,7 +75,6 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [query, search])
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -93,10 +93,10 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
     }
   }
 
-  const getTypeIcon = (type: string) => {
-    if (type === 'module') return '🧩'
-    if (type === 'topic') return <BookOpen size={13} />
-    return null  // articles: no icon
+  const getTypeLabel = (type: string) => {
+    if (type === 'module') return { label: 'Module', icon: '🧩' }
+    if (type === 'topic') return { label: 'Topic', icon: null, comp: <BookOpen size={11} /> }
+    return null
   }
 
   const getHref = (r: SearchResult) => {
@@ -106,20 +106,21 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
   }
 
   return (
-    <div ref={containerRef} className={`relative w-full ${fullPage ? 'max-w-2xl mx-auto' : 'max-w-md'}`}>
+    <div ref={containerRef} className={`relative w-full ${fullPage ? 'max-w-2xl mx-auto' : 'max-w-sm'}`}>
       <form onSubmit={handleSubmit}>
         <div
-          className="flex items-center gap-3 px-4 rounded-2xl transition-all"
+          className="flex items-center gap-3 px-4 rounded-xl transition-all duration-150"
           style={{
             background: 'var(--bg-elevated)',
-            border: `1px solid ${open ? 'rgba(108,61,255,0.5)' : 'var(--bg-border)'}`,
-            height: fullPage ? '56px' : '44px',
-            boxShadow: open ? '0 0 0 3px rgba(108,61,255,0.12)' : 'none',
+            border: `1px solid ${open ? 'rgba(59,130,246,0.5)' : 'var(--bg-border)'}`,
+            height: fullPage ? '54px' : '40px',
+            boxShadow: open ? '0 0 0 3px rgba(59,130,246,0.1)' : 'none',
+            fontFamily: FONT,
           }}
         >
           {loading
-            ? <Loader2 size={16} className="animate-spin shrink-0" style={{ color: 'var(--text-muted)' }} />
-            : <Search size={16} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
+            ? <Loader2 size={15} className="animate-spin shrink-0" style={{ color: 'var(--text-muted)' }} />
+            : <Search size={15} className="shrink-0" style={{ color: open ? '#3b82f6' : 'var(--text-muted)', transition: 'color 0.15s' }} />
           }
           <input
             ref={inputRef}
@@ -127,67 +128,91 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
             value={query}
             autoFocus={autoFocus}
             placeholder={placeholder}
-            className="flex-1 bg-transparent outline-none text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="flex-1 bg-transparent outline-none"
+            style={{
+              color: 'var(--text-primary)',
+              fontFamily: FONT,
+              fontSize: fullPage ? '15px' : '13.5px',
+              fontWeight: 400,
+            }}
             onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
+            suppressHydrationWarning
           />
           {query && (
-            <button type="button" onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus() }}>
-              <X size={14} style={{ color: 'var(--text-muted)' }} />
+            <button
+              type="button"
+              onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus() }}
+              className="p-0.5 rounded-full transition-colors hover:bg-black/10"
+              aria-label="Clear search"
+            >
+              <X size={13} style={{ color: 'var(--text-muted)' }} />
             </button>
           )}
         </div>
       </form>
 
-      {/* Dropdown */}
+      {/* Dropdown results */}
       {open && (results.length > 0 || (query.trim() && !loading)) && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 shadow-xl"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
+          className="absolute top-full left-0 right-0 mt-1.5 rounded-xl overflow-hidden z-50"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--bg-border)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            fontFamily: FONT,
+          }}
         >
           {results.length === 0 && query.trim() && !loading && (
-            <p className="px-4 py-5 text-sm text-center" style={{ color: 'var(--text-muted)' }}>
-              No results for "{query}"
-            </p>
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
+                No results for <strong style={{ color: 'var(--text-primary)' }}>"{query}"</strong>
+              </p>
+            </div>
           )}
-          {results.map((r) => {
-            const icon = getTypeIcon(r.type)
+
+          {results.map((r, idx) => {
+            const typeInfo = getTypeLabel(r.type)
             return (
               <Link
                 key={r.id}
                 href={getHref(r)}
                 onClick={() => { setOpen(false); setQuery('') }}
-                className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors border-b last:border-b-0"
-                style={{ borderColor: 'var(--bg-border)' }}
+                className="flex items-start gap-3 px-4 py-3 transition-colors"
+                style={{
+                  borderBottom: idx < results.length - 1 ? '1px solid var(--bg-border)' : 'none',
+                  background: 'transparent',
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.04)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
               >
-                {/* Icon — only for module/topic; articles have none */}
-                {icon && (
-                  <span className="text-sm mt-0.5 shrink-0" style={{ color: 'var(--text-muted)' }}>
-                    {icon}
-                  </span>
-                )}
-
-                <div className={`flex-1 min-w-0 ${icon ? '' : ''}`}>
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                    {r.title}
-                  </p>
-
-                  {/* Description / summary */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-[13.5px] font-semibold truncate" style={{ color: 'var(--text-primary)', fontFamily: FONT }}>
+                      {r.title}
+                    </p>
+                    {typeInfo && (
+                      <span
+                        className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}
+                      >
+                        {typeInfo.icon ?? (typeInfo as { comp?: React.ReactNode }).comp}
+                        {typeInfo.label}
+                      </span>
+                    )}
+                  </div>
                   {r.description && (
-                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-xs truncate" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
                       {r.description}
                     </p>
                   )}
-
-                  {/* Tags — only for articles */}
                   {r.type === 'article' && r.tags && r.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {r.tags.slice(0, 4).map((tag) => (
+                      {r.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
                           className="text-[10px] px-1.5 py-0.5 rounded-full"
-                          style={{ background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--bg-border)' }}
+                          style={{ background: 'var(--bg-border)', color: 'var(--text-muted)' }}
                         >
                           {tag}
                         </span>
@@ -195,11 +220,10 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
                     </div>
                   )}
                 </div>
-
                 {r.module && (
                   <span
-                    className="text-xs px-2 py-0.5 rounded-full shrink-0 mt-0.5"
-                    style={{ background: r.module.color + '20', color: r.module.color }}
+                    className="text-[11px] px-2 py-0.5 rounded-full shrink-0 mt-0.5 font-medium"
+                    style={{ background: r.module.color + '18', color: r.module.color, fontFamily: FONT }}
                   >
                     {r.module.name}
                   </span>
@@ -207,14 +231,19 @@ export default function SearchBar({ placeholder = 'Search articles, topics...', 
               </Link>
             )
           })}
+
           {results.length > 0 && (
-            <div className="px-4 py-2.5" style={{ borderTop: '1px solid var(--bg-border)' }}>
+            <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderTop: '1px solid var(--bg-border)', background: 'rgba(59,130,246,0.02)' }}>
+              <span className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
+                {results.length} quick results
+              </span>
               <button
-                className="text-xs font-medium hover:underline"
-                style={{ color: 'var(--green)' }}
+                type="button"
+                className="inline-flex items-center gap-1 text-[12px] font-semibold transition-opacity hover:opacity-70"
+                style={{ color: '#3b82f6', fontFamily: FONT }}
                 onClick={() => { setOpen(false); router.push(`/search?q=${encodeURIComponent(query)}`) }}
               >
-                View all results for "{query}" →
+                See all results <ArrowRight size={11} />
               </button>
             </div>
           )}
