@@ -5,8 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/slugify'
 import { calculateReadingTime } from '@/lib/readingTime'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { invalidateCache } from '@/lib/cache'
 import { z } from 'zod'
 import { ArticleStatus } from '@prisma/client'
+import { articleDetailInclude, articleListInclude } from '@/lib/article-includes'
 
 const SectionInput = z.object({
   id: z.number().int().optional(),
@@ -45,35 +47,14 @@ const ArticleSchema = z.object({
   sections: z.array(SectionInput).optional(),
 })
 
-const articleInclude = {
-  author: { select: { id: true, name: true, email: true } },
-  topicArticles: {
-    include: {
-      topic: {
-        include: {
-          module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
-        },
-      },
-    },
-    orderBy: { orderIndex: 'asc' as const },
-  },
-  articleTags: { include: { tag: true } },
-  coverImage: {
-    select: { id: true, url: true, altText: true, width: true, height: true },
-  },
-  subMenuArticles: { include: { subMenu: { select: { id: true, title: true, menu: { select: { id: true, title: true } } } } } },
-  menuArticles: { include: { menu: { select: { id: true, title: true } } } },
-  sections: { orderBy: { order: 'asc' as const } },
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const session = await auth()
     const isAdmin = !!session
 
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '12') || 12))
     const search = searchParams.get('search') || ''
     const topicId = searchParams.get('topicId')
     const moduleId = searchParams.get('moduleId')
@@ -130,7 +111,7 @@ export async function GET(req: NextRequest) {
         orderBy: { publishedAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: articleInclude,
+        include: articleListInclude,
       }),
     ])
 
@@ -150,12 +131,14 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
+  let body: unknown
+  try { body = await req.json() } catch { return apiError('Invalid JSON body', 400) }
+
   try {
-    const body = await req.json()
     const data = ArticleSchema.parse(body)
     const slug = data.slug || slugify(data.title)
 
-    const existing = await prisma.article.findUnique({ where: { slug } })
+    const existing = await prisma.article.findUnique({ where: { slug }, select: { id: true } })
     if (existing) return apiError('Slug already in use', 409)
 
     const readingTime = data.readingTimeMinutes ?? calculateReadingTime(data.content)
@@ -187,76 +170,77 @@ export async function POST(req: NextRequest) {
       if (media) resolvedCoverImageId = media.id
     }
 
-    const article = await prisma.article.create({
-      data: {
-        title: data.title,
-        slug,
-        summary: data.summary,
-        content: data.content,
-        status: data.status ?? ArticleStatus.DRAFT,
-        isFeatured: data.isFeatured ?? false,
-        coverImageId: resolvedCoverImageId ?? undefined,
-        audioUrl: data.audioUrl,
-        readingTimeMinutes: readingTime,
-        publishedAt: data.publishedAt
-          ? new Date(data.publishedAt)
-          : (data.status === ArticleStatus.PUBLISHED ? new Date() : undefined),
-        seoTitle: data.seoTitle,
-        seoDescription: data.seoDescription,
-        seoKeywords: data.seoKeywords,
-        seoCanonicalUrl: data.seoCanonicalUrl,
-        ogTitle: data.ogTitle,
-        ogDescription: data.ogDescription,
-        ogImageUrl: data.ogImageUrl,
-        twitterTitle: data.twitterTitle,
-        twitterDescription: data.twitterDescription,
-        aiContentDeclaration: data.aiContentDeclaration,
-        authorId,
-        topicArticles: {
-          create: data.topicIds.map((topicId, i) => ({ topicId, orderIndex: i })),
+    // Create article + all relations in a single transaction
+    const article = await prisma.$transaction(async (tx) => {
+      const art = await tx.article.create({
+        data: {
+          title: data.title,
+          slug,
+          summary: data.summary,
+          content: data.content,
+          status: data.status ?? ArticleStatus.DRAFT,
+          isFeatured: data.isFeatured ?? false,
+          coverImageId: resolvedCoverImageId ?? undefined,
+          audioUrl: data.audioUrl,
+          readingTimeMinutes: readingTime,
+          publishedAt: data.publishedAt
+            ? new Date(data.publishedAt)
+            : (data.status === ArticleStatus.PUBLISHED ? new Date() : undefined),
+          seoTitle: data.seoTitle,
+          seoDescription: data.seoDescription,
+          seoKeywords: data.seoKeywords,
+          seoCanonicalUrl: data.seoCanonicalUrl,
+          ogTitle: data.ogTitle,
+          ogDescription: data.ogDescription,
+          ogImageUrl: data.ogImageUrl,
+          twitterTitle: data.twitterTitle,
+          twitterDescription: data.twitterDescription,
+          aiContentDeclaration: data.aiContentDeclaration,
+          authorId,
+          topicArticles: {
+            create: data.topicIds.map((topicId, i) => ({ topicId, orderIndex: i })),
+          },
+          articleTags: resolvedTagIds.length > 0
+            ? { create: resolvedTagIds.map((tagId) => ({ tagId })) }
+            : undefined,
         },
-        articleTags: resolvedTagIds.length > 0
-          ? { create: resolvedTagIds.map((tagId) => ({ tagId })) }
-          : undefined,
-      },
-      include: articleInclude,
-    })
-
-    // Link to submenus if provided
-    if (data.subMenuIds?.length) {
-      await prisma.subMenuArticle.createMany({
-        data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: article.id, orderIndex: i + 1 })),
-        skipDuplicates: true,
       })
-    }
 
-    // Link directly to menus if provided
-    if (data.menuIds?.length) {
-      await prisma.menuArticle.createMany({
-        data: data.menuIds.map((menuId, i) => ({ menuId, articleId: article.id, orderIndex: i + 1 })),
-        skipDuplicates: true,
+      if (data.subMenuIds?.length) {
+        await tx.subMenuArticle.createMany({
+          data: data.subMenuIds.map((subMenuId, i) => ({ subMenuId, articleId: art.id, orderIndex: i + 1 })),
+          skipDuplicates: true,
+        })
+      }
+
+      if (data.menuIds?.length) {
+        await tx.menuArticle.createMany({
+          data: data.menuIds.map((menuId, i) => ({ menuId, articleId: art.id, orderIndex: i + 1 })),
+          skipDuplicates: true,
+        })
+      }
+
+      if (data.sections?.length) {
+        await tx.articleSection.createMany({
+          data: data.sections.map((s, i) => ({
+            articleId: art.id,
+            title: s.title,
+            content: s.content,
+            order: s.order ?? i,
+          })),
+        })
+      }
+
+      // Single fetch at the end with all relations — avoids the double-fetch
+      return tx.article.findUniqueOrThrow({
+        where: { id: art.id },
+        include: articleDetailInclude,
       })
-    }
+    }, { timeout: 15000 })
 
-    // Create sections if provided
-    if (data.sections?.length) {
-      await prisma.articleSection.createMany({
-        data: data.sections.map((s, i) => ({
-          articleId: article.id,
-          title: s.title,
-          content: s.content,
-          order: s.order ?? i,
-        })),
-      })
-    }
+    invalidateCache('articles', 'articles-list')
 
-    // Re-fetch with sections included
-    const articleWithSections = await prisma.article.findUnique({
-      where: { id: article.id },
-      include: articleInclude,
-    })
-
-    return apiSuccess(articleWithSections, 201)
+    return apiSuccess(article, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to create article', 500, err)

@@ -1,12 +1,14 @@
-// app/api/articles/[id]/route.ts  (coverImage uses relation connect/disconnect — no coverImageId scalar in update)
+// app/api/articles/[id]/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { slugify } from '@/lib/slugify'
 import { calculateReadingTime } from '@/lib/readingTime'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { invalidateCache } from '@/lib/cache'
+import { articleDetailInclude } from '@/lib/article-includes'
 import { z } from 'zod'
-import { ArticleStatus } from '@prisma/client'
+import { ArticleStatus, Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 const SectionInput = z.object({
@@ -47,28 +49,25 @@ const UpdateSchema = z.object({
   sections: z.array(SectionInput).optional(),
 })
 
-const articleInclude = {
-  author: { select: { id: true, name: true, email: true } },
-  topicArticles: {
-    include: {
-      topic: {
-        include: {
-          module: { select: { id: true, name: true, slug: true, color: true, order: true, icon: true } },
-        },
-      },
-    },
-    orderBy: { orderIndex: 'asc' as const },
-  },
-  articleTags: { include: { tag: true } },
-  coverImage: { select: { id: true, url: true, altText: true, width: true, height: true } },
-  subMenuArticles: { include: { subMenu: { select: { id: true, title: true, menu: { select: { id: true, title: true } } } } } },
-  menuArticles: { include: { menu: { select: { id: true, title: true } } } },
-  sections: { orderBy: { order: 'asc' as const } },
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+function parseId(raw: string): number | null {
+  const n = parseInt(raw, 10)
+  return isNaN(n) ? null : n
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/** Returns true if the Prisma error means "record not found". */
+function isNotFound(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025'
+}
+
+// ── GET ──────────────────────────────────────────────────────────────────
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt((await params).id)
+    const id = parseId((await params).id)
+    if (!id) return apiError('Invalid article ID', 400)
+
     const session = await auth()
 
     const article = await prisma.article.findFirst({
@@ -76,17 +75,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         id,
         ...(!session ? { status: ArticleStatus.PUBLISHED } : {}),
       },
-      include: articleInclude,
+      include: articleDetailInclude,
     })
 
     if (!article) return apiError('Article not found', 404)
 
-    // Increment view count for published articles on public access
+    // Increment view count for published articles on public access (fire-and-forget)
     if (!session && article.status === ArticleStatus.PUBLISHED) {
-      await prisma.article.update({
-        where: { id },
-        data: { viewCount: { increment: 1 } },
-      })
+      prisma.article.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
     }
 
     return apiSuccess(article)
@@ -95,13 +91,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
+// ── PUT ──────────────────────────────────────────────────────────────────
+
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
+  const id = parseId((await params).id)
+  if (!id) return apiError('Invalid article ID', 400)
+
+  let body: unknown
+  try { body = await req.json() } catch { return apiError('Invalid JSON body', 400) }
+
   try {
-    const id = parseInt((await params).id)
-    const body = await req.json()
     const data = UpdateSchema.parse(body)
 
     if (data.title && !data.slug) data.slug = slugify(data.title)
@@ -110,6 +112,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (data.slug) {
       const existing = await prisma.article.findFirst({
         where: { slug: data.slug, NOT: { id } },
+        select: { id: true },
       })
       if (existing) return apiError('Slug already in use', 409)
     }
@@ -152,19 +155,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
-    // Partial save = no sections provided. Skip the heavy articleInclude JOIN and return only {id,slug}.
+    // Partial save = no sections. Returns minimal data, skips heavy JOINs.
     const isPartial = data.sections === undefined
 
+    // Fetch current slug for revalidation BEFORE the transaction — avoids a
+    // post-transaction query and is needed even if the slug itself isn't changing.
+    const currentSlug = (await prisma.article.findUnique({ where: { id }, select: { slug: true } }))?.slug
+
     const article = await prisma.$transaction(async (tx) => {
-      // Update topic relationships if provided
       if (data.topicIds !== undefined) {
         await tx.topicArticle.deleteMany({ where: { articleId: id } })
-        await tx.topicArticle.createMany({
-          data: data.topicIds.map((topicId, i) => ({ topicId, articleId: id, orderIndex: i })),
-        })
+        if (data.topicIds.length > 0) {
+          await tx.topicArticle.createMany({
+            data: data.topicIds.map((topicId, i) => ({ topicId, articleId: id, orderIndex: i })),
+          })
+        }
       }
 
-      // Update tag relationships if provided
       if (resolvedTagIds !== undefined) {
         await tx.articleTag.deleteMany({ where: { articleId: id } })
         if (resolvedTagIds.length > 0) {
@@ -174,45 +181,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
       }
 
-      // Update SubMenu associations if provided
       if (data.subMenuIds !== undefined) {
         await tx.subMenuArticle.deleteMany({ where: { articleId: id } })
         if (data.subMenuIds.length > 0) {
           await tx.subMenuArticle.createMany({
             data: data.subMenuIds.map((subMenuId, i) => ({
-              subMenuId,
-              articleId: id,
-              orderIndex: i + 1,
+              subMenuId, articleId: id, orderIndex: i + 1,
             })),
           })
         }
       }
 
-      // Update direct Menu associations if provided
       if (data.menuIds !== undefined) {
         await tx.menuArticle.deleteMany({ where: { articleId: id } })
         if (data.menuIds.length > 0) {
           await tx.menuArticle.createMany({
             data: data.menuIds.map((menuId, i) => ({
-              menuId,
-              articleId: id,
-              orderIndex: i + 1,
+              menuId, articleId: id, orderIndex: i + 1,
             })),
           })
         }
       }
 
-      // Sync sections if provided — upsert by ID to keep section IDs stable.
-      // Stable IDs are critical: background audio jobs reference section IDs
-      // written at job-start; delete-recreate would give new IDs and the
-      // job's updateMany would silently match nothing (audio saved to
-      // MediaAsset but never linked to the section).
+      // Sync sections — upsert by ID to keep section IDs stable for background audio jobs.
       if (data.sections !== undefined) {
         const keptIds = data.sections
           .map((s) => s.id)
           .filter((sid): sid is number => sid != null)
 
-        // Delete sections that are no longer in the incoming list
         await tx.articleSection.deleteMany({
           where: {
             articleId: id,
@@ -222,8 +218,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         for (const [i, s] of data.sections.entries()) {
           if (s.id != null) {
-            // Update existing — omit audioUrl from the update when not provided
-            // so any audioUrl written by a background job is preserved.
             await tx.articleSection.updateMany({
               where: { id: s.id, articleId: id },
               data: {
@@ -234,7 +228,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
               },
             })
           } else {
-            // Create new section (no existing DB id)
             await tx.articleSection.create({
               data: {
                 articleId: id,
@@ -264,9 +257,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
         ...(data.publishedAt !== undefined
           ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }
-          : (data.status === ArticleStatus.PUBLISHED
-            ? { publishedAt: new Date() }
-            : {})
+          : (data.status === ArticleStatus.PUBLISHED ? { publishedAt: new Date() } : {})
         ),
         ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
         ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),
@@ -281,8 +272,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         updatedBy: parseInt((session.user as { id: string }).id),
       }
 
-      // Partial saves (no sections) get a minimal select — skips all the heavy JOINs.
-      // Full saves (sections provided) return the complete article so section IDs can be synced.
       if (isPartial) {
         await tx.article.update({ where: { id }, data: updateData })
         return null
@@ -291,26 +280,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return tx.article.update({
         where: { id },
         data: updateData,
-        include: articleInclude,
+        include: articleDetailInclude,
       })
     }, { timeout: 30000 })
 
-    // Revalidate only when public-facing content actually changed.
-    // Pure SEO/tags/nav panel saves don't need article-page revalidation.
+    // ── Revalidation (only when public-facing content changed) ────────────
     const needsArticleRevalidate = !isPartial ||
       data.title !== undefined || data.slug !== undefined ||
       data.status !== undefined || data.coverImageUrl !== undefined
-    const needsNavRevalidate = data.subMenuIds !== undefined || data.menuIds !== undefined
 
     if (needsArticleRevalidate) {
-      // For partial saves we don't have the full article back — fetch just the slug
-      const slugForPath = (article as { slug?: string } | null)?.slug
-        ?? (await prisma.article.findUnique({ where: { id }, select: { slug: true } }))?.slug
-      if (slugForPath) revalidatePath(`/articles/${slugForPath}`)
+      const slug = data.slug ?? currentSlug
+      if (slug) revalidatePath(`/articles/${slug}`)
       revalidatePath('/articles')
     }
 
-    if (needsNavRevalidate) {
+    if (data.subMenuIds !== undefined || data.menuIds !== undefined) {
       const subMenuLinks = await prisma.subMenuArticle.findMany({
         where: { articleId: id },
         select: { subMenu: { select: { slug: true, menu: { select: { slug: true } } } } },
@@ -321,52 +306,53 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    invalidateCache('articles', 'articles-list', `article-${id}`)
+
     return apiSuccess(isPartial ? { id } : article)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
+    if (isNotFound(err)) return apiError('Article not found', 404)
     return apiError('Failed to update article', 500, err)
   }
 }
 
+// ── DELETE ────────────────────────────────────────────────────────────────
+
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
-  try {
-    const id = parseInt((await params).id)
 
-    // Fetch the article slug and its submenu paths before deleting so we can
-    // revalidate the relevant statically-generated pages afterward.
+  try {
+    const id = parseId((await params).id)
+    if (!id) return apiError('Invalid article ID', 400)
+
+    // Fetch slug + submenu paths for post-delete revalidation
     const article = await prisma.article.findUnique({
       where: { id },
       select: {
         slug: true,
         subMenuArticles: {
-          select: {
-            subMenu: {
-              select: {
-                slug: true,
-                menu: { select: { slug: true } },
-              },
-            },
-          },
+          select: { subMenu: { select: { slug: true, menu: { select: { slug: true } } } } },
         },
       },
     })
 
+    if (!article) return apiError('Article not found', 404)
+
     await prisma.article.delete({ where: { id } })
 
-    // Revalidate cached pages that referenced this article
-    if (article) {
-      revalidatePath(`/articles/${article.slug}`)
-      revalidatePath('/articles')
-      for (const { subMenu } of article.subMenuArticles) {
-        revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
-        revalidatePath(`/${subMenu.menu.slug}`)
-      }
+    revalidatePath(`/articles/${article.slug}`)
+    revalidatePath('/articles')
+    for (const { subMenu } of article.subMenuArticles) {
+      revalidatePath(`/${subMenu.menu.slug}/${subMenu.slug}`)
+      revalidatePath(`/${subMenu.menu.slug}`)
     }
+
+    invalidateCache('articles', 'articles-list', `article-${id}`)
 
     return apiSuccess({ deleted: true })
   } catch (err) {
+    if (isNotFound(err)) return apiError('Article not found', 404)
     return apiError('Failed to delete article', 500, err)
   }
 }

@@ -2,17 +2,14 @@
 // Public endpoint for fetching published articles — used by the infinite scroll loader
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cached } from '@/lib/cache'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = req.nextUrl
-    const offset = Math.max(0, parseInt(searchParams.get('offset') ?? '0'))
-    const limit  = Math.min(100, Math.max(1, parseInt(searchParams.get('limit')  ?? '50')))
-    const tag    = searchParams.get('tag') ?? ''
-
+/** Core query — extracted so it can be wrapped by `cached()`. */
+const fetchPublicArticles = cached(
+  async (offset: number, limit: number, tag: string) => {
     const where = {
       status: 'PUBLISHED' as const,
       ...(tag ? { articleTags: { some: { tag: { name: tag } } } } : {}),
@@ -57,11 +54,23 @@ export async function GET(req: NextRequest) {
       prisma.article.count({ where }),
     ])
 
-    return NextResponse.json({
-      articles,
-      totalCount,
-      hasMore: offset + articles.length < totalCount,
-    })
+    return { articles, totalCount, hasMore: offset + articles.length < totalCount }
+  },
+  ['public-articles'],
+  'articleList',
+  ['articles', 'articles-list'],
+)
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = req.nextUrl
+    const offset = Math.max(0, parseInt(searchParams.get('offset') ?? '0') || 0)
+    const limit  = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50') || 50))
+    const tag    = searchParams.get('tag') ?? ''
+
+    const data = await fetchPublicArticles(offset, limit, tag)
+
+    return NextResponse.json(data)
   } catch (err) {
     logger.error('[GET /api/articles/public]', err)
     return NextResponse.json({ error: 'Failed to fetch articles' }, { status: 500 })

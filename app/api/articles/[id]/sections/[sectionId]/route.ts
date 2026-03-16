@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { invalidateCache } from '@/lib/cache'
 import { z } from 'zod'
 
 const PatchSchema = z.object({
@@ -20,13 +21,15 @@ export async function PATCH(
   const session = await auth()
   if (!session) return apiError('Unauthorized', 401)
 
-  try {
-    const { id, sectionId } = await params
-    const articleId  = parseInt(id, 10)
-    const secId      = parseInt(sectionId, 10)
-    if (isNaN(articleId) || isNaN(secId)) return apiError('Invalid id', 400)
+  const { id, sectionId } = await params
+  const articleId = parseInt(id, 10)
+  const secId     = parseInt(sectionId, 10)
+  if (isNaN(articleId) || isNaN(secId)) return apiError('Invalid id', 400)
 
-    const body = await req.json()
+  let body: unknown
+  try { body = await req.json() } catch { return apiError('Invalid JSON body', 400) }
+
+  try {
     const data = PatchSchema.parse(body)
 
     const updated = await prisma.articleSection.updateMany({
@@ -39,6 +42,8 @@ export async function PATCH(
     })
 
     if (updated.count === 0) return apiError('Section not found', 404)
+
+    invalidateCache(`article-${articleId}`)
 
     return apiSuccess({ id: secId, ...data })
   } catch (err) {

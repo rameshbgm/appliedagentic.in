@@ -65,7 +65,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   const [saving, setSaving] = useState(false)
   const [metaLoading, setMetaLoading] = useState(false)
   const [tagsLoading, setTagsLoading] = useState(false)
-  const [autoSaveTimer, setAutoSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showCoverPicker, setShowCoverPicker] = useState(false)
 
   // SEO tabs
@@ -813,7 +813,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       skipAutoSaveRef.current = false
       return // audio url changed — DB already has it, preserve existing timer
     }
-    if (autoSaveTimer) clearTimeout(autoSaveTimer)
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
     const timer = setTimeout(async () => {
       const jobStatus = audioJobStatusRef.current
       if (!title.trim() || jobStatus === 'pending' || jobStatus === 'running') return
@@ -829,7 +829,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
         dirtySectionIdsRef.current.forEach((tempId) => saveSection(tempId))
       }
     }, 60000)
-    setAutoSaveTimer(timer)
+    autoSaveTimerRef.current = timer
     return () => clearTimeout(timer)
   }, [title, slug, summary, sections, coverImageUrl, meta]) // eslint-disable-line
 

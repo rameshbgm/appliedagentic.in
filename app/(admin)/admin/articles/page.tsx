@@ -331,7 +331,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                       <Link href={`/admin/articles/${a.id}/edit`} className="p-1.5 rounded-lg hover:bg-gray-100" title="Edit">
                         <Pencil size={14} style={{ color: 'var(--text-muted)' }} />
                       </Link>
-                      <ArticleActions id={a.id} title={a.title} status={a.status} />
+                      <ArticleActions id={a.id} title={a.title} status={a.status} isFeatured={a.isFeatured} />
                     </div>
                   </td>
                 </tr>
