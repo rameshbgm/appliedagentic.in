@@ -89,11 +89,11 @@ export default function SearchPageClient({ initialQuery = '' }: { initialQuery?:
 
           {/* ── Search bar ── */}
           <form onSubmit={handleSubmit} role="search">
-            {/* Outer glow ring */}
-            <div style={{ padding: 1.5, borderRadius: 20, background: 'linear-gradient(135deg, rgba(99,102,241,0.5), rgba(56,189,248,0.35), rgba(129,140,248,0.5))', boxShadow: '0 0 0 5px rgba(99,102,241,0.07), 0 8px 32px rgba(99,102,241,0.12)' }}>
+            {/* Outer border */}
+            <div style={{ padding: 1.5, borderRadius: 10, background: 'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(129,140,248,0.3))', boxShadow: '0 4px 24px rgba(99,102,241,0.1)' }}>
               <div
                 className="flex items-center gap-3 pl-5 pr-3 py-3"
-                style={{ borderRadius: 18.5, background: 'var(--bg-elevated)' }}
+                style={{ borderRadius: 8.5, background: 'var(--bg-elevated)' }}
               >
                 <Search size={17} className="shrink-0 opacity-50" style={{ color: '#818cf8' }} />
                 <input
@@ -103,8 +103,8 @@ export default function SearchPageClient({ initialQuery = '' }: { initialQuery?:
                   autoFocus
                   autoComplete="off"
                   placeholder="Search articles, topics, modules..."
-                  className="flex-1 bg-transparent outline-none text-[0.95rem] min-w-0"
-                  style={{ color: 'var(--text-primary)', fontFamily: "'Space Grotesk', system-ui, sans-serif", letterSpacing: '-0.01em' }}
+                  className="flex-1 bg-transparent text-[0.95rem] min-w-0"
+                  style={{ color: 'var(--text-primary)', fontFamily: "'Space Grotesk', system-ui, sans-serif", letterSpacing: '-0.01em', outline: 'none', border: 'none', WebkitAppearance: 'none' }}
                   onChange={(e) => setQuery(e.target.value)}
                   suppressHydrationWarning
                 />
@@ -122,8 +122,8 @@ export default function SearchPageClient({ initialQuery = '' }: { initialQuery?:
                 <button
                   type="submit"
                   disabled={loading || !query.trim()}
-                  className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[13px] font-bold tracking-wide transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] disabled:opacity-35 disabled:pointer-events-none"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', boxShadow: '0 2px 10px rgba(99,102,241,0.35)', fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
+                  className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-bold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-[0.97] disabled:opacity-35 disabled:pointer-events-none"
+                  style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', boxShadow: '0 2px 10px rgba(99,102,241,0.3)', fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
                 >
                   {loading
                     ? <Loader2 size={14} className="animate-spin" />

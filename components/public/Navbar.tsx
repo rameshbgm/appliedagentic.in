@@ -50,6 +50,8 @@ export default function Navbar({ navMenus = [] }: Props) {
   const isDark          = theme === 'dark'
   const { showLoading } = useArticleLoading()
 
+  const ACCENTS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899']
+
   const navBg        = isDark ? 'rgba(8,14,30,0.96)'     : 'rgba(255,255,255,0.95)'
   const navBorder    = isDark ? 'rgba(255,255,255,0.07)'  : 'rgba(0,0,0,0.08)'
   const textPrimary  = isDark ? 'rgba(255,255,255,0.92)'  : '#111827'
@@ -212,45 +214,61 @@ export default function Navbar({ navMenus = [] }: Props) {
         >
           <div className="w-full flex" style={{ maxHeight: 460 }}>
 
-            {/* ── Col 1: Top-level menus (160px) ── */}
+            {/* ── Col 1: Top-level menus ── */}
             <div
-              className="shrink-0 overflow-y-auto mega-col-scroll py-3"
-              style={{ width: 180, borderRight: `1px solid ${megaBdr}` }}
+              className="shrink-0 overflow-y-auto mega-col-scroll py-3 flex flex-col"
+              style={{ width: 190, borderRight: `1px solid ${megaBdr}` }}
             >
-              {navMenus.map((menu) => {
-                const hasChildren = menu.subMenus && menu.subMenus.length > 0
-                const isActive    = menu.id === activeMenuId
-                return (
-                  <div
-                    key={menu.id}
-                    className="flex items-center cursor-pointer transition-all duration-100"
-                    style={{ color: isActive ? '#3b82f6' : textSecond }}
-                    onMouseEnter={() => {
-                      cancelClose()
-                      setActiveMenuId(menu.id)
-                      const firstSub = menu.subMenus?.[0]
-                      if (firstSub) activateSub(firstSub.id)
-                      else setActiveSubId(null)
-                    }}
-                  >
-                    <span
-                      className="shrink-0 self-stretch transition-all duration-150 rounded-r-sm"
-                      style={{ width: 3, background: isActive ? '#3b82f6' : 'transparent', minHeight: 36 }}
-                    />
-                    <Link
-                      href={`/${menu.slug}`}
-                      className="flex-1 flex items-center justify-between px-4 py-2.5 text-[13px] truncate"
-                      style={{ color: 'inherit', fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}
-                      onClick={() => { closeMega(); showLoading(`/${menu.slug}`) }}
+              <div className="flex-1">
+                {navMenus.map((menu, i) => {
+                  const hasChildren = menu.subMenus && menu.subMenus.length > 0
+                  const isActive    = menu.id === activeMenuId
+                  const accent      = ACCENTS[i % ACCENTS.length]
+                  return (
+                    <div
+                      key={menu.id}
+                      className="flex items-center cursor-pointer transition-all duration-100"
+                      style={{ color: isActive ? accent : textSecond }}
+                      onMouseEnter={() => {
+                        cancelClose()
+                        setActiveMenuId(menu.id)
+                        const firstSub = menu.subMenus?.[0]
+                        if (firstSub) activateSub(firstSub.id)
+                        else setActiveSubId(null)
+                      }}
                     >
-                      {menu.title}
-                      {hasChildren && (
-                        <ChevronRight size={12} className="shrink-0" style={{ color: isActive ? '#3b82f6' : textMuted, opacity: isActive ? 1 : 0.5 }} />
-                      )}
-                    </Link>
-                  </div>
-                )
-              })}
+                      <span
+                        className="shrink-0 self-stretch transition-all duration-150 rounded-r-sm"
+                        style={{ width: 3, background: isActive ? accent : 'transparent', minHeight: 36 }}
+                      />
+                      <Link
+                        href={`/${menu.slug}`}
+                        className="flex-1 flex items-center justify-between px-4 py-2.5 text-[13px]"
+                        style={{ color: 'inherit', fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}
+                        onClick={() => { closeMega(); showLoading(`/${menu.slug}`) }}
+                      >
+                        <span className="leading-snug">{menu.title}</span>
+                        {hasChildren && (
+                          <ChevronRight size={12} className="shrink-0 ml-1" style={{ color: isActive ? accent : textMuted, opacity: isActive ? 1 : 0.4 }} />
+                        )}
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+              {/* View all link for active menu */}
+              {activeMenu && (
+                <div className="px-4 py-3 mt-1" style={{ borderTop: `1px solid ${megaBdr}` }}>
+                  <Link
+                    href={`/${activeMenu.slug}`}
+                    onClick={() => { closeMega(); showLoading(`/${activeMenu.slug}`) }}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold transition-all hover:gap-1.5"
+                    style={{ color: ACCENTS[navMenus.findIndex(m => m.id === activeMenu.id) % ACCENTS.length], fontFamily: FONT }}
+                  >
+                    View all <ArrowRight size={10} />
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* ── Col 2: Sub-menus (200px) ── */}
@@ -259,40 +277,36 @@ export default function Navbar({ navMenus = [] }: Props) {
               style={{ width: 210, borderRight: `1px solid ${megaBdr}` }}
             >
               {activeMenu?.subMenus && activeMenu.subMenus.length > 0 ? (
-                <>
-                  {activeMenu.subMenus.map((sub) => {
-                    const isActive = sub.id === activeSubId
-                    return (
-                      <div
-                        key={sub.id}
-                        className="flex items-center cursor-pointer transition-all duration-100"
-                        style={{ color: isActive ? '#3b82f6' : textSecond }}
-                        onMouseEnter={() => { cancelClose(); activateSub(sub.id) }}
-                      >
-                        <span
-                          className="shrink-0 self-stretch transition-all duration-150 rounded-r-sm"
-                          style={{ width: 3, background: isActive ? '#3b82f6' : 'transparent', minHeight: 36 }}
-                        />
+                activeMenu.subMenus.map((sub, i) => {
+                  const isActive = sub.id === activeSubId
+                  const accent   = ACCENTS[i % ACCENTS.length]
+                  return (
+                    <div
+                      key={sub.id}
+                      className="flex items-center cursor-pointer transition-all duration-100"
+                      style={{ color: isActive ? accent : textSecond }}
+                      onMouseEnter={() => { cancelClose(); activateSub(sub.id) }}
+                    >
+                      <span
+                        className="shrink-0 self-stretch transition-all duration-150 rounded-r-sm"
+                        style={{ width: 3, background: isActive ? accent : 'transparent', minHeight: 40 }}
+                      />
+                      <div className="flex-1 flex items-center justify-between px-4 py-2.5 gap-2 min-w-0">
+                        <span className="flex-1 text-[13px] leading-snug truncate" style={{ fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}>
+                          {sub.title}
+                        </span>
                         <Link
                           href={`/${activeMenu.slug}/${sub.slug}`}
-                          className="flex-1 flex items-center justify-between px-4 py-2.5"
-                          style={{ color: 'inherit', fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}
                           onClick={() => { closeMega(); showLoading(`/${activeMenu.slug}/${sub.slug}`) }}
+                          className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-semibold transition-all hover:gap-1 whitespace-nowrap"
+                          style={{ color: isActive ? accent : textMuted, fontFamily: FONT, opacity: isActive ? 1 : 0.6 }}
                         >
-                          <span>
-                            <span className="block text-[13px] leading-snug">{sub.title}</span>
-                            {sub.description && (
-                              <span className="block text-[11px] leading-snug mt-0.5 truncate" style={{ color: textMuted, maxWidth: 150 }}>
-                                {sub.description}
-                              </span>
-                            )}
-                          </span>
-                          <ChevronRight size={11} className="shrink-0 ml-1" style={{ color: isActive ? '#3b82f6' : textMuted, opacity: isActive ? 1 : 0.4 }} />
+                          View all <ArrowRight size={9} />
                         </Link>
                       </div>
-                    )
-                  })}
-                </>
+                    </div>
+                  )
+                })
               ) : (
                 <div className="flex items-center justify-center h-full" style={{ opacity: 0.3 }}>
                   <p className="text-xs" style={{ color: textMuted, fontFamily: FONT }}>Select a topic</p>
@@ -305,15 +319,12 @@ export default function Navbar({ navMenus = [] }: Props) {
               {activeSub ? (
                 <>
                   {/* Header */}
-                  <div className="flex items-center justify-between mb-3 pb-2 sticky top-0" style={{ background: megaBg, borderBottom: `1px solid ${megaBdr}` }}>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: textMuted, fontFamily: FONT }}>
-                      {activeSub.title}
-                    </p>
+                  <div className="flex items-center justify-end mb-3 pb-2 sticky top-0" style={{ background: megaBg, borderBottom: `1px solid ${megaBdr}` }}>
                     <Link
                       href={activeMenu ? `/${activeMenu.slug}/${activeSub.slug}` : '#'}
                       onClick={() => { closeMega(); if (activeMenu) showLoading(`/${activeMenu.slug}/${activeSub.slug}`) }}
                       className="inline-flex items-center gap-1 text-[11px] font-semibold transition-all hover:gap-1.5"
-                      style={{ color: '#3b82f6', fontFamily: FONT, letterSpacing: '0.04em', textTransform: 'uppercase' }}
+                      style={{ color: ACCENTS[(activeMenu?.subMenus?.findIndex(s => s.id === activeSub.id) ?? 0) % ACCENTS.length], fontFamily: FONT, letterSpacing: '0.04em', textTransform: 'uppercase' }}
                     >
                       View all <ArrowRight size={10} />
                     </Link>
