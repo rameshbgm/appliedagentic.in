@@ -423,12 +423,12 @@ export default function Navbar({ navMenus = [] }: Props) {
         className={`lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto overscroll-contain transition-all duration-200 ${mobileOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-2'}`}
         style={{ background: 'var(--bg-page)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid ${navBorder}` }}
       >
-        <nav className="px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-0.5">
-          {navMenus.map((menu) => {
+        <nav className="px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1">
+          {navMenus.map((menu, mi) => {
             const hasSubs    = menu.subMenus && menu.subMenus.length > 0
             const isExpanded = openMobileMenuId === menu.id
             return (
-              <div key={menu.id}>
+              <div key={menu.id} style={{ borderBottom: mi < navMenus.length - 1 ? `1px solid ${navBorder}` : undefined, paddingBottom: mi < navMenus.length - 1 ? 6 : 0 }}>
                 {hasSubs ? (
                   /* Menu with sub-menus: entire row toggles expand, no navigation */
                   <button
@@ -459,7 +459,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                 )}
 
                 {hasSubs && isExpanded && (
-                  <div className="mt-1 mb-2 space-y-0.5" style={{ borderLeft: '3px solid #3b82f6', marginLeft: 16, paddingLeft: 12 }}>
+                  <div className="mt-1 mb-2 space-y-1" style={{ borderLeft: '3px solid #3b82f6', marginLeft: 16, paddingLeft: 12 }}>
                     {/* View all link for this menu */}
                     <Link
                       href={`/${menu.slug}`}
@@ -508,7 +508,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                                   <div className="w-4 h-4 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
                                 </div>
                               ) : subArticles && subArticles.length > 0 ? (
-                                <div className="flex flex-col gap-1">
+                                <div className="flex flex-col gap-2">
                                   {subArticles.slice(0, 6).map((article, ai) => (
                                     <Link
                                       key={article.id}

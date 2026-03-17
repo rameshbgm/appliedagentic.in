@@ -156,13 +156,13 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
             const isLast     = idx === subMenus.length - 1
             const accent     = ACCENTS[idx % ACCENTS.length]
             return (
-              <div key={sm.id} style={!isLast ? { borderBottom: '1px solid var(--bg-border)' } : {}}>
+              <div key={sm.id} style={!isLast ? { borderBottom: '1px solid var(--bg-border)', paddingBottom: 6 } : { paddingBottom: 4 }}>
 
                 {/* Sub-menu header row */}
                 <button
                   type="button"
                   onClick={() => setMobileOpenId(isActive ? -1 : sm.id)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-4 transition-colors"
                   style={{
                     background: isActive ? `${accent}12` : 'var(--bg-elevated)',
                     color: isActive ? accent : 'var(--text-primary)',
