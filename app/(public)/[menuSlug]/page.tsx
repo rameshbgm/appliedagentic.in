@@ -63,6 +63,8 @@ export default async function MenuPage({ params }: Props) {
                     slug: true,
                     summary: true,
                     readingTimeMinutes: true,
+                    viewCount: true,
+                    updatedAt: true,
                     status: true,
                     coverImage: { select: { url: true } },
                   },

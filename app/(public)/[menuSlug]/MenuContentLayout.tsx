@@ -1,12 +1,10 @@
 'use client'
 // app/(public)/[menuSlug]/MenuContentLayout.tsx
-// Two-panel layout: left sidebar = submenu list, right = article cards with images.
-// Mirrors the nav mega-menu design.
 
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, ChevronRight, Clock } from 'lucide-react'
+import { ArrowRight, ChevronRight, Clock, Eye, Calendar } from 'lucide-react'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 const FONT = "'Inter', sans-serif"
@@ -17,6 +15,8 @@ interface ArticlePreview {
   title: string
   summary: string | null
   readingTimeMinutes: number | null
+  viewCount: number | null
+  updatedAt: string | null
   coverImage: { url: string } | null
 }
 
@@ -34,33 +34,209 @@ interface Props {
   menuSlug: string
 }
 
+function ArticleMeta({ article }: { article: ArticlePreview }) {
+  return (
+    <span
+      className="mt-1.5 flex items-center gap-x-2 text-[10.5px] whitespace-nowrap overflow-hidden"
+      style={{ color: 'var(--text-muted)', fontFamily: FONT }}
+    >
+      {article.viewCount != null && (
+        <span className="inline-flex items-center gap-0.5"><Eye size={10} /> {article.viewCount} views</span>
+      )}
+      {article.viewCount != null && article.updatedAt && <span style={{ opacity: 0.35 }}>·</span>}
+      {article.updatedAt && (
+        <span className="inline-flex items-center gap-0.5">
+          <Calendar size={10} />
+          {new Date(article.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
+      )}
+      {(article.viewCount != null || article.updatedAt) && article.readingTimeMinutes != null && (
+        <span style={{ opacity: 0.35 }}>·</span>
+      )}
+      {article.readingTimeMinutes != null && (
+        <span className="inline-flex items-center gap-0.5"><Clock size={10} /> {article.readingTimeMinutes} min read</span>
+      )}
+    </span>
+  )
+}
+
+function ArticleRow({
+  article,
+  href,
+  isLast,
+  showLoading,
+}: {
+  article: ArticlePreview
+  href: string
+  isLast: boolean
+  showLoading: (path: string) => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={() => showLoading(href)}
+      className="group flex items-stretch gap-0 py-3 px-2 rounded-lg transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.04]"
+      style={!isLast ? { borderBottom: '1px solid var(--bg-border)' } : {}}
+    >
+      {/* Thumbnail */}
+      <div
+        className="shrink-0 relative rounded-lg overflow-hidden"
+        style={{ width: 80, minHeight: 56, background: 'var(--bg-elevated)' }}
+      >
+        {article.coverImage?.url ? (
+          <Image
+            src={article.coverImage.url}
+            alt={article.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="80px"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>No image</span>
+          </div>
+        )}
+      </div>
+      {/* Vertical separator */}
+      <div className="shrink-0 mx-3" style={{ width: 1, background: 'var(--bg-border)' }} />
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <h3
+          className="font-semibold text-[13.5px] leading-snug line-clamp-2 group-hover:text-blue-500 transition-colors"
+          style={{ color: 'var(--text-primary)', fontFamily: FONT }}
+        >
+          {article.title}
+        </h3>
+        {article.summary && (
+          <p
+            className="text-[11.5px] leading-relaxed line-clamp-1 mt-0.5"
+            style={{ color: 'var(--text-muted)', fontFamily: FONT }}
+          >
+            {article.summary}
+          </p>
+        )}
+        <ArticleMeta article={article} />
+      </div>
+      <ArrowRight
+        size={14}
+        className="shrink-0 self-center ml-2 opacity-0 group-hover:opacity-50 transition-opacity"
+        style={{ color: 'var(--text-muted)' }}
+      />
+    </Link>
+  )
+}
+
 export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
   const { showLoading } = useArticleLoading()
-  const [selectedId, setSelectedId] = useState<number>(subMenus[0]?.id ?? 0)
+  const [selectedId, setSelectedId]       = useState<number>(subMenus[0]?.id ?? 0)  // desktop
+  const [mobileOpenId, setMobileOpenId]   = useState<number>(-1)                     // mobile: all collapsed
 
-  const selected = subMenus.find((sm) => sm.id === selectedId) ?? subMenus[0]
-  const articles = selected?.articles.map((a) => a.article) ?? []
+  const selected  = subMenus.find((sm) => sm.id === selectedId) ?? subMenus[0]
+  const articles  = selected?.articles.map((a) => a.article) ?? []
 
   return (
     <section>
-      {/* Section header */}
       <div className="flex items-center justify-between mb-5">
-        <h2
-          className="text-2xl font-black tracking-tight"
-          style={{ color: 'var(--text-primary)', fontFamily: FONT }}
-        >
+        <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: FONT }}>
           Topics
         </h2>
       </div>
 
-      {/* Two-panel container */}
+      {/* ═══════════════════════════════════════════
+          MOBILE layout  (hidden on md+)
+      ═══════════════════════════════════════════ */}
+      <div className="md:hidden space-y-4">
+
+        {/* Sub-menu accordion list */}
+        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--bg-border)' }}>
+          {subMenus.map((sm, idx) => {
+            const isActive  = sm.id === mobileOpenId
+            const smArticles = sm.articles.map((a) => a.article)
+            const isLast    = idx === subMenus.length - 1
+            return (
+              <div key={sm.id} style={!isLast ? { borderBottom: '1px solid var(--bg-border)' } : {}}>
+
+                {/* Sub-menu header row */}
+                <button
+                  type="button"
+                  onClick={() => setMobileOpenId(isActive ? -1 : sm.id)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
+                  style={{
+                    background: isActive ? 'rgba(59,130,246,0.06)' : 'var(--bg-elevated)',
+                    color: isActive ? '#3b82f6' : 'var(--text-primary)',
+                    fontFamily: FONT,
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    WebkitTapHighlightColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                  } as React.CSSProperties}
+                >
+                  <span className="text-left leading-snug flex-1 pr-3">{sm.title}</span>
+                  <span className="shrink-0 flex items-center gap-2">
+                    <span className="text-[11px] font-normal" style={{ color: 'var(--text-muted)' }}>
+                      {sm._count.articles}
+                    </span>
+                    <ChevronRight
+                      size={16}
+                      className="transition-transform duration-200"
+                      style={{ transform: isActive ? 'rotate(90deg)' : 'rotate(0deg)', color: isActive ? '#3b82f6' : 'var(--text-muted)' }}
+                    />
+                  </span>
+                </button>
+
+                {/* Expanded: articles + view all */}
+                {isActive && (
+                  <div style={{ background: 'var(--bg-page)' }}>
+                    {smArticles.length > 0 ? (
+                      <>
+                        <div className="px-3 pt-1">
+                          {smArticles.map((article, i) => (
+                            <ArticleRow
+                              key={article.id}
+                              article={article}
+                              href={`/articles/${article.slug}`}
+                              isLast={i === smArticles.length - 1}
+                              showLoading={showLoading}
+                            />
+                          ))}
+                        </div>
+                        <div className="px-4 py-3" style={{ borderTop: '1px solid var(--bg-border)' }}>
+                          <Link
+                            href={`/${menuSlug}/${sm.slug}`}
+                            onClick={() => showLoading(`/${menuSlug}/${sm.slug}`)}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                            style={{ color: '#3b82f6', fontFamily: FONT }}
+                          >
+                            View all <ArrowRight size={11} />
+                          </Link>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="px-4 py-4 text-sm" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
+                        No articles yet
+                      </p>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            )
+          })}
+        </div>
+
+      </div>
+
+      {/* ═══════════════════════════════════════════
+          DESKTOP layout  (hidden below md)
+      ═══════════════════════════════════════════ */}
       <div
-        className="flex rounded-2xl overflow-hidden"
+        className="hidden md:flex rounded-2xl overflow-hidden"
         style={{ border: '1px solid var(--bg-border)', minHeight: 420 }}
       >
-        {/* ── Left sidebar: submenu list ── */}
+        {/* Left sidebar */}
         <div
-          className="hidden md:block flex-none w-[220px] overflow-y-auto"
+          className="flex-none w-[280px] overflow-y-auto"
           style={{ borderRight: '1px solid var(--bg-border)', background: 'var(--bg-elevated)' }}
         >
           <div className="space-y-px py-2">
@@ -74,31 +250,18 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
                   className="w-full flex items-center text-left transition-all duration-150"
                   style={{ color: isActive ? '#3b82f6' : 'var(--text-secondary)' }}
                 >
-                  {/* Active indicator bar */}
                   <span
                     className="shrink-0 self-stretch transition-all duration-150"
-                    style={{
-                      width: 3,
-                      background: isActive ? '#3b82f6' : 'transparent',
-                      borderRadius: '0 2px 2px 0',
-                      minHeight: '100%',
-                    }}
+                    style={{ width: 3, background: isActive ? '#3b82f6' : 'transparent', borderRadius: '0 2px 2px 0', minHeight: '100%' }}
                   />
                   <span className="flex-1 flex items-center justify-between gap-2 px-4 py-3">
-                    <span
-                      className="text-[13.5px] leading-snug truncate"
-                      style={{ fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}
-                    >
+                    <span className="text-[13.5px] leading-snug" style={{ fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}>
                       {sm.title}
                     </span>
                     <ChevronRight
                       size={13}
                       className="shrink-0 transition-transform duration-150"
-                      style={{
-                        color: isActive ? '#3b82f6' : 'var(--text-muted)',
-                        opacity: isActive ? 1 : 0.4,
-                        transform: isActive ? 'translateX(2px)' : 'none',
-                      }}
+                      style={{ color: isActive ? '#3b82f6' : 'var(--text-muted)', opacity: isActive ? 1 : 0.4, transform: isActive ? 'translateX(2px)' : 'none' }}
                     />
                   </span>
                 </button>
@@ -107,17 +270,14 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
           </div>
         </div>
 
-        {/* ── Right panel: article cards ── */}
+        {/* Right panel */}
         <div className="flex-1 min-w-0 p-5 overflow-y-auto">
           {/* Panel header */}
           <div
             className="flex items-center justify-between mb-4 pb-2.5"
             style={{ borderBottom: '1px solid var(--bg-border)' }}
           >
-            <p
-              className="text-[10px] font-bold uppercase tracking-[0.14em]"
-              style={{ color: 'var(--text-muted)', fontFamily: FONT }}
-            >
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
               {selected?.title}
             </p>
             {selected && (
@@ -132,109 +292,26 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
             )}
           </div>
 
-          {/* Mobile: submenu tabs (scrollable row) */}
-          <div
-            className="md:hidden flex gap-2 mb-4 overflow-x-auto pb-1"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            {subMenus.map((sm) => {
-              const isActive = sm.id === selectedId
-              return (
-                <button
-                  key={sm.id}
-                  type="button"
-                  onClick={() => setSelectedId(sm.id)}
-                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-                  style={
-                    isActive
-                      ? { background: '#3b82f6', color: '#fff', fontFamily: FONT }
-                      : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--bg-border)', fontFamily: FONT }
-                  }
-                >
-                  {sm.title}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Article grid */}
           {articles.length > 0 ? (
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
-                <Link
+            <div className="flex flex-col">
+              {articles.map((article, i) => (
+                <ArticleRow
                   key={article.id}
+                  article={article}
                   href={`/articles/${article.slug}`}
-                  onClick={() => showLoading(`/articles/${article.slug}`)}
-                  className="group flex flex-col rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
-                >
-                  {/* Cover image */}
-                  <div
-                    className="relative w-full overflow-hidden"
-                    style={{ height: 112, background: 'var(--bg-elevated)' }}
-                  >
-                    {article.coverImage?.url ? (
-                      <Image
-                        src={article.coverImage.url}
-                        alt={article.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                          No image
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card body */}
-                  <div className="p-3 flex flex-col flex-1">
-                    <h3
-                      className="font-semibold text-[13px] leading-snug line-clamp-2 mb-1.5 group-hover:text-blue-500 transition-colors"
-                      style={{ color: 'var(--text-primary)', fontFamily: FONT }}
-                    >
-                      {article.title}
-                    </h3>
-                    {article.summary && (
-                      <p
-                        className="text-[11px] line-clamp-2 leading-relaxed"
-                        style={{
-                          color: 'var(--text-muted)',
-                          fontFamily: "'Lora', Georgia, serif",
-                          fontStyle: 'italic',
-                        }}
-                      >
-                        {article.summary}
-                      </p>
-                    )}
-                    {article.readingTimeMinutes != null && (
-                      <span
-                        className="mt-auto pt-2 flex items-center gap-1 text-[10px]"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        <Clock size={10} />
-                        {article.readingTimeMinutes} min read
-                      </span>
-                    )}
-                  </div>
-                </Link>
+                  isLast={i === articles.length - 1}
+                  showLoading={showLoading}
+                />
               ))}
             </div>
           ) : (
-            <div
-              className="flex items-center justify-center"
-              style={{ minHeight: 200, opacity: 0.4 }}
-            >
-              <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>
-                No articles in this topic yet
-              </p>
+            <div className="flex items-center justify-center" style={{ minHeight: 200, opacity: 0.4 }}>
+              <p className="text-sm" style={{ color: 'var(--text-muted)', fontFamily: FONT }}>No articles in this topic yet</p>
             </div>
           )}
         </div>
       </div>
+
     </section>
   )
 }
