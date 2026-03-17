@@ -494,6 +494,15 @@ export default function Navbar({ navMenus = [] }: Props) {
                           {/* Articles list under this sub-menu */}
                           {subExpanded && (
                             <div style={{ padding: '4px 15% 8px 4px' }}>
+                              {/* View all — right below the sub-menu title */}
+                              <Link
+                                href={`/${menu.slug}/${sub.slug}`}
+                                onClick={() => { closeMobile(); showLoading(`/${menu.slug}/${sub.slug}`) }}
+                                className="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold"
+                                style={{ color: '#3b82f6', fontFamily: FONT }}
+                              >
+                                View all <ArrowRight size={10} />
+                              </Link>
                               {loadingSubId === sub.id ? (
                                 <div className="flex justify-center py-4">
                                   <div className="w-4 h-4 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
@@ -522,14 +531,6 @@ export default function Navbar({ navMenus = [] }: Props) {
                               ) : subArticles !== null ? (
                                 <p className="text-xs text-center py-3" style={{ color: textMuted, fontFamily: FONT }}>No articles yet</p>
                               ) : null}
-                              <Link
-                                href={`/${menu.slug}/${sub.slug}`}
-                                onClick={() => { closeMobile(); showLoading(`/${menu.slug}/${sub.slug}`) }}
-                                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold"
-                                style={{ color: '#3b82f6', fontFamily: FONT }}
-                              >
-                                View all <ArrowRight size={10} />
-                              </Link>
                             </div>
                           )}
                         </div>
