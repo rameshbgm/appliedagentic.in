@@ -243,7 +243,7 @@ export default function Navbar({ navMenus = [] }: Props) {
             {/* ── Col 1: Top-level menus ── */}
             <div
               className="shrink-0 overflow-y-auto mega-col-scroll py-3 flex flex-col"
-              style={{ width: 190, borderRight: `1px solid ${megaBdr}` }}
+              style={{ width: 165, borderRight: `1px solid ${megaBdr}` }}
             >
               <div className="flex-1">
                 {navMenus.map((menu, i) => {
@@ -254,7 +254,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                     <div
                       key={menu.id}
                       className="flex items-center cursor-pointer transition-all duration-100"
-                      style={{ color: isActive ? accent : textSecond }}
+                      style={{ color: isActive ? accent : textSecond, background: isActive ? `${accent}12` : 'transparent' }}
                       onMouseEnter={() => {
                         cancelClose()
                         setActiveMenuId(menu.id)
@@ -300,7 +300,7 @@ export default function Navbar({ navMenus = [] }: Props) {
             {/* ── Col 2: Sub-menus (200px) ── */}
             <div
               className="shrink-0 overflow-y-auto mega-col-scroll py-3"
-              style={{ width: 210, borderRight: `1px solid ${megaBdr}` }}
+              style={{ width: 230, borderRight: `1px solid ${megaBdr}` }}
             >
               {activeMenu?.subMenus && activeMenu.subMenus.length > 0 ? (
                 activeMenu.subMenus.map((sub, i) => {
@@ -310,7 +310,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                     <div
                       key={sub.id}
                       className="flex items-center cursor-pointer transition-all duration-100"
-                      style={{ color: isActive ? accent : textSecond }}
+                      style={{ color: isActive ? accent : textSecond, background: isActive ? `${accent}12` : 'transparent' }}
                       onMouseEnter={() => { cancelClose(); activateSub(sub.id) }}
                     >
                       <span
@@ -318,7 +318,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                         style={{ width: 3, background: isActive ? accent : 'transparent', minHeight: 40 }}
                       />
                       <div className="flex-1 flex items-center justify-between px-4 py-2.5 gap-2 min-w-0">
-                        <span className="flex-1 text-[13px] leading-snug truncate" style={{ fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}>
+                        <span className="flex-1 text-[13px] leading-snug" style={{ fontFamily: FONT, fontWeight: isActive ? 600 : 500 }}>
                           {sub.title}
                         </span>
                         <Link
@@ -341,7 +341,7 @@ export default function Navbar({ navMenus = [] }: Props) {
             </div>
 
             {/* ── Col 3: Articles (flex-1) ── */}
-            <div className="flex-1 min-w-0 overflow-y-auto mega-col-scroll py-3 px-4">
+            <div className="flex-1 min-w-0 overflow-y-auto mega-col-scroll py-3 px-4" style={{ maxWidth: 1000 }}>
               {activeSub ? (
                 <>
                   {/* Header */}
@@ -363,17 +363,17 @@ export default function Navbar({ navMenus = [] }: Props) {
                     </div>
                   ) : articles && articles.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2">
-                      {articles.slice(0, 6).map((article) => (
+                      {articles.slice(0, 6).map((article, ai) => (
                         <Link
                           key={article.id}
                           href={`/articles/${article.slug}`}
                           onClick={() => { closeMega(); showLoading(`/articles/${article.slug}`) }}
-                          className="group/art rounded-xl px-3 py-2.5 transition-all duration-150"
+                          className="group/art rounded-none px-3 py-2.5 transition-all duration-150"
                           style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${megaBdr}` }}
                           onMouseEnter={(e) => {
                             const el = e.currentTarget as HTMLElement
-                            el.style.background = isDark ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.06)'
-                            el.style.borderColor = 'rgba(59,130,246,0.25)'
+                            el.style.background = isDark ? `${ACCENTS[ai % ACCENTS.length]}18` : `${ACCENTS[ai % ACCENTS.length]}0d`
+                            el.style.borderColor = `${ACCENTS[ai % ACCENTS.length]}40`
                           }}
                           onMouseLeave={(e) => {
                             const el = e.currentTarget as HTMLElement
@@ -381,11 +381,11 @@ export default function Navbar({ navMenus = [] }: Props) {
                             el.style.borderColor = megaBdr
                           }}
                         >
-                          <p className="text-[12.5px] font-semibold leading-snug line-clamp-2 group-hover/art:text-[#3b82f6] transition-colors mb-1" style={{ color: textPrimary, fontFamily: FONT }}>
+                          <p className="text-[14.5px] font-semibold leading-snug line-clamp-2 mb-1" style={{ color: ACCENTS[ai % ACCENTS.length], fontFamily: FONT }}>
                             {article.title}
                           </p>
                           {article.summary && (
-                            <p className="text-[11px] leading-snug line-clamp-2" style={{ color: textMuted, fontFamily: FONT }}>
+                            <p className="text-[10.5px] leading-snug line-clamp-2" style={{ color: isDark ? 'rgba(255,255,255,0.55)' : '#1a1a1a', fontFamily: FONT, fontWeight: 400 }}>
                               {article.summary}
                             </p>
                           )}
