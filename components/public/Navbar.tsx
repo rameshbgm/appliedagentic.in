@@ -493,14 +493,14 @@ export default function Navbar({ navMenus = [] }: Props) {
 
                           {/* Articles list under this sub-menu */}
                           {subExpanded && (
-                            <div style={{ padding: '4px 15% 8px 15%' }}>
+                            <div style={{ padding: '4px 15% 8px 4px' }}>
                               {loadingSubId === sub.id ? (
                                 <div className="flex justify-center py-4">
                                   <div className="w-4 h-4 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
                                 </div>
                               ) : subArticles && subArticles.length > 0 ? (
                                 <div className="flex flex-col gap-1">
-                                  {subArticles.slice(0, 6).map((article) => (
+                                  {subArticles.slice(0, 6).map((article, ai) => (
                                     <Link
                                       key={article.id}
                                       href={`/articles/${article.slug}`}
@@ -508,11 +508,11 @@ export default function Navbar({ navMenus = [] }: Props) {
                                       className={`rounded-lg px-3 py-2 transition-colors ${hoverBg}`}
                                       style={{ borderBottom: `1px solid ${megaBdr}` }}
                                     >
-                                      <p className="text-[12.5px] font-medium leading-snug line-clamp-2 text-left" style={{ color: textPrimary, fontFamily: FONT }}>
+                                      <p className="text-[12.5px] font-semibold leading-snug line-clamp-2 text-left" style={{ color: ACCENTS[ai % ACCENTS.length], fontFamily: FONT }}>
                                         {article.title}
                                       </p>
                                       {article.summary && (
-                                        <p className="text-[11px] leading-snug mt-0.5 text-left truncate" style={{ color: textMuted, fontFamily: FONT }}>
+                                        <p className="text-[10.5px] leading-snug mt-0.5 text-left truncate" style={{ color: isDark ? 'rgba(255,255,255,0.55)' : '#1a1a1a', fontFamily: FONT, fontWeight: 400 }}>
                                           {article.summary}
                                         </p>
                                       )}
