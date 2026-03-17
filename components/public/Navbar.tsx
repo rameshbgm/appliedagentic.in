@@ -508,11 +508,11 @@ export default function Navbar({ navMenus = [] }: Props) {
                                       className={`rounded-lg px-3 py-2 transition-colors ${hoverBg}`}
                                       style={{ borderBottom: `1px solid ${megaBdr}` }}
                                     >
-                                      <p className="text-[12.5px] font-medium leading-snug line-clamp-2 text-center" style={{ color: textPrimary, fontFamily: FONT }}>
+                                      <p className="text-[12.5px] font-medium leading-snug line-clamp-2 text-left" style={{ color: textPrimary, fontFamily: FONT }}>
                                         {article.title}
                                       </p>
                                       {article.summary && (
-                                        <p className="text-[11px] leading-snug mt-0.5 text-center truncate" style={{ color: textMuted, fontFamily: FONT }}>
+                                        <p className="text-[11px] leading-snug mt-0.5 text-left truncate" style={{ color: textMuted, fontFamily: FONT }}>
                                           {article.summary}
                                         </p>
                                       )}

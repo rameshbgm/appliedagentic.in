@@ -7,7 +7,8 @@ import Image from 'next/image'
 import { ArrowRight, ChevronRight, Clock, Eye, Calendar } from 'lucide-react'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
-const FONT = "'Inter', sans-serif"
+const FONT    = "'Inter', sans-serif"
+const ACCENTS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899']
 
 interface ArticlePreview {
   id: number
@@ -148,11 +149,12 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
       <div className="md:hidden space-y-4">
 
         {/* Sub-menu accordion list */}
-        <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--bg-border)' }}>
+        <div className="overflow-hidden" style={{ border: '1px solid var(--bg-border)' }}>
           {subMenus.map((sm, idx) => {
-            const isActive  = sm.id === mobileOpenId
+            const isActive   = sm.id === mobileOpenId
             const smArticles = sm.articles.map((a) => a.article)
-            const isLast    = idx === subMenus.length - 1
+            const isLast     = idx === subMenus.length - 1
+            const accent     = ACCENTS[idx % ACCENTS.length]
             return (
               <div key={sm.id} style={!isLast ? { borderBottom: '1px solid var(--bg-border)' } : {}}>
 
@@ -162,32 +164,34 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
                   onClick={() => setMobileOpenId(isActive ? -1 : sm.id)}
                   className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
                   style={{
-                    background: isActive ? 'rgba(59,130,246,0.06)' : 'var(--bg-elevated)',
-                    color: isActive ? '#3b82f6' : 'var(--text-primary)',
+                    background: isActive ? `${accent}12` : 'var(--bg-elevated)',
+                    color: isActive ? accent : 'var(--text-primary)',
+                    borderLeft: `4px solid ${isActive ? accent : 'transparent'}`,
                     fontFamily: FONT,
                     fontWeight: 600,
-                    fontSize: '14px',
+                    fontSize: '15px',
                     WebkitTapHighlightColor: 'transparent',
                     border: 'none',
+                    borderLeft: `4px solid ${isActive ? accent : 'transparent'}`,
                     cursor: 'pointer',
                   } as React.CSSProperties}
                 >
                   <span className="text-left leading-snug flex-1 pr-3">{sm.title}</span>
                   <span className="shrink-0 flex items-center gap-2">
-                    <span className="text-[11px] font-normal" style={{ color: 'var(--text-muted)' }}>
+                    <span className="text-[11px] font-normal px-1.5 py-0.5 rounded" style={{ background: `${accent}20`, color: accent }}>
                       {sm._count.articles}
                     </span>
                     <ChevronRight
                       size={16}
                       className="transition-transform duration-200"
-                      style={{ transform: isActive ? 'rotate(90deg)' : 'rotate(0deg)', color: isActive ? '#3b82f6' : 'var(--text-muted)' }}
+                      style={{ transform: isActive ? 'rotate(90deg)' : 'rotate(0deg)', color: isActive ? accent : 'var(--text-muted)' }}
                     />
                   </span>
                 </button>
 
                 {/* Expanded: articles + view all */}
                 {isActive && (
-                  <div style={{ background: 'var(--bg-page)' }}>
+                  <div style={{ background: 'var(--bg-page)', borderTop: `1px solid ${accent}30` }}>
                     {smArticles.length > 0 ? (
                       <>
                         <div className="px-3 pt-1">
@@ -201,12 +205,12 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
                             />
                           ))}
                         </div>
-                        <div className="px-4 py-3" style={{ borderTop: '1px solid var(--bg-border)' }}>
+                        <div className="px-4 py-3" style={{ borderTop: `1px solid ${accent}25` }}>
                           <Link
                             href={`/${menuSlug}/${sm.slug}`}
                             onClick={() => showLoading(`/${menuSlug}/${sm.slug}`)}
                             className="inline-flex items-center gap-1 text-[12px] font-semibold"
-                            style={{ color: '#3b82f6', fontFamily: FONT }}
+                            style={{ color: accent, fontFamily: FONT }}
                           >
                             View all <ArrowRight size={11} />
                           </Link>
