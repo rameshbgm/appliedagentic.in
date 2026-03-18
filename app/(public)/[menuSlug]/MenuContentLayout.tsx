@@ -166,7 +166,6 @@ export default function MenuContentLayout({ subMenus, menuSlug }: Props) {
                   style={{
                     background: isActive ? `${accent}12` : 'var(--bg-elevated)',
                     color: isActive ? accent : 'var(--text-primary)',
-                    borderLeft: `4px solid ${isActive ? accent : 'transparent'}`,
                     fontFamily: FONT,
                     fontWeight: 600,
                     fontSize: '15px',
