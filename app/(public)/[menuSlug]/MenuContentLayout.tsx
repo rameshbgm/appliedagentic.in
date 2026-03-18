@@ -17,7 +17,7 @@ interface ArticlePreview {
   summary: string | null
   readingTimeMinutes: number | null
   viewCount: number | null
-  updatedAt: string | null
+  updatedAt: string | Date | null
   coverImage: { url: string } | null
 }
 
