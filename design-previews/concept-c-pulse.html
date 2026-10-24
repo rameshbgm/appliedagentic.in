@@ -1,0 +1,527 @@
+<title>Agentic Pulse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Concept C for appliedagentic.in: kinetic type, colour-blocked modules and swipeable 60-second concept cards.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,400..900&family=Hanken+Grotesk:ital,wght@0,400..700;1,400&display=swap">
+<style>
+/* Layout concept: a poster-like, thumb-first learning app. Colour blocks per module, type that
+   stretches (Archivo width axis), swipeable concept cards, floating pill navigation. No sidebar anywhere. */
+:root {
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --ink: #0D0D14;
+  --ink-2: #474A58;
+  --muted: #7A7D8C;
+  --line: #E1E3EB;
+  --cobalt: #2D44FF;
+  --tomato: #FF5733;
+  --mint: #22CB92;
+  --sun: #FFCB2B;
+  --pink: #FF8ACB;
+  --on-dark: #FFFFFF;
+  --on-light: #0D0D14;
+  --display: "Archivo", "Arial Black", "Helvetica Neue", sans-serif;
+  --body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gl: max(16px, env(safe-area-inset-left, 0px));
+  --gr: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0B10; --surface: #16161E; --ink: #F3F3F7; --ink-2: #B7B9C6; --muted: #858897; --line: #272833;
+    --cobalt: #4A5DFF; --tomato: #FF6A48; --mint: #2FD9A0; --sun: #FFD143; --pink: #FF9AD3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B0B10; --surface: #16161E; --ink: #F3F3F7; --ink-2: #B7B9C6; --muted: #858897; --line: #272833;
+  --cobalt: #4A5DFF; --tomato: #FF6A48; --mint: #2FD9A0; --sun: #FFD143; --pink: #FF9AD3;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.6; overflow-x: hidden; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; border-radius: 8px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: .92; }
+p { margin: 0; }
+.wrap { padding-left: var(--gl); padding-right: var(--gr); max-width: 1200px; margin: 0 auto; }
+.label { font-family: var(--display); font-weight: 700; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; font-variation-settings: "wdth" 110; }
+
+/* ---------- Header ---------- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 25; padding-block: 10px; }
+.top .wrap { display: flex; align-items: center; gap: 10px; }
+.mark { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-right: auto; background: var(--surface); padding: 8px 14px 8px 8px; border-radius: 999px; box-shadow: 0 6px 20px -12px rgba(0,0,0,.35); }
+.mark i { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(var(--tomato) 0 25%, var(--sun) 0 50%, var(--mint) 0 75%, var(--cobalt) 0); animation: spin 14s linear infinite; }
+@keyframes spin { to { transform: rotate(1turn); } }
+.mark b { font-family: var(--display); font-weight: 900; font-size: 1rem; text-transform: uppercase; letter-spacing: -.01em; font-variation-settings: "wdth" 72; }
+.top nav.desk { display: none; background: var(--surface); padding: 4px; border-radius: 999px; box-shadow: 0 6px 20px -12px rgba(0,0,0,.35); }
+.top nav.desk a { text-decoration: none; font-weight: 600; font-size: .92rem; padding: 8px 16px; border-radius: 999px; }
+.top nav.desk a[aria-current="page"] { background: var(--ink); color: var(--bg); }
+.round { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 20px -12px rgba(0,0,0,.35); }
+.round.menu { background: var(--ink); color: var(--bg); }
+
+/* ---------- Floating pill nav (mobile) ---------- */
+.pillnav { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 4px; padding: 6px; border-radius: 999px; background: var(--ink); box-shadow: 0 14px 40px -12px rgba(0,0,0,.5); max-width: calc(100% - 32px); }
+.pillnav a, .pillnav button { display: flex; align-items: center; gap: 8px; text-decoration: none; color: color-mix(in srgb, var(--bg) 70%, transparent); font-weight: 700; font-size: .85rem; padding: 10px 14px; border-radius: 999px; border: 0; background: none; cursor: pointer; font-family: var(--body); white-space: nowrap; }
+.pillnav a[aria-current="page"] { background: var(--bg); color: var(--ink); }
+.pillnav a span.t { display: none; }
+.pillnav a[aria-current="page"] span.t { display: inline; }
+.pillnav .ring { width: 26px; height: 26px; }
+.reader-only { display: none !important; }
+body.reading .reader-only { display: flex !important; }
+body.reading .pillnav a span.t { display: none; }
+
+/* ---------- Views ---------- */
+.view { display: none; }
+.view.on { display: block; }
+.view.on .enter { animation: enter .7s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes enter { from { transform: translateY(18px); opacity: .2; } }
+
+/* ---------- Hero ---------- */
+.hero { padding-block: 18px 10px; position: relative; }
+.mega { font-weight: 900; text-transform: uppercase; letter-spacing: -.02em; font-size: clamp(3.4rem, 16.5vw, 12rem); line-height: .84; display: grid; }
+.mega span { display: block; font-variation-settings: "wdth" 125; animation: stretch 1.4s cubic-bezier(.7,0,.2,1) both; }
+.mega span:nth-child(2) { animation-delay: .12s; color: transparent; -webkit-text-stroke: 2px var(--ink); }
+.mega span:nth-child(3) { animation-delay: .24s; color: var(--tomato); }
+@keyframes stretch { from { font-variation-settings: "wdth" 62; letter-spacing: .02em; } }
+.hero-row { display: grid; gap: 18px; margin-top: 22px; }
+.hero-row p { font-size: 1.15rem; color: var(--ink-2); max-width: 34ch; }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 22px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 1rem; border: 2px solid var(--ink); transition: transform .2s; }
+.btn.fill { background: var(--ink); color: var(--bg); }
+.btn:hover { transform: translateY(-2px) rotate(-1deg); }
+.sticker { position: absolute; right: calc(var(--gr) + 10px); top: calc(18px + min(16.5vw, 12rem) * .95); width: 96px; height: 96px; animation: spin 18s linear infinite; }
+.sticker text { font-family: var(--display); font-weight: 800; font-size: 10.5px; letter-spacing: 2.4px; text-transform: uppercase; fill: var(--ink); }
+.sticker .c { fill: var(--sun); }
+
+/* Marquee */
+.marquee-clip { overflow: hidden; padding-block: 12px; }
+.marquee { overflow: hidden; background: var(--ink); color: var(--bg); padding-block: 14px; margin-top: 30px; transform: rotate(-1.5deg); width: 104%; margin-left: -2%; }
+.marquee .track { display: flex; gap: 28px; width: max-content; animation: slide 28s linear infinite; }
+.marquee span { font-family: var(--display); font-weight: 800; font-size: 1.4rem; text-transform: uppercase; font-variation-settings: "wdth" 90; display: flex; align-items: center; gap: 28px; white-space: nowrap; }
+.marquee span::after { content: "✳"; color: var(--sun); }
+@keyframes slide { to { transform: translateX(-50%); } }
+
+/* ---------- Sections ---------- */
+.sec { padding-block: 56px 0; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.sec-head h2 { font-weight: 900; text-transform: uppercase; font-size: clamp(2.4rem, 11vw, 4.6rem); font-variation-settings: "wdth" 70; letter-spacing: -.01em; }
+.sec-head p { color: var(--ink-2); max-width: 36ch; }
+
+/* Stories (60-second concepts) */
+.segs { display: flex; gap: 4px; margin-bottom: 12px; }
+.segs i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; position: relative; }
+.segs i.on::after { content: ""; position: absolute; inset: 0; background: var(--ink); }
+.stories { display: grid; grid-auto-flow: column; grid-auto-columns: min(78%, 300px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.stories::-webkit-scrollbar { display: none; }
+.story { scroll-snap-align: start; aspect-ratio: 3 / 4.2; max-width: 100%; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; text-decoration: none; background: var(--c); color: var(--fg); position: relative; overflow: hidden; transition: transform .3s cubic-bezier(.2,.9,.2,1); }
+.story:hover { transform: translateY(-4px) rotate(-.6deg); }
+.story h3 { font-weight: 900; text-transform: uppercase; font-size: clamp(2.2rem, 10vw, 2.9rem); font-variation-settings: "wdth" 66; letter-spacing: -.01em; }
+.story p { font-size: 1rem; line-height: 1.45; color: var(--fg); opacity: .9; }
+.story .sfoot { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: .85rem; }
+.story .go { width: 44px; height: 44px; border-radius: 50%; background: var(--fg); color: var(--c); display: grid; place-items: center; }
+.story .glyph { position: absolute; right: -20px; top: 60px; font-family: var(--display); font-weight: 900; font-size: 11rem; line-height: 1; opacity: .14; font-variation-settings: "wdth" 125; pointer-events: none; }
+
+/* Stacked modules */
+.stack { display: grid; gap: 0; }
+.mod { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 74px + var(--i) * 12px); display: grid; gap: 12px; padding: 22px 20px 24px; border-radius: 28px; background: var(--c); color: var(--fg); text-decoration: none; margin-bottom: 14px; box-shadow: 0 -10px 30px -18px rgba(0,0,0,.4); transition: transform .3s; min-height: 210px; }
+.mod:hover { transform: scale(1.01); }
+.mod .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.mod .num { font-family: var(--display); font-weight: 900; font-size: 3.6rem; line-height: .8; font-variation-settings: "wdth" 125; }
+.mod h3 { font-weight: 900; text-transform: uppercase; font-size: clamp(1.9rem, 8vw, 3.2rem); font-variation-settings: "wdth" 74; transition: font-variation-settings .5s cubic-bezier(.2,.9,.2,1); }
+.mod:hover h3 { font-variation-settings: "wdth" 100; }
+.mod p { color: var(--fg); opacity: .88; max-width: 46ch; }
+.mod .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.mod .meta span { font-weight: 700; font-size: .8rem; padding: 5px 12px; border-radius: 999px; border: 2px solid currentColor; }
+.mod .arrow { width: 52px; height: 52px; flex: none; border-radius: 50%; background: var(--fg); color: var(--c); display: grid; place-items: center; transition: transform .3s; }
+.mod:hover .arrow { transform: rotate(-45deg); }
+
+/* Bento featured */
+.bento { display: grid; gap: 12px; }
+.tile { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 20px; border-radius: 26px; background: var(--surface); border: 2px solid var(--line); text-decoration: none; min-height: 190px; transition: border-color .2s, transform .25s; min-width: 0; }
+.tile:hover { border-color: var(--ink); transform: translateY(-3px); }
+.tile h3 { font-weight: 800; font-size: clamp(1.5rem, 6vw, 2rem); font-variation-settings: "wdth" 85; line-height: 1; letter-spacing: -.01em; }
+.tile p { color: var(--ink-2); font-size: .98rem; }
+.tile .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
+.tile .tagrow span { font-size: .78rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--bg); color: var(--ink-2); }
+.tile.big { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tile.big p { color: color-mix(in srgb, var(--bg) 75%, transparent); }
+.tile.big .tagrow span { background: color-mix(in srgb, var(--bg) 14%, transparent); color: var(--bg); }
+.tile.big h3 { font-size: clamp(2rem, 9vw, 3.4rem); font-weight: 900; text-transform: uppercase; font-variation-settings: "wdth" 70; }
+
+/* Decks (slides) */
+.decks { display: grid; grid-auto-flow: column; grid-auto-columns: min(70%, 280px); gap: 16px; overflow-x: auto; padding: 10px 4px 16px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.decks::-webkit-scrollbar { display: none; }
+.deck { scroll-snap-align: start; position: relative; text-decoration: none; aspect-ratio: 16 / 11; max-width: 100%; }
+.deck .pg { position: absolute; inset: 0; border-radius: 18px; background: var(--c); transition: transform .35s cubic-bezier(.2,.9,.2,1); }
+.deck .pg:nth-child(1) { transform: rotate(-5deg) translate(-4px, 4px); opacity: .45; }
+.deck .pg:nth-child(2) { transform: rotate(3deg); opacity: .7; }
+.deck .pg.top { opacity: 1; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; color: var(--fg); }
+.deck:hover .pg:nth-child(1) { transform: rotate(-10deg) translate(-12px, 6px); }
+.deck:hover .pg:nth-child(2) { transform: rotate(7deg) translate(10px, 0); }
+.deck h3 { font-weight: 900; font-size: 1.5rem; text-transform: uppercase; font-variation-settings: "wdth" 72; }
+
+/* Newsletter + footer */
+.news { margin-top: 64px; }
+.news h2 { font-weight: 900; text-transform: uppercase; font-size: clamp(3rem, 15vw, 8rem); font-variation-settings: "wdth" 65; line-height: .85; }
+.news h2 em { font-style: italic; color: var(--cobalt); font-variation-settings: "wdth" 110; }
+.news form { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; max-width: 560px; }
+.news input { flex: 1 1 220px; min-width: 0; font: inherit; padding: 15px 20px; border-radius: 999px; border: 2px solid var(--ink); background: var(--surface); color: var(--ink); }
+.news button { font: inherit; font-weight: 800; padding: 15px 22px; border-radius: 999px; border: 0; background: var(--tomato); color: var(--on-dark); cursor: pointer; }
+.news .ok { margin-top: 12px; font-weight: 700; color: var(--mint); }
+.foot { margin-top: 70px; overflow: hidden; }
+.foot .word { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 12.4vw; line-height: .8; letter-spacing: -.03em; font-variation-settings: "wdth" 62; color: var(--ink); white-space: nowrap; padding-left: var(--gl); }
+.foot .links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding-block: 18px; font-size: .85rem; color: var(--muted); }
+.foot nav { display: flex; gap: 16px; }
+
+/* ---------- Module view ---------- */
+.cover { background: var(--cobalt); color: var(--on-dark); border-radius: 0 0 36px 36px; margin-top: -72px; padding-top: 86px; overflow: hidden; position: relative; }
+.cover .wrap { padding-block: 10px 30px; position: relative; display: grid; gap: 14px; }
+.cover .ghost { position: absolute; right: -10px; bottom: -40px; font-family: var(--display); font-weight: 900; font-size: 15rem; line-height: 1; color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--on-dark) 40%, transparent); font-variation-settings: "wdth" 125; pointer-events: none; }
+.cover h1 { font-weight: 900; text-transform: uppercase; font-size: clamp(3rem, 15vw, 7rem); font-variation-settings: "wdth" 68; position: relative; }
+.cover p { max-width: 44ch; opacity: .92; position: relative; }
+.cover .crumb { font-weight: 700; font-size: .85rem; opacity: .85; position: relative; }
+.cover .crumb a { text-decoration: none; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-block: 18px 6px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chips button { flex: none; font: inherit; font-weight: 700; font-size: .9rem; padding: 10px 16px; border-radius: 999px; border: 2px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.list { list-style: none; margin: 10px 0 0; padding: 0; }
+.list li a { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 18px 0; border-bottom: 2px solid var(--line); text-decoration: none; }
+.list .n { font-family: var(--display); font-weight: 900; font-size: 2.6rem; line-height: .8; color: var(--cobalt); font-variation-settings: "wdth" 62; width: 2.2ch; transition: font-variation-settings .4s; }
+.list li a:hover .n { font-variation-settings: "wdth" 125; }
+.list h3 { font-family: var(--body); font-weight: 700; font-size: 1.15rem; line-height: 1.25; }
+.list p { font-size: .92rem; color: var(--ink-2); margin-top: 3px; }
+.list .min { font-weight: 800; font-size: .85rem; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 2px solid var(--line); white-space: nowrap; }
+.list .now .min { background: var(--sun); border-color: var(--sun); color: var(--on-light); }
+.list .body { min-width: 0; }
+
+/* ---------- Reader ---------- */
+.a-cover { background: var(--sun); color: var(--on-light); border-radius: 0 0 36px 36px; margin-top: -72px; padding-top: 90px; }
+.a-cover .wrap { padding-block: 10px 30px; display: grid; gap: 14px; }
+.a-cover h1 { font-weight: 900; text-transform: uppercase; font-size: clamp(2.8rem, 13vw, 6.4rem); font-variation-settings: "wdth" 66; letter-spacing: -.01em; }
+.a-cover .stand { font-size: 1.18rem; max-width: 40ch; line-height: 1.45; }
+.a-cover .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.a-cover .meta span { font-weight: 700; font-size: .82rem; padding: 5px 12px; border-radius: 999px; border: 2px solid var(--on-light); }
+.cards { display: grid; grid-auto-flow: column; grid-auto-columns: min(82%, 320px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-block: 22px 8px; scrollbar-width: none; }
+.cards::-webkit-scrollbar { display: none; }
+.flash { display: block; scroll-snap-align: start; perspective: 900px; min-height: 200px; border: 0; padding: 0; background: none; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+.flash .in { display: block; position: relative; height: 100%; min-height: 200px; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2,.9,.2,1); }
+.flash.flip .in { transform: rotateY(180deg); }
+.flash .f, .flash .b { position: absolute; inset: 0; border-radius: 22px; padding: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+.flash .f { background: var(--surface); border: 2px solid var(--ink); }
+.flash .f h3 { font-weight: 900; font-size: 1.9rem; text-transform: uppercase; font-variation-settings: "wdth" 70; }
+.flash .b { background: var(--ink); color: var(--bg); transform: rotateY(180deg); font-size: 1rem; line-height: 1.5; }
+.flash small { font-weight: 700; font-size: .75rem; opacity: .7; }
+.read-grid { display: grid; gap: 32px; padding-top: 24px; }
+.prose { max-width: 66ch; min-width: 0; }
+.prose > * + * { margin-top: 1.05em; }
+.prose p { color: var(--ink-2); line-height: 1.75; font-size: 1.1rem; }
+.prose p.first::first-letter { font-family: var(--display); font-weight: 900; float: left; font-size: 4.6rem; line-height: .8; padding: 6px 10px 0 0; color: var(--tomato); font-variation-settings: "wdth" 100; }
+.prose h2 { font-weight: 900; text-transform: uppercase; font-size: clamp(2rem, 9vw, 2.9rem); font-variation-settings: "wdth" 72; margin-top: 1.6em; scroll-margin-top: 90px; }
+.prose h3 { font-family: var(--body); font-size: 1.22rem; font-weight: 700; margin-top: 1.4em; }
+.prose strong { color: var(--ink); }
+.callout { background: var(--mint); color: var(--on-light); border-radius: 22px; padding: 18px 20px; transform: rotate(-1deg); }
+.callout .label { display: block; margin-bottom: 6px; }
+.callout p { color: var(--on-light); font-size: 1.02rem; }
+.callout strong { color: var(--on-light); }
+.prose .quote { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: clamp(2rem, 9.5vw, 3.4rem); line-height: .92; font-variation-settings: "wdth" 64; color: var(--cobalt); margin-block: 1.4em !important; }
+.compare { display: grid; gap: 10px; }
+.compare div { border-radius: 18px; padding: 16px; border: 2px solid var(--line); background: var(--surface); }
+.compare b { font-family: var(--display); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; font-variation-settings: "wdth" 80; display: block; }
+.compare span { color: var(--ink-2); font-size: .95rem; }
+.up-next { display: grid; gap: 12px; padding: 22px; border-radius: 28px; background: var(--tomato); color: var(--on-dark); text-decoration: none; margin-top: 2em !important; }
+.up-next h3 { font-weight: 900; text-transform: uppercase; font-size: 2.2rem; font-variation-settings: "wdth" 70; }
+.toc-desk { display: none; }
+
+/* Sheet */
+.sheet { position: fixed; inset: 0; z-index: 60; background: color-mix(in srgb, var(--ink) 50%, transparent); display: none; align-items: flex-end; }
+.sheet.on { display: flex; }
+.sheet .panel { width: 100%; background: var(--surface); border-radius: 28px 28px 0 0; padding: 12px var(--gr) calc(24px + env(safe-area-inset-bottom, 0px)) var(--gl); animation: sheetUp .35s cubic-bezier(.2,.9,.2,1); max-height: 80vh; overflow-y: auto; }
+@keyframes sheetUp { from { transform: translateY(100%); } }
+.sheet .grab { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 14px; }
+.sheet ol { list-style: none; padding: 0; margin: 0; }
+.sheet ol a { display: flex; gap: 14px; align-items: baseline; padding: 14px 4px; border-bottom: 2px solid var(--line); text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+.sheet ol a span { font-family: var(--display); font-weight: 900; color: var(--tomato); }
+
+/* Full-screen menu */
+.menu-ov { position: fixed; inset: 0; z-index: 70; background: var(--ink); color: var(--bg); display: none; flex-direction: column; padding: calc(16px + env(safe-area-inset-top, 0px)) var(--gr) calc(24px + env(safe-area-inset-bottom, 0px)) var(--gl); overflow-y: auto; }
+.menu-ov.on { display: flex; }
+.menu-ov .row { display: flex; justify-content: space-between; align-items: center; }
+.menu-ov .close { background: var(--bg); color: var(--ink); }
+.menu-ov ol { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 2px; }
+.menu-ov li { animation: enter .5s cubic-bezier(.2,.9,.2,1) both; animation-delay: calc(var(--i) * 40ms); }
+.menu-ov li a { display: flex; align-items: baseline; gap: 12px; text-decoration: none; font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: clamp(1.9rem, 9vw, 4rem); line-height: 1.02; font-variation-settings: "wdth" 66; transition: color .2s, font-variation-settings .4s; }
+.menu-ov li a small { font-size: .9rem; font-variation-settings: "wdth" 100; opacity: .6; }
+.menu-ov li a:hover { color: var(--h); font-variation-settings: "wdth" 100; }
+
+@media (min-width: 760px) {
+  body { padding-bottom: 0; }
+  .top nav.desk { display: flex; }
+  .pillnav .mob { display: none !important; }
+  .pillnav { display: none; }
+  body.reading .pillnav { display: flex; }
+  .hero-row { grid-template-columns: 1fr auto; align-items: end; }
+  .sticker { width: 150px; height: 150px; }
+  .bento { grid-template-columns: 1.3fr 1fr; grid-template-rows: auto auto; }
+  .bento .big { grid-row: span 2; }
+  .compare { grid-template-columns: repeat(3, 1fr); }
+  .mod { padding: 30px; }
+}
+@media (min-width: 1040px) {
+  .read-grid { grid-template-columns: minmax(0, 66ch) 1fr; gap: 64px; }
+  .toc-desk { display: block; position: sticky; top: 90px; align-self: start; }
+  .toc-desk ol { list-style: none; padding: 0; margin: 12px 0 0; }
+  .toc-desk a { display: block; padding: 8px 0; text-decoration: none; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--line); }
+  .toc-desk a.here { color: var(--ink); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#home" aria-label="Applied Agentic home"><i aria-hidden="true"></i><b>Applied Agentic</b></a>
+    <nav class="desk" aria-label="Primary"><a href="#home" data-nav="home">Home</a><a href="#module" data-nav="module">Modules</a><a href="#article" data-nav="article">Reading</a></nav>
+    <button class="round" type="button" id="themeBtn" aria-label="Switch colour theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    <button class="round menu" type="button" id="menuBtn" aria-label="Open all modules"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 8h16M4 16h10"/></svg></button>
+  </div>
+</header>
+
+<main>
+<!-- ========== HOME ========== -->
+<section class="view" id="home" aria-label="Home">
+  <div class="wrap hero">
+    <svg class="sticker" viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="c" cx="60" cy="60" r="58"/>
+      <path id="circ" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" fill="none"/>
+      <text><textPath href="#circ">8 modules · 51 lessons · free to read ·</textPath></text>
+    </svg>
+    <h1 class="mega" aria-label="Agents that act"><span>Agents</span><span>that</span><span>act.</span></h1>
+    <div class="hero-row">
+      <p>Learn to build AI that plans, uses tools and gets work done. Short, sharp lessons from first prompt to production.</p>
+      <div class="ctas"><a class="btn fill" href="#module">Start module 1 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn" href="#concepts">60-sec concepts</a></div>
+    </div>
+  </div>
+  <div class="marquee-clip" aria-hidden="true"><div class="marquee"><div class="track" id="marq"></div></div></div>
+
+  <div class="wrap sec" id="concepts">
+    <div class="sec-head"><h2>60-second concepts</h2><p>Swipe through the ideas every agent builder uses. Tap one to read the full lesson.</p></div>
+    <div class="segs" id="segs"></div>
+    <div class="stories" id="stories"></div>
+  </div>
+
+  <div class="wrap sec">
+    <div class="sec-head"><h2>The course</h2><p>Eight modules, in order. Each one builds on the last.</p></div>
+    <div class="stack" id="stack"></div>
+  </div>
+
+  <div class="wrap sec">
+    <div class="sec-head"><h2>Read this week</h2></div>
+    <div class="bento">
+      <a class="tile big" href="#article"><span class="label">Featured · 14 min</span><h3>One agent or a team?</h3><p>Some tasks need a specialist, some need a whole department. Here is how to tell.</p><span class="tagrow"><span>Multi-agent</span><span>Architecture</span></span></a>
+      <a class="tile" href="#article"><span class="label">Module 3 · 12 min</span><h3>Spotify, MCP and the edge cases</h3><span class="tagrow"><span>MCP</span><span>Tools</span></span></a>
+      <a class="tile" href="#article"><span class="label">Module 6 · 11 min</span><h3>Why agents fail in production</h3><span class="tagrow"><span>Evals</span><span>Monitoring</span></span></a>
+    </div>
+  </div>
+
+  <div class="wrap sec">
+    <div class="sec-head"><h2>Slide decks</h2><p>Visual walkthroughs you can flick through in a few minutes.</p></div>
+    <div class="decks">
+      <a class="deck" href="#home" style="--c:var(--cobalt);--fg:var(--on-dark)"><span class="pg"></span><span class="pg"></span><span class="pg top"><span class="label">32 slides</span><h3>Agentic AI end to end</h3></span></a>
+      <a class="deck" href="#home" style="--c:var(--pink);--fg:var(--on-light)"><span class="pg"></span><span class="pg"></span><span class="pg top"><span class="label">1 page</span><h3>Five agent types</h3></span></a>
+      <a class="deck" href="#home" style="--c:var(--mint);--fg:var(--on-light)"><span class="pg"></span><span class="pg"></span><span class="pg top"><span class="label">18 slides</span><h3>RAG, step by step</h3></span></a>
+    </div>
+  </div>
+
+  <div class="wrap news">
+    <h2>Get the <em>next</em> one.</h2>
+    <form id="newsForm"><input id="email" type="email" required placeholder="you@company.com" aria-label="Email address" autocomplete="email"><button type="submit">Subscribe</button></form>
+    <p class="ok" id="newsOk" hidden>Subscribed. You'll get one email when the next lesson drops.</p>
+  </div>
+</section>
+
+<!-- ========== MODULE ========== -->
+<section class="view" id="module" aria-label="Module 2">
+  <div class="cover">
+    <span class="ghost" aria-hidden="true">02</span>
+    <div class="wrap enter">
+      <span class="crumb"><a href="#home">Course</a> / Module 02</span>
+      <h1>The rise of agentic AI</h1>
+      <p>Generative AI grows up. The platforms, the new way of coding, and how teams of agents split up work.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="chips" role="group" aria-label="Filter lessons">
+      <button type="button" aria-pressed="true" data-f="all">All 6</button>
+      <button type="button" aria-pressed="false" data-f="a">Getting started · 3</button>
+      <button type="button" aria-pressed="false" data-f="b">Architecture · 3</button>
+    </div>
+    <ol class="list" id="lessons"></ol>
+  </div>
+</section>
+
+<!-- ========== ARTICLE ========== -->
+<section class="view" id="article" aria-label="Article">
+  <div class="a-cover">
+    <div class="wrap enter">
+      <span class="label">Module 02 · Lesson 05</span>
+      <h1>One agent or a team?</h1>
+      <p class="stand">Some tasks need a specialist, some need a team, and some need a whole department.</p>
+      <div class="meta"><span>14 min</span><span>2,418 reads</span><span>12 Oct 2026</span></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="cards" aria-label="Key ideas, tap to flip">
+      <button class="flash" type="button"><span class="in"><span class="f"><small>Key idea 1 · tap</small><h3>Reflex agent</h3></span><span class="b">Reacts to the current input with fixed rules. No memory, no plan. Think smoke detector.</span></span></button>
+      <button class="flash" type="button"><span class="in"><span class="f"><small>Key idea 2 · tap</small><h3>Supervisor</h3></span><span class="b">An agent that routes work to specialist agents and decides when the job is finished.</span></span></button>
+      <button class="flash" type="button"><span class="in"><span class="f"><small>Key idea 3 · tap</small><h3>Start with one</h3></span><span class="b">Add a second agent only where the first fails for a reason a specialist would fix.</span></span></button>
+    </div>
+    <div class="read-grid">
+      <article class="prose" id="prose">
+        <p class="first">When you picture an AI agent, you might imagine one clever system that handles everything. In practice, choosing between one agent and a team of agents is one of the biggest design decisions you will make.</p>
+        <h2 id="c1">Five kinds of agent</h2>
+        <p>Before combining agents, it helps to know what each kind can do alone. Think of them as skill levels for AI employees.</p>
+        <h3>Reflex agents follow rules</h3>
+        <p>A smoke detector senses smoke and rings. It doesn't know why and doesn't plan what happens next.</p>
+        <div class="callout"><span class="label">Real-world example</span><p>A robot vacuum is a <strong>model-based</strong> agent. It maps your home, remembers which rooms are clean, and skips them on the next run.</p></div>
+        <h2 id="c2">When one is enough</h2>
+        <p>One agent is easier to build, test and watch. If the job fits in one context window and needs one set of tools, extra agents mostly add delay and new ways to fail.</p>
+        <p class="quote">Split the work when the work splits.</p>
+        <h2 id="c3">Teams of agents</h2>
+        <p>Multi-agent systems give each agent a narrow role. A supervisor routes the work and decides when it is done.</p>
+        <div class="compare">
+          <div><b>Single</b><span>Focused tasks with one toolset.</span></div>
+          <div><b>Supervisor</b><span>Research and reports. Can bottleneck.</span></div>
+          <div><b>Handoff</b><span>Support triage. Watch for loops.</span></div>
+        </div>
+        <h2 id="c4">How to choose</h2>
+        <p>Start with one agent. Measure where it fails. Split out a second agent only for the part that needs a different toolset or runs for a long time.</p>
+        <a class="up-next" href="#module"><span class="label">Up next · 14 min</span><h3>Open vs closed source</h3></a>
+      </article>
+      <aside class="toc-desk" aria-label="Contents"><span class="label">In this lesson</span><ol id="tocDesk"></ol></aside>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="word" aria-hidden="true">Applied Agentic</div>
+  <div class="wrap links"><span>© 2026 Applied Agentic AI · preview C · sample figures</span><nav><a href="#home">Privacy</a><a href="#home">Terms</a></nav></div>
+</footer>
+
+<nav class="pillnav" aria-label="Primary mobile">
+  <a class="mob" href="#home" data-nav="home"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/></svg><span class="t">Home</span></a>
+  <a class="mob" href="#module" data-nav="module"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg><span class="t">Modules</span></a>
+  <a class="mob" href="#article" data-nav="article"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 5h7a2 2 0 0 1 2 2v13H6a2 2 0 0 1-2-2zM20 5h-4a2 2 0 0 0-2 2"/></svg><span class="t">Reading</span></a>
+  <button type="button" class="reader-only" id="listenBtn" aria-label="Listen to this lesson"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" id="listenI"><path d="M7 5v14l12-7z"/></svg><span id="listenT">Listen</span></button>
+  <button type="button" class="reader-only" id="tocBtn" aria-label="Lesson contents"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="4"/><circle id="ringC" cx="18" cy="18" r="15" fill="none" stroke="var(--sun)" stroke-width="4" stroke-linecap="round" stroke-dasharray="94.25" stroke-dashoffset="94.25" transform="rotate(-90 18 18)"/></svg><span id="pct">0%</span></button>
+</nav>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Lesson contents"><div class="panel"><div class="grab"></div><span class="label">In this lesson</span><ol id="tocM"></ol></div></div>
+
+<div class="menu-ov" id="menuOv" role="dialog" aria-modal="true" aria-label="All modules">
+  <div class="row"><span class="label">All modules</span><button class="round close" type="button" id="menuClose" aria-label="Close modules"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <ol id="menuList"></ol>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const PAL = [['--cobalt', '--on-dark'], ['--tomato', '--on-dark'], ['--sun', '--on-light'], ['--mint', '--on-light'], ['--pink', '--on-light'], ['--ink', '--bg']];
+const MODS = [
+  ['Foundations', 'What generative AI is, how chatbots work, and which models are worth the cost.', 7, 76],
+  ['Rise of agentic AI', 'Agent platforms, vibe coding, one agent vs many, open vs closed models.', 6, 58],
+  ['Digital ecosystems', 'Plug agents into the CRM, inbox and docs you already use. MCP in practice.', 6, 64],
+  ['Cybersecurity', 'Classic threats, new agent attack surfaces, and a full case study.', 7, 81],
+  ['Business functions', 'Where agents fit in product, healthcare, browsers and every team.', 9, 97],
+  ['The last mile', 'Voice agents, integration, change management and monitoring.', 6, 62],
+  ['Governance', 'Regulation, privacy, testing agent behaviour, speed vs oversight.', 6, 66],
+  ['Ethics & capstone', 'Ethics in practice, then a final build that ties it all together.', 4, 48],
+];
+$('#stack').innerHTML = MODS.map(([t, d, n, m], i) => { const [c, f] = PAL[i % PAL.length];
+  return `<a class="mod" href="#module" style="--c:var(${c});--fg:var(${f});--i:${i}"><div class="row"><span class="num">${String(i + 1).padStart(2, '0')}</span><span class="arrow"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><h3>${t}</h3><p>${d}</p><div class="meta"><span>${n} lessons</span><span>${m} min</span></div></a>`; }).join('');
+$('#menuList').innerHTML = MODS.map(([t], i) => `<li style="--i:${i}"><a href="#module" style="--h:var(${PAL[i % 5][0]})"><small>${String(i + 1).padStart(2, '0')}</small>${t}</a></li>`).join('');
+
+const TOPICS = ['Tool use', 'RAG', 'MCP', 'Voice agents', 'Guardrails', 'Multi-agent', 'Memory', 'Evals', 'Prompt injection', 'Planning'];
+$('#marq').innerHTML = [...TOPICS, ...TOPICS].map(t => `<span>${t}</span>`).join('');
+
+const STORIES = [
+  ['Tool use', 'An agent calls functions and APIs to act, instead of only writing text.', 'T', 0],
+  ['RAG', 'Fetch the right documents first, then answer from them. Fewer made-up facts.', 'R', 3],
+  ['MCP', 'One standard plug so agents can talk to any app: Spotify, Slack, your CRM.', 'M', 2],
+  ['Guardrails', 'Rules and checks that stop an agent before it does something it shouldn’t.', 'G', 1],
+  ['Evals', 'Repeatable tests that tell you if your agent got better or worse.', 'E', 4],
+];
+$('#stories').innerHTML = STORIES.map(([t, d, g, p]) => { const [c, f] = PAL[p];
+  return `<a class="story" href="#article" style="--c:var(${c});--fg:var(${f})"><span class="glyph" aria-hidden="true">${g}</span><span class="label">60 seconds</span><div><h3>${t}</h3><p style="margin-top:10px">${d}</p></div><span class="sfoot">Read the lesson<span class="go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>`; }).join('');
+$('#segs').innerHTML = STORIES.map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('');
+$('#stories').addEventListener('scroll', e => {
+  const el = e.target, w = el.firstElementChild.offsetWidth + 12;
+  const i = Math.min(STORIES.length - 1, Math.round(el.scrollLeft / w));
+  document.querySelectorAll('#segs i').forEach((s, k) => s.classList.toggle('on', k <= i));
+}, { passive: true });
+
+const LESSONS = [['a', 'Introduction', 'Where Module 1 ended and agents begin.', 6], ['a', 'Learning objectives', 'What you can do by the end.', 3], ['a', 'Emerging agentic platforms', 'Tools that turn models into workers.', 12],
+  ['b', 'Vibe coding', 'Programming by describing what you want.', 9], ['b', 'One agent or a team?', 'Specialist, team or department.', 14, 1], ['b', 'Open vs closed source', 'Models you can run, audit or rent.', 14]];
+function renderLessons(f) {
+  $('#lessons').innerHTML = LESSONS.map((l, i) => [l, i]).filter(([l]) => f === 'all' || l[0] === f).map(([[, t, d, m, now], i]) =>
+    `<li class="${now ? 'now' : ''}"><a href="#article"><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="body"><h3>${t}</h3><p>${d}</p></span><span class="min">${now ? 'Reading · ' : ''}${m}m</span></a></li>`).join('');
+}
+renderLessons('all');
+document.querySelectorAll('.chips button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.chips button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  renderLessons(b.dataset.f);
+});
+
+document.querySelectorAll('.flash').forEach(f => f.onclick = () => f.classList.toggle('flip'));
+
+const heads = [...document.querySelectorAll('#prose h2')];
+const tocHTML = heads.map((h, i) => `<li><a href="#article" data-i="${i}"><span>${String(i + 1).padStart(2, '0')}</span>${h.textContent}</a></li>`).join('');
+$('#tocM').innerHTML = tocHTML; $('#tocDesk').innerHTML = tocHTML;
+document.querySelectorAll('#tocM a, #tocDesk a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); $('#sheet').classList.remove('on'); heads[a.dataset.i].scrollIntoView({ behavior: 'smooth' }); }));
+$('#tocBtn').onclick = () => $('#sheet').classList.add('on');
+$('#sheet').onclick = e => { if (e.target.id === 'sheet') $('#sheet').classList.remove('on'); };
+function onScroll() {
+  if (!$('#article').classList.contains('on')) return;
+  const r = $('#prose').getBoundingClientRect();
+  const p = Math.max(0, Math.min(1, (innerHeight * .6 - r.top) / r.height));
+  $('#ringC').style.strokeDashoffset = 94.25 * (1 - p);
+  $('#pct').textContent = Math.round(p * 100) + '%';
+  let here = 0; heads.forEach((h, i) => { if (h.getBoundingClientRect().top < innerHeight * .4) here = i; });
+  document.querySelectorAll('#tocDesk a').forEach((a, i) => a.classList.toggle('here', i === here));
+}
+addEventListener('scroll', onScroll, { passive: true });
+let listening = false;
+$('#listenBtn').onclick = () => { listening = !listening;
+  $('#listenI').innerHTML = listening ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>' : '<path d="M7 5v14l12-7z"/>';
+  $('#listenT').textContent = listening ? 'Pause' : 'Listen'; };
+
+const VIEWS = ['home', 'module', 'article'];
+function show(v, top = true) {
+  if (!VIEWS.includes(v)) v = 'home';
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === v));
+  document.querySelectorAll('[data-nav]').forEach(a => a.dataset.nav === v ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  document.body.classList.toggle('reading', v === 'article');
+  if (top) scrollTo(0, 0);
+  onScroll();
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#"]'); if (!a) return;
+  const id = a.getAttribute('href').slice(1);
+  if (VIEWS.includes(id)) { e.preventDefault(); $('#menuOv').classList.remove('on'); show(id); try { history.replaceState(null, '', '#' + id); } catch (_) {} }
+  else if (id === 'concepts') { e.preventDefault(); $('#concepts').scrollIntoView({ behavior: 'smooth' }); }
+});
+show(location.hash.slice(1) || 'home', false);
+
+$('#menuBtn').onclick = () => $('#menuOv').classList.add('on');
+$('#menuClose').onclick = () => $('#menuOv').classList.remove('on');
+addEventListener('keydown', e => { if (e.key === 'Escape') { $('#menuOv').classList.remove('on'); $('#sheet').classList.remove('on'); } });
+$('#themeBtn').onclick = () => { const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark'; };
+$('#newsForm').addEventListener('submit', e => { e.preventDefault(); $('#newsOk').hidden = false; });
+</script>
