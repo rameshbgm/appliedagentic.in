@@ -17,7 +17,7 @@ interface ArticlePreview {
   summary: string | null
   readingTimeMinutes: number | null
   viewCount: number | null
-  updatedAt: string | Date | null
+  publishedAt: string | Date | null
   coverImage: { url: string } | null
 }
 
@@ -44,14 +44,14 @@ function ArticleMeta({ article }: { article: ArticlePreview }) {
       {article.viewCount != null && (
         <span className="inline-flex items-center gap-0.5"><Eye size={10} /> {article.viewCount} views</span>
       )}
-      {article.viewCount != null && article.updatedAt && <span style={{ opacity: 0.35 }}>·</span>}
-      {article.updatedAt && (
+      {article.viewCount != null && article.publishedAt && <span style={{ opacity: 0.35 }}>·</span>}
+      {article.publishedAt && (
         <span className="inline-flex items-center gap-0.5">
           <Calendar size={10} />
-          {new Date(article.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </span>
       )}
-      {(article.viewCount != null || article.updatedAt) && article.readingTimeMinutes != null && (
+      {(article.viewCount != null || article.publishedAt) && article.readingTimeMinutes != null && (
         <span style={{ opacity: 0.35 }}>·</span>
       )}
       {article.readingTimeMinutes != null && (

@@ -24,6 +24,7 @@ interface Props {
   readingTime?: number | null
   viewCount?: number
   createdAt: string | Date
+  publishedAt?: string | Date | null
   tags?: { name: string }[]
   moduleColor?: string | null
   moduleName?: string | null
@@ -34,7 +35,7 @@ interface Props {
 
 export default function ArticleCard({
   title, slug, summary, coverImageUrl, readingTime, viewCount = 0,
-  createdAt, tags = [], moduleName, index = 1, navChip, moduleColor,
+  createdAt, publishedAt, tags = [], moduleName, index = 1, navChip, moduleColor,
 }: Props) {
   const { showLoading } = useArticleLoading()
   const router = useRouter()
@@ -122,7 +123,7 @@ export default function ArticleCard({
               <span className="featured-article-card__metaItem"><Eye size={14} />{viewCount.toLocaleString()}</span>
             </div>
             <div className="featured-article-card__date">
-              {new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {new Date(publishedAt ?? createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
             <span className="featured-article-card__cta" aria-hidden="true">
               <ArrowUpRight size={15} />

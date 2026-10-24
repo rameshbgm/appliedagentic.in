@@ -388,6 +388,7 @@ export default async function HomePage() {
                 readingTime={article.readingTimeMinutes}
                 viewCount={article.viewCount}
                 createdAt={article.createdAt}
+                publishedAt={article.publishedAt}
                 tags={article.articleTags.map((at) => ({ name: at.tag.name }))}
                 moduleName={article.topicArticles[0]?.topic?.module?.name}
                 moduleColor={article.topicArticles[0]?.topic?.module?.color}

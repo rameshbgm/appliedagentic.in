@@ -55,7 +55,7 @@ export default async function MenuPage({ params }: Props) {
                     summary: true,
                     readingTimeMinutes: true,
                     viewCount: true,
-                    updatedAt: true,
+                    publishedAt: true,
                     status: true,
                     coverImage: { select: { url: true } },
                   },
@@ -146,7 +146,7 @@ export default async function MenuPage({ params }: Props) {
             subMenus={menu.subMenus.map((sm) => ({
               ...sm,
               articles: sm.articles.map(({ article }) => ({
-                article: { ...article, updatedAt: article.updatedAt.toISOString() },
+                article: { ...article, publishedAt: article.publishedAt?.toISOString() ?? null },
               })),
             }))}
             menuSlug={menu.slug}

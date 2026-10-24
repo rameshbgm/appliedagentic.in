@@ -135,6 +135,7 @@ export default async function TopicDetailPage({ params }: Props) {
                 readingTime={a.readingTimeMinutes}
                 viewCount={a.viewCount}
                 createdAt={a.createdAt}
+                publishedAt={a.publishedAt}
                 tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
                 moduleName={a.topicArticles[0]?.topic?.module?.name}
                 moduleColor={a.topicArticles[0]?.topic?.module?.color}
