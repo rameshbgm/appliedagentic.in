@@ -1,0 +1,1458 @@
+{
+  "title": "Agentic AI Engineering",
+  "slug": "agentic-ai-engineering",
+  "description": "Build useful AI agents through practical lessons on context, memory, retrieval, tools, workflow design and multi-agent architecture.",
+  "tagline": "Design and build useful AI agents.",
+  "modules": [
+    {
+      "title": "Agent Foundations",
+      "slug": "engineering-agent-foundations",
+      "description": "Choose an appropriate agent architecture and build a bounded tool-using loop.",
+      "articles": [
+        {
+          "title": "Chatbots, Workflows and Agents: Choosing the Right Approach",
+          "slug": "engineering-chatbots-workflows-agents",
+          "summary": "Choose between a conversational interface, a predictable workflow and a tool-using agent by examining uncertainty, permissions and success criteria.",
+          "seoTitle": "Chatbots, Workflows and Agents: How to Choose",
+          "seoDescription": "Choose the right AI architecture for a task. Compare chatbots, fixed workflows and agents with a practical support example and design exercise.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "architecture",
+            "workflows",
+            "agent foundations"
+          ],
+          "sources": [
+            {
+              "title": "Building effective agents",
+              "url": "https://www.anthropic.com/research/building-effective-agents"
+            },
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            }
+          ],
+          "coverConcept": "Three distinct paths: a question-answer pair, a fixed three-stage workflow, and a bounded branching tool loop.",
+          "coverAlt": "Three architecture choices: conversation, fixed workflow and bounded agent loop.",
+          "file": "engineering-chatbots-workflows-agents.md",
+          "diagram": {
+            "nodes": [
+              "User request",
+              "Conversation",
+              "Fixed workflow",
+              "Bounded agent"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                3
+              ]
+            ],
+            "caption": "Choose an execution architecture according to task uncertainty and required authority."
+          }
+        },
+        {
+          "title": "Anatomy of an AI Agent: Model, Tools, State and Control",
+          "slug": "engineering-agent-anatomy",
+          "summary": "Understand how models, tool contracts, state and application control work together in an agent, using an evidence-based delivery investigation.",
+          "seoTitle": "Anatomy of an AI Agent: Model, Tools and State",
+          "seoDescription": "Learn the components of an AI agent: model, tools, state, evidence and execution control. Follow a worked example and design a state record.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "agent architecture",
+            "state management",
+            "tool use"
+          ],
+          "sources": [
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "A five-component architecture linking user goal, model decision, validated tool, state store and final response, with a control boundary.",
+          "coverAlt": "Agent architecture showing model, tools, state and execution control.",
+          "file": "engineering-agent-anatomy.md",
+          "diagram": {
+            "nodes": [
+              "Task goal",
+              "Model proposal",
+              "Validated tool",
+              "Evidence state",
+              "Controller"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "caption": "The controller validates model proposals and records tool observations as evidence."
+          }
+        },
+        {
+          "title": "Build Your First Tool-Using Agent",
+          "slug": "engineering-first-tool-using-agent",
+          "summary": "Implement a provider-neutral, read-only agent loop with validated tool calls, explicit limits and grounded final answers.",
+          "seoTitle": "Build Your First Tool-Using AI Agent",
+          "seoDescription": "Build a bounded, read-only agent with tool validation, execution limits and source-based answers. Includes provider-neutral pseudocode and exercises.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "tool calling",
+            "pseudocode",
+            "agent foundations"
+          ],
+          "sources": [
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "A numbered execution loop from user request to proposal, schema validation, authorized lookup, observation and grounded final answer.",
+          "coverAlt": "Bounded tool loop with validation and a final answer checkpoint.",
+          "file": "engineering-first-tool-using-agent.md",
+          "diagram": {
+            "nodes": [
+              "User task",
+              "Propose action",
+              "Validate call",
+              "Observe result",
+              "Final answer"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                1,
+                4
+              ]
+            ],
+            "caption": "A bounded tool loop continues only while validated actions add useful evidence."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Context Engineering",
+      "slug": "engineering-context-engineering",
+      "description": "Build deliberate context packages, clear instructions and task-specific evidence selection.",
+      "articles": [
+        {
+          "title": "From Prompt Engineering to Context Engineering",
+          "slug": "engineering-prompt-to-context-engineering",
+          "summary": "Design the complete information package an agent needs at each step, including instructions, evidence, tool contracts and current task state.",
+          "seoTitle": "From Prompt Engineering to Context Engineering",
+          "seoDescription": "Learn to assemble useful agent context from instructions, task state, tools and evidence. Includes an evidence-packet example and a practical audit.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "context engineering",
+            "prompt design",
+            "context windows"
+          ],
+          "sources": [
+            {
+              "title": "Effective context engineering for AI agents",
+              "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            }
+          ],
+          "coverConcept": "Four input lanes for instructions, current task, selected evidence and tool contracts converge into a bounded model context window.",
+          "coverAlt": "Instructions, task state, evidence and tools feeding a bounded context window.",
+          "file": "engineering-prompt-to-context-engineering.md",
+          "diagram": {
+            "nodes": [
+              "Instructions",
+              "Task state",
+              "Selected evidence",
+              "Tool contracts",
+              "Model context"
+            ],
+            "edges": [
+              [
+                0,
+                4
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Context construction combines distinct information types for the next model decision."
+          }
+        },
+        {
+          "title": "Designing Instructions, Examples and Structured Outputs",
+          "slug": "engineering-instructions-examples-structured-outputs",
+          "summary": "Write testable agent instructions, choose examples that teach boundaries and validate structured outputs independently of language-model fluency.",
+          "seoTitle": "Agent Instructions, Examples and Structured Outputs",
+          "seoDescription": "Write clear agent instructions and useful examples. Design structured outputs with schema validation, semantic checks and explicit uncertainty.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "instructions",
+            "structured outputs",
+            "json schema"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "Effective context engineering for AI agents",
+              "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+            }
+          ],
+          "coverConcept": "An instruction contract and contrasting examples enter a model, followed by schema validation and a separate semantic evidence check.",
+          "coverAlt": "Instruction and example inputs followed by schema and evidence validation.",
+          "file": "engineering-instructions-examples-structured-outputs.md",
+          "diagram": {
+            "nodes": [
+              "Instruction contract",
+              "Boundary examples",
+              "Model response",
+              "Schema check",
+              "Evidence check"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Structured responses require both shape validation and checks against actual evidence."
+          }
+        },
+        {
+          "title": "Selecting the Right Context for Each Task",
+          "slug": "engineering-select-context-each-task",
+          "summary": "Build a task-aware selection policy that balances relevance, freshness, permissions and evidence coverage within a finite context budget.",
+          "seoTitle": "Selecting the Right Context for an AI Agent",
+          "seoDescription": "Design a context selection policy using task relevance, access, freshness and coverage. Work through competing records and test missing evidence.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "context selection",
+            "retrieval",
+            "evidence"
+          ],
+          "sources": [
+            {
+              "title": "Effective context engineering for AI agents",
+              "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            }
+          ],
+          "coverConcept": "Candidate records pass access and freshness gates, branch into supporting and conflicting evidence, then form a compact task packet.",
+          "coverAlt": "Evidence selection with access, freshness and contradiction checks.",
+          "file": "engineering-select-context-each-task.md",
+          "diagram": {
+            "nodes": [
+              "Candidate records",
+              "Access filter",
+              "Applicability check",
+              "Coverage selection",
+              "Context packet"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Select permitted, applicable evidence that covers the question and preserves contradictions."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Memory & Knowledge",
+      "slug": "engineering-memory-knowledge",
+      "description": "Design evidence-aware memory and retrieval over permitted business information.",
+      "articles": [
+        {
+          "title": "Session State, Working Memory and Long-Term Memory",
+          "slug": "engineering-session-working-long-term-memory",
+          "summary": "Separate session state, compact working memory and persistent user memory with provenance, expiry and appropriate access controls.",
+          "seoTitle": "Session State and Long-Term Memory for AI Agents",
+          "seoDescription": "Design agent memory with clear scopes, evidence, retention and correction. Compare task state, working summaries and persistent preferences.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "agent memory",
+            "state management",
+            "provenance"
+          ],
+          "sources": [
+            {
+              "title": "Python sqlite3 documentation",
+              "url": "https://docs.python.org/3/library/sqlite3.html"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            }
+          ],
+          "coverConcept": "Three memory stores for session events, working summary and verified persistent preferences with different retention clocks.",
+          "coverAlt": "Session, working and persistent memory stores with distinct lifecycles.",
+          "file": "engineering-session-working-long-term-memory.md",
+          "diagram": {
+            "nodes": [
+              "Session events",
+              "Working summary",
+              "Verified preference",
+              "Persistent store"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "caption": "Working memory draws from current events and separately governed persistent facts."
+          }
+        },
+        {
+          "title": "Building RAG with Your Business Documents",
+          "slug": "engineering-rag-business-documents",
+          "summary": "Build a retrieval-augmented answer pipeline that preserves document identity, access scope, effective dates and supporting passages.",
+          "seoTitle": "Build RAG with Business Documents",
+          "seoDescription": "Build a RAG pipeline for business documents with access filters, useful chunks, source metadata and evidence-based answers. Includes a worked example.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "rag",
+            "document retrieval",
+            "grounded answers"
+          ],
+          "sources": [
+            {
+              "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+              "url": "https://arxiv.org/abs/2005.11401"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            }
+          ],
+          "coverConcept": "Business documents become versioned chunks, pass permission-aware retrieval, and produce a cited answer with source passages.",
+          "coverAlt": "Permission-aware document retrieval feeding a cited business answer.",
+          "file": "engineering-rag-business-documents.md",
+          "diagram": {
+            "nodes": [
+              "Versioned documents",
+              "Coherent chunks",
+              "Scoped retrieval",
+              "Evidence bundle",
+              "Cited answer"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A RAG pipeline retrieves permitted source passages before constructing a grounded answer."
+          }
+        },
+        {
+          "title": "Agentic Retrieval: Search, Verify and Cite",
+          "slug": "engineering-agentic-retrieval-search-verify-cite",
+          "summary": "Add bounded search refinement and evidence verification when a single retrieval pass cannot resolve a multi-part business question.",
+          "seoTitle": "Agentic Retrieval: Search, Verify and Cite",
+          "seoDescription": "Design bounded agentic retrieval with query refinement, source verification and claim-level citations. Learn when another search is worthwhile.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "agentic rag",
+            "research agents",
+            "citations"
+          ],
+          "sources": [
+            {
+              "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+              "url": "https://arxiv.org/abs/2005.11401"
+            },
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            }
+          ],
+          "coverConcept": "An evidence-gap loop links question decomposition, search, passage verification and claim citation before a stopping gate.",
+          "coverAlt": "Bounded search and verification loop producing source-supported claims.",
+          "file": "engineering-agentic-retrieval-search-verify-cite.md",
+          "diagram": {
+            "nodes": [
+              "Required claims",
+              "Targeted search",
+              "Passage verification",
+              "Evidence gaps",
+              "Cited response"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Further retrieval addresses a recorded evidence gap before final synthesis."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Tools & Integrations",
+      "slug": "engineering-tools-integrations",
+      "description": "Expose useful operations through validated contracts, scoped APIs and MCP connections.",
+      "articles": [
+        {
+          "title": "Designing Reliable Tools for AI Agents",
+          "slug": "engineering-reliable-agent-tools",
+          "summary": "Design agent tools around clear operations, validated arguments, useful observations and server-enforced authorization.",
+          "seoTitle": "Designing Reliable Tools for AI Agents",
+          "seoDescription": "Design tools with clear names, bounded inputs, scoped access and useful results. Includes a support lookup contract and failure-case exercise.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "tool design",
+            "tool contracts",
+            "api integration"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "Model Context Protocol architecture",
+              "url": "https://modelcontextprotocol.io/docs/learn/architecture"
+            }
+          ],
+          "coverConcept": "A tool contract flows through argument validation, authorization, business checks and a typed result with evidence.",
+          "coverAlt": "Tool execution pipeline with validation, authorization and typed results.",
+          "file": "engineering-reliable-agent-tools.md",
+          "diagram": {
+            "nodes": [
+              "Tool proposal",
+              "Schema validation",
+              "Authorization",
+              "Business checks",
+              "Typed result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Useful tool execution requires validation, permission and business-state checks."
+          }
+        },
+        {
+          "title": "Connecting Agents to APIs and Databases",
+          "slug": "engineering-apis-databases",
+          "summary": "Connect agent tools to existing services without exposing arbitrary queries, credentials or another user’s records.",
+          "seoTitle": "Connecting AI Agents to APIs and Databases",
+          "seoDescription": "Connect agent tools to APIs and databases with parameterized queries, identity scoping, timeouts and clear failure outcomes.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "api integration",
+            "databases",
+            "authorization"
+          ],
+          "sources": [
+            {
+              "title": "Python sqlite3 documentation",
+              "url": "https://docs.python.org/3/library/sqlite3.html"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "An authorized agent tool routes to a scoped API adapter or parameterized database query and returns a minimal normalized observation.",
+          "coverAlt": "Scoped API and database adapters returning normalized tool observations.",
+          "file": "engineering-apis-databases.md",
+          "diagram": {
+            "nodes": [
+              "Trusted scope",
+              "Tool adapter",
+              "API client",
+              "Parameterized query",
+              "Observation"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Scoped adapters normalize API and database results without exposing arbitrary queries."
+          }
+        },
+        {
+          "title": "Building Your First MCP Integration",
+          "slug": "engineering-first-mcp-integration",
+          "summary": "Connect a read-only business capability through MCP while keeping host policy, server authorization and tool contracts explicit.",
+          "seoTitle": "Build Your First MCP Integration for an AI Agent",
+          "seoDescription": "Learn MCP host, client and server responsibilities. Connect a read-only tool, inspect its contract and test access and failure boundaries.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "mcp",
+            "tool integration",
+            "protocols"
+          ],
+          "sources": [
+            {
+              "title": "Model Context Protocol architecture",
+              "url": "https://modelcontextprotocol.io/docs/learn/architecture"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "OWASP prompt injection prevention",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html"
+            }
+          ],
+          "coverConcept": "A host contains an agent and MCP client connected to a read-only MCP server, which checks authorization before accessing order records.",
+          "coverAlt": "MCP host and client connecting to an authorized read-only order server.",
+          "file": "engineering-first-mcp-integration.md",
+          "diagram": {
+            "nodes": [
+              "Agent host",
+              "MCP client",
+              "MCP server",
+              "Authorization",
+              "Order service"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "MCP connects the host to a capability whose server still enforces record authorization."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Agent Workflow Patterns",
+      "slug": "engineering-workflow-patterns",
+      "description": "Compose predictable stages, bounded planning and deliberate human review.",
+      "articles": [
+        {
+          "title": "Prompt Chaining, Routing and Parallel Execution",
+          "slug": "engineering-chaining-routing-parallel-execution",
+          "summary": "Choose simple composition patterns for multi-step tasks, and define explicit contracts between model-assisted workflow stages.",
+          "seoTitle": "Prompt Chaining, Routing and Parallel Execution",
+          "seoDescription": "Compare chaining, routing and parallel execution for AI workflows. Design stage contracts, failure handling and a document-processing example.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "workflow patterns",
+            "routing",
+            "parallel execution"
+          ],
+          "sources": [
+            {
+              "title": "Building effective agents",
+              "url": "https://www.anthropic.com/research/building-effective-agents"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "An incoming request passes a router to a sequential extraction-validation chain or two independent parallel checks joined at a result gate.",
+          "coverAlt": "Routing, sequential chaining and parallel checks in one workflow.",
+          "file": "engineering-chaining-routing-parallel-execution.md",
+          "diagram": {
+            "nodes": [
+              "Document router",
+              "Extraction",
+              "Arithmetic check",
+              "Required fields",
+              "Review result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A fixed workflow joins independent checks after structured extraction."
+          }
+        },
+        {
+          "title": "Planning, Tool Use and Feedback Loops",
+          "slug": "engineering-planning-tool-use-feedback",
+          "summary": "Design short, revisable plans that connect agent actions to observations, verification and explicit stopping conditions.",
+          "seoTitle": "Planning, Tool Use and Feedback Loops for Agents",
+          "seoDescription": "Build bounded agent planning loops with evidence-based next steps, verification and stopping rules. Includes a delivery investigation exercise.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "planning",
+            "feedback loops",
+            "agent control"
+          ],
+          "sources": [
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            },
+            {
+              "title": "Building effective agents",
+              "url": "https://www.anthropic.com/research/building-effective-agents"
+            }
+          ],
+          "coverConcept": "A task goal produces a short plan, selected tool action and observation, followed by verification that either revises the plan or ends the run.",
+          "coverAlt": "Planning loop with tool observations, verification and an explicit exit.",
+          "file": "engineering-planning-tool-use-feedback.md",
+          "diagram": {
+            "nodes": [
+              "Task goal",
+              "Short plan",
+              "Tool action",
+              "Observation",
+              "Verification"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "caption": "Verification uses observations to revise a plan or justify stopping."
+          }
+        },
+        {
+          "title": "Designing Human Review and Escalation",
+          "slug": "engineering-human-review-escalation",
+          "summary": "Build useful human handoffs with explicit triggers, evidence bundles and approvals tied to exact proposed actions.",
+          "seoTitle": "Designing Human Review and Agent Escalation",
+          "seoDescription": "Design agent handoffs with clear triggers, reviewer evidence, action-specific approvals and reliable resume behavior. Includes a support scenario.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "human oversight",
+            "approvals",
+            "escalation"
+          ],
+          "sources": [
+            {
+              "title": "OWASP prompt injection prevention",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "An agent decision reaches a review gate, presents evidence and an exact proposed action, then branches to approve, revise or decline before controlled execution.",
+          "coverAlt": "Human review gate with evidence, scoped approval and controlled continuation.",
+          "file": "engineering-human-review-escalation.md",
+          "diagram": {
+            "nodes": [
+              "Review trigger",
+              "Evidence packet",
+              "Human decision",
+              "Fresh state check",
+              "Execute or decline"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Human approval applies to a specific operation and is rechecked against current state."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Multi-Agent Systems",
+      "slug": "engineering-multi-agent-systems",
+      "description": "Choose justified agent boundaries and coordinate specialist work with explicit contracts and state ownership.",
+      "articles": [
+        {
+          "title": "When to Use Multiple Agents",
+          "slug": "engineering-when-multiple-agents",
+          "summary": "Decide whether specialist agents add useful independence or merely increase coordination, latency and failure modes.",
+          "seoTitle": "When Should You Use Multiple AI Agents?",
+          "seoDescription": "Decide when multi-agent architecture is justified. Compare a single-agent baseline with specialist decomposition using a research workflow example.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "multi-agent systems",
+            "architecture tradeoffs",
+            "decomposition"
+          ],
+          "sources": [
+            {
+              "title": "How we built our multi-agent research system",
+              "url": "https://www.anthropic.com/research/multi-agent-research-system"
+            },
+            {
+              "title": "Building effective agents",
+              "url": "https://www.anthropic.com/research/building-effective-agents"
+            }
+          ],
+          "coverConcept": "A single bounded agent is compared with three independent specialists and a coordinator, each reporting evidence and coordination cost.",
+          "coverAlt": "Single-agent baseline compared with coordinated specialist agents.",
+          "file": "engineering-when-multiple-agents.md",
+          "diagram": {
+            "nodes": [
+              "Research task",
+              "Single-agent baseline",
+              "Independent specialists",
+              "Coordinator",
+              "Measured result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Compare specialist coordination with a strong single-agent baseline on the same task."
+          }
+        },
+        {
+          "title": "Supervisor, Specialist and Handoff Patterns",
+          "slug": "engineering-supervisor-specialist-handoffs",
+          "summary": "Choose between central coordination and delegated handoff, and define the task contracts that make either pattern inspectable.",
+          "seoTitle": "Supervisor, Specialist and Agent Handoff Patterns",
+          "seoDescription": "Compare supervisor coordination and specialist handoffs. Design ownership, task envelopes, deadlines and result validation for multi-agent work.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "orchestration",
+            "supervisor agents",
+            "handoffs"
+          ],
+          "sources": [
+            {
+              "title": "How we built our multi-agent research system",
+              "url": "https://www.anthropic.com/research/multi-agent-research-system"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "A supervisor dispatches two specialist tasks, validates their results, and optionally transfers an unresolved task to a human-owned queue.",
+          "coverAlt": "Supervisor dispatch, validated specialist returns and an explicit handoff.",
+          "file": "engineering-supervisor-specialist-handoffs.md",
+          "diagram": {
+            "nodes": [
+              "Supervisor",
+              "Task envelope",
+              "Specialist",
+              "Validated result",
+              "Synthesis"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A supervisor delegates bounded work and validates specialist results before synthesis."
+          }
+        },
+        {
+          "title": "Designing Communication and Shared State",
+          "slug": "engineering-multi-agent-communication-state",
+          "summary": "Coordinate specialist agents with versioned messages, explicit state ownership and evidence-preserving conflict handling.",
+          "seoTitle": "Multi-Agent Communication and Shared State",
+          "seoDescription": "Design agent messages, shared state and conflict handling. Learn ownership, version checks, evidence provenance and safe aggregation patterns.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "shared state",
+            "agent communication",
+            "concurrency"
+          ],
+          "sources": [
+            {
+              "title": "How we built our multi-agent research system",
+              "url": "https://www.anthropic.com/research/multi-agent-research-system"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "Two specialists publish versioned evidence records to a shared store; a coordinator reads a consistent snapshot and records unresolved conflicts.",
+          "coverAlt": "Versioned specialist evidence flowing into a consistent shared-state snapshot.",
+          "file": "engineering-multi-agent-communication-state.md",
+          "diagram": {
+            "nodes": [
+              "Specialist A",
+              "Specialist B",
+              "Versioned findings",
+              "Consistent snapshot",
+              "Coordinator"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Versioned findings preserve ownership and let synthesis use a consistent evidence snapshot."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Applied Agent Projects",
+      "slug": "engineering-applied-projects",
+      "description": "Build research, support and document agents with evidence, boundaries and testable outcomes.",
+      "articles": [
+        {
+          "title": "Build a Research Agent with Source Citations",
+          "slug": "engineering-research-agent-source-citations",
+          "summary": "Build a bounded research agent that gathers permitted evidence, maintains a claim ledger and produces an inspectable cited briefing.",
+          "seoTitle": "Build a Research Agent with Source Citations",
+          "seoDescription": "Build a research agent with a scoped question, evidence ledger, bounded search and claim-level citations. Includes fixtures and completion checks.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "research agents",
+            "citations",
+            "applied project"
+          ],
+          "sources": [
+            {
+              "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+              "url": "https://arxiv.org/abs/2005.11401"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+              "url": "https://arxiv.org/abs/2210.03629"
+            }
+          ],
+          "coverConcept": "A research question feeds scoped search, an evidence ledger and a claim-support check before generating a cited briefing.",
+          "coverAlt": "Research pipeline from scoped question to evidence-backed briefing.",
+          "file": "engineering-research-agent-source-citations.md",
+          "diagram": {
+            "nodes": [
+              "Research question",
+              "Scoped search",
+              "Evidence ledger",
+              "Claim checks",
+              "Cited briefing"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A research agent builds and verifies an evidence ledger before writing its briefing."
+          }
+        },
+        {
+          "title": "Build a Customer Support Agent with Human Handoff",
+          "slug": "engineering-customer-support-agent",
+          "summary": "Build a support agent that combines grounded policy answers, authenticated record lookups and useful human escalation.",
+          "seoTitle": "Build a Support Agent with Human Handoff",
+          "seoDescription": "Build a scoped support agent with policy retrieval, authorized order lookup, honest uncertainty and evidence-rich human handoff.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "customer support",
+            "human handoff",
+            "applied project"
+          ],
+          "sources": [
+            {
+              "title": "OWASP prompt injection prevention",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "A support request routes to policy retrieval or authenticated order lookup; unresolved cases enter a human handoff with an evidence packet.",
+          "coverAlt": "Support routing to grounded answers or evidence-rich human handoff.",
+          "file": "engineering-customer-support-agent.md",
+          "diagram": {
+            "nodes": [
+              "Support request",
+              "Policy retrieval",
+              "Order lookup",
+              "Evidence check",
+              "Human handoff"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Support combines permitted policy and order evidence, escalating unresolved decisions."
+          }
+        },
+        {
+          "title": "Build a Document Processing Agent",
+          "slug": "engineering-document-processing-agent",
+          "summary": "Build a document pipeline that extracts structured fields, validates them deterministically and routes ambiguous cases for review.",
+          "seoTitle": "Build a Document Processing AI Agent",
+          "seoDescription": "Build a document-processing agent with extraction schemas, provenance, arithmetic checks and review queues. Includes an invoice fixture project.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "document processing",
+            "extraction",
+            "applied project"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "Python sqlite3 documentation",
+              "url": "https://docs.python.org/3/library/sqlite3.html"
+            }
+          ],
+          "coverConcept": "A source document passes extraction, schema validation, deterministic arithmetic checks and a review gate before a validated record is stored.",
+          "coverAlt": "Document extraction pipeline with provenance, validation and review.",
+          "file": "engineering-document-processing-agent.md",
+          "diagram": {
+            "nodes": [
+              "Source document",
+              "Field extraction",
+              "Schema check",
+              "Arithmetic check",
+              "Review record"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Document processing preserves extracted values while deterministic checks identify review needs."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Engineering Capstone",
+      "slug": "engineering-engineering-capstone",
+      "description": "Specify, implement and package an evidence-based business agent for evaluation and operational review.",
+      "articles": [
+        {
+          "title": "Define Your Agent’s Requirements and Architecture",
+          "slug": "engineering-agent-requirements-architecture",
+          "summary": "Turn a business request into testable agent requirements, evidence contracts, tool boundaries and an implementation-ready architecture.",
+          "seoTitle": "Define AI Agent Requirements and Architecture",
+          "seoDescription": "Write testable requirements for an AI agent. Define users, evidence, tools, authorization, outcomes and architecture before implementation.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "requirements",
+            "architecture",
+            "capstone"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "A business goal is decomposed into user tasks, evidence requirements and permission boundaries, converging into a testable architecture contract.",
+          "coverAlt": "Business requirements flowing into a testable agent architecture.",
+          "file": "engineering-agent-requirements-architecture.md",
+          "diagram": {
+            "nodes": [
+              "Business goal",
+              "Supported tasks",
+              "Evidence contracts",
+              "Trust boundaries",
+              "Acceptance cases"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Requirements connect business tasks to evidence, permissions and testable outcomes."
+          }
+        },
+        {
+          "title": "Implement an End-to-End Business Workflow",
+          "slug": "engineering-end-to-end-business-workflow",
+          "summary": "Implement the capstone as small testable adapters, a bounded controller and evidence-aware outputs with a reliable review path.",
+          "seoTitle": "Implement an End-to-End AI Agent Workflow",
+          "seoDescription": "Implement a business agent with scoped adapters, structured state, bounded execution, grounded answers and a useful human review path.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "implementation",
+            "business workflows",
+            "capstone"
+          ],
+          "sources": [
+            {
+              "title": "Python sqlite3 documentation",
+              "url": "https://docs.python.org/3/library/sqlite3.html"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "An authenticated request passes scoped adapters, evidence state and a bounded controller before branching to a final answer or persisted review packet.",
+          "coverAlt": "End-to-end agent workflow from authentication to answer or review.",
+          "file": "engineering-end-to-end-business-workflow.md",
+          "diagram": {
+            "nodes": [
+              "Authenticated task",
+              "Scoped adapters",
+              "Evidence state",
+              "Bounded controller",
+              "Answer or review"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "The implementation persists evidence and enforces limits before returning an answer or review."
+          }
+        },
+        {
+          "title": "Package Your Agent for Evaluation and Deployment",
+          "slug": "engineering-package-agent-evaluation-deployment",
+          "summary": "Package the capstone with reproducible fixtures, evaluation handoff, dependency information and operational boundaries for a meaningful review.",
+          "seoTitle": "Package an AI Agent for Evaluation and Deployment",
+          "seoDescription": "Package your agent with fixtures, evidence traces, configuration, evaluation cases and operational requirements for a reproducible review.",
+          "tags": [
+            "agentic ai",
+            "ai engineering",
+            "deployment readiness",
+            "evaluation handoff",
+            "capstone"
+          ],
+          "sources": [
+            {
+              "title": "OpenTelemetry traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            },
+            {
+              "title": "W3C provenance overview",
+              "url": "https://www.w3.org/TR/prov-overview/"
+            },
+            {
+              "title": "JSON Schema object reference",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            }
+          ],
+          "coverConcept": "A versioned agent package combines code, fixture corpus, test cases and configuration, then passes an evaluation report and operational review before release.",
+          "coverAlt": "Agent package flowing through evaluation and operational review.",
+          "file": "engineering-package-agent-evaluation-deployment.md",
+          "diagram": {
+            "nodes": [
+              "Versioned package",
+              "Fixture corpus",
+              "Evaluation cases",
+              "Sanitized traces",
+              "Readiness review"
+            ],
+            "edges": [
+              [
+                0,
+                4
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A reviewable agent package includes reproducible fixtures, evaluation cases and observable runs."
+          }
+        }
+      ]
+    }
+  ]
+}

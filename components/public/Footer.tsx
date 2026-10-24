@@ -15,9 +15,10 @@ interface Menu {
 interface Props  { menus?: Menu[] }
 
 export default function Footer({ menus = [] }: Props) {
-  const moduleLinks = menus.flatMap((menu) => menu.subMenus?.length
-    ? menu.subMenus.map((sub) => ({ title: sub.title, href: `/${menu.slug}/${sub.slug}` }))
-    : [{ title: menu.title ?? menu.name ?? menu.slug, href: `/${menu.slug}` }])
+  const moduleLinks = menus.map(menu => ({
+    title: menu.title ?? menu.name ?? menu.slug,
+    href: `/${menu.slug}`,
+  }))
 
   return (
     <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)' }}>
@@ -54,7 +55,7 @@ export default function Footer({ menus = [] }: Props) {
           {/* Learning Modules */}
           <div>
             <h4 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-              Learning Modules
+              Learning Paths
             </h4>
             <ul className="space-y-2.5">
               {moduleLinks.map((module) => (

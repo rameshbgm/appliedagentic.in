@@ -14,6 +14,8 @@
     "start:uat": "dotenv -e .env.uat -- next start -p ${PORT:-3000}",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "test:learning": "node --test tests/learning-paths.test.cjs",
+    "content:learning": "node scripts/learning-paths.cjs",
     "test:ai": "node --test tests/ai-providers.test.cjs",
     "db:generate": "prisma generate"
   },

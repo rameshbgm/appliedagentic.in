@@ -1,7 +1,7 @@
 // lib/utils.ts
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
 /** Merge Tailwind classes safely */
 export function cn(...inputs: ClassValue[]) {
@@ -9,9 +9,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** Format a date to human-readable */
-export function formatDate(date: Date | string | null | undefined): string {
+export function formatDate(date: Date | string | null | undefined, month: 'long' | 'short' = 'long'): string {
   if (!date) return ''
-  return format(new Date(date), 'MMMM d, yyyy')
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Singapore', month, day: 'numeric', year: 'numeric' }).format(new Date(date))
 }
 
 /** Relative time e.g. "3 days ago" */

@@ -100,9 +100,9 @@ export default function Navbar({ navMenus = [] }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleCache])
 
-  // Pre-fetch all sub-menu articles in the background on mount
+  // Warm the first module in each path; fetch the rest when a reader opens it.
   useEffect(() => {
-    const allSubIds = navMenus.flatMap((m) => m.subMenus?.map((s) => s.id) ?? [])
+    const allSubIds = navMenus.flatMap((m) => m.subMenus?.slice(0, 1).map((s) => s.id) ?? [])
     allSubIds.forEach((subId, i) => {
       // stagger requests slightly to avoid hammering the server
       setTimeout(() => {
@@ -168,7 +168,7 @@ export default function Navbar({ navMenus = [] }: Props) {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+          <nav className="hidden xl:flex items-center gap-0.5 flex-1 justify-center" aria-label="Main navigation">
             {navMenus.map((menu) => {
               const hasChildren = menu.subMenus && menu.subMenus.length > 0
               const isActive    = activeMenuId === menu.id && megaOpen
@@ -190,6 +190,7 @@ export default function Navbar({ navMenus = [] }: Props) {
                 <button
                   key={menu.id}
                   type="button"
+                  aria-expanded={isActive}
                   onMouseEnter={() => openMega(menu.id)}
                   onMouseLeave={scheduleMegaClose}
                   onClick={() => (isActive ? closeMega() : openMega(menu.id))}
@@ -214,14 +215,14 @@ export default function Navbar({ navMenus = [] }: Props) {
 
           {/* Mobile icons */}
           <div className="flex items-center gap-2 shrink-0">
-            <Link href="/search" aria-label="Search" onClick={() => showLoading('/search')} className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`} style={{ color: textSecond }}>
+            <Link href="/search" aria-label="Search" onClick={() => showLoading('/search')} className={`xl:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`} style={{ color: textSecond }}>
               <Search size={20} />
             </Link>
             <button
               type="button"
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Toggle menu"
-              className={`lg:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`}
+              className={`xl:hidden p-2.5 rounded-lg transition-colors ${hoverBg}`}
               style={{ color: textSecond, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
             >
               {mobileOpen ? <X size={22} /> : <MenuIcon size={22} />}
@@ -233,7 +234,7 @@ export default function Navbar({ navMenus = [] }: Props) {
       {/* ── 3-column Mega-Nav ── */}
       {hasMegaMenus && (
         <div
-          className={`hidden lg:flex fixed left-0 right-0 z-30 transition-all duration-200 origin-top ${megaOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+          className={`hidden xl:flex fixed left-0 right-0 z-30 transition-all duration-200 origin-top ${megaOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
           style={{ top: 64, background: megaBg, borderBottom: `1px solid ${megaBdr}`, boxShadow: isDark ? '0 20px 60px rgba(0,0,0,0.5)' : '0 8px 40px rgba(0,0,0,0.1)' }}
           onMouseEnter={cancelClose}
           onMouseLeave={scheduleMegaClose}
@@ -412,7 +413,7 @@ export default function Navbar({ navMenus = [] }: Props) {
       {/* Backdrop */}
       {megaOpen && (
         <div
-          className="hidden lg:block fixed inset-0 z-20"
+          className="hidden xl:block fixed inset-0 z-20"
           style={{ top: 64 }}
           onClick={closeMega}
         />
@@ -420,7 +421,7 @@ export default function Navbar({ navMenus = [] }: Props) {
 
       {/* ── Mobile Drawer ── */}
       <div
-        className={`lg:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto overscroll-contain transition-all duration-200 ${mobileOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-2'}`}
+        className={`xl:hidden fixed inset-x-0 top-16 bottom-0 z-50 overflow-y-auto overscroll-contain transition-all duration-200 ${mobileOpen ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-2'}`}
         style={{ background: 'var(--bg-page)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: `1px solid ${navBorder}` }}
       >
         <nav className="px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-1">

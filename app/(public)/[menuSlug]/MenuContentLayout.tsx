@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, ChevronRight, Clock, Eye, Calendar } from 'lucide-react'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
+import { formatDate } from '@/lib/utils'
 
 const FONT    = "'Inter', sans-serif"
 const ACCENTS = ['#3b82f6', '#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ec4899']
@@ -36,6 +37,7 @@ interface Props {
 }
 
 function ArticleMeta({ article }: { article: ArticlePreview }) {
+  const publicationDate = article.publishedAt
   return (
     <span
       className="mt-1.5 flex items-center gap-x-2 text-[10.5px] whitespace-nowrap overflow-hidden"
@@ -44,14 +46,14 @@ function ArticleMeta({ article }: { article: ArticlePreview }) {
       {article.viewCount != null && (
         <span className="inline-flex items-center gap-0.5"><Eye size={10} /> {article.viewCount} views</span>
       )}
-      {article.viewCount != null && article.publishedAt && <span style={{ opacity: 0.35 }}>·</span>}
-      {article.publishedAt && (
+      {article.viewCount != null && publicationDate && <span style={{ opacity: 0.35 }}>·</span>}
+      {publicationDate && (
         <span className="inline-flex items-center gap-0.5">
           <Calendar size={10} />
-          {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {formatDate(publicationDate, 'short')}
         </span>
       )}
-      {(article.viewCount != null || article.publishedAt) && article.readingTimeMinutes != null && (
+      {(article.viewCount != null || publicationDate) && article.readingTimeMinutes != null && (
         <span style={{ opacity: 0.35 }}>·</span>
       )}
       {article.readingTimeMinutes != null && (

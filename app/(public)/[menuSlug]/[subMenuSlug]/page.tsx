@@ -18,12 +18,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { subMenuSlug } = await params
     const subMenu = await prisma.navSubMenu.findUnique({
       where: { slug: subMenuSlug },
-      select: { title: true, description: true, menu: { select: { title: true } } },
+      select: { title: true, description: true, menu: { select: { title: true, slug: true } } },
     })
     if (!subMenu) return {}
     return {
       title: `${subMenu.title} | ${subMenu.menu.title}`,
       description: subMenu.description ?? undefined,
+      alternates: { canonical: `/${subMenu.menu.slug}/${subMenuSlug}` },
+      openGraph: { title: subMenu.title, description: subMenu.description ?? undefined, url: `/${subMenu.menu.slug}/${subMenuSlug}`, type: 'website' },
     }
   } catch (err) {
     logger.error('[generateMetadata /[menuSlug]/[subMenuSlug]]', err)

@@ -44,10 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       where: { slug: id },
       select: {
         title: true,
+        status: true,
         summary: true,
         seoTitle: true,
         seoDescription: true,
         seoKeywords: true,
+        seoCanonicalUrl: true,
         ogTitle: true,
         ogDescription: true,
         twitterTitle: true,
@@ -77,6 +79,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: resolvedTitle,
       description: resolvedDescription,
       keywords,
+      alternates: {
+        canonical: article.seoCanonicalUrl || `/articles/${id}`,
+      },
+      robots: article.status === 'PUBLISHED'
+        ? { index: true, follow: true }
+        : { index: false, follow: false },
       openGraph: {
         title: ogTitle,
         description: ogDesc,
@@ -110,7 +118,8 @@ export default async function ArticleDetailPage({ params }: Props) {
     article = await prisma.article.findUnique({
       where: { slug: id },
       include: {
-        coverImage: { select: { url: true } },
+        coverImage: { select: { url: true, altText: true } },
+        author: { select: { name: true } },
         articleTags: { include: { tag: { select: { id: true, name: true } } } },
         sections: { orderBy: { order: 'asc' } },
         subMenuArticles: {
@@ -204,6 +213,18 @@ export default async function ArticleDetailPage({ params }: Props) {
     const idx = allTopicArticles.findIndex((ta) => ta.article.id === article.id)
     if (idx > 0) prevArticle = allTopicArticles[idx - 1].article
     if (idx >= 0 && idx < allTopicArticles.length - 1) nextArticle = allTopicArticles[idx + 1].article
+  } else if (navAssignments[0]) {
+    const pathArticles = await prisma.subMenuArticle.findMany({
+      where: {
+        subMenu: { menuId: navAssignments[0].menuId, isVisible: true },
+        article: { status: 'PUBLISHED' },
+      },
+      orderBy: [{ subMenu: { order: 'asc' } }, { orderIndex: 'asc' }, { id: 'asc' }],
+      select: { article: { select: { id: true, title: true, slug: true } } },
+    })
+    const index = pathArticles.findIndex(link => link.article.id === article.id)
+    if (index > 0) prevArticle = pathArticles[index - 1].article
+    if (index >= 0 && index < pathArticles.length - 1) nextArticle = pathArticles[index + 1].article
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
@@ -213,9 +234,25 @@ export default async function ArticleDetailPage({ params }: Props) {
   const fullContent = sections.length > 0
     ? sections.map(s => s.content).join('\n')
     : article.content
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.seoDescription || article.summary,
+    mainEntityOfPage: article.seoCanonicalUrl || articleUrl,
+    datePublished: article.publishedAt?.toISOString(),
+    dateModified: article.updatedAt.toISOString(),
+    author: { '@type': 'Person', name: article.author.name },
+    publisher: { '@type': 'Organization', name: 'Applied Agentic AI', url: siteUrl },
+    ...(article.coverImage ? { image: new URL(article.coverImage.url, siteUrl).href } : {}),
+    ...(article.audioUrl ? { audio: { '@type': 'AudioObject', contentUrl: new URL(article.audioUrl, siteUrl).href, encodingFormat: article.audioUrl.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav', name: `${article.title}: AI-generated narration` } } : {}),
+    keywords: tags.map(tag => tag.name),
+    inLanguage: 'en',
+  }
 
   return (
     <>
+      {!isDraft && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />}
       <ReadingProgressBar />
 
       <div className="min-h-screen article-page">
@@ -235,7 +272,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           <div className="article-cover-wrapper">
             <LazyImage
               src={article.coverImage.url}
-              alt={article.title}
+              alt={article.coverImage.altText || article.title}
               priority
               aspectClass="aspect-video"
               className="object-cover"

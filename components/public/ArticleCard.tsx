@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Clock3, Eye, ArrowUpRight } from 'lucide-react'
 import LazyImage from '@/components/shared/LazyImage'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
+import { formatDate } from '@/lib/utils'
 
 // Warm-to-cool gradient pairs that cycle per card index
 const CARD_GRADIENTS = [
@@ -123,7 +124,7 @@ export default function ArticleCard({
               <span className="featured-article-card__metaItem"><Eye size={14} />{viewCount.toLocaleString()}</span>
             </div>
             <div className="featured-article-card__date">
-              {new Date(publishedAt ?? createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {formatDate(publishedAt ?? createdAt, 'short')}
             </div>
             <span className="featured-article-card__cta" aria-hidden="true">
               <ArrowUpRight size={15} />

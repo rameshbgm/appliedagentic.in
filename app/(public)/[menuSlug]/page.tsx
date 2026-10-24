@@ -24,6 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: menu.title,
       description: menu.description ?? undefined,
+      alternates: { canonical: `/${menuSlug}` },
+      openGraph: { title: menu.title, description: menu.description ?? undefined, url: `/${menuSlug}`, type: 'website' },
     }
   } catch (err) {
     logger.error('[generateMetadata /[menuSlug]]', err)
