@@ -1,17 +1,14 @@
 'use client'
 // components/shared/ArticleLoadingModal.tsx
-// Route-change indicator: a multi-line progress rail with a "Departing" chip.
+// Route-change indicator: four colour bars racing across the top of the screen.
 interface Props {
   completing: boolean
 }
 
 export default function ArticleLoadingModal({ completing }: Props) {
   return (
-    <div className={`tr-departing${completing ? ' done' : ''}`} role="status" aria-live="polite">
-      <div className="tr-departing__bar" />
-      {!completing && (
-        <span className="tr-departing__chip"><i aria-hidden="true" />Departing</span>
-      )}
+    <div className={`p-loading${completing ? ' done' : ''}`} role="status" aria-label="Loading page">
+      <i /><i /><i /><i />
     </div>
   )
 }

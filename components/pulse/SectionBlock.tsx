@@ -1,5 +1,5 @@
 'use client'
-// components/transit/SectionBlock.tsx
+// components/pulse/SectionBlock.tsx
 // One ArticleSection: numbered stop header (collapsible), audio + AI summary, body.
 import { useState } from 'react'
 import { ChevronDown, Loader2, Pause, Play, Sparkles, Volume2 } from 'lucide-react'
@@ -7,6 +7,7 @@ import ArticleContent from '@/components/public/ArticleContent'
 import AiSummaryDialog from './AiSummaryDialog'
 import { useArticleAudio } from '@/components/public/ArticleAudioContext'
 import { featureFlags } from '@/content/features'
+import { swatch } from '@/lib/catalog'
 
 interface Section {
   id: number
@@ -28,6 +29,8 @@ export default function SectionBlock({ section, index, total }: Props) {
   const isThis = audio.currentSectionIdx === index
   const playState = isThis ? audio.playState : 'idle'
   const hasTitle = Boolean(section.title?.trim())
+  // Every section gets its own colour from the palette, offset from the module colour
+  const sw = swatch(index + 1)
 
   const onAudio = () => {
     if (isThis && audio.playState === 'playing') audio.pause()
@@ -36,30 +39,35 @@ export default function SectionBlock({ section, index, total }: Props) {
   }
 
   return (
-    <section className="tr-section" id={`section-${index + 1}`} aria-labelledby={hasTitle ? `section-${section.id}` : undefined}>
+    <section
+      className={`p-section${index === 0 ? ' p-first' : ''}`}
+      id={`section-${index + 1}`}
+      aria-labelledby={hasTitle ? `section-${section.id}` : undefined}
+      style={{ '--sc': sw.color, '--sfg': sw.fg } as React.CSSProperties}
+    >
       {hasTitle && (
-        <div className="tr-section__head" id={`section-${section.id}`} data-ride-stop={section.title}>
+        <div className="p-section__head" id={`section-${section.id}`} data-ride-stop={section.title}>
           <button
             type="button"
-            className="tr-section__toggle"
+            className="p-section__toggle"
             aria-expanded={!collapsed}
             aria-controls={`section-body-${section.id}`}
             onClick={() => setCollapsed((c) => !c)}
           >
-            <span className="tr-section__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-            <span className="tr-section__title">{section.title}</span>
-            <ChevronDown size={18} className="tr-section__chev" aria-hidden="true" />
+            <span className="p-section__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <span className="p-section__title">{section.title}</span>
+            <ChevronDown size={18} className="p-section__chev" aria-hidden="true" />
           </button>
-          <span className="tr-section__tools">
+          <span className="p-section__tools">
             {featureFlags.aiSummary && total > 1 && (
-              <button type="button" className="tr-icon-btn" onClick={() => setSummaryOpen(true)} aria-label="Summarise this section" title="Summarise this section">
+              <button type="button" className="p-round p-round--sm" onClick={() => setSummaryOpen(true)} aria-label="Summarise this section" title="Summarise this section">
                 <Sparkles size={16} />
               </button>
             )}
             {section.audioUrl && (
               <button
                 type="button"
-                className="tr-icon-btn"
+                className="p-round p-round--sm"
                 data-playing={playState === 'playing' ? 'true' : undefined}
                 onClick={onAudio}
                 aria-label={playState === 'playing' ? 'Pause section audio' : 'Play section audio'}
@@ -76,7 +84,7 @@ export default function SectionBlock({ section, index, total }: Props) {
       )}
 
       {section.content && (
-        <div id={`section-body-${section.id}`} hidden={collapsed}>
+        <div id={`section-body-${section.id}`} className="p-section__body" hidden={collapsed}>
           <ArticleContent content={section.content} standalone />
         </div>
       )}

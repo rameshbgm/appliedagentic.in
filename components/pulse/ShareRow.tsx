@@ -1,5 +1,5 @@
 'use client'
-// components/transit/ShareRow.tsx
+// components/pulse/ShareRow.tsx
 import { useEffect, useState } from 'react'
 import { Check, Link2, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -37,7 +37,7 @@ export default function ShareRow({ url, title }: Props) {
   }
 
   return (
-    <div className="tr-share" aria-label="Share this article">
+    <div className="p-share" aria-label="Share this article">
       {canShare && (
         <button type="button" onClick={nativeShare} aria-label="Share"><Share2 size={16} /></button>
       )}

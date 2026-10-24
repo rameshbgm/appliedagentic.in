@@ -1,5 +1,5 @@
 'use client'
-// components/transit/AiSummaryDialog.tsx
+// components/pulse/AiSummaryDialog.tsx
 // Fetches bullet-point summaries from /api/ai/summarize and shows them in a sheet.
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -57,21 +57,21 @@ export default function AiSummaryDialog({ open, onClose, title, subtitle, conten
   if (!open || typeof document === 'undefined') return null
 
   return createPortal(
-    <div className="tr-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="tr-sheet tr-ai">
-        <div className="tr-sheet__grab" />
-        <div className="tr-ai__head">
+    <div className="p-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="p-sheet p-ai">
+        <div className="p-sheet__grab" />
+        <div className="p-ai__head">
           <div style={{ minWidth: 0 }}>
-            <span className="tr-eyebrow">{subtitle}</span>
+            <span className="p-label">{subtitle}</span>
             <h2>{title}</h2>
           </div>
-          <button type="button" className="tr-icon-btn" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
+          <button type="button" className="p-round p-round--sm" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
         </div>
         {state === 'loading' && <div className="state"><Loader2 size={18} className="animate-spin" /> Summarising this stop…</div>}
         {state === 'error' && (
           <div className="state" style={{ flexWrap: 'wrap' }}>
             <span>{error} Try again in a moment.</span>
-            <button type="button" className="tr-btn tr-btn--sm" onClick={load}>Retry</button>
+            <button type="button" className="p-btn p-btn--sm" onClick={load}>Retry</button>
           </div>
         )}
         {state === 'done' && (

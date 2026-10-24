@@ -4,14 +4,13 @@ import { Search } from 'lucide-react'
 
 export default function NotFound() {
   return (
-    <div className="tr-wrap tr-lost">
-      <span className="tr-eyebrow">Lost property</span>
-      <span className="code" aria-hidden="true">404</span>
-      <h1 className="tr-display">This stop is not on the map.</h1>
-      <p>The page may have moved to another line, or the link has a typo. Search the timetable or start again from the network map.</p>
-      <div className="tr-ctas">
-        <Link href="/" className="tr-btn tr-btn--primary">Network map</Link>
-        <Link href="/search" className="tr-btn"><Search size={16} /> Search stops</Link>
+    <div className="p-wrap p-lost">
+      <span className="p-lost__code" aria-hidden="true"><span>4</span><span>0</span><span>4</span></span>
+      <h1 className="p-display">This page wandered off.</h1>
+      <p>The lesson may have moved, or the link has a typo. Search the library or head back home.</p>
+      <div className="p-ctas">
+        <Link href="/" className="p-btn p-btn--fill">Go home</Link>
+        <Link href="/search" className="p-btn"><Search size={17} /> Search lessons</Link>
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 'use client'
-// components/transit/NewsletterForm.tsx
+// components/pulse/NewsletterForm.tsx
 import { useState } from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 import { newsletterContent } from '@/content/newsletter'
@@ -26,14 +26,14 @@ export default function NewsletterForm({ compact = false }: Props) {
 
   if (status === 'success') {
     return (
-      <p className={compact ? undefined : 'ok'} role="status" style={compact ? { display: 'flex', gap: 8, alignItems: 'center', color: 'var(--success)', fontWeight: 600, margin: 0 } : undefined}>
-        <Check size={16} style={{ display: 'inline', verticalAlign: '-3px' }} /> {newsletterContent.successMsg}
+      <p className="p-ok" role="status">
+        <Check size={18} /> {newsletterContent.successMsg}
       </p>
     )
   }
 
   return (
-    <form onSubmit={onSubmit} style={compact ? { display: 'flex', flexWrap: 'wrap', gap: 8 } : undefined}>
+    <form onSubmit={onSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
       <label htmlFor={id} className="sr-only">Email address</label>
       <input
         id={id}
@@ -43,10 +43,10 @@ export default function NewsletterForm({ compact = false }: Props) {
         onChange={(e) => setEmail(e.target.value)}
         placeholder={newsletterContent.placeholder}
         autoComplete="email"
-        className={compact ? 'input' : undefined}
-        style={compact ? { flex: '1 1 180px', minWidth: 0, borderRadius: 999, minHeight: 44 } : undefined}
+        className="p-input"
+        style={compact ? { minHeight: 46, flexBasis: 180 } : undefined}
       />
-      <button type="submit" className={`tr-btn ${compact ? 'tr-btn--primary' : 'tr-btn--notice'}`} disabled={status === 'loading'}>
+      <button type="submit" className={`p-btn ${compact ? 'p-btn--sm p-btn--fill' : 'p-btn--fill'}`} disabled={status === 'loading'}>
         {status === 'loading' ? newsletterContent.loadingLabel : <>{newsletterContent.ctaLabel} <ArrowRight size={16} /></>}
       </button>
     </form>

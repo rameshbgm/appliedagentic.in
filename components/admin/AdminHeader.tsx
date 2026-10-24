@@ -15,8 +15,8 @@ const labels: Record<string, string> = {
   new: 'New',
   edit: 'Edit',
   login: 'Login',
-  menus: 'Lines',
-  submenus: 'Zones',
+  menus: 'Modules',
+  submenus: 'Chapters',
 }
 
 interface Props {
@@ -37,20 +37,20 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
   })
 
   return (
-    <header className="tr-admin-top">
-      <button type="button" onClick={onMobileMenuToggle} className="tr-icon-btn lg:hidden" aria-label="Open menu">
+    <header className="p-admin-top">
+      <button type="button" onClick={onMobileMenuToggle} className="p-round p-round--sm lg:hidden" aria-label="Open menu">
         <Menu size={18} />
       </button>
       <nav aria-label="Breadcrumb">
         <Link href="/admin/dashboard">Admin</Link>
         {crumbs.map((c) => (
           <span key={c.href} style={{ display: 'inline-flex', gap: 6 }}>
-            <span aria-hidden="true">›</span>
+            <span aria-hidden="true">/</span>
             {c.isLast ? <b>{c.label}</b> : c.isLinked ? <Link href={c.href}>{c.label}</Link> : <span>{c.label}</span>}
           </span>
         ))}
       </nav>
-      <a href="/" target="_blank" rel="noopener noreferrer" className="tr-btn tr-btn--ghost tr-btn--sm tr-admin-top__site">
+      <a href="/" target="_blank" rel="noopener noreferrer" className="p-btn p-btn--sm p-btn--soft p-admin-top__site">
         <ExternalLink size={14} /> <span className="hidden sm:inline">View site</span>
       </a>
     </header>

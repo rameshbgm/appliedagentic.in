@@ -1,12 +1,13 @@
 // app/(public)/layout.tsx
 import type { Metadata } from 'next'
-import TransitShell from '@/components/transit/TransitShell'
-import Footer from '@/components/transit/Footer'
-import Splash from '@/components/transit/Splash'
+import PulseShell from '@/components/pulse/PulseShell'
+import Footer from '@/components/pulse/Footer'
+import Splash from '@/components/pulse/Splash'
+import Effects from '@/components/pulse/Effects'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
-import { getNetwork, toShellLines } from '@/lib/transit'
+import { getNetwork, toShellLines } from '@/lib/catalog'
 
 // Navigation is edited in the database, independently of application builds.
 export const dynamic = 'force-dynamic'
@@ -25,8 +26,9 @@ export default async function PublicLayout({ children }: { children: React.React
       <ArticleLoadingProvider>
         <ToastNotifier />
         <Splash />
-        <TransitShell lines={lines} />
-        <main id="main" className="tr-main">
+        <Effects />
+        <PulseShell lines={lines} />
+        <main id="main" className="p-main">
           {children}
         </main>
         <Footer lines={lines} />

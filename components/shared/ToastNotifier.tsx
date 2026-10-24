@@ -6,15 +6,16 @@ export default function ToastNotifier() {
   return (
     <Toaster
       position="top-center"
-      offset={72}
+      offset={78}
       toastOptions={{
         style: {
-          background: 'var(--board)',
-          color: 'var(--board-ink)',
+          background: 'var(--ink)',
+          color: 'var(--bg)',
           border: '0',
           borderRadius: '999px',
-          fontFamily: 'var(--mono)',
-          fontSize: '13px',
+          fontFamily: 'var(--body)',
+          fontWeight: 700,
+          fontSize: '14px',
         },
       }}
     />

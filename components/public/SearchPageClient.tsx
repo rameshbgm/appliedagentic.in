@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Search, X } from 'lucide-react'
-import StopList, { type Stop } from '@/components/transit/StopList'
+import LessonList, { type Lesson } from '@/components/pulse/LessonList'
 import { heroContent } from '@/content/home'
+import { swatch } from '@/lib/catalog'
 
 interface Props {
   initialQuery: string
@@ -22,7 +23,7 @@ interface ApiItem {
 export default function SearchPageClient({ initialQuery }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState(initialQuery)
-  const [results, setResults] = useState<Stop[]>([])
+  const [results, setResults] = useState<Lesson[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState('')
@@ -66,12 +67,13 @@ export default function SearchPageClient({ initialQuery }: Props) {
   useEffect(() => { if (!initialQuery) inputRef.current?.focus() }, [initialQuery])
 
   return (
-    <div style={{ '--c': 'var(--l2)' } as React.CSSProperties}>
-      <header className="tr-band tr-band--soft">
-        <div className="tr-wrap tr-band__inner">
-          <span className="tr-eyebrow">Timetable</span>
-          <h1 className="tr-display">Find your stop</h1>
-          <form className="tr-search-box" role="search" onSubmit={(e) => { e.preventDefault(); run(query) }} style={{ maxWidth: 720 }}>
+    <div style={{ '--c': 'var(--violet)', '--fg': 'var(--on-dark)' } as React.CSSProperties}>
+      <header className="p-cover">
+        <span className="p-cover__ghost" aria-hidden="true">?</span>
+        <div className="p-wrap p-cover__inner">
+          <span className="p-label">Library</span>
+          <h1 className="p-display">Find a lesson</h1>
+          <form className="p-searchbox" role="search" onSubmit={(e) => { e.preventDefault(); run(query) }}>
             <Search size={20} aria-hidden="true" />
             <label htmlFor="search-page-input" className="sr-only">Search articles</label>
             <input
@@ -84,37 +86,37 @@ export default function SearchPageClient({ initialQuery }: Props) {
               autoComplete="off"
             />
             {query && (
-              <button type="button" className="tr-icon-btn" onClick={() => { setQuery(''); inputRef.current?.focus() }} aria-label="Clear search" style={{ width: 38, height: 38 }}>
+              <button type="button" className="p-round p-round--sm" onClick={() => { setQuery(''); inputRef.current?.focus() }} aria-label="Clear search">
                 <X size={16} />
               </button>
             )}
-            <button type="submit" className="tr-btn tr-btn--primary tr-btn--sm tr-desktop-only">Search</button>
+            <button type="submit" className="p-btn p-btn--fill p-btn--sm p-desktop-only">Search</button>
           </form>
         </div>
       </header>
 
-      <div className="tr-wrap tr-wrap--narrow" style={{ paddingBottom: 48 }}>
+      <div className="p-wrap" style={{ paddingBottom: 48, maxWidth: 900 }}>
         {loading && (
-          <p className="tr-results-meta" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <Loader2 size={14} className="animate-spin" /> Checking the timetable…
+          <p className="p-results-meta" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Loader2 size={14} className="animate-spin" /> Searching the library…
           </p>
         )}
-        {error && <p className="tr-results-meta" style={{ color: 'var(--danger)' }}>{error}</p>}
+        {error && <p className="p-results-meta" style={{ color: 'var(--danger)' }}>{error}</p>}
 
         {!loading && !error && searched && (
-          <p className="tr-results-meta" aria-live="polite">
-            {total === 0 ? `No stops match “${searched}”.` : `${total} ${total === 1 ? 'stop matches' : 'stops match'} “${searched}”`}
+          <p className="p-results-meta" aria-live="polite">
+            {total === 0 ? `No lessons match “${searched}”.` : `${total} ${total === 1 ? 'lesson matches' : 'lessons match'} “${searched}”`}
           </p>
         )}
 
-        {results.length > 0 && <StopList stops={results} />}
+        {results.length > 0 && <LessonList lessons={results} />}
 
         {!loading && (!searched || total === 0) && (
-          <section className="tr-sec" aria-labelledby="suggest-title" style={{ paddingTop: 24 }}>
-            <h2 id="suggest-title" className="tr-eyebrow">{searched ? 'Try one of these instead' : 'Popular destinations'}</h2>
-            <div className="tr-suggest">
-              {heroContent.typewriterTopics.map((t) => (
-                <button key={t} type="button" className="tr-chip" onClick={() => setQuery(t)}>{t}</button>
+          <section aria-labelledby="suggest-title" style={{ paddingTop: 28 }}>
+            <h2 id="suggest-title" className="p-label" style={{ margin: 0 }}>{searched ? 'Try one of these instead' : 'Popular destinations'}</h2>
+            <div className="p-cloud" style={{ marginTop: 14 }}>
+              {heroContent.typewriterTopics.map((t, i) => (
+                <a key={t} href={`/search?q=${encodeURIComponent(t)}`} onClick={(e) => { e.preventDefault(); setQuery(t) }} style={{ '--c': swatch(i).color, '--fg': swatch(i).fg } as React.CSSProperties}>{t}</a>
               ))}
             </div>
           </section>

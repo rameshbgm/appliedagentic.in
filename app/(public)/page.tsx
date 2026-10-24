@@ -1,4 +1,4 @@
-// app/(public)/page.tsx — Network map (home)
+// app/(public)/page.tsx — home
 import Link from 'next/link'
 import fs from 'fs'
 import path from 'path'
@@ -6,11 +6,10 @@ import type { Metadata } from 'next'
 import { ArrowRight, Presentation } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, lineColor } from '@/lib/transit'
-import DepartureBoard, { type Departure } from '@/components/transit/DepartureBoard'
-import NetworkMap from '@/components/transit/NetworkMap'
-import StopCard from '@/components/transit/StopCard'
-import NewsletterForm from '@/components/transit/NewsletterForm'
+import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, swatch, formatJourney, plural } from '@/lib/catalog'
+import StoryStrip, { type Story } from '@/components/pulse/StoryStrip'
+import Tile from '@/components/pulse/Tile'
+import NewsletterForm from '@/components/pulse/NewsletterForm'
 import { heroContent } from '@/content/home'
 import { newsletterContent } from '@/content/newsletter'
 
@@ -28,46 +27,29 @@ const articleSelect = {
   summary: true,
   readingTimeMinutes: true,
   viewCount: true,
-  publishedAt: true,
   coverImage: { select: { url: true } },
+  articleTags: { take: 2, select: { tag: { select: { name: true } } } },
   ...articleLineSelect,
 } as const
 
 async function getHomeData() {
   try {
-    const [featured, latest, publishedCount, tags] = await Promise.all([
-      prisma.article.findMany({
-        where: { status: 'PUBLISHED', isFeatured: true },
-        orderBy: { createdAt: 'desc' },
-        take: 6,
-        select: articleSelect,
-      }),
-      prisma.article.findMany({
-        where: { status: 'PUBLISHED' },
-        orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
-        take: 10,
-        select: articleSelect,
-      }),
+    const [featured, latest, popular, publishedCount, tags] = await Promise.all([
+      prisma.article.findMany({ where: { status: 'PUBLISHED', isFeatured: true }, orderBy: { createdAt: 'desc' }, take: 5, select: articleSelect }),
+      prisma.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }], take: 8, select: articleSelect }),
+      prisma.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: { viewCount: 'desc' }, take: 5, select: articleSelect }),
       prisma.article.count({ where: { status: 'PUBLISHED' } }),
       prisma.tag.findMany({
         where: { articleTags: { some: { article: { status: 'PUBLISHED' } } } },
         orderBy: { articleTags: { _count: 'desc' } },
-        take: 12,
-        select: {
-          id: true,
-          name: true,
-          articleTags: {
-            where: { article: { status: 'PUBLISHED' } },
-            take: 30,
-            select: { article: { select: articleLineSelect } },
-          },
-        },
+        take: 14,
+        select: { id: true, name: true, _count: { select: { articleTags: true } } },
       }),
     ])
-    return { featured, latest, publishedCount, tags }
+    return { featured, latest, popular, publishedCount, tags }
   } catch (err) {
     logger.error('[GET /] DB error loading homepage data', err)
-    return { featured: [], latest: [], publishedCount: 0, tags: [] }
+    return { featured: [], latest: [], popular: [], publishedCount: 0, tags: [] }
   }
 }
 
@@ -98,95 +80,129 @@ function getStaticFiles() {
 }
 
 export default async function HomePage() {
-  const [network, { featured, latest, publishedCount, tags }] = await Promise.all([getNetwork(), getHomeData()])
-  const staticFiles = getStaticFiles()
+  const [modules, { featured, latest, popular, publishedCount, tags }] = await Promise.all([getNetwork(), getHomeData()])
+  const decks = getStaticFiles()
+  const moduleOf = (a: Parameters<typeof menuIdsOf>[0]) => resolveLine(modules, menuIdsOf(a))
 
-  const lineOf = (a: Parameters<typeof menuIdsOf>[0]) => resolveLine(network, menuIdsOf(a))
-
-  const boardSource = latest.length > 0 ? latest : featured
-  const departures: Departure[] = boardSource.map((a) => {
-    const line = lineOf(a)
-    return { slug: a.slug, title: a.title, minutes: a.readingTimeMinutes, lineNumber: line?.number ?? null, color: line?.color ?? 'var(--l2)' }
+  const stories: Story[] = latest.map((a, i) => {
+    const m = moduleOf(a)
+    const sw = m ? { color: m.color, fg: m.fg } : swatch(i)
+    return { slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes, label: m ? `Module ${String(m.number).padStart(2, '0')}` : 'New', ...sw }
   })
-
-  const interchanges = tags
-    .map((t) => {
-      const lineNumbers = new Set<number>()
-      t.articleTags.forEach((at) => { const l = lineOf(at.article); if (l) lineNumbers.add(l.number) })
-      return { id: t.id, name: t.name, count: t.articleTags.length, lines: [...lineNumbers].sort((a, b) => a - b) }
-    })
-    .filter((t) => t.count > 0)
-
-  const totalZones = network.reduce((sum, l) => sum + l.zones.length, 0)
-  const firstLine = network[0]
-  const allGood = network.length > 0
+  const picks = (featured.length >= 3 ? featured : popular).slice(0, 5)
+  const topics = tags.length > 0 ? tags.map((t) => ({ name: t.name, count: t._count.articleTags })) : heroContent.typewriterTopics.map((name) => ({ name, count: 0 }))
+  const totalMinutes = modules.reduce((s, m) => s + m.minutes, 0)
+  const first = modules[0]
 
   return (
     <>
-      {/* ── Hero + departure board ─────────────────────────────── */}
-      <section className="tr-wrap tr-hero" aria-labelledby="home-title">
-        <div>
-          <div className="tr-status">
-            <span className="dot" aria-hidden="true" />
-            <span className="tr-eyebrow">{allGood ? `Good service on all ${network.length} lines` : 'Lines opening soon'}</span>
-          </div>
-          <h1 id="home-title" className="tr-display">Every route to <em>agentic&nbsp;AI</em>, mapped.</h1>
-          <p className="tr-lede">{heroContent.subheadline}</p>
-          <div className="tr-ctas">
-            {firstLine && (
-              <Link href={`/${firstLine.slug}`} className="tr-btn tr-btn--primary">
-                Board Line 1 <ArrowRight size={17} />
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="p-wrap p-hero" aria-labelledby="home-title">
+        <svg className="p-sticker" viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="58" />
+          <path id="sticker-path" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" fill="none" />
+          <text><textPath href="#sticker-path">{modules.length} modules · {publishedCount} lessons · free ·</textPath></text>
+        </svg>
+        <h1 id="home-title" className="p-display p-mega" aria-label="Agents that act">
+          <span>Agents</span><span>that</span><span>act.</span>
+        </h1>
+        <div className="p-hero__row">
+          <p className="p-lede">{heroContent.subheadline}</p>
+          <div className="p-ctas">
+            {first && (
+              <Link href={`/${first.slug}`} className="p-btn p-btn--fill">
+                Start module 01 <ArrowRight size={18} />
               </Link>
             )}
-            <a href="#network" className="tr-btn">See the network map</a>
-          </div>
-          <div className="tr-stats">
-            <div><b>{network.length}</b><span>Lines</span></div>
-            <div><b>{totalZones}</b><span>Zones</span></div>
-            <div><b>{publishedCount}</b><span>Stops</span></div>
-            <div><b>100%</b><span>Free to ride</span></div>
+            <a href="#fresh" className="p-btn">Fresh reads</a>
           </div>
         </div>
-        {departures.length > 0 && <DepartureBoard departures={departures} />}
+        <div className="p-stats">
+          <div><b>{modules.length}</b><span>Modules</span></div>
+          <div><b>{publishedCount}</b><span>Lessons</span></div>
+          {totalMinutes > 0 && <div><b>{Math.round(totalMinutes / 60)}h</b><span>Of reading</span></div>}
+          <div><b>Free</b><span>Always</span></div>
+        </div>
       </section>
 
-      {/* ── Network map ─────────────────────────────────────────── */}
-      <section id="network" className="tr-wrap tr-sec" aria-labelledby="network-title" style={{ scrollMarginTop: 'calc(var(--nav-h) + 12px)' }}>
-        <div className="tr-sec-head" data-reveal>
-          <h2 id="network-title" className="tr-display">Network map</h2>
-          <p>Each learning path is a line. Start at Line 1 for the foundations, or board wherever your work is today.</p>
-        </div>
-        {network.length > 0 ? (
-          <NetworkMap lines={network} />
-        ) : (
-          <div className="tr-empty">
-            <h3>Lines under construction</h3>
-            <p>The first learning paths are being laid. Check back shortly.</p>
+      {/* ── Topic ticker ─────────────────────────────────────────── */}
+      <div className="p-marquee-clip">
+        <div className="p-marquee">
+          <div className="p-marquee__track">
+            {[0, 1].map((copy) => (
+              <span key={copy} style={{ display: 'flex' }} aria-hidden={copy === 1 ? true : undefined}>
+                {topics.map((t) => (
+                  <Link key={`${copy}-${t.name}`} href={`/search?q=${encodeURIComponent(t.name)}`} tabIndex={copy === 1 ? -1 : undefined}>{t.name}</Link>
+                ))}
+              </span>
+            ))}
           </div>
+        </div>
+      </div>
+
+      {/* ── Fresh reads (stories) ────────────────────────────────── */}
+      {stories.length > 0 && (
+        <section id="fresh" className="p-wrap p-sec" aria-labelledby="fresh-title" style={{ scrollMarginTop: 'calc(var(--top-h) + 10px)' }}>
+          <div className="p-sec-head">
+            <h2 id="fresh-title" className="p-display">Fresh reads</h2>
+            <p>The newest lessons, one swipe at a time. Tap a card to start reading.</p>
+          </div>
+          <StoryStrip stories={stories} />
+        </section>
+      )}
+
+      {/* ── Course modules (stacked cards) ───────────────────────── */}
+      <section className="p-wrap p-sec" aria-labelledby="course-title">
+        <div className="p-sec-head">
+          <h2 id="course-title" className="p-display">The course</h2>
+          <p>Modules in order. Each one builds on the last, so start at 01 if you are new.</p>
+        </div>
+        {modules.length > 0 ? (
+          <div className="p-stack">
+            {modules.map((m, i) => (
+              <Link key={m.id} href={`/${m.slug}`} className="p-mod" style={{ '--c': m.color, '--fg': m.fg, '--i': i } as React.CSSProperties}>
+                <div className="p-mod__row">
+                  <span className="p-num">{String(m.number).padStart(2, '0')}</span>
+                  <span className="p-mod__go" aria-hidden="true"><ArrowRight size={24} /></span>
+                </div>
+                <h3>{m.title}</h3>
+                {m.description && <p>{m.description}</p>}
+                <div className="p-mod__meta">
+                  <span>{plural(m.stops, 'lesson')}</span>
+                  {m.zones.length > 0 && <span>{plural(m.zones.length, 'chapter')}</span>}
+                  {m.minutes > 0 && <span>{formatJourney(m.minutes)}</span>}
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="p-empty"><h3>Modules coming soon</h3><p>The first modules are being written. Check back shortly.</p></div>
         )}
       </section>
 
-      {/* ── Featured stops ──────────────────────────────────────── */}
-      {featured.length > 0 && (
-        <section className="tr-wrap tr-sec" aria-labelledby="featured-title">
-          <div className="tr-sec-head" data-reveal>
-            <h2 id="featured-title" className="tr-display">Express stops</h2>
-            <p>Hand-picked reads that are worth the trip, whichever line you ride.</p>
+      {/* ── Picks (bento) ────────────────────────────────────────── */}
+      {picks.length > 0 && (
+        <section className="p-wrap p-sec" aria-labelledby="picks-title">
+          <div className="p-sec-head">
+            <h2 id="picks-title" className="p-display">{featured.length >= 3 ? 'Editor’s picks' : 'Most read'}</h2>
+            <p>The lessons readers come back to most.</p>
           </div>
-          <div className="tr-cards">
-            {featured.map((a) => {
-              const line = lineOf(a)
+          <div className="p-bento">
+            {picks.map((a, i) => {
+              const m = moduleOf(a)
               return (
-                <StopCard
+                <Tile
                   key={a.id}
+                  variant={i === 0 ? 'big' : 'plain'}
                   slug={a.slug}
                   title={a.title}
                   summary={a.summary}
                   minutes={a.readingTimeMinutes}
-                  views={a.viewCount}
                   imageUrl={a.coverImage?.url}
-                  label={line ? `Line ${line.number} · ${line.title}` : 'Express'}
-                  color={line?.color}
+                  tags={a.articleTags.map((t) => t.tag.name)}
+                  label={m ? `Module ${String(m.number).padStart(2, '0')} · ${m.title}` : 'Featured'}
+                  color={m?.color}
+                  fg={m?.fg}
                 />
               )
             })}
@@ -194,63 +210,57 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Interchanges (tags) ─────────────────────────────────── */}
-      {interchanges.length > 0 && (
-        <section className="tr-wrap tr-sec" aria-labelledby="xchg-title">
-          <div className="tr-sec-head" data-reveal>
-            <h2 id="xchg-title" className="tr-display">Interchanges</h2>
-            <p>Topics that run across several lines. Change here to follow one idea through the whole network.</p>
+      {/* ── Topic cloud ──────────────────────────────────────────── */}
+      {tags.length > 0 && (
+        <section className="p-wrap p-sec" aria-labelledby="topics-title">
+          <div className="p-sec-head">
+            <h2 id="topics-title" className="p-display">Jump to a topic</h2>
           </div>
-          <div className="tr-xchg" data-reveal>
-            {interchanges.map((t) => (
-              <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>
-                {t.lines.length > 0 && (
-                  <span className="tr-dots" aria-hidden="true">
-                    {t.lines.slice(0, 4).map((n) => <i key={n} style={{ background: lineColor(n - 1) }} />)}
+          <div className="p-cloud" data-reveal>
+            {tags.map((t, i) => {
+              const sw = swatch(i)
+              return (
+                <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`} style={{ '--c': sw.color, '--fg': sw.fg } as React.CSSProperties}>
+                  {t.name}<small>{t._count.articleTags}</small>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Slide decks ──────────────────────────────────────────── */}
+      {decks.length > 0 && (
+        <section className="p-wrap p-sec" aria-labelledby="decks-title">
+          <div className="p-sec-head">
+            <h2 id="decks-title" className="p-display">Slide decks</h2>
+            <p>Visual walkthroughs you can flick through in a few minutes. They open in a new tab.</p>
+          </div>
+          <div className="p-decks">
+            {decks.map((d, i) => {
+              const sw = swatch(i + 2)
+              return (
+                <a key={d.file} href={d.href} target="_blank" rel="noopener noreferrer" className="p-deck" style={{ '--c': sw.color, '--fg': sw.fg } as React.CSSProperties}>
+                  <span className="pg" /><span className="pg" />
+                  <span className="pg top">
+                    <span className="p-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Presentation size={16} /> Deck</span>
+                    <span style={{ display: 'grid', gap: 6 }}>
+                      <h3>{d.title}</h3>
+                      {d.description && <p>{d.description}</p>}
+                    </span>
                   </span>
-                )}
-                {t.name}
-                <small>{t.count}</small>
-              </Link>
-            ))}
+                </a>
+              )
+            })}
           </div>
         </section>
       )}
 
-      {/* ── Ticket office (static decks) ────────────────────────── */}
-      {staticFiles.length > 0 && (
-        <section className="tr-wrap tr-sec" aria-labelledby="tickets-title">
-          <div className="tr-sec-head" data-reveal>
-            <h2 id="tickets-title" className="tr-display">Ticket office</h2>
-            <p>Slide decks and visual guides you can open on their own.</p>
-          </div>
-          <div className="tr-tickets">
-            {staticFiles.map((f) => (
-              <a key={f.file} href={f.href} target="_blank" rel="noopener noreferrer" className="tr-ticket" data-reveal>
-                <div className="tr-ticket__main">
-                  <span className="tr-eyebrow">Presentation · opens in a new tab</span>
-                  <h3>{f.title}</h3>
-                  {f.description && <p>{f.description}</p>}
-                </div>
-                <div className="tr-ticket__stub">
-                  <div><Presentation size={22} />Open</div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── Newsletter band ─────────────────────────────────────── */}
-      <section className="tr-news" aria-labelledby="news-title">
-        <div className="tr-wrap tr-news__inner">
-          <div>
-            <span className="tr-eyebrow" style={{ color: 'inherit', opacity: 0.7 }}>Service updates</span>
-            <h2 id="news-title" className="tr-display" style={{ marginTop: 8 }}>New stops, straight to your inbox.</h2>
-            <p style={{ marginTop: 10 }}>{newsletterContent.subheadline}</p>
-          </div>
-          <NewsletterForm />
-        </div>
+      {/* ── Newsletter ───────────────────────────────────────────── */}
+      <section className="p-wrap p-news" aria-labelledby="news-title">
+        <h2 id="news-title" className="p-display">Get the <em>next</em> one.</h2>
+        <p>{newsletterContent.subheadline}</p>
+        <NewsletterForm />
       </section>
     </>
   )

@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss'
 
-// Agentic Transit — Tailwind maps onto the CSS tokens in styles/globals.css,
+// Agentic Pulse — Tailwind maps onto the CSS tokens in styles/globals.css,
 // so utility classes follow light/dark automatically.
 const config: Config = {
   content: [
@@ -15,21 +15,27 @@ const config: Config = {
         xs: '375px',
       },
       colors: {
-        paper: 'var(--paper)',
-        'paper-2': 'var(--paper-2)',
-        card: 'var(--card)',
+        cobalt: 'var(--cobalt)',
+        tomato: 'var(--tomato)',
+        sun: 'var(--sun)',
+        mint: 'var(--mint)',
+        violet: 'var(--violet)',
+        pink: 'var(--pink)',
+        paper: 'var(--bg)',
+        'paper-2': 'var(--bg-2)',
+        card: 'var(--surface)',
         ink: 'var(--ink)',
         'ink-2': 'var(--ink-2)',
         muted: 'var(--muted)',
-        rule: 'var(--rule)',
-        notice: 'var(--notice)',
+        rule: 'var(--line)',
+        notice: 'var(--sun)',
         primary: 'var(--ink)',
         secondary: 'var(--ink-2)',
-        accent: 'var(--l1)',
-        gold: 'var(--notice)',
-        surface: 'var(--card)',
-        elevated: 'var(--paper-2)',
-        border: 'var(--rule)',
+        accent: 'var(--tomato)',
+        gold: 'var(--sun)',
+        surface: 'var(--surface)',
+        elevated: 'var(--bg-2)',
+        border: 'var(--line)',
         line: {
           1: 'var(--l1)',
           2: 'var(--l2)',

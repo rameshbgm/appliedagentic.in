@@ -21,20 +21,20 @@ export default function TermsPage() {
   const lastUpdated = 'March 1, 2025'
 
   return (
-    <div style={{ '--c': 'var(--l2)' } as React.CSSProperties}>
-      <header className="tr-band tr-band--soft">
-        <div className="tr-wrap tr-band__inner">
-          <nav className="tr-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Network</Link><span aria-hidden="true">›</span><span>Legal</span>
+    <div style={{ '--c': 'var(--mint)', '--fg': 'var(--on-light)' } as React.CSSProperties}>
+      <header className="p-cover p-cover--soft">
+        <div className="p-wrap p-cover__inner">
+          <nav className="p-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Home</Link><span aria-hidden="true">/</span><span>Legal</span>
           </nav>
-          <h1 className="tr-display">Terms of Service</h1>
-          <div className="tr-band__stats"><span>Last updated {lastUpdated}</span></div>
+          <h1 className="p-display">Terms of Service</h1>
+          <div className="p-cover__stats"><span>Last updated {lastUpdated}</span></div>
         </div>
       </header>
 
-      <div className="tr-wrap tr-legal">
+      <div className="p-wrap p-legal">
         <div className="notice" role="note">
-          <p className="tr-eyebrow">AI-Generated Content Disclosure</p>
+          <p className="p-label">AI-Generated Content Disclosure</p>
           <p>
             A significant portion of the articles, images, and other content on Applied Agentic AI is generated
               or assisted by artificial intelligence (AI) tools including large language models (LLMs) and
@@ -293,9 +293,9 @@ export default function TermsPage() {
         </section>
 
         {/* Footer nav */}
-        <div className="tr-ctas" style={{ paddingTop: 24, borderTop: '1px solid var(--rule)' }}>
-          <Link href="/privacy" className="tr-btn tr-btn--sm">Privacy Policy</Link>
-          <Link href="/" className="tr-btn tr-btn--primary tr-btn--sm">← Back to Home</Link>
+        <div className="p-ctas" style={{ paddingTop: 24, borderTop: '2px solid var(--line)' }}>
+          <Link href="/privacy" className="p-btn p-btn--sm">Privacy Policy</Link>
+          <Link href="/" className="p-btn p-btn--fill p-btn--sm">← Back to Home</Link>
         </div>
       </div>
     </div>

@@ -1,16 +1,30 @@
-// lib/transit.ts
-// Agentic Transit data helpers: every visible NavMenu is a "line" with a colour
-// picked by its position, every NavSubMenu is a "zone", every article a "stop".
+import type React from 'react'
+// lib/catalog.ts
+// Agentic Pulse data helpers: every visible NavMenu is a colour-blocked module,
+// every NavSubMenu a chapter, every article a lesson. Colours come from position.
 import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-export const LINE_COLORS = 8
+/** Block colour + readable text colour pairs, cycled by module position. */
+export const PALETTE = [
+  { color: 'var(--cobalt)', fg: 'var(--on-dark)' },
+  { color: 'var(--tomato)', fg: 'var(--on-dark)' },
+  { color: 'var(--sun)', fg: 'var(--on-light)' },
+  { color: 'var(--mint)', fg: 'var(--on-light)' },
+  { color: 'var(--violet)', fg: 'var(--on-dark)' },
+  { color: 'var(--pink)', fg: 'var(--on-light)' },
+] as const
 
-/** CSS colour token for the line at a zero-based position. */
-export function lineColor(index: number): string {
-  const i = ((index % LINE_COLORS) + LINE_COLORS) % LINE_COLORS
-  return `var(--l${i + 1})`
+export function swatch(index: number) {
+  const i = ((index % PALETTE.length) + PALETTE.length) % PALETTE.length
+  return PALETTE[i]
+}
+
+/** Inline style that sets --c (block colour) and --fg (text on it). */
+export function swatchStyle(index: number): React.CSSProperties {
+  const s = swatch(index)
+  return { '--c': s.color, '--fg': s.fg } as React.CSSProperties
 }
 
 export interface NetworkZone {
@@ -27,9 +41,10 @@ export interface NetworkLine {
   title: string
   slug: string
   description: string | null
-  /** 1-based line number shown in roundels */
+  /** 1-based module number */
   number: number
   color: string
+  fg: string
   zones: NetworkZone[]
   directStops: number
   stops: number
@@ -80,7 +95,8 @@ export const getNetwork = cache(async (): Promise<NetworkLine[]> => {
         slug: m.slug,
         description: m.description,
         number: index + 1,
-        color: lineColor(index),
+        color: swatch(index).color,
+        fg: swatch(index).fg,
         zones,
         directStops: m.menuArticles.length,
         stops: zones.reduce((sum, z) => sum + z.stops, 0) + m.menuArticles.length,
@@ -88,7 +104,7 @@ export const getNetwork = cache(async (): Promise<NetworkLine[]> => {
       }
     })
   } catch (err) {
-    logger.error('[transit] DB error loading network', err)
+    logger.error('[catalog] DB error loading modules', err)
     return []
   }
 })
@@ -105,7 +121,7 @@ export async function getLineBySlug(slug: string): Promise<NetworkLine | null> {
   return network.find((l) => l.slug === slug) ?? null
 }
 
-/** "1 h 12 min" style journey time. */
+/** "1 h 12 min" style total reading time. */
 export function formatJourney(minutes: number): string {
   if (!minutes || minutes < 1) return '—'
   if (minutes < 60) return `${minutes} min`
@@ -125,6 +141,7 @@ export interface ShellLine {
   slug: string
   number: number
   color: string
+  fg: string
   zones: { id: number; title: string; slug: string; stops: number }[]
 }
 
@@ -135,6 +152,7 @@ export function toShellLines(network: NetworkLine[]): ShellLine[] {
     slug: l.slug,
     number: l.number,
     color: l.color,
+    fg: l.fg,
     zones: l.zones.map((z) => ({ id: z.id, title: z.title, slug: z.slug, stops: z.stops })),
   }))
 }

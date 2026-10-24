@@ -1,4 +1,4 @@
-// app/(public)/articles/[id]/page.tsx — the reader ("the ride")
+// app/(public)/articles/[id]/page.tsx — the reader
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -7,16 +7,16 @@ import { ArrowLeft, ArrowRight, Calendar, Clock, Eye } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { formatDate } from '@/lib/utils'
-import { getNetwork, resolveLine, articleLineSelect, menuIdsOf } from '@/lib/transit'
+import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, swatch } from '@/lib/catalog'
 import ArticleContent from '@/components/public/ArticleContent'
 import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
 import { ArticleAudioProvider } from '@/components/public/ArticleAudioContext'
-import SectionBlock from '@/components/transit/SectionBlock'
-import ListenButton from '@/components/transit/ListenButton'
-import ShareRow from '@/components/transit/ShareRow'
-import ReaderTools from '@/components/transit/ReaderTools'
-import StopCard from '@/components/transit/StopCard'
-import { RideProvider, RideBar, RideSideMap, RideFab } from '@/components/transit/Ride'
+import SectionBlock from '@/components/pulse/SectionBlock'
+import ListenButton from '@/components/pulse/ListenButton'
+import ShareRow from '@/components/pulse/ShareRow'
+import ReaderTools from '@/components/pulse/ReaderTools'
+import Tile from '@/components/pulse/Tile'
+import { ReadingProvider, ReadingBar, SectionCards, ReadingSide, ReadingPill, FinishLine } from '@/components/pulse/Reading'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -145,7 +145,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   ])
   const zone = nav && line ? line.zones.find((z) => z.id === nav.subMenu.id) ?? null : null
   const zoneIndex = zone && line ? line.zones.indexOf(zone) : -1
-  const color = line?.color ?? 'var(--l2)'
+  const color = line?.color ?? 'var(--cobalt)'
   const tags = article.articleTags.map((t) => t.tag)
 
   // Neighbouring stops: the zone's running order, else the topic's
@@ -199,143 +199,142 @@ export default async function ArticleDetailPage({ params }: Props) {
       ? [{ id: 0, title: article.title, audioUrl: article.audioUrl }]
       : []
   const minutes = article.readingTimeMinutes ?? 0
-  const otherLines = network.filter((l) => l.id !== line?.id).slice(0, 4)
   const tools = <ReaderTools content={fullContent} title={article.title} />
+  const modNum = line ? String(line.number).padStart(2, '0') : null
+  const fg = line?.fg ?? 'var(--on-dark)'
+  const sectionCards = sections
+    .map((sec, i) => ({ sec, i }))
+    .filter(({ sec }) => sec.title?.trim())
+    .map(({ sec, i }) => ({ id: `section-${sec.id}`, title: sec.title, color: swatch(i + 1).color, fg: swatch(i + 1).fg }))
 
   return (
     <ArticleAudioProvider sections={audioSections}>
-      <RideProvider slug={article.slug} title={article.title} minutes={minutes}>
-        <div style={{ '--c': color } as React.CSSProperties}>
-          {isDraft && <div className="tr-draft">Draft preview · this article is not published</div>}
-          <RideBar />
+      <ReadingProvider slug={article.slug} title={article.title}>
+        <div style={{ '--c': color, '--fg': fg } as React.CSSProperties}>
+          <ReadingBar />
 
-          <div className="tr-wrap">
-            <header className="tr-art-head">
-              <nav className="tr-crumbs" aria-label="Breadcrumb">
-                <Link href="/">Network</Link>
-                {line && (<><span aria-hidden="true">›</span><Link href={`/${line.slug}`}>Line {line.number}</Link></>)}
-                {line && zone && (<><span aria-hidden="true">›</span><Link href={`/${line.slug}/${zone.slug}`}>{zone.title}</Link></>)}
+          <header className="p-art-cover">
+            <div className="p-wrap p-art-cover__inner">
+              {isDraft && <div className="p-draft">Draft preview · this article is not published</div>}
+              <nav className="p-crumbs" aria-label="Breadcrumb">
+                <Link href="/">Home</Link>
+                {line && (<><span aria-hidden="true">/</span><Link href={`/${line.slug}`}>Module {modNum}</Link></>)}
+                {line && zone && (<><span aria-hidden="true">/</span><Link href={`/${line.slug}/${zone.slug}`}>{zone.title}</Link></>)}
               </nav>
-
               {line && (
-                <span className="tr-line-tag" style={{ color }}>
-                  <span className="tr-roundel">{line.number}</span>
-                  <span>
-                    {line.title}
-                    {zone ? ` · Zone ${zoneIndex + 1}` : ''}
-                    {pos >= 0 && order.length > 1 ? ` · Stop ${pos + 1} of ${order.length}` : ''}
-                  </span>
+                <span className="p-label">
+                  {line.title}{pos >= 0 && order.length > 1 ? ` · Lesson ${pos + 1} of ${order.length}` : ''}
                 </span>
               )}
-
-              <h1 className="tr-display">{article.title}</h1>
-              {article.summary && <p className="standfirst">{article.summary}</p>}
-
-              <div className="tr-art-meta">
-                {minutes > 0 && <span><Clock size={14} /> {minutes} min ride</span>}
+              <h1 className="p-display">{article.title}</h1>
+              {article.summary && <p className="stand">{article.summary}</p>}
+              <div className="p-cover__stats">
+                {minutes > 0 && <span><Clock size={14} /> {minutes} min read</span>}
                 {article.publishedAt && <span><Calendar size={14} /> {formatDate(article.publishedAt)}</span>}
-                <span><Eye size={14} /> {article.viewCount.toLocaleString()} riders</span>
+                <span><Eye size={14} /> {article.viewCount.toLocaleString()} reads</span>
               </div>
-
               {tags.length > 0 && (
-                <div className="tr-art-tags">
-                  {tags.map((t) => <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>{t.name}</Link>)}
+                <div className="p-tagrow">
+                  {tags.map((t) => <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>#{t.name}</Link>)}
                 </div>
               )}
-
-              <div className="tr-art-actions">
+              <div className="p-art-actions">
                 <ListenButton />
                 <ShareRow url={articleUrl} title={article.title} />
               </div>
-            </header>
+            </div>
+          </header>
 
+          <div className="p-wrap">
             {article.coverImage && (
-              <div className="tr-cover" style={{ maxWidth: 1000 }}>
+              <div className="p-art-image">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={article.coverImage.url} alt="" fetchPriority="high" />
               </div>
             )}
 
-            <div className="tr-read-grid">
-              <article className="tr-read-main" data-ride-root>
+            <SectionCards sections={sectionCards} />
+
+            <div className="p-read-grid">
+              <article className="p-read-main" data-read-root>
                 {sections.length > 0 ? (
                   sections.map((section, idx) => (
                     <SectionBlock key={section.id} section={section} index={idx} total={sections.length} />
                   ))
                 ) : article.content ? (
-                  <ArticleContent content={article.content} />
+                  <div className="p-first"><ArticleContent content={article.content} /></div>
                 ) : (
-                  <div className="tr-empty"><h2>Stop under construction</h2><p>This article has no content yet.</p></div>
+                  <div className="p-empty"><h2>Coming soon</h2><p>This lesson has no content yet.</p></div>
                 )}
+
+                <FinishLine>
+                  <h2 className="p-display">Lesson complete.</h2>
+                  <p>{next ? 'Nice work. The next lesson is ready when you are.' : 'Nice work. You have reached the end of this chapter.'}</p>
+                  {next && (
+                    <Link href={`/articles/${next.slug}`} className="p-btn" style={{ color: 'var(--bg)', borderColor: 'var(--bg)' }}>
+                      Next lesson <ArrowRight size={18} />
+                    </Link>
+                  )}
+                </FinishLine>
               </article>
 
-              <aside className="tr-read-side" aria-label="Reading tools and contents">
-                <div className="tr-side-card">
-                  <span className="tr-eyebrow">Reader tools</span>
+              <aside className="p-read-side" aria-label="Reading progress and tools">
+                <ReadingSide minutes={minutes} />
+                <div className="p-side-card">
+                  <span className="p-label">Reading tools</span>
                   {tools}
                 </div>
-                <RideSideMap />
               </aside>
             </div>
 
             {(prev || next) && (
-              <nav className="tr-nextprev" aria-label="Previous and next stop" style={{ maxWidth: 720 }}>
+              <nav className="p-nextprev" aria-label="Previous and next lesson" style={{ maxWidth: 720 }}>
                 {prev ? (
-                  <Link href={`/articles/${prev.slug}`} className="tr-np tr-np--prev">
-                    <span className="arrow"><ArrowLeft size={20} /></span>
-                    <div><span className="tr-eyebrow">Previous stop</span><h3>{prev.title}</h3></div>
+                  <Link href={`/articles/${prev.slug}`} className="p-next p-next--soft p-next--prev">
+                    <span className="p-next__go" aria-hidden="true"><ArrowLeft size={22} /></span>
+                    <div><span className="p-label">Previous lesson</span><h3>{prev.title}</h3></div>
                   </Link>
-                ) : <span className="tr-desktop-only" />}
+                ) : <span className="p-desktop-only" />}
                 {next && (
-                  <Link href={`/articles/${next.slug}`} className="tr-np tr-np--next">
-                    <div><span className="tr-eyebrow">Next stop</span><h3>{next.title}</h3></div>
-                    <span className="arrow"><ArrowRight size={20} /></span>
+                  <Link href={`/articles/${next.slug}`} className="p-next">
+                    <div><span className="p-label">Up next</span><h3>{next.title}</h3></div>
+                    <span className="p-next__go" aria-hidden="true"><ArrowRight size={22} /></span>
                   </Link>
                 )}
               </nav>
             )}
 
             {relatedCards.length > 0 && (
-              <section className="tr-sec" aria-labelledby="related-title">
-                <div className="tr-sec-head">
-                  <h2 id="related-title" className="tr-display">Also on this route</h2>
+              <section className="p-sec" aria-labelledby="related-title">
+                <div className="p-sec-head">
+                  <h2 id="related-title" className="p-display">Keep going</h2>
+                  <p>More lessons on the same ideas.</p>
                 </div>
-                <div className="tr-cards">
+                <div className="p-bento">
                   {relatedCards.map((r) => {
-                    const l = resolveLine(network, menuIdsOf(r))
+                    const m = resolveLine(network, menuIdsOf(r))
                     return (
-                      <StopCard
+                      <Tile
                         key={r.id}
                         slug={r.slug}
                         title={r.title}
                         summary={r.summary}
                         minutes={r.readingTimeMinutes}
-                        views={r.viewCount}
-                        label={l ? `Line ${l.number} · ${l.title}` : null}
-                        color={l?.color}
+                        label={m ? `Module ${String(m.number).padStart(2, '0')}` : null}
+                        color={m?.color}
+                        fg={m?.fg}
                       />
                     )
                   })}
                 </div>
               </section>
             )}
-
-            {otherLines.length > 0 && (
-              <div className="tr-change" style={{ padding: '28px 0 40px' }}>
-                Change here for
-                {otherLines.map((l) => (
-                  <Link key={l.id} href={`/${l.slug}`} style={{ '--c': l.color } as React.CSSProperties}>
-                    <span className="tr-roundel" style={{ '--s': '24px' } as React.CSSProperties}>{l.number}</span>{l.title}
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
-          <RideFab tools={tools} />
+          <ReadingPill tools={tools} listen={<ListenButton variant="pill" />} />
           <ArticleAudioPlayer />
         </div>
-      </RideProvider>
+      </ReadingProvider>
     </ArticleAudioProvider>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 // components/public/ArticleAudioPlayer.tsx
-// Narration dock — floats above the mobile dock, reads all state from ArticleAudioContext.
+// Floating narration player — sits above the pill nav, reads all state from ArticleAudioContext.
 import { useRef, useState } from 'react'
 import { Loader2, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react'
 import { useArticleAudio } from './ArticleAudioContext'
@@ -46,30 +46,33 @@ export default function ArticleAudioPlayer() {
   }
 
   return (
-    <div className="tr-audio" role="region" aria-label="Audio narration">
-      <div className="tr-audio__row">
-        <button type="button" className="tr-audio__play" onClick={togglePlayPause} disabled={isLoading} aria-label={isPlaying ? 'Pause' : 'Play'}>
+    <div className="p-audio" role="region" aria-label="Audio narration">
+      <div className="p-audio__row">
+        <button type="button" className="p-audio__play" onClick={togglePlayPause} disabled={isLoading} aria-label={isPlaying ? 'Pause' : 'Play'}>
           {isLoading ? <Loader2 size={18} className="animate-spin" /> : isPlaying ? <Pause size={18} /> : <Play size={18} />}
         </button>
-        <div className="tr-audio__title">
-          <small>{multi && pos >= 0 ? `Stop ${pos + 1} of ${audioIdx.length}` : 'Now playing'}</small>
+        <div className="p-audio__title">
+          <small>
+            {multi && pos >= 0 ? `Section ${pos + 1} of ${audioIdx.length}` : 'Now playing'}
+            {isPlaying && <span className="p-audio__eq" aria-hidden="true"><i /><i /><i /></span>}
+          </small>
           <b title={title}>{title}</b>
         </div>
         {multi && (
-          <button type="button" className="tr-audio__btn" onClick={() => goToSection(-1)} disabled={pos <= 0} aria-label="Previous section"><SkipBack size={16} /></button>
+          <button type="button" className="p-audio__btn" onClick={() => goToSection(-1)} disabled={pos <= 0} aria-label="Previous section"><SkipBack size={16} /></button>
         )}
-        <button type="button" className="tr-audio__btn" onClick={() => skip(-15)} disabled={!duration} aria-label="Back 15 seconds"><RotateCcw size={16} /></button>
-        <button type="button" className="tr-audio__btn" onClick={() => skip(15)} disabled={!duration} aria-label="Forward 15 seconds"><RotateCw size={16} /></button>
+        <button type="button" className="p-audio__btn skip" onClick={() => skip(-15)} disabled={!duration} aria-label="Back 15 seconds"><RotateCcw size={16} /></button>
+        <button type="button" className="p-audio__btn skip" onClick={() => skip(15)} disabled={!duration} aria-label="Forward 15 seconds"><RotateCw size={16} /></button>
         {multi && (
-          <button type="button" className="tr-audio__btn" onClick={() => goToSection(1)} disabled={pos < 0 || pos >= audioIdx.length - 1} aria-label="Next section"><SkipForward size={16} /></button>
+          <button type="button" className="p-audio__btn" onClick={() => goToSection(1)} disabled={pos < 0 || pos >= audioIdx.length - 1} aria-label="Next section"><SkipForward size={16} /></button>
         )}
-        <button type="button" className="tr-audio__btn" onClick={close} aria-label="Close player"><X size={16} /></button>
+        <button type="button" className="p-audio__btn" onClick={close} aria-label="Close player"><X size={16} /></button>
       </div>
-      <div className="tr-audio__scrub">
+      <div className="p-audio__scrub">
         <span>{fmt(currentTime)}</span>
         <div
           ref={barRef}
-          className="tr-audio__bar"
+          className="p-audio__bar"
           role="slider"
           tabIndex={0}
           aria-label="Seek"
@@ -86,7 +89,7 @@ export default function ArticleAudioPlayer() {
           </div>
         </div>
         <span>{duration ? fmt(duration) : '--:--'}</span>
-        <div className="tr-audio__speed">
+        <div className="p-audio__speed">
           <button type="button" onClick={() => setShowSpeed((v) => !v)} aria-expanded={showSpeed} aria-label="Playback speed">{speed}×</button>
           {showSpeed && (
             <ul>
@@ -98,7 +101,7 @@ export default function ArticleAudioPlayer() {
             </ul>
           )}
         </div>
-        <button type="button" className="tr-audio__btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+        <button type="button" className="p-audio__btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       </div>

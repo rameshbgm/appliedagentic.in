@@ -4,10 +4,8 @@ import { signIn } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { Eye, EyeOff, Loader2, LogIn, Zap } from 'lucide-react'
 import { toast } from 'sonner'
-import BrandMark from '@/components/transit/BrandMark'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 
-const LINES = ['var(--l1)', 'var(--l2)', 'var(--l3)', 'var(--l4)', 'var(--l5)']
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -48,66 +46,56 @@ export default function LoginPage() {
   return (
     <>
     <ToastNotifier />
-    <div className="tr-admin min-h-screen grid lg:grid-cols-2" data-theme="light">
-
-      {/* Brand panel — departure-board style, desktop only */}
-      <section className="hidden lg:flex flex-col justify-between p-14 xl:p-20" style={{ background: 'var(--board)', color: '#E6EAF0' }} aria-hidden="true">
-        <div className="flex items-center gap-3">
-          <BrandMark size={40} />
-          <span className="tr-mono" style={{ fontSize: '.72rem', letterSpacing: '.12em', color: 'var(--board-dim)' }}>CONTROL ROOM</span>
-        </div>
-        <div>
-          <p className="tr-display" style={{ fontSize: 'clamp(3.4rem, 6vw, 6rem)', color: '#fff' }}>
-            Run the<br /><span style={{ color: 'var(--board-ink)' }}>network.</span>
-          </p>
-          <p style={{ color: 'var(--board-dim)', maxWidth: 420, marginTop: 18, lineHeight: 1.6 }}>
-            Publish stops, lay new lines and keep every route to agentic AI on time.
-          </p>
-          <div style={{ display: 'grid', gap: 10, marginTop: 36, maxWidth: 420 }}>
-            {LINES.map((c, i) => (
-              <span key={c} style={{ height: 8, borderRadius: 4, background: c, width: `${100 - i * 14}%`, transformOrigin: 'left', animation: `tr-draw .8s ${i * 0.1}s both` }} />
-            ))}
+    <div className="p-admin min-h-screen grid lg:grid-cols-2" data-theme="light">
+      {/* Brand panel — colour blocks, desktop only */}
+      <section className="hidden lg:grid p-6 gap-4" style={{ gridTemplateRows: 'repeat(3, 1fr)' }} aria-hidden="true">
+        {[
+          { word: 'Write.', c: 'var(--cobalt)', fg: 'var(--on-dark)' },
+          { word: 'Publish.', c: 'var(--sun)', fg: 'var(--on-light)' },
+          { word: 'Teach.', c: 'var(--tomato)', fg: 'var(--on-dark)' },
+        ].map((b, i) => (
+          <div key={b.word} style={{ background: b.c, color: b.fg, borderRadius: 32, padding: '28px 34px', display: 'flex', alignItems: 'flex-end', animation: `p-rise .7s var(--ease-out) ${i * 0.12}s both` }}>
+            <span className="p-display" style={{ fontSize: 'clamp(3.4rem, 7vw, 6.4rem)', animation: `p-stretch 1.3s cubic-bezier(.7,0,.2,1) ${0.2 + i * 0.12}s both` }}>{b.word}</span>
           </div>
-        </div>
-        <p className="tr-mono" style={{ fontSize: '.7rem', color: 'var(--board-dim)' }}>Applied Agentic AI © {new Date().getFullYear()}</p>
+        ))}
       </section>
 
       {/* Sign-in form */}
       <section className="flex items-center justify-center" style={{ padding: 'max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px))' }}>
         <div className="w-full" style={{ maxWidth: 400 }}>
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <BrandMark size={36} />
-            <span className="tr-display" style={{ fontSize: '1.5rem' }}>Applied Agentic</span>
+          <div className="flex items-center gap-3 mb-10">
+            <span className="p-mark__dot" aria-hidden="true" />
+            <span className="p-display" style={{ fontSize: '1.4rem' }}>Applied Agentic</span>
           </div>
 
-          <span className="tr-eyebrow">Admin access</span>
-          <h1 className="tr-display" style={{ fontSize: 'clamp(2.4rem, 10vw, 3.4rem)', margin: '6px 0 8px' }}>Sign in</h1>
+          <span className="p-label" style={{ color: 'var(--tomato)' }}>Admin access</span>
+          <h1 className="p-display" style={{ fontSize: 'clamp(3rem, 13vw, 4.4rem)', margin: '6px 0 8px' }}>Sign in</h1>
           <p style={{ color: 'var(--ink-2)', marginBottom: 24 }}>Use your admin email and password.</p>
 
-          <form onSubmit={handleSubmit} className="grid gap-4" noValidate={false}>
+          <form onSubmit={handleSubmit} className="grid gap-4">
             {/* Rendered client-side only so password-manager extensions can't cause hydration mismatches */}
             {mounted && (
               <>
                 <div className="grid gap-1.5">
-                  <label htmlFor="login-email" className="text-sm font-semibold">Email</label>
-                  <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@appliedagentic.com" required autoFocus autoComplete="username" className="input" style={{ minHeight: 48 }} />
+                  <label htmlFor="login-email" className="text-sm font-bold">Email</label>
+                  <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@appliedagentic.com" required autoFocus autoComplete="username" className="input" style={{ minHeight: 52, borderRadius: 999, paddingInline: 20 }} />
                 </div>
                 <div className="grid gap-1.5">
-                  <label htmlFor="login-password" className="text-sm font-semibold">Password</label>
+                  <label htmlFor="login-password" className="text-sm font-bold">Password</label>
                   <div className="relative">
-                    <input id="login-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" required autoComplete="current-password" className="input" style={{ minHeight: 48, paddingRight: 48 }} />
-                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-1 top-1/2 -translate-y-1/2 tr-icon-btn" style={{ width: 40, height: 40, border: 0, background: 'transparent' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                    <input id="login-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" required autoComplete="current-password" className="input" style={{ minHeight: 52, borderRadius: 999, paddingInline: '20px 54px' }} />
+                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 p-round p-round--sm" style={{ border: 0, background: 'transparent' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                       {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                     </button>
                   </div>
                 </div>
                 {error && (
-                  <p role="alert" style={{ margin: 0, padding: '10px 14px', borderRadius: 12, background: 'color-mix(in srgb, var(--l1) 10%, var(--card))', color: 'var(--danger)', fontSize: '.9rem', fontWeight: 600 }}>
+                  <p role="alert" style={{ margin: 0, padding: '12px 18px', borderRadius: 18, background: 'color-mix(in srgb, var(--tomato) 12%, var(--surface))', color: 'var(--danger)', fontSize: '.92rem', fontWeight: 700, animation: 'p-pop .3s var(--ease-spring)' }}>
                     {error}
                   </p>
                 )}
-                <button type="submit" disabled={loading} className="tr-btn tr-btn--primary tr-btn--block" style={{ minHeight: 50 }}>
-                  {loading ? <Loader2 size={17} className="animate-spin" /> : <LogIn size={17} />}
+                <button type="submit" disabled={loading} className="p-btn p-btn--fill p-btn--block" style={{ minHeight: 54 }}>
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
               </>
@@ -117,11 +105,11 @@ export default function LoginPage() {
           {/* Quick Login — shown only when NEXT_PUBLIC_QUICK_LOGIN=true in env */}
           {process.env.NEXT_PUBLIC_QUICK_LOGIN === 'true' && (
             <div className="grid gap-2 mt-5">
-              <button type="button" onClick={handleQuickLogin} disabled={loading} className="tr-btn tr-btn--ghost tr-btn--block">
+              <button type="button" onClick={handleQuickLogin} disabled={loading} className="p-btn p-btn--soft p-btn--block">
                 {loading ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
                 Quick sign-in as admin
               </button>
-              <p className="tr-mono text-center" style={{ fontSize: '.72rem', color: 'var(--muted)' }}>admin@appliedagentic.com · Admin@2026!</p>
+              <p className="text-center" style={{ fontSize: '.78rem', color: 'var(--muted)' }}>admin@appliedagentic.com · Admin@2026!</p>
             </div>
           )}
         </div>

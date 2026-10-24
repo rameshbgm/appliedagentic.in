@@ -1,12 +1,12 @@
-// app/(public)/[menuSlug]/page.tsx — a line: its zones (sub-menus) and stops (articles)
+// app/(public)/[menuSlug]/page.tsx — a module: its chapters (sub-menus) and lessons
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, formatJourney, plural } from '@/lib/transit'
-import StopList, { type Stop } from '@/components/transit/StopList'
+import { getNetwork, formatJourney, plural } from '@/lib/catalog'
+import LessonList, { type Lesson } from '@/components/pulse/LessonList'
 
 interface Props {
   params: Promise<{ menuSlug: string }>
@@ -17,10 +17,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { menuSlug } = await params
-    const menu = await prisma.navMenu.findUnique({
-      where: { slug: menuSlug },
-      select: { title: true, description: true },
-    })
+    const menu = await prisma.navMenu.findUnique({ where: { slug: menuSlug }, select: { title: true, description: true } })
     if (!menu) return {}
     return { title: menu.title, description: menu.description ?? undefined }
   } catch (err) {
@@ -29,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-const stopSelect = {
+const lessonSelect = {
   id: true,
   title: true,
   slug: true,
@@ -56,14 +53,11 @@ export default async function MenuPage({ params }: Props) {
           where: { isVisible: true },
           orderBy: { order: 'asc' },
           select: {
-            id: true,
-            title: true,
-            slug: true,
-            description: true,
-            articles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: stopSelect } } },
+            id: true, title: true, slug: true, description: true,
+            articles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: lessonSelect } } },
           },
         },
-        menuArticles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: stopSelect } } },
+        menuArticles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: lessonSelect } } },
       },
     })
   } catch (err) {
@@ -72,113 +66,104 @@ export default async function MenuPage({ params }: Props) {
   }
   if (!menu) notFound()
 
-  const network = await getNetwork()
-  const line = network.find((l) => l.id === menu.id)
-  const color = line?.color ?? 'var(--l2)'
-  const number = line?.number ?? 1
+  const modules = await getNetwork()
+  const idx = modules.findIndex((m) => m.id === menu.id)
+  const mod = modules[idx]
+  const next = idx >= 0 ? modules[idx + 1] : undefined
+  const style = { '--c': mod?.color ?? 'var(--cobalt)', '--fg': mod?.fg ?? 'var(--on-dark)' } as React.CSSProperties
 
-  const toStop = (a: typeof menu.menuArticles[number]['article']): Stop => ({
-    id: a.id,
-    slug: a.slug,
-    title: a.title,
-    summary: a.summary,
-    minutes: a.readingTimeMinutes,
-    imageUrl: a.coverImage?.url,
-    tags: a.articleTags.map((t) => t.tag.name),
+  const toLesson = (a: typeof menu.menuArticles[number]['article']): Lesson => ({
+    id: a.id, slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes,
+    imageUrl: a.coverImage?.url, tags: a.articleTags.map((t) => t.tag.name),
   })
-
-  const zones = menu.subMenus.map((z) => ({ ...z, stops: z.articles.map((x) => toStop(x.article)) }))
-  const directStops = menu.menuArticles.map((x) => toStop(x.article))
-  const totalStops = zones.reduce((s, z) => s + z.stops.length, 0) + directStops.length
-  const totalMinutes = [...zones.flatMap((z) => z.stops), ...directStops].reduce((s, a) => s + (a.minutes ?? 0), 0)
-  const otherLines = network.filter((l) => l.id !== menu.id)
-  const lineIndex = network.findIndex((l) => l.id === menu.id)
-  const nextLine = lineIndex >= 0 ? network[lineIndex + 1] : undefined
+  const chapters = menu.subMenus.map((z) => ({ ...z, lessons: z.articles.map((x) => toLesson(x.article)) }))
+  const extra = menu.menuArticles.map((x) => toLesson(x.article))
+  const all = [...chapters.flatMap((c) => c.lessons), ...extra]
+  const minutes = all.reduce((s, l) => s + (l.minutes ?? 0), 0)
+  let counter = 1
 
   return (
-    <div style={{ '--c': color } as React.CSSProperties}>
-      <header className="tr-band">
-        <span className="tr-band__ghost" aria-hidden="true">{number}</span>
-        <div className="tr-wrap tr-band__inner">
-          <nav className="tr-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Network</Link><span aria-hidden="true">›</span><span>Line {number}</span>
+    <div style={style}>
+      <header className="p-cover">
+        <span className="p-cover__ghost" aria-hidden="true">{String(mod?.number ?? 1).padStart(2, '0')}</span>
+        <div className="p-wrap p-cover__inner">
+          <nav className="p-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Home</Link><span aria-hidden="true">/</span><span>Module {String(mod?.number ?? 1).padStart(2, '0')}</span>
           </nav>
-          <h1 className="tr-display">{menu.title}</h1>
+          <h1 className="p-display">{menu.title}</h1>
           {menu.description && <p>{menu.description}</p>}
-          <div className="tr-band__stats">
-            <span>{plural(totalStops, 'stop')}</span>
-            {zones.length > 0 && <span>{plural(zones.length, 'zone')}</span>}
-            {totalMinutes > 0 && <span>{formatJourney(totalMinutes)} ride</span>}
+          <div className="p-cover__stats">
+            <span>{plural(all.length, 'lesson')}</span>
+            {chapters.length > 0 && <span>{plural(chapters.length, 'chapter')}</span>}
+            {minutes > 0 && <span>{formatJourney(minutes)}</span>}
           </div>
+          {all[0] && (
+            <div className="p-ctas">
+              <Link href={`/articles/${all[0].slug}`} className="p-btn" style={{ borderColor: 'var(--fg)', color: 'var(--fg)', '--sweep': 'var(--fg)', '--sweep-fg': 'var(--c)' } as React.CSSProperties}>
+                Start lesson 01 <ArrowRight size={18} />
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="tr-wrap" style={{ paddingBottom: 48 }}>
-        {zones.length > 1 && (
-          <nav className="tr-zonebar" aria-label="Zones on this line">
-            {zones.map((z, i) => (
-              <a key={z.id} href={`#zone-${z.slug}`} className="tr-chip">
-                <span className="tr-mono" style={{ fontSize: '.72rem', color: 'var(--muted)' }}>Z{i + 1}</span>{z.title}
+      <div className="p-wrap" style={{ paddingBottom: 40 }}>
+        {chapters.length > 1 && (
+          <nav className="p-chips" aria-label="Chapters">
+            {chapters.map((c, i) => (
+              <a key={c.id} href={`#chapter-${c.slug}`} className="p-chip">
+                <span style={{ opacity: .55 }}>{String(i + 1).padStart(2, '0')}</span>{c.title}
               </a>
             ))}
           </nav>
         )}
 
-        {zones.map((z, i) => (
-          <section key={z.id} id={`zone-${z.slug}`} className="tr-zone" aria-labelledby={`zone-title-${z.id}`}>
-            <div className="tr-zone__head">
-              <span className="z">ZONE {i + 1}</span>
-              <h2 id={`zone-title-${z.id}`} className="tr-display">{z.title}</h2>
-              <Link href={`/${menu.slug}/${z.slug}`} className="tr-link">Zone page <ArrowRight size={14} /></Link>
-            </div>
-            {z.description && <p>{z.description}</p>}
-            {z.stops.length > 0 ? (
-              <StopList stops={z.stops} showThumbs />
-            ) : (
-              <p style={{ color: 'var(--muted)', padding: '12px 0' }}>No stops in this zone yet.</p>
-            )}
-          </section>
-        ))}
+        {chapters.map((c, i) => {
+          const start = counter
+          counter += c.lessons.length
+          return (
+            <section key={c.id} id={`chapter-${c.slug}`} className="p-chapter" aria-labelledby={`chapter-title-${c.id}`}>
+              <div className="p-chapter__head">
+                <span className="p-label" style={{ color: 'var(--c)' }}>Chapter {String(i + 1).padStart(2, '0')}</span>
+                <h2 id={`chapter-title-${c.id}`} className="p-display" style={{ flexBasis: '100%' }}>{c.title}</h2>
+              </div>
+              {c.description && <p>{c.description}</p>}
+              {c.lessons.length > 0
+                ? <LessonList lessons={c.lessons} showThumbs start={start} />
+                : <p style={{ color: 'var(--muted)', padding: '12px 0' }}>Lessons for this chapter are on their way.</p>}
+              <Link href={`/${menu.slug}/${c.slug}`} className="p-btn p-btn--sm p-btn--soft" style={{ marginTop: 14 }}>
+                Open chapter page <ArrowRight size={16} />
+              </Link>
+            </section>
+          )
+        })}
 
-        {directStops.length > 0 && (
-          <section className="tr-zone" aria-labelledby="direct-title">
-            <div className="tr-zone__head">
-              <span className="z">EXPRESS</span>
-              <h2 id="direct-title" className="tr-display">{zones.length > 0 ? 'More stops on this line' : 'Stops on this line'}</h2>
+        {extra.length > 0 && (
+          <section className="p-chapter" aria-labelledby="extra-title">
+            <div className="p-chapter__head">
+              <h2 id="extra-title" className="p-display">{chapters.length > 0 ? 'More lessons' : 'Lessons'}</h2>
             </div>
-            <StopList stops={directStops} showThumbs />
+            <LessonList lessons={extra} showThumbs start={counter} />
           </section>
         )}
 
-        {zones.length === 0 && directStops.length === 0 && (
-          <div className="tr-empty">
-            <h2>Line under construction</h2>
-            <p>Stops on this line open soon. Ride another line in the meantime.</p>
-            <Link href="/" className="tr-btn tr-btn--primary">Back to the network map</Link>
+        {all.length === 0 && (
+          <div className="p-empty">
+            <h2>Coming soon</h2>
+            <p>Lessons for this module are being written. Explore another module in the meantime.</p>
+            <Link href="/" className="p-btn p-btn--fill">Back home</Link>
           </div>
         )}
 
-        {(nextLine || otherLines.length > 0) && (
-          <div className="tr-sec" style={{ display: 'grid', gap: 16 }}>
-            {nextLine && (
-              <Link href={`/${nextLine.slug}`} className="tr-np tr-np--next" style={{ '--c': nextLine.color } as React.CSSProperties}>
-                <div>
-                  <span className="tr-eyebrow">Next line</span>
-                  <h3>{nextLine.title}</h3>
-                </div>
-                <span className="arrow"><ArrowRight size={20} /></span>
-              </Link>
-            )}
-            {otherLines.length > 0 && (
-              <div className="tr-change">
-                Change here for
-                {otherLines.map((l) => (
-                  <Link key={l.id} href={`/${l.slug}`} style={{ '--c': l.color } as React.CSSProperties}>
-                    <span className="tr-roundel" style={{ '--s': '24px' } as React.CSSProperties}>{l.number}</span>{l.title}
-                  </Link>
-                ))}
+        {next && (
+          <div className="p-nextprev">
+            <Link href={`/${next.slug}`} className="p-next" style={{ '--c': next.color, '--fg': next.fg, gridColumn: '1 / -1' } as React.CSSProperties}>
+              <div>
+                <span className="p-label">Next module · {String(next.number).padStart(2, '0')}</span>
+                <h3>{next.title}</h3>
               </div>
-            )}
+              <span className="p-next__go" aria-hidden="true"><ArrowRight size={24} /></span>
+            </Link>
           </div>
         )}
       </div>

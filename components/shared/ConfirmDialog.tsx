@@ -35,21 +35,21 @@ export default function ConfirmDialog({
   }
 
   const btnColors = {
-    danger: 'var(--l1)',
-    warning: 'var(--l4)',
-    info: 'var(--l2)',
+    danger: 'var(--tomato)',
+    warning: 'var(--warning)',
+    info: 'var(--cobalt)',
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div
-        className="relative w-full max-w-md rounded-[22px] p-6 shadow-2xl"
+        className="relative w-full max-w-md rounded-[28px] p-6 shadow-2xl"
         style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}
       >
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 tr-icon-btn"
+          className="absolute top-4 right-4 p-round p-round--sm"
         >
           <X size={16} style={{ color: 'var(--text-muted)' }} />
         </button>
@@ -58,7 +58,7 @@ export default function ConfirmDialog({
           <AlertTriangle size={20} />
         </div>
 
-        <h3 className="tr-display mb-2" style={{ fontSize: '1.7rem' }}>
+        <h3 className="p-display mb-2" style={{ fontSize: '1.9rem' }}>
           {title}
         </h3>
         <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -69,14 +69,14 @@ export default function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="tr-btn tr-btn--ghost tr-btn--sm"
+            className="p-btn p-btn--sm p-btn--soft"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="tr-btn tr-btn--sm" style={{ background: btnColors[variant], borderColor: 'transparent', color: '#fff' }}
+            className="p-btn p-btn--sm" style={{ background: btnColors[variant], borderColor: btnColors[variant], color: '#fff', '--sweep': 'var(--ink)', '--sweep-fg': 'var(--bg)' } as React.CSSProperties}
           >
             {loading ? 'Please wait...' : confirmLabel}
           </button>

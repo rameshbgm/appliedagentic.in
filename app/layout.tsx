@@ -30,8 +30,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F1F4F2' },
-    { media: '(prefers-color-scheme: dark)', color: '#0E1216' },
+    { media: '(prefers-color-scheme: light)', color: '#F4F5F9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0B11' },
   ],
 }
 
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Overpass+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,700..900&family=Hanken+Grotesk:ital,wght@0,400..800;1,400..600&family=JetBrains+Mono:wght@400;600&display=swap"
         />
       </head>
       <body suppressHydrationWarning>
