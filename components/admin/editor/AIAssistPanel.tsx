@@ -367,7 +367,7 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
                   onClick={generateAudio}
                   disabled={loading}
                   className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
-                  style={{ background: '#1E293B' }}
+                  style={{ background: 'var(--ink)' }}
                 >
                   {loading ? <Loader2 size={12} className="animate-spin" /> : <Music size={12} />}
                   Generate Audio

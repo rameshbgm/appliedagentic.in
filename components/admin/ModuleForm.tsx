@@ -124,7 +124,7 @@ export default function ModuleForm({ initialData }: Props) {
               type="button"
               onClick={() => set('icon', icon)}
               className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all border-2 ${
-                form.icon === icon ? 'border-[#1E293B] scale-110' : 'border-transparent'
+                form.icon === icon ? 'border-ink scale-110' : 'border-transparent'
               }`}
               style={{ background: 'var(--bg-surface)' }}
             >
@@ -172,7 +172,7 @@ export default function ModuleForm({ initialData }: Props) {
           type="checkbox"
           checked={form.published}
           onChange={(e) => set('published', e.target.checked)}
-          className="accent-[#1E293B] w-4 h-4"
+          className="accent-ink w-4 h-4"
         />
         <label htmlFor="published" className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Publish this module (visible on public site)

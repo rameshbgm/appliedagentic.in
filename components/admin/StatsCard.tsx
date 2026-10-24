@@ -46,13 +46,14 @@ export default function StatsCard({ label, value, iconName, color, suffix = '', 
 
   return (
     <div
-      className="card p-5 flex items-start justify-between gap-4 group hover:scale-105 transition-transform duration-200"
+      className="card p-5 flex items-start justify-between gap-4"
+      style={{ borderTop: `4px solid ${color}` }}
     >
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+        <p className="tr-eyebrow mb-1">
           {label}
         </p>
-        <p className="text-3xl font-display font-bold" style={{ color: 'var(--text-primary)' }}>
+        <p className="tr-display" style={{ fontSize: '2.4rem', fontVariantNumeric: 'tabular-nums' }}>
           {count.toLocaleString()}{suffix}
         </p>
         {change !== undefined && (
@@ -62,8 +63,8 @@ export default function StatsCard({ label, value, iconName, color, suffix = '', 
         )}
       </div>
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
-        style={{ background: `${color}20` }}
+        className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, border: `3px solid ${color}` }}
       >
         <Icon size={22} style={{ color }} />
       </div>

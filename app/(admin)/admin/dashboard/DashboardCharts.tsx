@@ -6,7 +6,7 @@ interface Props {
   topArticles: { title: string; viewCount: number }[]
 }
 
-const COLORS = ['#6C3DFF', '#00D4FF', '#FF6B6B', '#FFA502', '#2ED573']
+const COLORS = ['var(--l2)', 'var(--l6)', 'var(--l1)', 'var(--l4)', 'var(--l3)']
 
 export default function DashboardCharts({ topArticles }: Props) {
   const topData = topArticles.slice(0, 5).map((a) => ({
@@ -30,7 +30,7 @@ export default function DashboardCharts({ topArticles }: Props) {
                 contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', borderRadius: 12 }}
                 labelStyle={{ color: 'var(--text-primary)' }}
               />
-              <Bar dataKey="views" fill="#6C3DFF" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="views" fill="var(--l2)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (

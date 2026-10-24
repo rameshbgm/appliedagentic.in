@@ -57,7 +57,8 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
   const [duration, setDuration] = useState(0)
   const [speed, setSpeedState] = useState(1)
   const [muted, setMuted] = useState(false)
-  const [visible, setVisible] = useState(() => sections.some((s) => s.audioUrl))
+  // The dock appears once narration starts (via loadAndPlay)
+  const [visible, setVisible] = useState(false)
 
   // Keep a ref to sections so callbacks don't go stale
   const sectionsRef = useRef(sections)

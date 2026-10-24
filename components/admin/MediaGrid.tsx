@@ -258,7 +258,7 @@ export default function MediaGrid({ items, onDeleted }: Props) {
             <div className="flex items-center justify-between px-5 py-3.5 border-b" style={{ borderColor: '#e5e7eb' }}>
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg" style={{ background: 'rgba(108,61,255,0.1)' }}>
-                  <FileText size={15} style={{ color: '#6C3DFF' }} />
+                  <FileText size={15} style={{ color: 'var(--l2)' }} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm text-gray-900">Articles Using This File</h3>

@@ -139,7 +139,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
         <Link
           href="/admin/articles/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-transform hover:scale-105"
-          style={{ background: '#6C3DFF' }}
+          style={{ background: 'var(--l2)' }}
         >
           <Plus size={16} />
           New Article
@@ -163,7 +163,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 active ? 'text-white' : 'border hover:bg-gray-50'
               }`}
               style={{
-                background:  active ? '#1E293B' : 'transparent',
+                background:  active ? 'var(--ink)' : 'transparent',
                 borderColor: active ? 'transparent' : 'var(--bg-border)',
                 color:       active ? '#fff' : 'var(--text-muted)',
               }}
@@ -386,7 +386,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
                 href={buildHref('/admin/articles', sp, { page: String(p) })}
                 className="w-8 h-8 rounded-xl text-sm flex items-center justify-center font-medium transition-colors"
                 style={{
-                  background:   p === page ? '#1E293B' : 'transparent',
+                  background:   p === page ? 'var(--ink)' : 'transparent',
                   borderWidth:  p === page ? '0' : '1px',
                   borderStyle:  p === page ? 'none' : 'solid',
                   borderColor:  'var(--bg-border)',

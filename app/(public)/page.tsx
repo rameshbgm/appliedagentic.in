@@ -1,18 +1,18 @@
-// app/(public)/page.tsx
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/logger'
-import HeroSection from '@/components/public/HeroSection'
-import ArticleCard from '@/components/public/ArticleCard'
-import NewsletterSection from '@/components/public/NewsletterSection'
-import { StaggerContainer, FadeIn, ParallaxSection } from '@/components/public/ScrollAnimations'
+// app/(public)/page.tsx — Network map (home)
 import Link from 'next/link'
-import { BookOpen, Sparkles, FileText } from 'lucide-react'
 import fs from 'fs'
 import path from 'path'
 import type { Metadata } from 'next'
-import { browseTopicsContent, featuredArticlesContent, ctaBannerContent } from '@/content/home'
-import ModuleTileGrid from '@/components/public/ModuleTileGrid'
-import ScrollBorderWrapper from '@/components/public/ScrollBorderWrapper'
+import { ArrowRight, Presentation } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
+import { logger } from '@/lib/logger'
+import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, lineColor } from '@/lib/transit'
+import DepartureBoard, { type Departure } from '@/components/transit/DepartureBoard'
+import NetworkMap from '@/components/transit/NetworkMap'
+import StopCard from '@/components/transit/StopCard'
+import NewsletterForm from '@/components/transit/NewsletterForm'
+import { heroContent } from '@/content/home'
+import { newsletterContent } from '@/content/newsletter'
 
 export const metadata: Metadata = {
   title: 'Applied Agentic AI | Master AI Agents & LLMs',
@@ -21,76 +21,55 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
+const articleSelect = {
+  id: true,
+  title: true,
+  slug: true,
+  summary: true,
+  readingTimeMinutes: true,
+  viewCount: true,
+  publishedAt: true,
+  coverImage: { select: { url: true } },
+  ...articleLineSelect,
+} as const
 
-async function getData() {
+async function getHomeData() {
   try {
-    const [navMenus, featuredArticles] = await Promise.all([
-      prisma.navMenu.findMany({
-        where: { isVisible: true },
-        orderBy: { order: 'asc' },
-        include: {
-          subMenus: {
-            where: { isVisible: true },
-            orderBy: { order: 'asc' },
-            select: { id: true, title: true, slug: true },
-          },
-        },
-      }),
+    const [featured, latest, publishedCount, tags] = await Promise.all([
       prisma.article.findMany({
         where: { status: 'PUBLISHED', isFeatured: true },
         orderBy: { createdAt: 'desc' },
         take: 6,
-        include: {
-          articleTags: { include: { tag: { select: { name: true } } } },
-          topicArticles: {
-            take: 1,
-            include: {
-              topic: { select: { module: { select: { name: true, color: true } } } },
-            },
+        select: articleSelect,
+      }),
+      prisma.article.findMany({
+        where: { status: 'PUBLISHED' },
+        orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+        take: 10,
+        select: articleSelect,
+      }),
+      prisma.article.count({ where: { status: 'PUBLISHED' } }),
+      prisma.tag.findMany({
+        where: { articleTags: { some: { article: { status: 'PUBLISHED' } } } },
+        orderBy: { articleTags: { _count: 'desc' } },
+        take: 12,
+        select: {
+          id: true,
+          name: true,
+          articleTags: {
+            where: { article: { status: 'PUBLISHED' } },
+            take: 30,
+            select: { article: { select: articleLineSelect } },
           },
         },
       }),
     ])
-    return { navMenus, featuredArticles }
+    return { featured, latest, publishedCount, tags }
   } catch (err) {
     logger.error('[GET /] DB error loading homepage data', err)
-    return { navMenus: [], featuredArticles: [] }
+    return { featured: [], latest: [], publishedCount: 0, tags: [] }
   }
 }
-
-// Rich multi-stop text-only gradients — picked by filename hash for variety
-const FILE_NAME_GRADIENTS = [
-  'linear-gradient(90deg, #34d399 0%, #38bdf8 50%, #818cf8 100%)',
-  'linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
-  'linear-gradient(90deg, #818cf8 0%, #ec4899 50%, #fb923c 100%)',
-  'linear-gradient(90deg, #38bdf8 0%, #34d399 50%, #4ade80 100%)',
-  'linear-gradient(90deg, #f472b6 0%, #a78bfa 50%, #38bdf8 100%)',
-  'linear-gradient(90deg, #4ade80 0%, #f59e0b 50%, #ef4444 100%)',
-  'linear-gradient(90deg, #a78bfa 0%, #38bdf8 50%, #34d399 100%)',
-  'linear-gradient(90deg, #fb923c 0%, #f59e0b 50%, #4ade80 100%)',
-  'linear-gradient(90deg, #ec4899 0%, #818cf8 50%, #38bdf8 100%)',
-  'linear-gradient(90deg, #34d399 0%, #a78bfa 50%, #ec4899 100%)',
-  'linear-gradient(90deg, #38bdf8 0%, #f472b6 50%, #fb923c 100%)',
-  'linear-gradient(90deg, #4ade80 0%, #38bdf8 50%, #a78bfa 100%)',
-  'linear-gradient(90deg, #fbbf24 0%, #f472b6 50%, #818cf8 100%)',
-  'linear-gradient(90deg, #34d399 0%, #fbbf24 50%, #f472b6 100%)',
-  'linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #fbbf24 100%)',
-  'linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #4ade80 100%)',
-]
-function getNameGradient(filename: string): string {
-  let h = 0
-  for (let i = 0; i < filename.length; i++) h = (h * 31 + filename.charCodeAt(i)) & 0xffffffff
-  return FILE_NAME_GRADIENTS[Math.abs(h) % FILE_NAME_GRADIENTS.length]
-}
-
-const CARD_GRADIENTS = [
-  { gradient: 'linear-gradient(135deg, #34d399 0%, #38bdf8 100%)', icon: '#34d399', glow: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.25)',  label: '#34d399',  colorA: '#34d399', colorB: '#38bdf8' },
-  { gradient: 'linear-gradient(135deg, #818cf8 0%, #ec4899 100%)', icon: '#818cf8', glow: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.25)', label: '#818cf8', colorA: '#818cf8', colorB: '#ec4899' },
-  { gradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', icon: '#f59e0b', glow: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.25)',  label: '#f59e0b',  colorA: '#f59e0b', colorB: '#ef4444' },
-  { gradient: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)', icon: '#38bdf8', glow: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.25)',  label: '#38bdf8',  colorA: '#38bdf8', colorB: '#818cf8' },
-  { gradient: 'linear-gradient(135deg, #f472b6 0%, #fb923c 100%)', icon: '#f472b6', glow: 'rgba(244,114,182,0.15)', border: 'rgba(244,114,182,0.25)', label: '#f472b6', colorA: '#f472b6', colorB: '#fb923c' },
-  { gradient: 'linear-gradient(135deg, #4ade80 0%, #38bdf8 100%)', icon: '#4ade80', glow: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.25)',  label: '#4ade80',  colorA: '#4ade80', colorB: '#38bdf8' },
-]
 
 function getStaticFiles() {
   try {
@@ -99,25 +78,19 @@ function getStaticFiles() {
       .readdirSync(publicDir)
       .filter((f) => f.endsWith('.html') || f.endsWith('.htm'))
       .map((f) => {
-        const fallbackName = f.replace(/\.(html|htm)$/, '').replace(/[-_]/g, ' ')
-        let title = fallbackName
+        let title = f.replace(/\.(html|htm)$/, '').replace(/[-_]/g, ' ')
         let description: string | null = null
-
         try {
           const html = fs.readFileSync(path.join(publicDir, f), 'utf8')
           const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
           if (titleMatch) title = titleMatch[1].trim()
-
-          // match both single-line and multi-line description meta tags
           const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
             ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
-            ?? html.match(/name="description"[\s\S]*?content="([^"]+)"/i)
           if (descMatch) description = descMatch[1].trim()
         } catch {
-          // if reading fails, use filename-based fallback
+          // fall back to the file name
         }
-
-        return { name: fallbackName, title, description, file: f, href: `/${f}` }
+        return { file: f, title, description, href: `/${f}` }
       })
   } catch {
     return []
@@ -125,309 +98,160 @@ function getStaticFiles() {
 }
 
 export default async function HomePage() {
-  const { navMenus, featuredArticles } = await getData()
+  const [network, { featured, latest, publishedCount, tags }] = await Promise.all([getNetwork(), getHomeData()])
   const staticFiles = getStaticFiles()
+
+  const lineOf = (a: Parameters<typeof menuIdsOf>[0]) => resolveLine(network, menuIdsOf(a))
+
+  const boardSource = latest.length > 0 ? latest : featured
+  const departures: Departure[] = boardSource.map((a) => {
+    const line = lineOf(a)
+    return { slug: a.slug, title: a.title, minutes: a.readingTimeMinutes, lineNumber: line?.number ?? null, color: line?.color ?? 'var(--l2)' }
+  })
+
+  const interchanges = tags
+    .map((t) => {
+      const lineNumbers = new Set<number>()
+      t.articleTags.forEach((at) => { const l = lineOf(at.article); if (l) lineNumbers.add(l.number) })
+      return { id: t.id, name: t.name, count: t.articleTags.length, lines: [...lineNumbers].sort((a, b) => a - b) }
+    })
+    .filter((t) => t.count > 0)
+
+  const totalZones = network.reduce((sum, l) => sum + l.zones.length, 0)
+  const firstLine = network[0]
+  const allGood = network.length > 0
 
   return (
     <>
-      <HeroSection />
-
-      {/* ── Browse Topics ── */}
-      <section id="topics" className="py-16 sm:py-24 px-4 md:px-8 max-w-7xl mx-auto">
-        <ParallaxSection speed={0.25}>
-          <FadeIn>
-            <div className="mb-12 sm:mb-16">
-              <div className="flex items-center gap-2 mb-4">
-                <BookOpen size={15} style={{ color: '#38BDF8' }} />
-                <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#38BDF8' }}>
-                  {browseTopicsContent.badge}
-                </span>
-              </div>
-
-              {/* Redesigned heading */}
-              <h2
-                className="font-black leading-[1.08] tracking-tight mb-4"
-                style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
-              >
-                <span style={{ color: 'var(--text-primary)' }}>{browseTopicsContent.headline} </span>
-                <span
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {browseTopicsContent.headlineAccent}
-                </span>
-              </h2>
-
-              <p className="text-base sm:text-lg max-w-2xl" style={{ color: 'var(--text-secondary)', fontFamily: "'Literata', 'Source Serif 4', Georgia, serif", fontStyle: 'italic', lineHeight: '1.7' }}>
-                {browseTopicsContent.subheadline}
-              </p>
-            </div>
-          </FadeIn>
-        </ParallaxSection>
-
-        <ModuleTileGrid menus={navMenus} />
+      {/* ── Hero + departure board ─────────────────────────────── */}
+      <section className="tr-wrap tr-hero" aria-labelledby="home-title">
+        <div>
+          <div className="tr-status">
+            <span className="dot" aria-hidden="true" />
+            <span className="tr-eyebrow">{allGood ? `Good service on all ${network.length} lines` : 'Lines opening soon'}</span>
+          </div>
+          <h1 id="home-title" className="tr-display">Every route to <em>agentic&nbsp;AI</em>, mapped.</h1>
+          <p className="tr-lede">{heroContent.subheadline}</p>
+          <div className="tr-ctas">
+            {firstLine && (
+              <Link href={`/${firstLine.slug}`} className="tr-btn tr-btn--primary">
+                Board Line 1 <ArrowRight size={17} />
+              </Link>
+            )}
+            <a href="#network" className="tr-btn">See the network map</a>
+          </div>
+          <div className="tr-stats">
+            <div><b>{network.length}</b><span>Lines</span></div>
+            <div><b>{totalZones}</b><span>Zones</span></div>
+            <div><b>{publishedCount}</b><span>Stops</span></div>
+            <div><b>100%</b><span>Free to ride</span></div>
+          </div>
+        </div>
+        {departures.length > 0 && <DepartureBoard departures={departures} />}
       </section>
 
-      {/* ── Static Resources ── */}
-      {staticFiles.length > 0 && (
-        <section className="py-16 sm:py-24 px-4 md:px-8 max-w-7xl mx-auto">
-          <ParallaxSection speed={0.25}>
-            <FadeIn>
-              <div className="mb-12 sm:mb-16">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText size={15} style={{ color: '#34D399' }} />
-                  <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#34D399' }}>
-                    Presentations &amp; Guides
-                  </span>
-                </div>
-                <h2
-                  className="font-black leading-[1.08] tracking-tight mb-4"
-                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontFamily: "'Inter', sans-serif" }}
-                >
-                  <span style={{ color: 'var(--text-primary)' }}>Explore our </span>
-                  <span
-                    style={{
-                      background: 'linear-gradient(135deg, #34d399 0%, #38bdf8 50%, #818cf8 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}
-                  >
-                    interactive slides
-                  </span>
-                </h2>
-                <p
-                  className="text-base sm:text-lg max-w-2xl"
-                  style={{ color: 'var(--text-secondary)', fontFamily: "'Literata', 'Source Serif 4', Georgia, serif", fontStyle: 'italic', lineHeight: '1.7' }}
-                >
-                  Hands-on presentations and visual guides covering agentic AI concepts, architectures, and real-world patterns.
-                </p>
-              </div>
-            </FadeIn>
-          </ParallaxSection>
+      {/* ── Network map ─────────────────────────────────────────── */}
+      <section id="network" className="tr-wrap tr-sec" aria-labelledby="network-title" style={{ scrollMarginTop: 'calc(var(--nav-h) + 12px)' }}>
+        <div className="tr-sec-head" data-reveal>
+          <h2 id="network-title" className="tr-display">Network map</h2>
+          <p>Each learning path is a line. Start at Line 1 for the foundations, or board wherever your work is today.</p>
+        </div>
+        {network.length > 0 ? (
+          <NetworkMap lines={network} />
+        ) : (
+          <div className="tr-empty">
+            <h3>Lines under construction</h3>
+            <p>The first learning paths are being laid. Check back shortly.</p>
+          </div>
+        )}
+      </section>
 
-          {/* Mobile: list rows (3 visible + scroll) | Desktop md+: 3-col tile grid (3 rows + scroll) */}
-          {/* Scroll container is narrowed; heading stays in full-width section */}
-          <div className="max-w-3xl">
-          <ScrollBorderWrapper
-            className="static-resources-scroll static-resources-responsive"
-            style={{
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              borderRadius: '1rem',
-            }}
-          >
-            {/* ── Mobile list (hidden on md+) ── */}
-            <div className="flex flex-col md:hidden">
-              {staticFiles.map((item, idx) => {
-                const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
-                return (
-                  <a
-                    key={item.file}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-white/5 first:rounded-t-xl last:rounded-b-xl"
-                    style={{ borderBottom: '1px solid var(--bg-border)' }}
-                  >
-                    <div
-                      className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg"
-                      style={{ background: `linear-gradient(135deg, ${palette.glow.replace('0.15','0.2')} 0%, ${palette.glow.replace('0.15','0.07')} 100%)`, border: `1px solid ${palette.border}` }}
-                    >
-                      <FileText size={14} style={{ color: palette.icon }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate text-[0.78rem] leading-tight"
-                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: "'Inter', sans-serif" }}>
-                        {item.title}
-                      </p>
-                      {item.description && (
-                        <p className="mt-0.5 truncate text-[0.65rem]"
-                          style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" />
-                      <line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </a>
-                )
-              })}
-            </div>
-
-            {/* ── Desktop 3-col tile grid (hidden on mobile) ── */}
-            <div className="hidden md:grid grid-cols-3 gap-3 p-1">
-              {staticFiles.map((item, idx) => {
-                const palette = CARD_GRADIENTS[idx % CARD_GRADIENTS.length]
-                return (
-                  <div
-                    key={item.file}
-                    className="module-tile-wrapper presentation-guide-tile relative rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <div
-                      className="module-tile-ring"
-                      style={{ background: `conic-gradient(from 0deg, ${palette.colorA} 0%, ${palette.colorB} 50%, ${palette.colorA} 100%)` }}
-                    />
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="presentation-guide-tile__inner group relative flex flex-col"
-                    >
-                      <div className="presentation-guide-tile__top">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={palette.icon} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="presentation-guide-tile__icon">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                          <polyline points="15 3 21 3 21 9" />
-                          <line x1="10" y1="14" x2="21" y2="3" />
-                        </svg>
-                      </div>
-                      <p
-                        className="presentation-guide-tile__title font-bold text-[0.92rem] leading-snug line-clamp-2"
-                        style={{ background: getNameGradient(item.file), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                      >
-                        {item.title}
-                      </p>
-                      <div
-                        className="presentation-guide-tile__divider"
-                        style={{ background: `linear-gradient(90deg, ${palette.colorA}66, ${palette.colorB}44, transparent)` }}
-                      />
-                      {item.description && (
-                        <p
-                          className="presentation-guide-tile__summary text-[0.68rem] leading-relaxed line-clamp-2"
-                          style={{ color: 'var(--text-secondary)' }}
-                        >
-                          {item.description}
-                        </p>
-                      )}
-                      <div className="presentation-guide-tile__footer">
-                        <span className="presentation-guide-tile__cta text-[0.6rem] font-semibold uppercase tracking-widest" style={{ color: palette.label }}>
-                          Open
-                        </span>
-                        <span
-                          className="presentation-guide-tile__ctaArrow"
-                          style={{ background: `linear-gradient(135deg, ${palette.colorA}18, ${palette.colorB}18)`, color: palette.icon, borderColor: `${palette.colorA}30` }}
-                        >
-                          →
-                        </span>
-                      </div>
-                    </a>
-                  </div>
-                )
-              })}
-            </div>
-          </ScrollBorderWrapper>
+      {/* ── Featured stops ──────────────────────────────────────── */}
+      {featured.length > 0 && (
+        <section className="tr-wrap tr-sec" aria-labelledby="featured-title">
+          <div className="tr-sec-head" data-reveal>
+            <h2 id="featured-title" className="tr-display">Express stops</h2>
+            <p>Hand-picked reads that are worth the trip, whichever line you ride.</p>
+          </div>
+          <div className="tr-cards">
+            {featured.map((a) => {
+              const line = lineOf(a)
+              return (
+                <StopCard
+                  key={a.id}
+                  slug={a.slug}
+                  title={a.title}
+                  summary={a.summary}
+                  minutes={a.readingTimeMinutes}
+                  views={a.viewCount}
+                  imageUrl={a.coverImage?.url}
+                  label={line ? `Line ${line.number} · ${line.title}` : 'Express'}
+                  color={line?.color}
+                />
+              )
+            })}
           </div>
         </section>
       )}
 
-      {/* ── Featured Articles ── */}
-      {featuredArticles.length > 0 && (
-        <section className="relative py-12 sm:py-14 lg:py-16 px-4 md:px-8 max-w-7xl mx-auto">
-          <ParallaxSection speed={0.2}>
-            <FadeIn>
-              <div className="mb-7 sm:mb-8 lg:mb-10 max-w-[44rem]">
-                <div className="flex items-center gap-3 mb-4">
-                  <span
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full"
-                    style={{ background: 'linear-gradient(135deg, rgba(251,146,60,.12), rgba(236,72,153,.12))', border: '1px solid rgba(236,72,153,.12)' }}
-                  >
-                    <Sparkles size={15} style={{ color: '#ec4899' }} />
+      {/* ── Interchanges (tags) ─────────────────────────────────── */}
+      {interchanges.length > 0 && (
+        <section className="tr-wrap tr-sec" aria-labelledby="xchg-title">
+          <div className="tr-sec-head" data-reveal>
+            <h2 id="xchg-title" className="tr-display">Interchanges</h2>
+            <p>Topics that run across several lines. Change here to follow one idea through the whole network.</p>
+          </div>
+          <div className="tr-xchg" data-reveal>
+            {interchanges.map((t) => (
+              <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>
+                {t.lines.length > 0 && (
+                  <span className="tr-dots" aria-hidden="true">
+                    {t.lines.slice(0, 4).map((n) => <i key={n} style={{ background: lineColor(n - 1) }} />)}
                   </span>
-                  <span className="text-[0.72rem] font-bold uppercase tracking-[0.24em]" style={{ color: '#ec4899' }}>
-                    {featuredArticlesContent.badge}
-                  </span>
-                </div>
-                <h2
-                  className="font-black leading-[0.98] tracking-tight"
-                  style={{ fontSize: 'clamp(1.85rem, 4vw, 3.2rem)', fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  <span style={{ color: 'var(--text-primary)' }}>{featuredArticlesContent.headline}{' '}</span>
-                  <span className="relative inline-block">
-                    <span
-                      style={{
-                        background: 'linear-gradient(90deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }}
-                    >
-                      {featuredArticlesContent.headlineAccent}
-                    </span>
-                    <span
-                      className="absolute left-0 -bottom-1 w-full h-[3px] rounded-full"
-                      style={{ background: 'linear-gradient(90deg, #f59e0b, #ef4444, #ec4899)' }}
-                    />
-                  </span>
-                </h2>
-                <p
-                  className="mt-3 max-w-xl text-[0.92rem] sm:text-[0.98rem]"
-                  style={{ color: 'var(--text-secondary)', fontFamily: "'Newsreader', serif", lineHeight: 1.75 }}
-                >
-                  A sharper reading experience with richer visual hierarchy, clearer metadata, and cards that feel deliberate on both mobile and desktop.
-                </p>
-              </div>
-            </FadeIn>
-          </ParallaxSection>
-
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4.5 xl:gap-5 items-stretch max-w-[68rem]">
-            {featuredArticles.map((article, idx) => (
-              <ArticleCard
-                key={article.id}
-                index={idx + 1}
-                title={article.title}
-                slug={article.slug}
-                summary={article.summary}
-                readingTime={article.readingTimeMinutes}
-                viewCount={article.viewCount}
-                createdAt={article.createdAt}
-                tags={article.articleTags.map((at) => ({ name: at.tag.name }))}
-                moduleName={article.topicArticles[0]?.topic?.module?.name}
-                moduleColor={article.topicArticles[0]?.topic?.module?.color}
-              />
+                )}
+                {t.name}
+                <small>{t.count}</small>
+              </Link>
             ))}
-          </StaggerContainer>
+          </div>
         </section>
       )}
 
-      {/* ── CTA Banner ── */}
-      <section className="py-20 px-4 md:px-8">
-        <FadeIn>
-          <div
-            className="max-w-4xl mx-auto rounded-3xl p-10 md:p-16 text-center relative overflow-hidden"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)' }}
-          >
-            <h2 className="relative text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-              {ctaBannerContent.headline}{' '}
-              <span className="gradient-text">{ctaBannerContent.headlineAccent}</span>
-            </h2>
-            <p className="relative text-lg mb-8 max-w-xl mx-auto" style={{ color: 'var(--text-secondary)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic' }}>
-              {ctaBannerContent.subheadline}
-            </p>
-            <div className="relative flex flex-wrap gap-4 justify-center">
-              <Link href={ctaBannerContent.primaryCta.href} className="btn-primary px-8 py-3.5 rounded-full">
-                {ctaBannerContent.primaryCta.label}
-              </Link>
-              <Link
-                href={ctaBannerContent.secondaryCta.href}
-                className="px-8 py-3.5 rounded-full font-semibold transition-all border hover:bg-white/5"
-                style={{ color: 'var(--text-primary)', borderColor: 'var(--bg-border)' }}
-              >
-                {ctaBannerContent.secondaryCta.label}
-              </Link>
-            </div>
+      {/* ── Ticket office (static decks) ────────────────────────── */}
+      {staticFiles.length > 0 && (
+        <section className="tr-wrap tr-sec" aria-labelledby="tickets-title">
+          <div className="tr-sec-head" data-reveal>
+            <h2 id="tickets-title" className="tr-display">Ticket office</h2>
+            <p>Slide decks and visual guides you can open on their own.</p>
           </div>
-        </FadeIn>
-      </section>
+          <div className="tr-tickets">
+            {staticFiles.map((f) => (
+              <a key={f.file} href={f.href} target="_blank" rel="noopener noreferrer" className="tr-ticket" data-reveal>
+                <div className="tr-ticket__main">
+                  <span className="tr-eyebrow">Presentation · opens in a new tab</span>
+                  <h3>{f.title}</h3>
+                  {f.description && <p>{f.description}</p>}
+                </div>
+                <div className="tr-ticket__stub">
+                  <div><Presentation size={22} />Open</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <NewsletterSection />
+      {/* ── Newsletter band ─────────────────────────────────────── */}
+      <section className="tr-news" aria-labelledby="news-title">
+        <div className="tr-wrap tr-news__inner">
+          <div>
+            <span className="tr-eyebrow" style={{ color: 'inherit', opacity: 0.7 }}>Service updates</span>
+            <h2 id="news-title" className="tr-display" style={{ marginTop: 8 }}>New stops, straight to your inbox.</h2>
+            <p style={{ marginTop: 10 }}>{newsletterContent.subheadline}</p>
+          </div>
+          <NewsletterForm />
+        </div>
+      </section>
     </>
   )
 }

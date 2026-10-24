@@ -1,11 +1,10 @@
-// app/(public)/topics/[topicSlug]/page.tsx
+// app/(public)/topics/[id]/page.tsx — a topic: articles grouped by subject
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
-import ArticleCard from '@/components/public/ArticleCard'
-import { StaggerContainer, FadeIn } from '@/components/public/ScrollAnimations'
+import StopList from '@/components/transit/StopList'
+import { formatJourney, plural } from '@/lib/transit'
 import Link from 'next/link'
-import { ArrowLeft, FileText } from 'lucide-react'
 import type { Metadata } from 'next'
 
 interface Props { params: Promise<{ id: string }> }
@@ -68,85 +67,48 @@ export default async function TopicDetailPage({ params }: Props) {
 
   if (!topic) notFound()
 
-  const articles = topic.topicArticles.map((ta) => ta.article)
-  const color = topic.module?.color ?? '#1E293B'
+  const stops = topic.topicArticles.map(({ article: a }) => ({
+    id: a.id,
+    slug: a.slug,
+    title: a.title,
+    summary: a.summary,
+    minutes: a.readingTimeMinutes,
+    imageUrl: a.coverImage?.url,
+    tags: a.articleTags.map((t) => t.tag.name),
+  }))
+  const minutes = stops.reduce((s, a) => s + (a.minutes ?? 0), 0)
+  const color = topic.module?.color ?? topic.color ?? 'var(--l2)'
 
   return (
-    <div className="min-h-screen">
-      {/* Topic Hero */}
-      <div
-        className="py-16 px-4 md:px-8 relative overflow-hidden"
-        style={{ background: 'var(--bg-page)', borderBottom: '1px solid var(--bg-border)' }}
-      >
-        <div className="max-w-7xl mx-auto relative">
-          <div className="flex items-center gap-2 mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>
-            <Link href="/modules" className="hover:opacity-80">Modules</Link>
-            <span>/</span>
-            {topic.module && (
-              <>
-                <Link href={`/modules/${topic.module.slug}`} className="hover:opacity-80">
-                  {topic.module.name}
-                </Link>
-                <span>/</span>
-              </>
-            )}
-            <span style={{ color: 'var(--text-primary)' }}>{topic.name}</span>
+    <div style={{ '--c': color } as React.CSSProperties}>
+      <header className="tr-band tr-band--soft">
+        <div className="tr-wrap tr-band__inner">
+          <nav className="tr-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Network</Link><span aria-hidden="true">›</span>
+            {topic.module && (<><span>{topic.module.name}</span><span aria-hidden="true">›</span></>)}
+            <span>Topic</span>
+          </nav>
+          <h1 className="tr-display">{topic.name}</h1>
+          {topic.description && <p style={{ color: 'var(--ink-2)' }}>{topic.description}</p>}
+          <div className="tr-band__stats">
+            <span>{plural(stops.length, 'stop')}</span>
+            {minutes > 0 && <span>{formatJourney(minutes)} ride</span>}
           </div>
-
-          <FadeIn>
-            <div className="max-w-3xl">
-              {topic.module && (
-                <Link
-                  href={`/modules/${topic.module.slug}`}
-                  className="inline-flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full mb-4"
-                  style={{ background: color + '25', color }}
-                >
-                  {topic.module.icon} {topic.module.name}
-                </Link>
-              )}
-              <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-                {topic.name}
-              </h1>
-              {topic.description && (
-                <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  {topic.description}
-                </p>
-              )}
-              <p className="mt-3 text-sm flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                <FileText size={14} />
-                {articles.length} {articles.length === 1 ? 'article' : 'articles'}
-              </p>
-            </div>
-          </FadeIn>
         </div>
-      </div>
+      </header>
 
-      {/* Articles Grid */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-14">
-        {articles.length > 0 ? (
-          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {articles.map((a) => (
-              <ArticleCard
-                key={a.id}
-                title={a.title}
-                slug={a.slug}
-                summary={a.summary}
-                coverImageUrl={(a as any).coverImage?.url}
-                readingTime={a.readingTimeMinutes}
-                viewCount={a.viewCount}
-                createdAt={a.createdAt}
-                tags={a.articleTags.map((at) => ({ name: at.tag.name }))}
-                moduleName={a.topicArticles[0]?.topic?.module?.name}
-                moduleColor={a.topicArticles[0]?.topic?.module?.color}
-              />
-            ))}
-          </StaggerContainer>
-        ) : (
-          <div className="text-center py-24" style={{ color: 'var(--text-muted)' }}>
-            <p className="text-5xl mb-4">📝</p>
-            <p className="text-lg">Articles coming soon</p>
-          </div>
-        )}
+      <div className="tr-wrap" style={{ paddingBottom: 48 }}>
+        <section className="tr-zone" aria-label="Articles in this topic">
+          {stops.length > 0 ? (
+            <StopList stops={stops} showThumbs />
+          ) : (
+            <div className="tr-empty">
+              <h2>No stops yet</h2>
+              <p>Articles for this topic are on their way.</p>
+              <Link href="/" className="tr-btn tr-btn--primary">Back to the network map</Link>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

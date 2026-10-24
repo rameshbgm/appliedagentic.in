@@ -119,7 +119,7 @@ export default function SettingsPage() {
             onClick={() => setTab(t.id)}
             className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${tab === t.id ? 'text-white shadow-sm' : ''}`}
             style={{
-              background: tab === t.id ? '#1E293B' : 'transparent',
+              background: tab === t.id ? 'var(--ink)' : 'transparent',
               color: tab === t.id ? '#fff' : 'var(--text-muted)',
             }}
           >
@@ -140,7 +140,7 @@ export default function SettingsPage() {
               <input value={settings.siteUrl} onChange={(e) => setSettings((s) => ({ ...s, siteUrl: e.target.value }))} placeholder="https://appliedagentic.in" className={inputClass} style={inputStyle} /></div>
             <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>SEO Description</label>
               <textarea value={settings.seoDescription} onChange={(e) => setSettings((s) => ({ ...s, seoDescription: e.target.value }))} rows={3} className={inputClass + ' resize-none'} style={inputStyle} /></div>
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
+            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'var(--ink)' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
             </button>
           </>
@@ -165,7 +165,7 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
+            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'var(--ink)' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Update Profile
             </button>
           </>

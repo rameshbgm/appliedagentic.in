@@ -1,6 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from 'next'
-import Script from 'next/script'
+import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
@@ -26,34 +25,32 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F1F4F2' },
+    { media: '(prefers-color-scheme: dark)', color: '#0E1216' },
+  ],
+}
+
+// Applies the saved theme before first paint so there is no light/dark flash.
+const themeScript = `try{var t=localStorage.getItem('aa-theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      data-theme="light"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Critical fonts — loaded synchronously */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Overpass+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         />
-        {/* Deferred fonts — article reading fonts loaded async */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
-        />
-        <Script id="deferred-fonts" strategy="afterInteractive">
-          {`var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap';document.head.appendChild(l);`}
-        </Script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#FFFFFF" />
       </head>
-      <body suppressHydrationWarning style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }} className="antialiased">
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>
