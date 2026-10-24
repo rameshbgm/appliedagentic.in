@@ -1,3 +1,4 @@
+import { AI_MODELS } from '@/lib/ai-models'
 // agents/audio-narrator/config.ts
 // To switch provider: change `provider` and update `textModel`.
 import type { AgentConfig } from '../types'
@@ -8,16 +9,12 @@ export const config: AgentConfig = {
    * OpenAI API key  → OPENAI_API_KEY in .env.local
    * Gemini API key  → GOOGLE_GENAI_API_KEY in .env.local
    */
-  provider: 'gemini',
+  provider: 'openai',
 
-  /**
-   * OpenAI models:  gpt-4o-mini | gpt-4o | ...
-   * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-pro | ...
-   */
-  textModel: 'gemini-3-flash-preview',
+  /** OpenAI text generation via Responses API with high reasoning. */
+  textModel: process.env.OPENAI_TEXT_MODEL ?? AI_MODELS.openai.text,
 
-  /** Lower temperature for predictable, clean prose output */
-  temperature: 0.3,
+  reasoningEffort: 'high',
 
   maxTokens: 4000,
   streaming: false,
@@ -27,31 +24,31 @@ export const config: AgentConfig = {
 export const ttsConfig = {
   /**
    * Which TTS provider to use for voice synthesis.
-   * 'gemini' → Gemini 2.5 Flash TTS (via GOOGLE_GENAI_API_KEY, no extra package)
-   * 'openai' → OpenAI TTS (via OPENAI_API_KEY)
+   * 'gemini' → Gemini 3.8 Flash TTS (via GOOGLE_GENAI_API_KEY, no extra package)
+   * 'openai' → OpenAI Realtime audio (via OPENAI_API_KEY)
    *
    * Note: the voice picker in the editor auto-detects the provider from
    * the voice name — Gemini voices are Title-cased (e.g. "Kore"),
-   * OpenAI voices are lowercase (e.g. "nova").
+   * OpenAI voices are lowercase (e.g. "marin").
    */
-  ttsProvider: 'gemini' as 'gemini' | 'openai',
+  ttsProvider: 'openai' as 'gemini' | 'openai',
 
   /**
    * Default voice.
    * Gemini voices: Zephyr | Puck | Charon | Kore | Fenrir | Aoede | Leda | Orus | Schedar | Laomedeia
-   * OpenAI voices: alloy | ash | ballad | coral | echo | fable | nova | onyx | sage | shimmer | verse
+   * OpenAI voices: marin | cedar | alloy | ash | ballad | coral | echo | sage | shimmer | verse
    */
-  voice: 'Kore' as string,
+  voice: process.env.OPENAI_TTS_VOICE ?? 'marin',
 
   /**
-   * OpenAI TTS model (used only when ttsProvider === 'openai').
-   * Options: tts-1 (faster) | tts-1-hd (higher quality)
+   * OpenAI Realtime audio model (used only when ttsProvider === 'openai').
+   * Uses the Realtime WebSocket API with PCM audio output.
    */
-  openaiModel: 'tts-1' as string,
+  openaiModel: process.env.OPENAI_AUDIO_MODEL ?? AI_MODELS.openai.audio,
 
   /**
    * Maximum characters per TTS chunk.
-   * OpenAI hard limit: 4096. Gemini handles longer text but we keep parity.
+   * Keep narration chunks short enough for reliable synthesis with either provider.
    */
   maxCharsPerChunk: 4096,
 }

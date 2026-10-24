@@ -1,3 +1,4 @@
+import { AI_MODELS } from '@/lib/ai-models'
 // agents/content-writer/config.ts
 // Agent configuration for the Content Writer.
 // To switch provider: change `provider` and update `textModel` to a model name
@@ -10,17 +11,12 @@ export const config: AgentConfig = {
    * OpenAI API key  → OPENAI_API_KEY in .env.local
    * Gemini API key  → GOOGLE_GENAI_API_KEY in .env.local
    */
-  provider: 'gemini',
+  provider: 'openai',
 
-  /**
-   * Model name for the selected provider.
-   * OpenAI models:  gpt-4o | gpt-4o-mini | gpt-4-turbo | ...
-   * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-pro
-   */
-  textModel: 'gemini-3-flash-preview',
+  /** OpenAI text generation via Responses API with high reasoning. */
+  textModel: process.env.OPENAI_TEXT_MODEL ?? AI_MODELS.openai.text,
 
-  /** Sampling temperature — higher = more creative (0.0 – 2.0) */
-  temperature: 0.75,
+  reasoningEffort: 'high',
 
   /** Maximum output tokens — full articles need large limits */
   maxTokens: 4000,

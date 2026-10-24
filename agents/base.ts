@@ -2,11 +2,11 @@
 // Factory: creates the right LangChain LLM instance from an AgentConfig.
 // SERVER-SIDE ONLY — never import in client components.
 
-import { ChatOpenAI } from '@langchain/openai'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import type { AgentConfig, AgentInput, AgentOutput } from './types'
 import { logger } from '@/lib/logger'
+import { getOpenAIClient } from '@/lib/openai'
 
 /**
  * Build a LangChain chain (prompt → LLM) and execute it,
@@ -18,12 +18,11 @@ export async function runAgent(
   guardrails: string,
   input: AgentInput,
 ): Promise<AgentOutput> {
-  const temperature = input.temperature ?? config.temperature
+  const temperature = input.temperature ?? config.temperature ?? 0.7
   const maxTokens   = input.maxTokens   ?? config.maxTokens
 
   // ── LLM ──────────────────────────────────────────────────────────────────
-  const llm =
-    config.provider === 'gemini'
+  const llm = config.provider === 'gemini'
       ? new ChatGoogleGenerativeAI({
           model:           config.textModel,
           temperature,
@@ -31,13 +30,7 @@ export async function runAgent(
           streaming:       config.streaming,
           apiKey:          process.env.GOOGLE_GENAI_API_KEY,
         })
-      : new ChatOpenAI({
-          model:       config.textModel,
-          temperature,
-          maxTokens,
-          streaming:   config.streaming,
-          apiKey:      process.env.OPENAI_API_KEY,
-        })
+      : null
 
   // ── Prompt ───────────────────────────────────────────────────────────────
   // Guardrails are appended to the system prompt as a separate section.
@@ -57,10 +50,30 @@ export async function runAgent(
   const t0 = Date.now()
   let rawMsg
   try {
-    rawMsg = await promptTemplate.pipe(llm).invoke({
-      prompt: input.prompt,
-      ...(input.context ? { context: input.context } : {}),
-    })
+    if (llm) {
+      rawMsg = await promptTemplate.pipe(llm).invoke({
+        prompt: input.prompt,
+        ...(input.context ? { context: input.context } : {}),
+      })
+    } else {
+      // Responses supports GPT-6 reasoning directly; sampling temperature is
+      // unsupported with high reasoning. Reserve output space for thinking.
+      const response = await getOpenAIClient().responses.create({
+        model: config.textModel,
+        instructions: fullSystem,
+        input: input.context ? `Context:\n${input.context}\n\n---\n\n${input.prompt}` : input.prompt,
+        reasoning: { effort: config.reasoningEffort ?? 'high' },
+        max_output_tokens: Math.max(16384, maxTokens + 8192),
+        store: false,
+      })
+      if (response.status !== 'completed' || !response.output_text?.trim()) {
+        throw new Error(`OpenAI returned ${response.status ?? 'no text'}: ${response.incomplete_details?.reason ?? 'generation did not complete'}`)
+      }
+      rawMsg = {
+        content: response.output_text,
+        response_metadata: { usage_metadata: response.usage },
+      }
+    }
   } catch (err) {
     logger.ai(
       config.provider,

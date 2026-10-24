@@ -1,7 +1,9 @@
 // app/api/ai/generate-image/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getOpenAIClient, getAIConfig } from '@/lib/openai'
+import { getAIConfig } from '@/lib/openai'
+import { AI_MODELS } from '@/lib/ai-models'
+import { generateImage, type ImageProvider, type ImageSize, type ImageQuality } from '@/lib/ai-images'
 import { prisma } from '@/lib/prisma'
 import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
@@ -17,20 +19,27 @@ export async function POST(req: NextRequest) {
       prompt,
       size,
       quality,
-      style,
+      provider: reqProvider,
       model: reqModel,
       enhancePrompt = true, // set to false to skip LangChain image-prompter step
       articleId,            // optional — when provided, auto-attaches as article cover image
     } = body
 
-    if (!prompt) return apiError('Prompt is required', 422)
+    if (typeof prompt !== 'string' || !prompt.trim()) return apiError('Prompt is required', 422)
 
     const config = await getAIConfig()
-    const openai = getOpenAIClient()
-
-    const model = reqModel || config.imageModel
-    const imageSize = size || config.imageSize
-    const imageQuality = quality || config.imageQuality
+    const geminiModel = process.env.GOOGLE_IMAGE_MODEL ?? AI_MODELS.gemini.image
+    const provider: ImageProvider = reqProvider ?? (reqModel === geminiModel ? 'gemini' : 'openai')
+    if (provider !== 'gemini' && provider !== 'openai') return apiError('Unsupported image provider', 422)
+    const model = provider === 'gemini' ? geminiModel : config.imageModel
+    if (reqModel && reqModel !== model) return apiError('Model does not match the configured image provider', 422)
+    // Accept older clients' dimensions while sending supported GPT Image sizes.
+    const requestedSize = size || config.imageSize
+    const imageSize = requestedSize === '1792x1024' ? '1536x1024' : requestedSize === '1024x1792' ? '1024x1536' : requestedSize
+    const requestedQuality = quality || config.imageQuality
+    const imageQuality = requestedQuality === 'standard' ? 'medium' : requestedQuality === 'hd' ? 'high' : requestedQuality
+    if (!['1024x1024', '1536x1024', '1024x1536'].includes(imageSize)) return apiError('Unsupported image size', 422)
+    if (!['auto', 'low', 'medium', 'high'].includes(imageQuality)) return apiError('Unsupported image quality', 422)
 
     // ── Step 1: Enhance the prompt via the image-prompter LangChain agent ──
     let finalPrompt = prompt
@@ -38,8 +47,8 @@ export async function POST(req: NextRequest) {
       try {
         const promptResult = await runImagePrompter({
           prompt,
-          target: model === 'dall-e-3' ? 'dalle3' : 'imagen',
-          aspectRatio: imageSize === '1792x1024' ? '16:9' : imageSize === '1024x1024' ? '1:1' : '1:1',
+          target: provider,
+          aspectRatio: imageSize === '1536x1024' ? '3:2' : imageSize === '1024x1536' ? '2:3' : '1:1',
         })
         finalPrompt = promptResult.imagePrompt
       } catch {
@@ -48,26 +57,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Step 2: Generate the image via DALL-E ──
-    const response = await openai.images.generate({
-      model,
+    const generated = await generateImage({
+      provider,
       prompt: finalPrompt,
-      size: imageSize as '1024x1024' | '1792x1024' | '1024x1792',
-      quality: imageQuality as 'standard' | 'hd',
-      style: style || 'vivid',
-      response_format: 'url',
-      n: 1,
+      size: imageSize as ImageSize,
+      quality: imageQuality as ImageQuality,
     })
-
-    const imageUrl = response.data?.[0]?.url
-    const revisedPrompt = response.data?.[0]?.revised_prompt
-
-    if (!imageUrl) return apiError('No image was generated', 500)
-
-    // Download the generated image
-    const imageResponse = await fetch(imageUrl)
-    const buffer = Buffer.from(await imageResponse.arrayBuffer())
-    const { url, filename } = prepareAsset({ mimeType: 'image/png', subDir: 'ai' })
+    const { buffer, mimeType, revisedPrompt } = generated
+    const { url, filename } = prepareAsset({ mimeType, subDir: 'ai' })
 
     // Create MediaAsset record — binary stored in DB
     const userId = parseInt((session.user as { id: string }).id)
@@ -77,7 +74,7 @@ export async function POST(req: NextRequest) {
         url,
         data: new Uint8Array(buffer) as Uint8Array<ArrayBuffer>,
         type: 'IMAGE',
-        mimeType: 'image/png',
+        mimeType,
         sizeBytes: buffer.length,
         aiPrompt: finalPrompt,
         createdByUserId: userId,
@@ -109,6 +106,8 @@ export async function POST(req: NextRequest) {
       originalPrompt: prompt,
       enhancedPrompt: enhancePrompt ? finalPrompt : undefined,
       mediaAssetId: asset.id,
+      provider,
+      model,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'AI image generation failed'

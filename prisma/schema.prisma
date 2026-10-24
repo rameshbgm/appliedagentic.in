@@ -242,14 +242,14 @@ model SiteSettings {
   socialYoutube       String?
   defaultOgImage      String?
   analyticsId         String?
-  openaiTextModel     String   @default("gpt-4o")
-  openaiImageModel    String   @default("dall-e-3")
-  openaiAudioModel    String   @default("tts-1")
+  openaiTextModel     String   @default("gpt-6-luna")
+  openaiImageModel    String   @default("gpt-image-2.5-flare")
+  openaiAudioModel    String   @default("gpt-realtime-2.1-mini")
   openaiTemperature   Float    @default(0.7)
   openaiMaxTokens     Int      @default(2000)
   openaiImageSize     String   @default("1024x1024")
-  openaiImageQuality  String   @default("standard")
-  openaiTtsVoice      String   @default("nova")
+  openaiImageQuality  String   @default("medium")
+  openaiTtsVoice      String   @default("marin")
   updatedAt           DateTime @updatedAt
 }
 

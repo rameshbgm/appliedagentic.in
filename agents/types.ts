@@ -8,9 +8,11 @@ export interface AgentConfig {
   provider: LLMProvider
   /** Text model identifier — resolved from env var with fallback */
   textModel: string
-  /** Sampling temperature (0–2) */
-  temperature: number
-  /** Maximum output tokens */
+  /** OpenAI reasoning effort; sampling parameters are omitted when enabled. */
+  reasoningEffort?: 'high'
+  /** Gemini sampling temperature (0–2); ignored for OpenAI high reasoning. */
+  temperature?: number
+  /** Visible output budget; OpenAI reserves additional tokens for reasoning. */
   maxTokens: number
   /** Enable streaming responses */
   streaming: boolean
@@ -23,7 +25,7 @@ export interface AgentInput {
   context?: string
   /** Optional override for max output tokens (per-call) */
   maxTokens?: number
-  /** Optional override for temperature (per-call) */
+  /** Optional Gemini temperature override; omitted for OpenAI reasoning requests. */
   temperature?: number
 }
 

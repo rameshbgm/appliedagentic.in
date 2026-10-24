@@ -11,20 +11,7 @@ interface Props {
   params: Promise<{ menuSlug: string; subMenuSlug: string }>
 }
 
-export async function generateStaticParams() {
-  try {
-    const subMenus = await prisma.navSubMenu.findMany({
-      where: { isVisible: true, menu: { isVisible: true } },
-      select: { slug: true, menu: { select: { slug: true } } },
-    })
-    return subMenus.map((sm) => ({
-      menuSlug: sm.menu.slug,
-      subMenuSlug: sm.slug,
-    }))
-  } catch {
-    return []
-  }
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
@@ -35,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     })
     if (!subMenu) return {}
     return {
-      title: `${subMenu.title} — ${subMenu.menu.title}`,
+      title: `${subMenu.title} | ${subMenu.menu.title}`,
       description: subMenu.description ?? undefined,
     }
   } catch (err) {

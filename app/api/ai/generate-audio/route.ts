@@ -1,12 +1,13 @@
 // app/api/ai/generate-audio/route.ts
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getOpenAIClient } from '@/lib/openai'
+import { openaiTextToSpeech } from '@/lib/openai-tts'
+import { concatenateWav } from '@/lib/audio'
 import { prisma } from '@/lib/prisma'
 import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runAudioNarrator, ttsConfig } from '@/agents/audio-narrator/agent'
-import { geminiTextToSpeech, isGeminiVoice } from '@/lib/gemini-tts'
+import { geminiTextToSpeech, isGeminiVoice, GEMINI_TTS_MODEL } from '@/lib/gemini-tts'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -38,30 +39,15 @@ export async function POST(req: NextRequest) {
       chunks = [text]
     }
 
-    // ── Synthesise — Gemini TTS (WAV) or OpenAI TTS (MP3) ────────────────
+    // Both providers produce PCM WAV; merge sample data under one header.
     const audioBuffers: Buffer[] = []
-    let mimeType: string
-
-    if (useGemini) {
-      for (const chunk of chunks) {
-        audioBuffers.push(await geminiTextToSpeech(chunk, selectedVoice))
-      }
-      mimeType = 'audio/wav'
-    } else {
-      const openai = getOpenAIClient()
-      for (const chunk of chunks) {
-        const mp3Response = await openai.audio.speech.create({
-          model: ttsConfig.openaiModel,
-          voice: selectedVoice as 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse',
-          input: chunk,
-          speed: 1.0,
-        })
-        audioBuffers.push(Buffer.from(await mp3Response.arrayBuffer()))
-      }
-      mimeType = 'audio/mpeg'
+    for (const chunk of chunks) {
+      audioBuffers.push(useGemini
+        ? await geminiTextToSpeech(chunk, selectedVoice)
+        : await openaiTextToSpeech(chunk, selectedVoice))
     }
-
-    const combinedBuffer = Buffer.concat(audioBuffers)
+    const combinedBuffer = concatenateWav(audioBuffers)
+    const mimeType = 'audio/wav'
     const { url, filename } = prepareAsset({ mimeType, subDir: 'audio' })
 
     // Save binary to DB (MediaAsset)
@@ -97,7 +83,7 @@ export async function POST(req: NextRequest) {
         userId,
         articleId: articleId ? parseInt(articleId) : null,
         type: 'AUDIO_GENERATION',
-        model: useGemini ? 'gemini-2.5-flash-preview-tts' : ttsConfig.openaiModel,
+        model: useGemini ? GEMINI_TTS_MODEL : ttsConfig.openaiModel,
         promptSnippet: text.slice(0, 200),
         status: 'success',
       },

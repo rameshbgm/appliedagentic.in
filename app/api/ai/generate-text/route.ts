@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runContentWriter } from '@/agents/content-writer/agent'
 import type { LLMProvider } from '@/agents/types'
+import { AI_MODELS } from '@/lib/ai-models'
 
 const LENGTH_TOKENS: Record<string, number> = {
   short: 600,
@@ -34,9 +35,13 @@ export async function POST(req: NextRequest) {
     // ── Content generation mode ──────────────────────────────────────────────
     const maxTokens = reqMaxTokens || LENGTH_TOKENS[length] || 1200
     const VALID_PROVIDERS: LLMProvider[] = ['gemini', 'openai']
-    const providerOverride = provider && model && VALID_PROVIDERS.includes(provider as LLMProvider)
-      ? { provider: provider as LLMProvider, textModel: model as string }
-      : undefined
+    if (provider && !VALID_PROVIDERS.includes(provider as LLMProvider)) return apiError('Unsupported text provider', 422)
+    const selectedProvider = (provider ?? 'openai') as LLMProvider
+    const configuredModel = selectedProvider === 'gemini'
+      ? process.env.GOOGLE_TEXT_MODEL ?? AI_MODELS.gemini.text
+      : process.env.OPENAI_TEXT_MODEL ?? AI_MODELS.openai.text
+    if (model && model !== configuredModel) return apiError('Unsupported text model', 422)
+    const providerOverride = { provider: selectedProvider, textModel: configuredModel }
 
     if (generateTitle) {
       // Generate markdown content normally (content-writer system prompt enforces RAW MARKDOWN).

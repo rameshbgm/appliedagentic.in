@@ -1,5 +1,5 @@
 // agents/image-prompter/agent.ts
-// Image Prompter agent — generates optimised DALL-E / Imagen prompts from article content.
+// Image Prompter agent — generates image prompts from article content.
 // SERVER-SIDE ONLY.
 
 import { runAgent }     from '../base'
@@ -17,9 +17,9 @@ export interface ImagePrompterInput extends AgentInput {
   /** Optional: content snippet to give the agent more context */
   context?: string
   /** Target image generation service — affects style hints */
-  target?: 'dalle3' | 'imagen'
+  target?: 'openai' | 'gemini'
   /** Aspect ratio hint */
-  aspectRatio?: '1:1' | '16:9' | '4:3'
+  aspectRatio?: '1:1' | '3:2' | '2:3'
 }
 
 export interface ImagePrompterOutput extends AgentOutput {
@@ -33,17 +33,17 @@ export interface ImagePrompterOutput extends AgentOutput {
  * @example
  * const result = await runImagePrompter({
  *   prompt: 'Autonomous AI agent orchestrating multiple tools',
- *   target: 'dalle3',
- *   aspectRatio: '16:9',
+ *   target: 'openai',
+ *   aspectRatio: '3:2',
  * })
- * // Pass result.imagePrompt directly to the DALL-E API
+ * // Pass result.imagePrompt to the selected image provider.
  */
 export async function runImagePrompter(
   input: ImagePrompterInput,
 ): Promise<ImagePrompterOutput> {
-  const targetNote = input.target === 'imagen'
-    ? 'Generate a prompt optimised for Google Imagen 3.'
-    : 'Generate a prompt optimised for DALL-E 3.'
+  const targetNote = input.target === 'gemini'
+    ? 'Generate a prompt optimised for Gemini Nano Banana 2.1.'
+    : 'Generate a prompt optimised for GPT Image 2.5 Flare.'
 
   const aspectNote = input.aspectRatio
     ? `Target aspect ratio: ${input.aspectRatio}.`

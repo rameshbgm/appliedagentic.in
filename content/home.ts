@@ -21,10 +21,10 @@ export const heroContent = {
   ],
 
   subheadline:
-    'Build, deploy, and reason about AI agents — from LLM fundamentals to production-ready agentic workflows.',
+    'Build, deploy, and reason about AI agents - from LLM fundamentals to production-ready agentic workflows.',
 
   ctas: {
-    primary:   { label: 'Explore Articles', href: '/modules' },
+    primary:   { label: 'Explore Articles', href: '/search'  },
     secondary: { label: 'Browse Topics',   href: '/#topics'   },
   },
 
@@ -54,7 +54,7 @@ export const featuredArticlesContent = {
   headline:       'Start',
   headlineAccent: 'Learning',
   viewAllLabel:   'All articles',
-  viewAllHref:    '/modules',
+  viewAllHref:    '/search',
 }
 
 // ─── Hero rotating messages (shown every 7s with random neon color) ──────────

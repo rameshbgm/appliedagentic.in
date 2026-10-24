@@ -74,6 +74,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
   // Cover image AI
   const [showCoverAI, setShowCoverAI] = useState(false)
   const [coverAIPrompt, setCoverAIPrompt] = useState('')
+  const [coverAIProvider, setCoverAIProvider] = useState<'openai' | 'gemini'>('openai')
 
   // Full article AI generator
   const [showAIGenerator, setShowAIGenerator] = useState(false)
@@ -311,8 +312,8 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt,
-        size: '1792x1024',
-        style: 'vivid',
+        provider: coverAIProvider,
+        size: '1536x1024',
         ...(initialArticle.id && { articleId: initialArticle.id }),
       }),
     })
@@ -1160,6 +1161,18 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
             {/* AI cover image generation panel */}
             {showCoverAI && (
               <div className="p-4 border-b space-y-3" style={{ borderColor: 'var(--bg-border)', background: 'var(--bg-surface)' }}>
+                <label className="block text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Image model
+                  <select
+                    value={coverAIProvider}
+                    onChange={(e) => setCoverAIProvider(e.target.value as 'openai' | 'gemini')}
+                    className="mt-1 w-full px-3 py-2 rounded-xl border text-sm"
+                    style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="openai">OpenAI · GPT Image 2.5 Flare</option>
+                    <option value="gemini">Gemini · Nano Banana 2.1</option>
+                  </select>
+                </label>
                 <label className="text-[10px] uppercase tracking-widest font-semibold block" style={{ color: 'var(--text-muted)' }}>
                   Describe the cover image
                 </label>
@@ -1192,7 +1205,7 @@ export default function ArticleEditorPage({ initialArticle, menus, allTags }: Pr
                   </button>
                 </div>
                 <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  Generates a wide (16:9) image and saves it to your media library.
+                  Generates a landscape (3:2) image and saves it to your media library.
                 </p>
               </div>
             )}

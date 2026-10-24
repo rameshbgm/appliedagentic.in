@@ -15,11 +15,11 @@ import ModuleTileGrid from '@/components/public/ModuleTileGrid'
 import ScrollBorderWrapper from '@/components/public/ScrollBorderWrapper'
 
 export const metadata: Metadata = {
-  title: 'Applied Agentic AI — Master AI Agents & LLMs',
+  title: 'Applied Agentic AI | Master AI Agents & LLMs',
   description: 'Your comprehensive, structured guide to understanding and building AI-powered agentic systems.',
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 
 async function getData() {

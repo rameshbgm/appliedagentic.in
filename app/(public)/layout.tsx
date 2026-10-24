@@ -10,6 +10,9 @@ import Loader3D from '@/components/shared/Loader3D'
 import RouteProgress from '@/components/shared/RouteProgress'
 import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
 
+// Navigation is edited in the database, independently of application builds.
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: { default: 'Applied Agentic AI', template: '%s | Applied Agentic AI' },
   description: 'Your comprehensive guide to AI agents, LLMs, and agentic systems.',

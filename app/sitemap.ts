@@ -4,43 +4,43 @@ import { prisma } from '@/lib/prisma'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
 
-export const revalidate = 3600
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let modules: { slug: string; updatedAt: Date }[] = []
-  let topics: { slug: string; updatedAt: Date }[] = []
-  let articles: { slug: string; publishedAt: Date | null; updatedAt: Date }[] = []
+  let menus: { slug: string; updatedAt: Date }[] = []
+  let subMenus: { slug: string; updatedAt: Date; menu: { slug: string } }[] = []
+  let articles: { slug: string; updatedAt: Date }[] = []
 
   try {
-    ;[modules, topics, articles] = await Promise.all([
-      prisma.module.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-      prisma.topic.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-      prisma.article.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, publishedAt: true, updatedAt: true } }),
+    ;[menus, subMenus, articles] = await Promise.all([
+      prisma.navMenu.findMany({ where: { isVisible: true }, select: { slug: true, updatedAt: true } }),
+      prisma.navSubMenu.findMany({
+        where: { isVisible: true, menu: { isVisible: true } },
+        select: { slug: true, updatedAt: true, menu: { select: { slug: true } } },
+      }),
+      prisma.article.findMany({ where: { status: 'PUBLISHED' }, select: { slug: true, updatedAt: true } }),
     ])
   } catch {
-    // Return static routes only if database is unavailable
+    // Keep static entry points available if the database is unavailable.
   }
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: BASE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
-    { url: `${BASE_URL}/modules`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/articles`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-    { url: `${BASE_URL}/search`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
+    { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${BASE_URL}/search`, changeFrequency: 'monthly', priority: 0.4 },
   ]
 
-  const moduleRoutes: MetadataRoute.Sitemap = modules.map((m) => ({
-    url: `${BASE_URL}/modules/${m.slug}`,
+  const menuRoutes: MetadataRoute.Sitemap = menus.map((m) => ({
+    url: `${BASE_URL}/${m.slug}`,
+    lastModified: m.updatedAt,
+    changeFrequency: 'weekly',
+    priority: 0.9,
+  }))
+
+  const moduleRoutes: MetadataRoute.Sitemap = subMenus.map((m) => ({
+    url: `${BASE_URL}/${m.menu.slug}/${m.slug}`,
     lastModified: m.updatedAt,
     changeFrequency: 'weekly',
     priority: 0.8,
-  }))
-
-  const topicRoutes: MetadataRoute.Sitemap = topics.map((t) => ({
-    url: `${BASE_URL}/topics/${t.slug}`,
-    lastModified: t.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.7,
   }))
 
   const articleRoutes: MetadataRoute.Sitemap = articles.map((a) => ({
@@ -50,5 +50,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticRoutes, ...moduleRoutes, ...topicRoutes, ...articleRoutes]
+  return [...staticRoutes, ...menuRoutes, ...moduleRoutes, ...articleRoutes]
 }

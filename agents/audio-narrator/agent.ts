@@ -58,7 +58,7 @@ function chunkText(text: string, maxChars: number): string[] {
  * const result = await runAudioNarrator({ prompt: markdownContent })
  * // Pass result.chunks to OpenAI TTS API one at a time
  * for (const chunk of result.chunks) {
- *   const audio = await openai.audio.speech.create({ model: ttsConfig.model, voice: ttsConfig.voice, input: chunk })
+ *   const audio = await openaiTextToSpeech(chunk, ttsConfig.voice)
  * }
  */
 export async function runAudioNarrator(

@@ -8,7 +8,7 @@ export const footerContent = {
   },
 
   exploreLinks: [
-    { href: '/modules',  label: 'All Modules'  },
+    { href: '/#topics', label: 'All Modules'  },
     { href: '/search',   label: 'Search'        },
   ],
 

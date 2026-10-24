@@ -8,7 +8,7 @@ export const guardrails = `
 - Do NOT reference real people, celebrities, politicians, or their likenesses.
 - Do NOT request depictions of real-world trademarked logos or brand identities.
 - Do NOT request images of real software UIs or copyrighted interfaces.
-- Do NOT include text-rendering instructions (DALL-E cannot reliably render text).
+- Do NOT include text-rendering instructions unless explicitly requested.
 - Keep the prompt between 50 and 200 words — concise but descriptive.
 - Always align the visual style with a professional tech platform aesthetic.
 `.trim()

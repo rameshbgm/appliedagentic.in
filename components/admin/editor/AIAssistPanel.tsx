@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sparkles, ChevronDown, ChevronUp, Loader2, Music } from 'lucide-react'
 import { toast } from 'sonner'
+import { AI_MODELS, OPENAI_REALTIME_VOICES } from '@/lib/ai-models'
 
 type Tab = 'text' | 'audio'
 type TextProvider = 'gemini' | 'openai'
@@ -23,13 +24,13 @@ const textTones = ['informative', 'casual', 'professional', 'engaging', 'technic
 const textLengths = ['short', 'medium', 'long']
 
 const TEXT_MODELS: Record<TextProvider, string[]> = {
-  gemini: ['gemini-2.5-flash-preview', 'gemini-2.0-flash', 'gemini-1.5-pro'],
-  openai: ['gpt-4o-mini', 'gpt-4o'],
+  gemini: [AI_MODELS.gemini.text],
+  openai: [AI_MODELS.openai.text],
 }
 
 const VOICES: Record<AudioProvider, string[]> = {
   gemini: ['Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Schedar', 'Laomedeia'],
-  openai: ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse'],
+  openai: [...OPENAI_REALTIME_VOICES],
 }
 
 const PROVIDER_LABELS: Record<TextProvider | AudioProvider, string> = {
@@ -48,8 +49,8 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
   const [textLength, setTextLength] = useState('medium')
   const [textPrompt, setTextPrompt] = useState('')
   const [withTitle, setWithTitle] = useState(false)
-  const [textProvider, setTextProvider] = useState<TextProvider>('gemini')
-  const [textModel, setTextModel] = useState(TEXT_MODELS.gemini[0])
+  const [textProvider, setTextProvider] = useState<TextProvider>('openai')
+  const [textModel, setTextModel] = useState(TEXT_MODELS.openai[0])
 
   const handleTextProviderChange = (p: TextProvider) => {
     setTextProvider(p)
@@ -59,8 +60,8 @@ export default function AIAssistPanel({ onInsert, onReplace, onSetTitle, article
   // Audio
   const [audioSource, setAudioSource] = useState<'content' | 'custom'>('content')
   const [audioText, setAudioText] = useState('')
-  const [audioProvider, setAudioProvider] = useState<AudioProvider>('gemini')
-  const [audioVoice, setAudioVoice] = useState(VOICES.gemini[3]) // 'Kore'
+  const [audioProvider, setAudioProvider] = useState<AudioProvider>('openai')
+  const [audioVoice, setAudioVoice] = useState(VOICES.openai[0])
 
   const handleProviderChange = (p: AudioProvider) => {
     setAudioProvider(p)

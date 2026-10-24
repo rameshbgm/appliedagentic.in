@@ -1,3 +1,4 @@
+import { AI_MODELS } from '@/lib/ai-models'
 // agents/tags-generator/config.ts
 // To switch provider: change `provider` and update `textModel`.
 // Default: Gemini Flash — fast and cheap for short classification tasks.
@@ -9,16 +10,12 @@ export const config: AgentConfig = {
    * Gemini API key  → GOOGLE_GENAI_API_KEY in .env.local
    * OpenAI API key  → OPENAI_API_KEY in .env.local
    */
-  provider: 'gemini',
+  provider: 'openai',
 
-  /**
-   * Gemini models:  gemini-3-flash-preview | gemini-2.0-flash | gemini-1.5-flash-002
-   * OpenAI models:  gpt-4o-mini | gpt-4o | ...
-   */
-  textModel: 'gemini-2.0-flash',
+  /** OpenAI text generation via Responses API with high reasoning. */
+  textModel: process.env.OPENAI_TEXT_MODEL ?? AI_MODELS.openai.text,
 
-  /** Low temperature for deterministic, repeatable tag lists */
-  temperature: 0.3,
+  reasoningEffort: 'high',
 
   /** 10 tags in a JSON array — well under 150 tokens; 300 gives safe headroom */
   maxTokens: 300,

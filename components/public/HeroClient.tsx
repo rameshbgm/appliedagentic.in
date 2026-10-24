@@ -11,8 +11,8 @@ import { heroContent, heroRotatingMessages } from '@/content/home'
 import { useArticleLoading } from '@/components/shared/ArticleLoadingContext'
 
 interface Props {
-  menuCount:    number
-  articleCount: number
+  moduleCount: number | null
+  articleCount: number | null
 }
 
 // ─── Typewriter hook ───────────────────────────────────────────────────────────
@@ -55,55 +55,55 @@ function useTypewriter(words: string[], typingMs = 80, pauseMs = 1800, erasingMs
 
 // ─── Rotating hero messages ────────────────────────────────────────────────────
 const HERO_MESSAGES = [
-  'Build, deploy, and reason about AI agents — from LLM fundamentals to production-ready agentic workflows.',
-  'Go beyond prompting — understand the architecture behind autonomous, tool-using AI systems.',
-  'From RAG pipelines to multi-agent orchestration — learn what actually works in production.',
+  'Build, deploy, and reason about AI agents - from LLM fundamentals to production-ready agentic workflows.',
+  'Go beyond prompting - understand the architecture behind autonomous, tool-using AI systems.',
+  'From RAG pipelines to multi-agent orchestration - learn what actually works in production.',
   'Master the patterns that power real AI agents: memory, planning, tools, and reflection.',
-  'The internet runs on APIs. The future runs on agents — learn to build both.',
+  'The internet runs on APIs. The future runs on agents - learn to build both.',
   'Structured paths from first principles to deployed, reasoning AI systems.',
   'LLMs are the engine. Agents are the vehicle. Learn to drive.',
-  'Explore the full stack of agentic AI — models, memory, tools, and orchestration layers.',
+  'Explore the full stack of agentic AI - models, memory, tools, and orchestration layers.',
   'Every great AI product starts with understanding how language models reason and act.',
-  'Cut through the hype — deep, practical knowledge on agentic systems that ship.',
+  'Cut through the hype - deep, practical knowledge on agentic systems that ship.',
   'From zero-shot prompts to autonomous agents that plan, act, and self-correct.',
-  'Learn to build AI that doesn\'t just respond — it decides, acts, and adapts.',
+  'Learn to build AI that doesn\'t just respond - it decides, acts, and adapts.',
   'The era of single-turn chatbots is over. Welcome to the age of agentic AI.',
-  'Understand how agents perceive, reason, and act — then build your own.',
-  'Production AI isn\'t about clever prompts — it\'s about robust, observable systems.',
-  'RAG, tool-calling, memory, planning — master every pillar of modern agentic design.',
-  'AI agents that work in the real world require more than a good model — learn what else.',
-  'From transformer internals to deployment pipelines — deep coverage, zero fluff.',
+  'Understand how agents perceive, reason, and act - then build your own.',
+  'Production AI isn\'t about clever prompts - it\'s about robust, observable systems.',
+  'RAG, tool-calling, memory, planning - master every pillar of modern agentic design.',
+  'AI agents that work in the real world require more than a good model - learn what else.',
+  'From transformer internals to deployment pipelines - deep coverage, zero fluff.',
   'Build agents that solve real problems, not just demos that impress for five minutes.',
   'The shift from assistants to agents is the biggest platform transition in software.',
-  'Agentic AI is the new full-stack — understand the entire execution chain.',
+  'Agentic AI is the new full-stack - understand the entire execution chain.',
   'Practical, production-focused content on LLMs, agents, RAG, and beyond.',
   'Learn how top teams are building reliable, observable, agentic AI systems today.',
-  'Not tutorials — mental models. Not demos — deployable patterns.',
+  'Not tutorials - mental models. Not demos - deployable patterns.',
   'Go deep on the systems that will define how software is built for the next decade.',
   'Every module here is built around what actually ships, not what just looks good in a notebook.',
-  'Understand why agents fail — and how to build ones that don\'t.',
-  'Context windows, tool use, multi-step reasoning — the building blocks of agentic AI.',
-  'AI agents that can browse, code, search, and synthesise — learn to orchestrate them.',
+  'Understand why agents fail - and how to build ones that don\'t.',
+  'Context windows, tool use, multi-step reasoning - the building blocks of agentic AI.',
+  'AI agents that can browse, code, search, and synthesise - learn to orchestrate them.',
   'The next generation of software engineers will build with, around, and on top of LLMs.',
-  'Grounding, retrieval, evaluation, and safety — the unglamorous parts that make AI real.',
+  'Grounding, retrieval, evaluation, and safety - the unglamorous parts that make AI real.',
   'Move from prompt curiosity to agentic systems engineering.',
   'Learn to design AI agents that are robust, auditable, and actually useful.',
   'The best agentic systems feel like magic from the outside and rock-solid engineering inside.',
-  'Understand attention, embeddings, and reasoning chains — not just API calls.',
-  'From local models to cloud-scale multi-agent pipelines — cover the full spectrum.',
+  'Understand attention, embeddings, and reasoning chains - not just API calls.',
+  'From local models to cloud-scale multi-agent pipelines - cover the full spectrum.',
   'Agentic AI rewards systems thinkers. Start thinking in systems.',
-  'The foundations aren\'t optional — every great agent engineer understands the model first.',
+  'The foundations aren\'t optional - every great agent engineer understands the model first.',
   'Hands-on, structured, opinionated learning for serious AI builders.',
-  'Retrieval-augmented generation done right — architecture, evaluation, and tradeoffs.',
+  'Retrieval-augmented generation done right - architecture, evaluation, and tradeoffs.',
   'Build agents with long-term memory, persistent state, and real-world tool access.',
-  'Not just what LLMs can do — but how to reliably make them do it at scale.',
+  'Not just what LLMs can do - but how to reliably make them do it at scale.',
   'Every lesson here is written for engineers who want to ship, not just experiment.',
-  'Autonomous agents need more than intelligence — they need guardrails and observability.',
-  'From fine-tuning intuition to production RLHF — understand how models are shaped.',
-  'Multi-agent systems, role specialization, and coordination patterns — covered in depth.',
+  'Autonomous agents need more than intelligence - they need guardrails and observability.',
+  'From fine-tuning intuition to production RLHF - understand how models are shaped.',
+  'Multi-agent systems, role specialization, and coordination patterns - covered in depth.',
   'The gap between AI demo and AI product is systems engineering. Bridge it here.',
   'Real-world agentic AI is part software, part product, part cognitive architecture.',
-  'Knowledge graphs, vector stores, semantic search — the memory layer of modern AI.',
+  'Knowledge graphs, vector stores, semantic search - the memory layer of modern AI.',
   'Applied means usable. Learn agentic AI the way professionals actually build it.',
 ]
 
@@ -163,7 +163,7 @@ function DotsLayer() {
 }
 
 // ─── Hero Client ──────────────────────────────────────────────────────────────
-export default function HeroClient({ menuCount, articleCount }: Props) {
+export default function HeroClient({ moduleCount, articleCount }: Props) {
   const { headline, typewriterTopics, ctas, staticStats, dynamicStatLabels, badge } =
     heroContent
 
@@ -194,8 +194,8 @@ export default function HeroClient({ menuCount, articleCount }: Props) {
   }, [])
 
   const stats = [
-    { value: String(menuCount    || '8'),   label: dynamicStatLabels.modules  },
-    { value: String(articleCount || '50+'), label: dynamicStatLabels.articles },
+    { value: moduleCount == null ? 'N/A' : String(moduleCount), label: dynamicStatLabels.modules },
+    { value: articleCount == null ? 'N/A' : String(articleCount), label: dynamicStatLabels.articles },
     ...staticStats,
   ]
 

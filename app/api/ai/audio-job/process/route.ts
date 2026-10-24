@@ -3,7 +3,8 @@
 // Continues running on the server even after the browser closes (keepalive fetch).
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getOpenAIClient } from '@/lib/openai'
+import { openaiTextToSpeech } from '@/lib/openai-tts'
+import { concatenateWav } from '@/lib/audio'
 import { prisma } from '@/lib/prisma'
 import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
@@ -61,7 +62,6 @@ export async function POST(req: NextRequest) {
     // Determine provider from voice name — Gemini voices are Title-cased
     const useGemini = isGeminiVoice(voice)
     const ttsModel = useGemini ? GEMINI_TTS_MODEL : ttsConfig.openaiModel
-    const openai = useGemini ? null : getOpenAIClient()
 
     logger.info(`[audio-job] articleId=${articleId} voice="${voice}" provider=${useGemini ? 'gemini' : 'openai'} sections=${sections.length}`)
 
@@ -79,33 +79,15 @@ export async function POST(req: NextRequest) {
           // Step 1: Clean markdown → TTS-ready prose via LangChain/Gemini LLM
           const narratorResult = await runAudioNarrator({ prompt: section.content })
 
-          // Step 2: Synthesise audio — Gemini TTS or OpenAI TTS
-          let combined: Buffer
-          let mimeType: string
-
-          if (useGemini) {
-            // Gemini TTS: returns a WAV buffer directly (PCM wrapped in RIFF header)
-            const wavBuffers: Buffer[] = []
-            for (const chunk of narratorResult.chunks) {
-              wavBuffers.push(await geminiTextToSpeech(chunk, voice))
-            }
-            combined = Buffer.concat(wavBuffers)
-            mimeType = 'audio/wav'
-          } else {
-            // OpenAI TTS: returns MP3
-            const mp3Buffers: Buffer[] = []
-            for (const chunk of narratorResult.chunks) {
-              const mp3 = await openai!.audio.speech.create({
-                model: ttsConfig.openaiModel,
-                voice: voice as 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse',
-                input: chunk,
-                speed: 1.0,
-              })
-              mp3Buffers.push(Buffer.from(await mp3.arrayBuffer()))
-            }
-            combined = Buffer.concat(mp3Buffers)
-            mimeType = 'audio/mpeg'
+          // Both providers return WAV. Merge data rather than concatenating headers.
+          const audioBuffers: Buffer[] = []
+          for (const chunk of narratorResult.chunks) {
+            audioBuffers.push(useGemini
+              ? await geminiTextToSpeech(chunk, voice)
+              : await openaiTextToSpeech(chunk, voice))
           }
+          const combined = concatenateWav(audioBuffers)
+          const mimeType = 'audio/wav'
 
           const { url, filename } = prepareAsset({ mimeType, subDir: 'audio' })
 

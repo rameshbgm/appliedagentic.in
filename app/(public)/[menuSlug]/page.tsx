@@ -11,17 +11,7 @@ interface Props {
   params: Promise<{ menuSlug: string }>
 }
 
-export async function generateStaticParams() {
-  try {
-    const menus = await prisma.navMenu.findMany({
-      where: { isVisible: true },
-      select: { slug: true },
-    })
-    return menus.map((m) => ({ menuSlug: m.slug }))
-  } catch {
-    return []
-  }
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
@@ -52,8 +42,9 @@ export default async function MenuPage({ params }: Props) {
           where: { isVisible: true },
           orderBy: { order: 'asc' },
           include: {
-            _count: { select: { articles: true } },
+            _count: { select: { articles: { where: { article: { status: 'PUBLISHED' } } } } },
             articles: {
+              where: { article: { status: 'PUBLISHED' } },
               orderBy: { orderIndex: 'asc' },
               include: {
                 article: {
@@ -154,7 +145,9 @@ export default async function MenuPage({ params }: Props) {
           <MenuContentLayout
             subMenus={menu.subMenus.map((sm) => ({
               ...sm,
-              articles: sm.articles.filter((a) => a.article.status === 'PUBLISHED'),
+              articles: sm.articles.map(({ article }) => ({
+                article: { ...article, updatedAt: article.updatedAt.toISOString() },
+              })),
             }))}
             menuSlug={menu.slug}
           />

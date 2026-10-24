@@ -6,10 +6,19 @@ import FooterNewsletterWrapper from './FooterNewsletterWrapper'
 import { footerContent } from '@/content/footer'
 import { siteConfig }   from '@/content/site'
 
-interface Menu { name?: string; title?: string; slug: string }
+interface Menu {
+  name?: string
+  title?: string
+  slug: string
+  subMenus?: { title: string; slug: string }[]
+}
 interface Props  { menus?: Menu[] }
 
 export default function Footer({ menus = [] }: Props) {
+  const moduleLinks = menus.flatMap((menu) => menu.subMenus?.length
+    ? menu.subMenus.map((sub) => ({ title: sub.title, href: `/${menu.slug}/${sub.slug}` }))
+    : [{ title: menu.title ?? menu.name ?? menu.slug, href: `/${menu.slug}` }])
+
   return (
     <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--bg-border)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
@@ -48,12 +57,12 @@ export default function Footer({ menus = [] }: Props) {
               Learning Modules
             </h4>
             <ul className="space-y-2.5">
-              {menus.slice(0, 6).map((m) => (
-                <li key={m.slug}>
-                  <NavLink href={`/${m.slug}`}
+              {moduleLinks.map((module) => (
+                <li key={module.href}>
+                  <NavLink href={module.href}
                     className="text-[13px] transition-colors hover:text-[var(--green)]"
                     style={{ color: 'var(--text-secondary)' }}>
-                    {m.title ?? m.name}
+                    {module.title}
                   </NavLink>
                 </li>
               ))}
