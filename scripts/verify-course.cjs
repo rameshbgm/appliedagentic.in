@@ -115,7 +115,7 @@ async function pooled(items, fn) {
   }
   const report = { verifiedAt: new Date().toISOString(), database: 'u915919430_appliedagentic', host: new URL(process.env.DATABASE_URL).hostname,
     publishedModules: 8, publishedArticles: 42, newArticles: 21, sections: 139, newSections: 75, covers: 42, audioSections: 139,
-    newCovers: 21, newAudioSections: 75, wavAudioMinutes: Math.round(audioSeconds / 60), emDashesInPublishedCourse: 0,
+    newCovers: 21, newAudioSections: 75, totalAudioMinutes: Math.round(audioSeconds / 60), emDashesInPublishedCourse: 0,
     originalArticlesPreservedApartFromPunctuation: preserved, sourceTextAndMetadataVerified: true, navigationVerified: true,
     liveOrigin: origin, pages, sitemapVerified: true, audioRangeChecks };
   fs.writeFileSync(path.join(work, 'verification.json'), JSON.stringify(report, null, 2) + '\n');
