@@ -79,6 +79,9 @@ subscriber. The application does not send campaign emails by itself.
 | `npm run test:learning` | Curriculum and publication tooling |
 | `npm run test:ai` | Provider transports and text fallback with mocked APIs |
 | `npm run test:app` | Search parameters and media byte ranges |
+| `npm run test:deploy` | Additive release planning, repeatability and incompatible schema guards |
+| `npm run db:check:prod` | Read-only verification against `.env.production` |
+| `npm run db:deploy:prod` | Explicitly apply the reviewed additive Transit release to `.env.production` |
 | `npm run test:app:live` | Running local app: login, admin pages, search, article lifecycle, media, settings and newsletter |
 | `npm run build` | Prisma client generation and production Next.js build |
 
@@ -87,10 +90,13 @@ admin. Override `APP_TEST_EMAIL` / `APP_TEST_PASSWORD` for a different existing
 local account. Tests create and remove only their own records and restore the
 settings they temporarily change. They refuse non-local URLs and databases.
 
-Before deploying this branch, apply its additive Prisma schema changes
-(`SiteSettings.siteUrl`, `SiteSettings.showArticleImages` and `NewsletterSubscriber`) to the intended database with
-your established database release workflow. No production schema or data is
-changed by local development or verification.
+Before deploying against an existing database, run `npm run db:check:prod`.
+If it reports missing Transit schema, review `prisma/releases/20261025_transit.sql`
+and run `npm run db:deploy:prod` with the intended environment. The release adds
+only missing `SiteSettings.siteUrl`, `SiteSettings.showArticleImages` and
+`NewsletterSubscriber`; it preserves existing settings/content and can safely
+resume a partially completed run. Local development and verification never
+apply this production release implicitly.
 
 
 ## Dependency baseline (25 October 2026)
@@ -118,6 +124,22 @@ release candidates are excluded from this production update.
   warnings; React Compiler is not enabled for this application.
 
 For a clean production build, run `npm ci` followed by `npm run build:prod`.
-This generates the client and cleans cached build output without deploying
-schema changes. Apply the additive schema changes above through the database
-release workflow before deploying the application.
+Every build with a configured database now checks the Transit schema before
+cleaning/compiling. Missing columns or tables fail the build with the explicit
+release command, preventing a successful build from deploying a broken site.
+Standard builds generate the client but never apply this release automatically.
+The explicit `build:with-migrate` command applies this reviewed release before
+compiling. When
+DATABASE_URL is absent, compilation may still use the existing build-time stub;
+run the explicit database check with the deployment environment before release.
+
+## Production incident verification (25 October 2026)
+
+The live 500 was reproduced locally with `npm run start:prod`, which reads
+`.env.production`: health was 200, but home was 500 because `siteUrl` was missing.
+Both settings columns and the subscriber table were absent from production.
+The release was tested against isolated MySQL, then explicitly approved and
+applied to production. Existing settings and all 114 articles, 211 sections and
+326 media records were preserved. Live and production-environment local routes
+were checked after the repair. The local app continues to run with the
+production environment, so admin changes there affect the real database.

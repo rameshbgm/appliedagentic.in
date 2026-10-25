@@ -5,11 +5,11 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:setup": "node scripts/dev-setup.cjs",
-    "build": "prisma generate && npm run clean && next build --webpack",
-    "build:prod": "dotenv run -q -f .env.production -- sh -c 'prisma generate && npm run clean && next build --webpack'",
-    "build:uat": "dotenv run -q -f .env.uat -- sh -c 'prisma generate && npm run clean && next build --webpack'",
-    "build:with-migrate": "dotenv run -q -f .env.production -- sh -c 'prisma migrate deploy && prisma generate && npm run clean && next build --webpack'",
-    "build:no-migrate": "dotenv run -q -f .env.production -- sh -c 'prisma generate && npm run clean && next build --webpack'",
+    "build": "prisma generate && node scripts/deploy-schema.cjs --allow-no-database && npm run clean && next build --webpack",
+    "build:prod": "dotenv run -q -f .env.production -- sh -c 'prisma generate && node scripts/deploy-schema.cjs --allow-no-database && npm run clean && next build --webpack'",
+    "build:uat": "dotenv run -q -f .env.uat -- sh -c 'prisma generate && node scripts/deploy-schema.cjs --allow-no-database && npm run clean && next build --webpack'",
+    "build:with-migrate": "dotenv run -q -f .env.production -- sh -c 'prisma generate && node scripts/deploy-schema.cjs --apply && npm run clean && next build --webpack'",
+    "build:no-migrate": "dotenv run -q -f .env.production -- sh -c 'prisma generate && node scripts/deploy-schema.cjs --allow-no-database && npm run clean && next build --webpack'",
     "start": "next start -p ${PORT:-3000}",
     "start:prod": "dotenv run -q -f .env.production -- next start -p ${PORT:-3000}",
     "start:uat": "dotenv run -q -f .env.uat -- next start -p ${PORT:-3000}",
@@ -23,7 +23,12 @@
     "test:app": "node --test tests/application.test.cjs",
     "test:app:live": "node scripts/verify-local.cjs",
     "clean": "node scripts/clean.cjs",
-    "predev": "prisma generate"
+    "predev": "prisma generate",
+    "db:check": "prisma generate && node scripts/deploy-schema.cjs",
+    "db:deploy": "prisma generate && node scripts/deploy-schema.cjs --apply",
+    "db:check:prod": "dotenv run -q -f .env.production -- npm run db:check",
+    "db:deploy:prod": "dotenv run -q -f .env.production -- npm run db:deploy",
+    "test:deploy": "node --test tests/deploy-schema.test.cjs"
   },
   "packageManager": "npm@12.2.1",
   "ts-node": {

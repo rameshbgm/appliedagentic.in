@@ -16,7 +16,7 @@ import { ArticleAudioProvider } from '@/components/public/ArticleAudioContext'
 import SectionBlock from '@/components/transit/SectionBlock'
 import ListenButton from '@/components/transit/ListenButton'
 import ShareRow from '@/components/transit/ShareRow'
-import ReaderTools from '@/components/transit/ReaderTools'
+import ArticleSummaryButton from '@/components/transit/ArticleSummaryButton'
 import StopCard from '@/components/transit/StopCard'
 import { RideProvider, RideBar, RideSideMap, RideFab } from '@/components/transit/Ride'
 
@@ -238,7 +238,6 @@ export default async function ArticleDetailPage({ params }: Props) {
       : []
   const minutes = article.readingTimeMinutes ?? 0
   const otherLines = network.filter((l) => l.id !== line?.id).slice(0, 4)
-  const tools = <ReaderTools content={fullContent} title={article.title} />
 
   return (
     <ArticleAudioProvider key={article.slug} sections={audioSections}>
@@ -284,23 +283,20 @@ export default async function ArticleDetailPage({ params }: Props) {
 
               <div className="tr-art-actions">
                 <ListenButton />
+                <ArticleSummaryButton content={fullContent} title={article.title} />
                 <ShareRow url={articleUrl} title={article.title} />
               </div>
             </header>
 
             {showArticleImages && article.coverImage && (
-              <div className="tr-cover" style={{ maxWidth: 1000 }}>
+              <div className="tr-cover">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={article.coverImage.url} alt={article.coverImage.altText || article.title} fetchPriority="high" />
               </div>
             )}
 
             <div className="tr-read-grid">
-              <aside className="tr-read-side" aria-label="Reading tools and contents">
-                <div className="tr-side-card">
-                  <span className="tr-eyebrow">Reader tools</span>
-                  {tools}
-                </div>
+              <aside className="tr-read-side" aria-label="Article contents">
                 <RideSideMap />
               </aside>
 
@@ -317,17 +313,17 @@ export default async function ArticleDetailPage({ params }: Props) {
               </article>
 
               {(prev || next) && (
-                <nav className="tr-nextprev tr-reader-nextprev" aria-label="Previous and next stop" style={{ maxWidth: 720 }}>
+                <nav className="tr-nextprev tr-reader-nextprev" aria-label="Previous and next stop">
                   {prev ? (
                     <Link href={`/articles/${prev.slug}`} className="tr-np tr-np--prev">
-                      <span className="arrow"><ArrowLeft size={20} /></span>
+                      <span className="arrow"><ArrowLeft size={16} /></span>
                       <div><span className="tr-eyebrow">Previous stop</span><h3>{prev.title}</h3></div>
                     </Link>
                   ) : <span className="tr-desktop-only" />}
                   {next && (
                     <Link href={`/articles/${next.slug}`} className="tr-np tr-np--next">
                       <div><span className="tr-eyebrow">Next stop</span><h3>{next.title}</h3></div>
-                      <span className="arrow"><ArrowRight size={20} /></span>
+                      <span className="arrow"><ArrowRight size={16} /></span>
                     </Link>
                   )}
                 </nav>
@@ -371,7 +367,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
           </div>
 
-          <RideFab tools={tools} />
+          <RideFab />
           <ArticleAudioPlayer />
         </div>
       </RideProvider>

@@ -181,14 +181,14 @@ export function RideSideMap() {
 }
 
 /** Mobile: floating "Stops" button with a progress ring, opens a sheet. */
-export function RideFab({ tools }: { tools?: React.ReactNode }) {
+export function RideFab() {
   const { stops, progress } = useRide()
   const [open, setOpen] = useState(false)
   const C = 2 * Math.PI * 10
 
   return (
     <>
-      <button type="button" className="tr-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label="Stops and reading tools">
+      <button type="button" className="tr-fab" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-label="Stops in this article">
         <svg className="ring" viewBox="0 0 26 26" aria-hidden="true">
           <circle cx="13" cy="13" r="10" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="3.5" />
           <circle cx="13" cy="13" r="10" fill="none" stroke="var(--notice)" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress)} transform="rotate(-90 13 13)" />
@@ -203,7 +203,6 @@ export function RideFab({ tools }: { tools?: React.ReactNode }) {
               <h2 className="tr-display">This ride</h2>
               <button type="button" className="tr-icon-btn" onClick={() => setOpen(false)} aria-label="Close"><X size={18} /></button>
             </div>
-            {tools && <div style={{ marginBottom: 16 }}>{tools}</div>}
             {stops.length > 0 && <div className="tr-sidemap"><StopLinks onPick={() => setOpen(false)} /></div>}
           </div>
         </Modal>

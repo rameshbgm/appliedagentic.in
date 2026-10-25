@@ -1,5 +1,5 @@
 // app/api/ai/summarize/route.ts
-// Public (no auth) — called from ArticleReaderTools to summarize article content
+// Public (no auth) — called by the article and section summary buttons
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runSummarizer } from '@/agents/summarizer/agent'
