@@ -3,6 +3,23 @@ import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
+
+const SettingsSchema = z.object({
+  siteName: z.string().trim().min(1).max(200).optional(),
+  showArticleImages: z.boolean().optional(),
+  siteUrl: z.union([z.string().url().regex(/^https?:\/\//, 'Use an HTTP or HTTPS URL.'), z.literal('')]).optional(),
+  tagline: z.string().max(500).optional(),
+  logoUrl: z.string().optional(), faviconUrl: z.string().optional(),
+  metaDescription: z.string().max(2000).optional(), footerText: z.string().max(2000).optional(),
+  socialTwitter: z.string().optional(), socialLinkedin: z.string().optional(), socialYoutube: z.string().optional(),
+  defaultOgImage: z.string().optional(), analyticsId: z.string().optional(),
+  openaiTextModel: z.string().optional(), openaiImageModel: z.string().optional(), openaiAudioModel: z.string().optional(),
+  openaiTemperature: z.coerce.number().min(0).max(2).optional(),
+  openaiMaxTokens: z.coerce.number().int().positive().optional(),
+  openaiImageSize: z.string().optional(), openaiImageQuality: z.string().optional(), openaiTtsVoice: z.string().optional(),
+})
 
 export async function GET() {
   const session = await auth()
@@ -25,9 +42,11 @@ export async function PUT(req: NextRequest) {
   if (!session) return apiError('Unauthorized', 401)
 
   try {
-    const body = await req.json()
+    const body = SettingsSchema.parse(await req.json())
     const {
       siteName,
+      showArticleImages,
+      siteUrl,
       tagline,
       logoUrl,
       faviconUrl,
@@ -52,6 +71,8 @@ export async function PUT(req: NextRequest) {
       where: { id: 1 },
       update: {
         ...(siteName !== undefined && { siteName }),
+        ...(showArticleImages !== undefined && { showArticleImages }),
+        ...(siteUrl !== undefined && { siteUrl }),
         ...(tagline !== undefined && { tagline }),
         ...(logoUrl !== undefined && { logoUrl }),
         ...(faviconUrl !== undefined && { faviconUrl }),
@@ -65,20 +86,23 @@ export async function PUT(req: NextRequest) {
         ...(openaiTextModel !== undefined && { openaiTextModel }),
         ...(openaiImageModel !== undefined && { openaiImageModel }),
         ...(openaiAudioModel !== undefined && { openaiAudioModel }),
-        ...(openaiTemperature !== undefined && { openaiTemperature: parseFloat(openaiTemperature) }),
-        ...(openaiMaxTokens !== undefined && { openaiMaxTokens: parseInt(openaiMaxTokens) }),
+        ...(openaiTemperature !== undefined && { openaiTemperature }),
+        ...(openaiMaxTokens !== undefined && { openaiMaxTokens }),
         ...(openaiImageSize !== undefined && { openaiImageSize }),
         ...(openaiImageQuality !== undefined && { openaiImageQuality }),
         ...(openaiTtsVoice !== undefined && { openaiTtsVoice }),
       },
       create: {
         id: 1,
+        ...body,
         siteName: siteName || 'Applied Agentic AI',
       },
     })
 
+    revalidatePath('/', 'layout')
     return apiSuccess(settings)
   } catch (err) {
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update settings', 500, err)
   }
 }

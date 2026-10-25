@@ -6,6 +6,8 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseMediaRange } from '@/lib/media-range'
+import { readDevelopmentMedia } from '@/lib/dev-media'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.jpg':  'image/jpeg',
@@ -38,6 +40,20 @@ export async function GET(
       select: { data: true, mimeType: true, filename: true },
     })
 
+    if (asset && !asset.data) {
+      const remote = await readDevelopmentMedia(assetUrl, req.headers.get('range'))
+      if (remote) {
+        if (!remote.range) return new NextResponse('Range Not Satisfiable', { status: 416, headers: { 'Content-Range': `bytes */${remote.size}` } })
+        const partial = req.headers.has('range')
+        return new NextResponse(remote.data, { status: partial ? 206 : 200, headers: {
+          'Content-Type': asset.mimeType || 'application/octet-stream',
+          'Content-Length': String(remote.data.length), 'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          ...(partial ? { 'Content-Range': `bytes ${remote.range.start}-${remote.range.end}/${remote.size}` } : {}),
+        } })
+      }
+    }
+
     if (!asset || !asset.data) {
       return new NextResponse('Not found', { status: 404 })
     }
@@ -54,30 +70,25 @@ export async function GET(
     // ── Range request support (required for audio/video seeking + duration) ──
     const rangeHeader = req.headers.get('range')
     if (rangeHeader) {
-      const match = rangeHeader.match(/bytes=(\d*)-(\d*)/)
-      if (match) {
-        const start = match[1] ? parseInt(match[1], 10) : 0
-        const end   = match[2] ? Math.min(parseInt(match[2], 10), totalBytes - 1) : totalBytes - 1
-
-        if (start > end || start >= totalBytes) {
-          return new NextResponse('Range Not Satisfiable', {
-            status: 416,
-            headers: { 'Content-Range': `bytes */${totalBytes}` },
-          })
-        }
-
-        const chunk = body.subarray(start, end + 1)
-        return new NextResponse(chunk, {
-          status: 206,
-          headers: {
-            'Content-Type':   contentType,
-            'Content-Length': String(chunk.length),
-            'Content-Range':  `bytes ${start}-${end}/${totalBytes}`,
-            'Accept-Ranges':  'bytes',
-            'Cache-Control':  'public, max-age=31536000, immutable',
-          },
+      const range = parseMediaRange(rangeHeader, totalBytes)
+      if (!range) {
+        return new NextResponse('Range Not Satisfiable', {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${totalBytes}` },
         })
       }
+      const { start, end } = range
+      const chunk = body.subarray(start, end + 1)
+      return new NextResponse(chunk, {
+        status: 206,
+        headers: {
+          'Content-Type':   contentType,
+          'Content-Length': String(chunk.length),
+          'Content-Range':  `bytes ${start}-${end}/${totalBytes}`,
+          'Accept-Ranges':  'bytes',
+          'Cache-Control':  'public, max-age=31536000, immutable',
+        },
+      })
     }
 
     // ── Full response ──────────────────────────────────────────────────────

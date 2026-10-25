@@ -3,6 +3,12 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils'
 import { runSummarizer } from '@/agents/summarizer/agent'
+import { z } from 'zod'
+
+const SummaryInput = z.object({
+  content: z.string().trim().min(50, 'Article content is too short to summarize').max(200000),
+  type: z.enum(['article', 'section']).default('article'),
+})
 
 // Strip HTML tags and collapse whitespace to plain text
 function htmlToText(html: string): string {
@@ -23,20 +29,12 @@ function htmlToText(html: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const {
-      content,
-      maxPoints,
-      type = 'article', // 'article' | 'section'
-    } = body as { content?: string; maxPoints?: number; type?: 'article' | 'section' }
-
-    if (!content || content.trim().length < 50) {
-      return apiError('Article content is too short to summarize', 422)
-    }
+    const { content, type } = SummaryInput.parse(body)
 
     const plainText = htmlToText(content).slice(0, 12000)
 
     const isSection = type === 'section'
-    const targetPoints = Number(maxPoints) || (isSection ? 3 : 7)
+    const targetPoints = isSection ? 3 : 7
 
     const result = await runSummarizer({
       prompt: isSection
@@ -51,6 +49,8 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess({ bullets })
   } catch (err: unknown) {
+    if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
+    if (err instanceof SyntaxError) return apiError('Invalid JSON body', 400)
     const message = err instanceof Error ? err.message : 'Summarization failed'
     return apiError(`[POST /api/ai/summarize] ${message}`, 500, err)
   }

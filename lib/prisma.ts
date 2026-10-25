@@ -1,5 +1,6 @@
 // lib/prisma.ts
-import { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '@prisma/client'
+import { createPrismaClient } from './prisma-client.cjs'
 
 const isVerbose = process.env.ENABLE_DEBUG_LOGS === 'true'
 
@@ -49,8 +50,8 @@ if (!process.env.DATABASE_URL) {
       ? rawUrl
       : `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}connection_limit=10&pool_timeout=60`
 
-    const base = new PrismaClient({
-      datasources: { db: { url: dbUrl } },
+    const base = createPrismaClient({
+      url: dbUrl,
       log: isVerbose ? ['query', 'info', 'warn', 'error'] : ['error'],
     })
 

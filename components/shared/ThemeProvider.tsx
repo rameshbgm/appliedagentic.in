@@ -1,6 +1,8 @@
 'use client'
 // components/shared/ThemeProvider.tsx
-import { createContext, useContext, useEffect, useState } from 'react'
+// Light / dark theme. With no saved choice the site follows the OS setting
+// (CSS handles that via prefers-color-scheme); a saved choice sets data-theme.
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -14,23 +16,30 @@ const ThemeContext = createContext<{
   toggleTheme: () => {},
 })
 
+function readTheme(): Theme {
+  const attr = document.documentElement.getAttribute('data-theme')
+  if (attr === 'dark' || attr === 'light') return attr
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light')
 
   useEffect(() => {
-    // Always force light theme — clear any previously stored dark preference
-    localStorage.removeItem('aa-theme')
-    document.documentElement.setAttribute('data-theme', 'light')
-    setThemeState('light')
+    setThemeState(readTheme())
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => setThemeState(readTheme())
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  const setTheme = (t: Theme) => {
+  const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     document.documentElement.setAttribute('data-theme', t)
-    localStorage.setItem('aa-theme', t)
-  }
+    try { localStorage.setItem('aa-theme', t) } catch { /* storage unavailable */ }
+  }, [])
 
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
+  const toggleTheme = useCallback(() => setTheme(readTheme() === 'dark' ? 'light' : 'dark'), [setTheme])
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
@@ -39,17 +48,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const useTheme = () => {
-  // Avoid calling React hooks during server rendering or from non-client code.
-  // If we're on the server, return a safe default to prevent runtime errors
-  // when code accidentally calls this outside a client component.
-  if (typeof window === 'undefined') {
-    return {
-      theme: 'light' as Theme,
-      setTheme: () => {},
-      toggleTheme: () => {},
-    }
-  }
-
-  return useContext(ThemeContext)
-}
+export const useTheme = () => useContext(ThemeContext)

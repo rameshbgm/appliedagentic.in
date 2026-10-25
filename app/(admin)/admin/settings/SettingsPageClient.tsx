@@ -15,12 +15,14 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<TabId>('general')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   const [settings, setSettings] = useState({
     siteName: 'Applied Agentic AI',
-    tagline: 'Master the AI era, one concept at a time.',
+    tagline: '',
     siteUrl: '',
     seoDescription: '',
+    showArticleImages: true,
   })
 
   const [account, setAccount] = useState({
@@ -43,15 +45,19 @@ export default function SettingsPage() {
             tagline: data.data.tagline ?? s.tagline,
             siteUrl: data.data.siteUrl ?? s.siteUrl,
             seoDescription: data.data.metaDescription ?? s.seoDescription,
+            showArticleImages: data.data.showArticleImages ?? true,
           }))
-        }
+        } else if (!data.success) setLoadError(data.error || 'Site settings could not load.')
       })
+      .catch(() => setLoadError('Site settings could not connect. Reload to try again.'))
       .finally(() => setLoading(false))
     fetch('/api/admin/profile')
       .then((r) => r.json())
       .then((data) => {
         if (data.success) setAccount((a) => ({ ...a, name: data.data.name, email: data.data.email }))
+        else setLoadError(data.error || 'Your profile could not load.')
       })
+      .catch(() => setLoadError('Your profile could not connect. Reload to try again.'))
   }, [])
 
   const saveSettings = async () => {
@@ -65,11 +71,14 @@ export default function SettingsPage() {
           tagline: settings.tagline,
           siteUrl: settings.siteUrl,
           metaDescription: settings.seoDescription,
+          showArticleImages: settings.showArticleImages,
         }),
       })
       const data = await res.json()
       if (data.success) toast.success('Settings saved!')
       else toast.error(data.error ?? 'Failed to save')
+    } catch {
+      toast.error('Settings could not connect. Your changes are still here; try saving again.')
     } finally {
       setSaving(false)
     }
@@ -94,6 +103,8 @@ export default function SettingsPage() {
       const data = await res.json()
       if (data.success) { toast.success('Profile updated!'); setAccount((a) => ({ ...a, currentPassword: '', newPassword: '', confirmPassword: '' })) }
       else toast.error(data.error ?? 'Failed to update')
+    } catch {
+      toast.error('Your profile could not connect. Try saving again.')
     } finally {
       setSaving(false)
     }
@@ -106,6 +117,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      {loadError && <div role="alert"><p>{loadError}</p><button type="button" className="tr-btn tr-btn--sm" onClick={() => window.location.reload()}>Reload settings</button></div>}
       <div>
         <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>Settings</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Manage site configuration</p>
@@ -119,7 +131,7 @@ export default function SettingsPage() {
             onClick={() => setTab(t.id)}
             className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${tab === t.id ? 'text-white shadow-sm' : ''}`}
             style={{
-              background: tab === t.id ? '#1E293B' : 'transparent',
+              background: tab === t.id ? 'var(--ink)' : 'transparent',
               color: tab === t.id ? '#fff' : 'var(--text-muted)',
             }}
           >
@@ -132,15 +144,34 @@ export default function SettingsPage() {
       <div className="card p-6 space-y-5">
         {tab === 'general' && (
           <>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Site Name</label>
-              <input value={settings.siteName} onChange={(e) => setSettings((s) => ({ ...s, siteName: e.target.value }))} className={inputClass} style={inputStyle} /></div>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tagline</label>
-              <input value={settings.tagline} onChange={(e) => setSettings((s) => ({ ...s, tagline: e.target.value }))} className={inputClass} style={inputStyle} /></div>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Site URL</label>
-              <input value={settings.siteUrl} onChange={(e) => setSettings((s) => ({ ...s, siteUrl: e.target.value }))} placeholder="https://appliedagentic.in" className={inputClass} style={inputStyle} /></div>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>SEO Description</label>
-              <textarea value={settings.seoDescription} onChange={(e) => setSettings((s) => ({ ...s, seoDescription: e.target.value }))} rows={3} className={inputClass + ' resize-none'} style={inputStyle} /></div>
-            <button onClick={saveSettings} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
+            <div><label htmlFor="settings-siteName" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Site Name</label>
+              <input id="settings-siteName" value={settings.siteName} onChange={(e) => setSettings((s) => ({ ...s, siteName: e.target.value }))} className={inputClass} style={inputStyle} /></div>
+            <div><label htmlFor="settings-tagline" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Tagline</label>
+              <input id="settings-tagline" value={settings.tagline} onChange={(e) => setSettings((s) => ({ ...s, tagline: e.target.value }))} className={inputClass} style={inputStyle} /></div>
+            <div><label htmlFor="settings-siteUrl" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Site URL</label>
+              <input id="settings-siteUrl" value={settings.siteUrl} onChange={(e) => setSettings((s) => ({ ...s, siteUrl: e.target.value }))} placeholder="https://appliedagentic.in" className={inputClass} style={inputStyle} /></div>
+            <div><label htmlFor="settings-seoDescription" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>SEO Description</label>
+              <textarea id="settings-seoDescription" value={settings.seoDescription} onChange={(e) => setSettings((s) => ({ ...s, seoDescription: e.target.value }))} rows={3} className={inputClass + ' resize-none'} style={inputStyle} /></div>
+            <div className="border-t pt-5" style={{ borderColor: 'var(--bg-border)' }}>
+              <label htmlFor="settings-article-images" className="flex items-start gap-3 cursor-pointer">
+                <input
+                  id="settings-article-images"
+                  type="checkbox"
+                  aria-label="Show article images"
+                  checked={settings.showArticleImages}
+                  onChange={(e) => setSettings((s) => ({ ...s, showArticleImages: e.target.checked }))}
+                  aria-describedby="settings-article-images-help"
+                  className="mt-1 h-5 w-5 shrink-0 accent-current"
+                />
+                <span>
+                  <span className="block text-sm font-semibold">Show article images</span>
+                  <span id="settings-article-images-help" className="block text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                    Load covers, thumbnails, and images inside articles. When off, these images are not loaded on the public site. Images remain available in the admin editor.
+                  </span>
+                </span>
+              </label>
+            </div>
+            <button onClick={saveSettings} disabled={saving || Boolean(loadError)} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'var(--ink)' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Save
             </button>
           </>
@@ -148,10 +179,10 @@ export default function SettingsPage() {
 
         {tab === 'account' && (
           <>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Name</label>
-              <input value={account.name} onChange={(e) => setAccount((a) => ({ ...a, name: e.target.value }))} className={inputClass} style={inputStyle} /></div>
-            <div><label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
-              <input value={account.email} onChange={(e) => setAccount((a) => ({ ...a, email: e.target.value }))} className={inputClass} style={inputStyle} /></div>
+            <div><label htmlFor="account-name" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Name</label>
+              <input id="account-name" value={account.name} onChange={(e) => setAccount((a) => ({ ...a, name: e.target.value }))} className={inputClass} style={inputStyle} /></div>
+            <div><label htmlFor="account-email" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
+              <input id="account-email" value={account.email} onChange={(e) => setAccount((a) => ({ ...a, email: e.target.value }))} className={inputClass} style={inputStyle} /></div>
             <div className="border-t pt-5" style={{ borderColor: 'var(--bg-border)' }}>
               <p className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Change Password</p>
               {[
@@ -160,12 +191,12 @@ export default function SettingsPage() {
                 { key: 'confirmPassword', label: 'Confirm New Password' },
               ].map(({ key, label: lbl }) => (
                 <div key={key} className="mb-4">
-                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
-                  <input type="password" value={(account as any)[key]} onChange={(e) => setAccount((a) => ({ ...a, [key]: e.target.value }))} className={inputClass} style={inputStyle} />
+                  <label htmlFor={`account-${key}`} className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>{lbl}</label>
+                  <input id={`account-${key}`} type="password" value={(account as any)[key]} onChange={(e) => setAccount((a) => ({ ...a, [key]: e.target.value }))} className={inputClass} style={inputStyle} />
                 </div>
               ))}
             </div>
-            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: '#1E293B' }}>
+            <button onClick={saveAccount} disabled={saving} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white" style={{ background: 'var(--ink)' }}>
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}Update Profile
             </button>
           </>

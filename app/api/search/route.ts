@@ -2,39 +2,26 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { apiSuccess, apiError } from '@/lib/utils'
-import { ArticleStatus } from '@prisma/client'
+import { positiveInteger, searchWhere } from '@/lib/search'
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const q = searchParams.get('q') || ''
+    const q = (searchParams.get('q') || '').trim().slice(0, 200)
     const moduleId = searchParams.get('moduleId')
     const topicId = searchParams.get('topicId')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const page = positiveInteger(searchParams.get('page'), 1, 10000)
+    const limit = positiveInteger(searchParams.get('limit'), 10, 100)
 
     if (!q.trim()) return apiSuccess({ items: [], total: 0, page, limit, totalPages: 0 })
 
-    const where: Record<string, unknown> = {
-      status: ArticleStatus.PUBLISHED,
-      OR: [
-        { title: { contains: q } },
-        { summary: { contains: q } },
-        { content: { contains: q } },
-      ],
-    }
-
-    if (topicId) {
-      where.topicArticles = { some: { topicId: parseInt(topicId) } }
-    } else if (moduleId) {
-      where.topicArticles = { some: { topic: { moduleId: parseInt(moduleId) } } }
-    }
+    const where = searchWhere(q, positiveInteger(moduleId, 0), positiveInteger(topicId, 0))
 
     const [total, articles] = await prisma.$transaction([
       prisma.article.count({ where }),
       prisma.article.findMany({
         where,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
         select: {
@@ -44,6 +31,7 @@ export async function GET(req: NextRequest) {
           summary: true,
           publishedAt: true,
           readingTimeMinutes: true,
+          coverImage: { select: { url: true } },
           articleTags: {
             take: 4,
             include: { tag: { select: { name: true } } },

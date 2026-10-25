@@ -1,60 +1,40 @@
 // app/(public)/layout.tsx
 import type { Metadata } from 'next'
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/logger'
-import Navbar from '@/components/public/Navbar'
-import Footer from '@/components/public/Footer'
+import TransitShell from '@/components/transit/TransitShell'
+import Footer from '@/components/transit/Footer'
+import Splash from '@/components/transit/Splash'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
-import Loader3D from '@/components/shared/Loader3D'
-import RouteProgress from '@/components/shared/RouteProgress'
 import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
+import { getNetwork, toShellLines } from '@/lib/transit'
+import { getSiteSettings } from '@/lib/site-settings'
 
 // Navigation is edited in the database, independently of application builds.
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: { default: 'Applied Agentic AI', template: '%s | Applied Agentic AI' },
-  description: 'Your comprehensive guide to AI agents, LLMs, and agentic systems.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'),
-}
-
-async function getNavMenus() {
-  try {
-    return await prisma.navMenu.findMany({
-      where: { isVisible: true },
-      orderBy: { order: 'asc' },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        subMenus: {
-          where: { isVisible: true },
-          orderBy: { order: 'asc' },
-          select: { id: true, title: true, slug: true, description: true },
-        },
-      },
-    })
-  } catch (err) {
-    logger.error('[PublicLayout] DB error loading nav menus', err)
-    return []
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings()
+  return {
+    title: { default: settings.siteName, template: `%s | ${settings.siteName}` },
+    description: settings.metaDescription,
+    metadataBase: new URL(settings.siteUrl),
   }
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const navMenus = await getNavMenus()
+  const [network, settings] = await Promise.all([getNetwork(), getSiteSettings()])
+  const lines = toShellLines(network)
 
   return (
     <ThemeProvider>
       <ArticleLoadingProvider>
         <ToastNotifier />
-        <RouteProgress />
-        <Loader3D />
-        <Navbar navMenus={navMenus} />
-        <main className="min-h-screen pt-16">
+        <Splash />
+        <TransitShell lines={lines} siteName={settings.siteName} />
+        <main id="main" className="tr-main">
           {children}
         </main>
-        <Footer menus={navMenus} />
+        <Footer lines={lines} siteName={settings.siteName} footerText={settings.footerText} />
       </ArticleLoadingProvider>
     </ThemeProvider>
   )

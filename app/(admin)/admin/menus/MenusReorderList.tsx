@@ -83,7 +83,7 @@ function SortableMenuItem({ menu, isDeleting, onDeleted, onVisibilityChanged }: 
     <div
       ref={setNodeRef}
       style={style}
-      className={`card p-5 flex items-center gap-5 group ${isDragging ? 'shadow-2xl ring-2 ring-[#1E293B]/40' : ''}`}
+      className={`card p-5 flex items-center gap-5 group ${isDragging ? 'shadow-2xl ring-2 ring-ink/40' : ''}`}
     >
       {/* Drag handle */}
       <button

@@ -2,11 +2,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "client"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────
@@ -232,6 +232,8 @@ model AIUsageLog {
 model SiteSettings {
   id                  Int      @id @default(1)
   siteName            String   @default("Applied Agentic AI")
+  siteUrl             String?
+  showArticleImages   Boolean  @default(true)
   tagline             String?
   logoUrl             String?
   faviconUrl          String?
@@ -251,6 +253,17 @@ model SiteSettings {
   openaiImageQuality  String   @default("medium")
   openaiTtsVoice      String   @default("marin")
   updatedAt           DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
+  token       String    @unique @default(uuid())
+  source      String    @default("website")
+  createdAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────

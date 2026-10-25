@@ -1,11 +1,13 @@
-// app/(public)/[menuSlug]/[subMenuSlug]/page.tsx
-// Public page for a sub-menu: lists its articles
+// app/(public)/[menuSlug]/[subMenuSlug]/page.tsx — a zone: one stretch of a line
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-import ArticlesView from './ArticlesView'
+import { getNetwork, formatJourney, plural } from '@/lib/transit'
+import { getSiteSettings } from '@/lib/site-settings'
+import StopList from '@/components/transit/StopList'
 
 interface Props {
   params: Promise<{ menuSlug: string; subMenuSlug: string }>
@@ -43,12 +45,19 @@ export default async function SubMenuPage({ params }: Props) {
       include: {
         menu: { select: { id: true, title: true, slug: true, isVisible: true } },
         articles: {
+          where: { article: { status: 'PUBLISHED' } },
           orderBy: { orderIndex: 'asc' },
           include: {
             article: {
-              include: {
-                articleTags: { include: { tag: { select: { id: true, name: true } } } },
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                summary: true,
+                readingTimeMinutes: true,
+                publishedAt: true,
                 coverImage: { select: { url: true } },
+                articleTags: { take: 3, select: { tag: { select: { name: true } } } },
               },
             },
           },
@@ -63,45 +72,89 @@ export default async function SubMenuPage({ params }: Props) {
   if (!subMenu || !subMenu.menu.isVisible || !subMenu.isVisible) notFound()
   if (subMenu.menu.slug !== menuSlug) notFound()
 
-  // Only show published articles
-  const articles = subMenu.articles
-    .filter((a) => a.article.status === 'PUBLISHED')
-    .map((a) => a.article)
+  const network = await getNetwork()
+  const { showArticleImages } = await getSiteSettings()
+  const line = network.find((l) => l.id === subMenu.menu.id)
+  const color = line?.color ?? 'var(--l2)'
+  const zones = line?.zones ?? []
+  const zoneIndex = zones.findIndex((z) => z.id === subMenu.id)
+  const prevZone = zoneIndex > 0 ? zones[zoneIndex - 1] : undefined
+  const nextZone = zoneIndex >= 0 ? zones[zoneIndex + 1] : undefined
+
+  const stops = subMenu.articles.map(({ article: a }) => ({
+    id: a.id,
+    slug: a.slug,
+    title: a.title,
+    summary: a.summary,
+    minutes: a.readingTimeMinutes,
+    publishedAt: a.publishedAt,
+    imageUrl: a.coverImage?.url,
+    tags: a.articleTags.map((t) => t.tag.name),
+  }))
+  const minutes = stops.reduce((s, a) => s + (a.minutes ?? 0), 0)
 
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <div
-        className="w-full px-4 md:px-8 pt-12 pb-14"
-        style={{ borderBottom: '1px solid var(--bg-border)' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <nav className="flex items-center gap-2 text-sm mb-6 flex-wrap" style={{ color: 'var(--text-muted)' }}>
-            <Link href="/" className="hover:text-(--green) transition-colors">Home</Link>
-            <span className="opacity-40">&rsaquo;</span>
-            <Link href={`/${subMenu.menu.slug}`} className="hover:text-(--green) transition-colors">
-              {subMenu.menu.title}
-            </Link>
-            <span className="opacity-40">&rsaquo;</span>
-            <span style={{ color: 'var(--text-primary)' }}>{subMenu.title}</span>
+    <div style={{ '--c': color } as React.CSSProperties}>
+      <header className="tr-band tr-band--soft">
+        <span className="tr-band__ghost" aria-hidden="true">Z{zoneIndex + 1}</span>
+        <div className="tr-wrap tr-band__inner">
+          <nav className="tr-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Network</Link><span aria-hidden="true">›</span>
+            <Link href={`/${subMenu.menu.slug}`}>Line {line?.number ?? ''} · {subMenu.menu.title}</Link><span aria-hidden="true">›</span>
+            <span>Zone {zoneIndex + 1}</span>
           </nav>
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight mb-4"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {subMenu.title}
-          </h1>
-          {subMenu.description && (
-            <p className="text-lg leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {subMenu.description}
-            </p>
-          )}
+          <span className="tr-line-tag" style={{ color }}>
+            <span className="tr-roundel" style={{ '--s': '26px' } as React.CSSProperties}>{line?.number ?? '•'}</span>
+            {subMenu.menu.title}
+          </span>
+          <h1 className="tr-display">{subMenu.title}</h1>
+          {subMenu.description && <p style={{ color: 'var(--ink-2)' }}>{subMenu.description}</p>}
+          <div className="tr-band__stats">
+            <span>{plural(stops.length, 'stop')}</span>
+            {minutes > 0 && <span>{formatJourney(minutes)} ride</span>}
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Articles — list/grid toggle */}
-      <div className="max-w-5xl mx-auto px-4 md:px-8 py-10">
-        <ArticlesView articles={articles} />
+      <div className="tr-wrap" style={{ paddingBottom: 48 }}>
+        {zones.length > 1 && (
+          <nav className="tr-zonebar" aria-label="Other zones on this line">
+            {zones.map((z, i) => (
+              <Link key={z.id} href={`/${subMenu.menu.slug}/${z.slug}`} className="tr-chip" aria-current={z.id === subMenu.id ? 'page' : undefined}>
+                <span className="tr-mono" style={{ fontSize: '.72rem', opacity: 0.7 }}>Z{i + 1}</span>{z.title}
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <section className="tr-zone" aria-label="Stops in this zone">
+          {stops.length > 0 ? (
+            <StopList stops={stops} showThumbs={showArticleImages} />
+          ) : (
+            <div className="tr-empty">
+              <h2>No stops yet</h2>
+              <p>Articles for this zone are on their way.</p>
+              <Link href={`/${subMenu.menu.slug}`} className="tr-btn tr-btn--primary">Back to the line</Link>
+            </div>
+          )}
+        </section>
+
+        {(prevZone || nextZone) && (
+          <nav className="tr-nextprev" aria-label="Neighbouring zones">
+            {prevZone ? (
+              <Link href={`/${subMenu.menu.slug}/${prevZone.slug}`} className="tr-np tr-np--prev">
+                <span className="arrow"><ArrowLeft size={20} /></span>
+                <div><span className="tr-eyebrow">Previous zone</span><h3>{prevZone.title}</h3></div>
+              </Link>
+            ) : <span className="tr-desktop-only" />}
+            {nextZone && (
+              <Link href={`/${subMenu.menu.slug}/${nextZone.slug}`} className="tr-np tr-np--next">
+                <div><span className="tr-eyebrow">Next zone</span><h3>{nextZone.title}</h3></div>
+                <span className="arrow"><ArrowRight size={20} /></span>
+              </Link>
+            )}
+          </nav>
+        )}
       </div>
     </div>
   )

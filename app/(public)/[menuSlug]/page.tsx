@@ -1,11 +1,13 @@
+// app/(public)/[menuSlug]/page.tsx — a line: its zones (sub-menus) and stops (articles)
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { BookOpen } from 'lucide-react'
-import type { Metadata } from 'next'
-import MenuContentLayout from './MenuContentLayout'
-import ArticlesView from './[subMenuSlug]/ArticlesView'
+import { getNetwork, formatJourney, plural } from '@/lib/transit'
+import { getSiteSettings } from '@/lib/site-settings'
+import StopList, { type Stop } from '@/components/transit/StopList'
 
 interface Props {
   params: Promise<{ menuSlug: string }>
@@ -33,147 +35,162 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+const stopSelect = {
+  id: true,
+  title: true,
+  slug: true,
+  summary: true,
+  readingTimeMinutes: true,
+  publishedAt: true,
+  coverImage: { select: { url: true } },
+  articleTags: { take: 3, select: { tag: { select: { name: true } } } },
+} as const
+
+const published = { article: { status: 'PUBLISHED' as const } }
+
 export default async function MenuPage({ params }: Props) {
   const { menuSlug } = await params
   let menu
   try {
     menu = await prisma.navMenu.findUnique({
       where: { slug: menuSlug, isVisible: true },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
         subMenus: {
           where: { isVisible: true },
           orderBy: { order: 'asc' },
-          include: {
-            _count: { select: { articles: { where: { article: { status: 'PUBLISHED' } } } } },
-            articles: {
-              where: { article: { status: 'PUBLISHED' } },
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                article: {
-                  select: {
-                    id: true,
-                    title: true,
-                    slug: true,
-                    summary: true,
-                    readingTimeMinutes: true,
-                    viewCount: true,
-                    publishedAt: true,
-                    status: true,
-                    coverImage: { select: { url: true } },
-                  },
-                },
-              },
-            },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            description: true,
+            articles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: stopSelect } } },
           },
         },
-        menuArticles: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            article: {
-              select: {
-                id: true,
-                title: true,
-                slug: true,
-                summary: true,
-                readingTimeMinutes: true,
-                publishedAt: true,
-                viewCount: true,
-                status: true,
-                coverImage: { select: { url: true } },
-                articleTags: { include: { tag: { select: { id: true, name: true } } } },
-              },
-            },
-          },
-        },
+        menuArticles: { where: published, orderBy: { orderIndex: 'asc' }, select: { article: { select: stopSelect } } },
       },
     })
   } catch (err) {
     logger.error(`[GET /${menuSlug}] DB error loading menu`, err)
     throw err
   }
-
   if (!menu) notFound()
 
-  // Only show published articles on the public page
-  const articles = menu.menuArticles
-    .map((ma) => ma.article)
-    .filter((a) => a.status === 'PUBLISHED')
+  const network = await getNetwork()
+  const { showArticleImages } = await getSiteSettings()
+  const line = network.find((l) => l.id === menu.id)
+  const color = line?.color ?? 'var(--l2)'
+  const number = line?.number ?? 1
+
+  const toStop = (a: typeof menu.menuArticles[number]['article']): Stop => ({
+    id: a.id,
+    slug: a.slug,
+    title: a.title,
+    summary: a.summary,
+    minutes: a.readingTimeMinutes,
+    publishedAt: a.publishedAt,
+    imageUrl: a.coverImage?.url,
+    tags: a.articleTags.map((t) => t.tag.name),
+  })
+
+  const zones = menu.subMenus.map((z) => ({ ...z, stops: z.articles.map((x) => toStop(x.article)) }))
+  const directStops = menu.menuArticles.map((x) => toStop(x.article))
+  const totalStops = zones.reduce((s, z) => s + z.stops.length, 0) + directStops.length
+  const totalMinutes = [...zones.flatMap((z) => z.stops), ...directStops].reduce((s, a) => s + (a.minutes ?? 0), 0)
+  const otherLines = network.filter((l) => l.id !== menu.id)
+  const lineIndex = network.findIndex((l) => l.id === menu.id)
+  const nextLine = lineIndex >= 0 ? network[lineIndex + 1] : undefined
 
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <div className="relative overflow-hidden w-full px-4 md:px-8 pt-14 pb-16" style={{ borderBottom: '1px solid var(--bg-border)' }}>
-        {/* Decorative blobs */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }} aria-hidden>
-          <div style={{ position: 'absolute', top: '-20%', right: '0%', width: 560, height: 560, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', bottom: '-30%', left: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%)' }} />
-        </div>
-        <div className="max-w-5xl mx-auto relative">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium mb-5 transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            ← Back to Home
-          </Link>
-          <nav className="flex items-center gap-2 text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-            <Link href="/" className="hover:underline transition-colors">Home</Link>
-            <span className="opacity-40">&rsaquo;</span>
-            <span style={{ color: 'var(--text-primary)' }}>{menu.title}</span>
+    <div style={{ '--c': color } as React.CSSProperties}>
+      <header className="tr-band">
+        <span className="tr-band__ghost" aria-hidden="true">{number}</span>
+        <div className="tr-wrap tr-band__inner">
+          <nav className="tr-crumbs" aria-label="Breadcrumb">
+            <Link href="/">Network</Link><span aria-hidden="true">›</span><span>Line {number}</span>
           </nav>
-          <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-[0.15em]" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.22)' }}>
-            <BookOpen size={12} /> Learning Path
+          <h1 className="tr-display">{menu.title}</h1>
+          {menu.description && <p>{menu.description}</p>}
+          <div className="tr-band__stats">
+            <span>{plural(totalStops, 'stop')}</span>
+            {zones.length > 0 && <span>{plural(zones.length, 'zone')}</span>}
+            {totalMinutes > 0 && <span>{formatJourney(totalMinutes)} ride</span>}
           </div>
-          <h1
-            className="font-black leading-[1.06] tracking-tight mb-5"
-            style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontFamily: "'Inter', sans-serif" }}
-          >
-            <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 40%, #38bdf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              {menu.title}
-            </span>
-          </h1>
-          {menu.description && (
-            <p className="text-lg leading-relaxed max-w-2xl" style={{ color: 'var(--text-secondary)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic', lineHeight: 1.7 }}>
-              {menu.description}
-            </p>
-          )}
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 space-y-14">
-
-        {/* ── Sub-menus + their articles (two-panel layout) ── */}
-        {menu.subMenus.length > 0 && (
-          <MenuContentLayout
-            subMenus={menu.subMenus.map((sm) => ({
-              ...sm,
-              articles: sm.articles.map(({ article }) => ({
-                article: { ...article, publishedAt: article.publishedAt?.toISOString() ?? null },
-              })),
-            }))}
-            menuSlug={menu.slug}
-          />
+      <div className="tr-wrap" style={{ paddingBottom: 48 }}>
+        {zones.length > 1 && (
+          <nav className="tr-zonebar" aria-label="Zones on this line">
+            {zones.map((z, i) => (
+              <a key={z.id} href={`#zone-${z.slug}`} className="tr-chip">
+                <span className="tr-mono" style={{ fontSize: '.72rem', color: 'var(--muted)' }}>Z{i + 1}</span>{z.title}
+              </a>
+            ))}
+          </nav>
         )}
 
-        {/* ── Articles directly assigned to this menu ── */}
-        {articles.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-              Articles
-            </h2>
-            <ArticlesView articles={articles} />
+        {zones.map((z, i) => (
+          <section key={z.id} id={`zone-${z.slug}`} className="tr-zone" aria-labelledby={`zone-title-${z.id}`}>
+            <div className="tr-zone__head">
+              <span className="z">ZONE {i + 1}</span>
+              <h2 id={`zone-title-${z.id}`} className="tr-display">{z.title}</h2>
+              <Link href={`/${menu.slug}/${z.slug}`} className="tr-link">Zone page <ArrowRight size={14} /></Link>
+            </div>
+            {z.description && <p>{z.description}</p>}
+            {z.stops.length > 0 ? (
+              <StopList stops={z.stops} showThumbs={showArticleImages} />
+            ) : (
+              <p style={{ color: 'var(--muted)', padding: '12px 0' }}>No stops in this zone yet.</p>
+            )}
+          </section>
+        ))}
+
+        {directStops.length > 0 && (
+          <section className="tr-zone" aria-labelledby="direct-title">
+            <div className="tr-zone__head">
+              <span className="z">EXPRESS</span>
+              <h2 id="direct-title" className="tr-display">{zones.length > 0 ? 'More stops on this line' : 'Stops on this line'}</h2>
+            </div>
+            <StopList stops={directStops} showThumbs={showArticleImages} />
           </section>
         )}
 
-        {/* Empty state */}
-        {menu.subMenus.length === 0 && articles.length === 0 && (
-          <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
-            <p className="text-lg mb-2" style={{ color: 'var(--text-secondary)' }}>No content yet</p>
-            <p className="text-sm">This section is coming soon.</p>
+        {zones.length === 0 && directStops.length === 0 && (
+          <div className="tr-empty">
+            <h2>Line under construction</h2>
+            <p>Stops on this line open soon. Ride another line in the meantime.</p>
+            <Link href="/" className="tr-btn tr-btn--primary">Back to the network map</Link>
+          </div>
+        )}
+
+        {(nextLine || otherLines.length > 0) && (
+          <div className="tr-sec" style={{ display: 'grid', gap: 16 }}>
+            {nextLine && (
+              <Link href={`/${nextLine.slug}`} className="tr-np tr-np--next" style={{ '--c': nextLine.color } as React.CSSProperties}>
+                <div>
+                  <span className="tr-eyebrow">Next line</span>
+                  <h3>{nextLine.title}</h3>
+                </div>
+                <span className="arrow"><ArrowRight size={20} /></span>
+              </Link>
+            )}
+            {otherLines.length > 0 && (
+              <div className="tr-change">
+                Change here for
+                {otherLines.map((l) => (
+                  <Link key={l.id} href={`/${l.slug}`} style={{ '--c': l.color } as React.CSSProperties}>
+                    <span className="tr-roundel" style={{ '--s': '24px' } as React.CSSProperties}>{l.number}</span>{l.title}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   )
 }
-

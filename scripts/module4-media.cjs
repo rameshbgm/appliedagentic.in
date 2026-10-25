@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Reuses the application's configured image, narration and speech API clients.
-// dotenv -e .env.production -- node scripts/module4-media.cjs [--images|--audio]
+// dotenv run -q -f .env.production -- node scripts/module4-media.cjs [--images|--audio]
 const fs = require('node:fs');
 const path = require('node:path');
-const { PrismaClient } = require('@prisma/client');
+const { createPrismaClient } = require('../lib/prisma-client.cjs');
 const courseNumbers = process.env.COURSE_MODULES?.split(',').map(Number);
 const adapter = courseNumbers ? require('./course-content.cjs').mediaAdapter(courseNumbers) : require('./import-module4.cjs');
 const { buildPlan, checkContent, readModule, work, root, sha } = adapter;
 const { normalizeText, prepareNarration } = require('./course-text.cjs');
-require('ts-node').register({ transpileOnly: true, compilerOptions: { module: 'CommonJS', moduleResolution: 'Node' } });
+require('ts-node').register({ transpileOnly: true, compilerOptions: { module: 'Node16', moduleResolution: 'Node16' } });
 require('tsconfig-paths').register({ baseUrl: root, paths: { '@/*': ['./*'] } });
 
 const { generateImage } = require('../lib/ai-images');
@@ -20,7 +20,7 @@ const { concatenateWav } = require('../lib/audio');
 const { prepareAsset } = require('../lib/storage');
 const sharp = require('sharp');
 
-const p = new PrismaClient();
+const p = createPrismaClient();
 const plan = buildPlan();
 const failures = [];
 fs.mkdirSync(work, { recursive: true });

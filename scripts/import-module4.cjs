@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Run with dotenv -e .env.production -- node scripts/import-module4.cjs.
+// Run with dotenv run -q -f .env.production -- node scripts/import-module4.cjs.
 // Default: validate and write a local plan. --apply stages drafts; --publish
 // requires complete covers/audio. Existing articles are never overwritten.
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const assert = require('node:assert/strict');
-const { PrismaClient } = require('@prisma/client');
+const { createPrismaClient } = require('../lib/prisma-client.cjs');
 const { normalizeObject } = require('./course-text.cjs');
 
 const root = path.resolve(__dirname, '..');
@@ -178,7 +178,7 @@ async function main() {
   console.log(JSON.stringify({ plan: path.join(work, 'plan.json'), articles: plan.articles.map(a => ({ title: a.title, slug: a.slug, sections: a.sections.length, sourceFiles: a.sources.map(s => s.filename) })), totalSections: plan.articles.reduce((n, a) => n + a.sections.length, 0) }));
   if (!process.argv.some(x => ['--apply', '--verify', '--publish'].includes(x))) return;
   assert(process.env.DATABASE_URL, 'DATABASE_URL is required');
-  const p = new PrismaClient();
+  const p = createPrismaClient();
   try {
     const parent = await p.navMenu.findUniqueOrThrow({ where: { slug: plan.parentSlug } });
     if (process.argv.includes('--apply')) {

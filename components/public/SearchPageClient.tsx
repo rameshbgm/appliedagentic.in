@@ -1,293 +1,107 @@
 'use client'
-// components/public/SearchPageClient.tsx
-// Search-on-submit client component for the /search page
-
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Loader2, X, Clock, Eye, ArrowRight, Sparkles } from 'lucide-react'
-import Link from 'next/link'
+import { Loader2, Search, X } from 'lucide-react'
+import StopList, { type Stop } from '@/components/transit/StopList'
+import { heroContent } from '@/content/home'
 
-const RESULT_COLORS = [
-  { gradient: 'linear-gradient(135deg, #34d399, #38bdf8)', accent: '#34d399' },
-  { gradient: 'linear-gradient(135deg, #818cf8, #ec4899)', accent: '#818cf8' },
-  { gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)', accent: '#f59e0b' },
-  { gradient: 'linear-gradient(135deg, #38bdf8, #818cf8)', accent: '#38bdf8' },
-  { gradient: 'linear-gradient(135deg, #f472b6, #fb923c)', accent: '#f472b6' },
-  { gradient: 'linear-gradient(135deg, #4ade80, #38bdf8)', accent: '#4ade80' },
-]
+interface Props { initialQuery: string; initialPage?: number; showArticleImages?: boolean }
+interface ApiItem {
+  id: number; title: string; slug: string; summary: string | null
+  readingTimeMinutes: number | null; publishedAt: string | null
+  coverImage?: { url: string } | null
+  articleTags: { tag: { name: string } }[]
+}
+const LIMIT = 20
 
-export default function SearchPageClient({ initialQuery = '' }: { initialQuery?: string }) {
+export default function SearchPageClient({ initialQuery, initialPage = 1, showArticleImages = true }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState(initialQuery)
-  const [results, setResults] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
+  const [page, setPage] = useState(initialPage)
+  const [results, setResults] = useState<Stop[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(Boolean(initialQuery))
+  const [searched, setSearched] = useState('')
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); setLoading(false); setSearched(false); return }
-    setLoading(true)
-    setSearched(true)
-    router.replace(`/search?q=${encodeURIComponent(q.trim())}`, { scroll: false })
-    try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=24`)
-      const data = await res.json()
-      if (data.success) setResults(data.data?.items ?? [])
-      else setResults([])
-    } catch { setResults([]) }
-    finally { setLoading(false) }
-  }, [router])
+  // Back/Forward and searches from the header can reuse this component.
+  useEffect(() => { setQuery(initialQuery); setPage(initialPage) }, [initialQuery, initialPage])
 
-  // Run initial query on mount (when navigating to /search?q=...)
   useEffect(() => {
-    if (initialQuery) doSearch(initialQuery)
-  }, [initialQuery, doSearch])
+    const term = query.trim()
+    const ctrl = new AbortController()
+    if (!term) {
+      setResults([]); setTotal(0); setSearched(''); setError(''); setLoading(false)
+      return () => ctrl.abort()
+    }
+    setLoading(true)
+    setError('')
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&limit=${LIMIT}&page=${page}`, { signal: ctrl.signal })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Search could not load. Please try again.')
+        if (ctrl.signal.aborted) return
+        const items: ApiItem[] = data.data.items
+        setResults(items.map((a) => ({
+          id: a.id, slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes,
+          publishedAt: a.publishedAt, imageUrl: a.coverImage?.url, tags: a.articleTags.map((t) => t.tag.name),
+        })))
+        setTotal(data.data.total)
+        setSearched(term)
+      } catch (err) {
+        if (!ctrl.signal.aborted) { setResults([]); setError(err instanceof Error ? err.message : 'Search could not connect. Please try again.') }
+      } finally { if (!ctrl.signal.aborted) setLoading(false) }
+    }, term === initialQuery ? 0 : 300)
+    return () => { clearTimeout(timer); ctrl.abort() }
+  }, [query, page, initialQuery, retry])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    doSearch(query)
+  const navigate = (term: string, nextPage = 1, replace = false) => {
+    const params = new URLSearchParams()
+    if (term.trim()) params.set('q', term.trim())
+    if (nextPage > 1) params.set('page', String(nextPage))
+    const url = `/search${params.size ? `?${params}` : ''}`
+    if (replace) router.replace(url, { scroll: false })
+    else router.push(url, { scroll: false })
   }
 
-  const handleClear = () => {
-    setQuery('')
-    setResults([])
-    setSearched(false)
-    router.replace('/search', { scroll: false })
-    inputRef.current?.focus()
-  }
+  useEffect(() => {
+    if (query.trim() === initialQuery && page === initialPage) return
+    const timer = setTimeout(() => navigate(query, page, true), 350)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, page])
 
-  return (
-    <div className="min-h-screen">
+  useEffect(() => { if (!initialQuery) inputRef.current?.focus() }, [initialQuery])
+  const pages = Math.ceil(total / LIMIT)
 
-      {/* ── Hero / search bar ── */}
-      <div className="relative overflow-hidden pt-20 pb-12 px-4" style={{ borderBottom: '1px solid var(--bg-border)' }}>
-        {/* Decorative blobs */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }} aria-hidden>
-          <div style={{ position: 'absolute', top: '-30%', right: '5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(129,140,248,0.13) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', bottom: '-30%', left: '-5%', width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(52,211,153,0.1) 0%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', top: '10%', left: '30%', width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(244,114,182,0.07) 0%, transparent 70%)' }} />
-        </div>
-
-        <div className="max-w-2xl mx-auto relative">
-          <div className="text-center mb-10">
-            <div
-              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] px-3 py-1 rounded-full mb-6"
-              style={{ background: 'rgba(129,140,248,0.1)', color: '#818cf8', border: '1px solid rgba(129,140,248,0.2)' }}
-            >
-              <Sparkles size={10} /> Knowledge Search
-            </div>
-            <h1 className="font-black leading-[1.08] tracking-tight" style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', color: 'var(--text-primary)' }}>
-              Find{' '}
-              <span style={{ background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 45%, #38bdf8 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                anything.
-              </span>
-            </h1>
-            <p className="mt-3 text-[0.97rem]" style={{ color: 'var(--text-muted)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic', lineHeight: 1.65 }}>
-              Articles, topics &amp; learning modules — press Enter or click Search.
-            </p>
-          </div>
-
-          {/* ── Search bar ── */}
-          <form onSubmit={handleSubmit} role="search">
-            {/* Outer border */}
-            <div style={{ padding: 1.5, borderRadius: 10, background: 'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(129,140,248,0.3))', boxShadow: '0 4px 24px rgba(99,102,241,0.1)' }}>
-              <div
-                className="flex items-center gap-3 pl-5 pr-3 py-3"
-                style={{ borderRadius: 8.5, background: 'var(--bg-elevated)' }}
-              >
-                <Search size={17} className="shrink-0 opacity-50" style={{ color: '#818cf8' }} />
-                <input
-                  ref={inputRef}
-                  type="search"
-                  value={query}
-                  autoFocus
-                  autoComplete="off"
-                  placeholder="Search articles, topics, modules..."
-                  className="flex-1 bg-transparent text-[0.95rem] min-w-0"
-                  style={{ color: 'var(--text-primary)', fontFamily: "'Space Grotesk', system-ui, sans-serif", letterSpacing: '-0.01em', outline: 'none', border: 'none', WebkitAppearance: 'none' }}
-                  onChange={(e) => setQuery(e.target.value)}
-                  suppressHydrationWarning
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={handleClear}
-                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full transition-all hover:scale-110"
-                    style={{ background: 'var(--bg-border)', color: 'var(--text-muted)' }}
-                    aria-label="Clear search"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  disabled={loading || !query.trim()}
-                  className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-bold tracking-wide transition-all duration-200 hover:opacity-90 active:scale-[0.97] disabled:opacity-35 disabled:pointer-events-none"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', boxShadow: '0 2px 10px rgba(99,102,241,0.3)', fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
-                >
-                  {loading
-                    ? <Loader2 size={14} className="animate-spin" />
-                    : <Search size={14} />
-                  }
-                  Search
-                </button>
-              </div>
-            </div>
-          </form>
-
-          {searched && !loading && (
-            <p className="text-xs text-center mt-4 font-medium" style={{ color: results.length > 0 ? '#818cf8' : 'var(--text-muted)' }}>
-              {results.length > 0
-                ? `${results.length} result${results.length !== 1 ? 's' : ''} found`
-                : `No results for "${query}"`}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Results ── */}
-      <div className="max-w-4xl mx-auto px-4 py-10">
-
-        {/* Loading spinner */}
-        {loading && (
-          <div className="flex justify-center py-20">
-            <Loader2 size={32} className="animate-spin" style={{ color: '#818cf8' }} />
-          </div>
-        )}
-
-        {/* Results grid */}
-        {!loading && results.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((a, idx) => {
-              const color = RESULT_COLORS[idx % RESULT_COLORS.length]
-              const href = a.type === 'topic'
-                ? `/topics/${a.slug}`
-                : a.type === 'module'
-                  ? `/modules/${a.slug}`
-                  : `/articles/${a.slug}`
-              const tags: string[] = a.articleTags?.map((at: any) => at.tag.name) ?? a.tags ?? []
-              const moduleName: string | undefined = a.topicArticles?.[0]?.topic?.module?.name ?? a.module?.name
-              const moduleColor: string = a.topicArticles?.[0]?.topic?.module?.color ?? a.module?.color ?? color.accent
-
-              return (
-                <Link
-                  key={a.id || a.slug}
-                  href={href}
-                  className="group relative flex flex-col rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl overflow-hidden"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', padding: '1rem 1.1rem 1rem' }}
-                >
-                  {/* Colored top accent */}
-                  <div
-                    className="absolute top-0 left-0 right-0 h-[2px]"
-                    style={{ background: color.gradient }}
-                  />
-
-                  {moduleName && (
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full mb-2.5 self-start"
-                      style={{ background: `${moduleColor}18`, color: moduleColor, border: `1px solid ${moduleColor}30` }}
-                    >
-                      {moduleName}
-                    </span>
-                  )}
-
-                  <h3
-                    className="font-bold text-[0.9rem] leading-snug mb-2 line-clamp-2 pr-2"
-                    style={{ background: color.gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: "'Inter', sans-serif" }}
-                  >
-                    {a.title}
-                  </h3>
-
-                  {(a.summary ?? a.description) && (
-                    <p
-                      className="text-[0.72rem] leading-relaxed line-clamp-2 mb-2.5"
-                      style={{ color: 'var(--text-muted)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic' }}
-                    >
-                      {a.summary ?? a.description}
-                    </p>
-                  )}
-
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2.5">
-                      {tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] px-1.5 py-0.5 rounded-full"
-                          style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--bg-border)' }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div
-                    className="flex items-center gap-3 text-[11px] mt-auto pt-2"
-                    style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--bg-border)' }}
-                  >
-                    {a.readingTimeMinutes && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={10} /> {a.readingTimeMinutes} min
-                      </span>
-                    )}
-                    {a.viewCount > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Eye size={10} /> {a.viewCount}
-                      </span>
-                    )}
-                    <span
-                      className="ml-auto flex items-center gap-1 font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: color.accent }}
-                    >
-                      Read <ArrowRight size={11} />
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-
-        {/* No results */}
-        {!loading && searched && results.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-5">🔍</div>
-            <p className="font-bold text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
-              No results for &ldquo;{query}&rdquo;
-            </p>
-            <p
-              className="text-sm mb-8"
-              style={{ color: 'var(--text-muted)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic' }}
-            >
-              Try different keywords or browse the topics below
-            </p>
-            <Link
-              href="/#topics"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #818cf8, #ec4899)' }}
-            >
-              Browse Topics <ArrowRight size={14} />
-            </Link>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && !searched && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-6">✨</div>
-            <p className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>
-              Start typing to search
-            </p>
-            <p
-              className="text-sm"
-              style={{ color: 'var(--text-muted)', fontFamily: "'Lora', Georgia, serif", fontStyle: 'italic' }}
-            >
-              Results appear instantly as you type
-            </p>
-          </div>
-        )}
-
-      </div>
+  return <div style={{ '--c': 'var(--l2)' } as React.CSSProperties}>
+    <header className="tr-band tr-band--soft"><div className="tr-wrap tr-band__inner">
+      <h1 className="tr-display">Find your stop</h1>
+      <form className="tr-search-box" role="search" onSubmit={(e) => { e.preventDefault(); navigate(query); setRetry((v) => v + 1) }} style={{ maxWidth: 720 }}>
+        <Search size={20} aria-hidden="true" />
+        <label htmlFor="search-page-input" className="sr-only">Search articles</label>
+        <input id="search-page-input" ref={inputRef} type="search" maxLength={200} value={query} onChange={(e) => { setQuery(e.target.value); setPage(1) }} placeholder="Search articles, e.g. RAG, guardrails, voice" autoComplete="off" />
+        {query && <button type="button" className="tr-icon-btn" onClick={() => { setQuery(''); setPage(1); navigate(''); inputRef.current?.focus() }} aria-label="Clear search"><X size={16} /></button>}
+        <button type="submit" className="tr-btn tr-btn--primary tr-btn--sm tr-desktop-only">Search</button>
+      </form>
+    </div></header>
+    <div className="tr-wrap tr-wrap--narrow" style={{ paddingBottom: 48 }} aria-busy={loading}>
+      {loading && <p className="tr-results-meta" role="status"><Loader2 size={14} className="animate-spin inline" /> Searching articles…</p>}
+      {error && <div className="tr-results-meta" role="alert"><p>{error}</p><button type="button" className="tr-btn tr-btn--sm" onClick={() => setRetry((v) => v + 1)}>Retry search</button></div>}
+      {!loading && !error && searched && <p className="tr-results-meta" aria-live="polite">{total === 0 ? `No stops match “${searched}”.` : `${total} ${total === 1 ? 'stop matches' : 'stops match'} “${searched}”`}</p>}
+      {!loading && !error && results.length > 0 && <StopList stops={results} showThumbs={showArticleImages} showRouteMarkers={false} />}
+      {!loading && !error && pages > 1 && <nav aria-label="Search result pages" className="flex items-center justify-between gap-3 py-6">
+        <button type="button" className="tr-btn tr-btn--sm" disabled={page <= 1} onClick={() => { setPage(page - 1); navigate(query, page - 1) }}>Previous</button>
+        <span>Page {page} of {pages}</span>
+        <button type="button" className="tr-btn tr-btn--sm" disabled={page >= pages} onClick={() => { setPage(page + 1); navigate(query, page + 1) }}>Next</button>
+      </nav>}
+      {!loading && !error && (!searched || total === 0) && <section className="tr-sec" aria-labelledby="suggest-title" style={{ paddingTop: 24 }}>
+        <h2 id="suggest-title">{searched ? 'Try one of these instead' : 'Popular destinations'}</h2>
+        <div className="tr-suggest">{heroContent.typewriterTopics.map((t) => <button key={t} type="button" className="tr-chip" onClick={() => { setQuery(t); setPage(1); navigate(t) }}>{t}</button>)}</div>
+      </section>}
     </div>
-  )
+  </div>
 }

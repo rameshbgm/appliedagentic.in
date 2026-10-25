@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { PrismaClient } = require('@prisma/client');
+const { createPrismaClient } = require('../lib/prisma-client.cjs');
 const { root, sha } = require('./learning-paths-plan.cjs');
 const { assertTarget } = require('./learning-paths.cjs');
 
@@ -33,7 +33,7 @@ function allocateDates(articles, now = new Date()) {
 }
 
 async function main() {
-  const p = new PrismaClient();
+  const p = createPrismaClient();
   try {
     await assertTarget(p);
     const articles = await p.article.findMany({ where: { status: 'PUBLISHED' }, select: { id: true, slug: true, publishedAt: true, updatedAt: true }, orderBy: { id: 'asc' } });

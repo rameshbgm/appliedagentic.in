@@ -7,6 +7,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts'
 import type { AgentConfig, AgentInput, AgentOutput } from './types'
 import { logger } from '@/lib/logger'
 import { getOpenAIClient } from '@/lib/openai'
+import { AI_MODELS } from '@/lib/ai-models'
 
 /**
  * Build a LangChain chain (prompt → LLM) and execute it,
@@ -83,6 +84,15 @@ export async function runAgent(
       Date.now() - t0,
       'error',
     )
+    const status = (err as { status?: number })?.status
+    if (config.provider === 'openai' && [402, 429, 503].includes(status ?? 0)
+      && process.env.GOOGLE_GENAI_API_KEY && process.env.AI_TEXT_FALLBACK_PROVIDER !== 'none') {
+      logger.warn('OpenAI text service is unavailable; retrying with the configured Gemini provider.')
+      return runAgent({
+        ...config, provider: 'gemini', textModel: process.env.GOOGLE_TEXT_MODEL ?? AI_MODELS.gemini.text,
+        maxTokens: Math.max(4096, maxTokens),
+      }, systemPrompt, guardrails, { ...input, maxTokens: Math.max(4096, maxTokens) })
+    }
     throw err
   }
 

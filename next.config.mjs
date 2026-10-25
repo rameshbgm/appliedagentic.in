@@ -12,7 +12,7 @@ const config = {
   experimental: {
     serverActions: { bodySizeLimit: '10mb' },
   },
-  serverExternalPackages: ['pdf-parse'],
+  serverExternalPackages: ['pdf-parse', 'probe-image-size'],
 }
 
 export default config

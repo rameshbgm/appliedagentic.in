@@ -1,32 +1,39 @@
 // app/(admin)/login/LoginPageClient.tsx
 'use client'
 import { signIn } from 'next-auth/react'
-import { useState, useEffect } from 'react'
-import { Zap, Loader2, Eye, EyeOff, Brain, Shield, Rocket } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Eye, EyeOff, Loader2, LogIn, Zap } from 'lucide-react'
 import { toast } from 'sonner'
+import BrandMark from '@/components/transit/BrandMark'
+import ToastNotifier from '@/components/shared/ToastNotifier'
+
+const LINES = ['var(--l1)', 'var(--l2)', 'var(--l3)', 'var(--l4)', 'var(--l5)']
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => { setMounted(true) }, [])
 
   const doSignIn = async (em: string, pw: string) => {
     setLoading(true)
+    setError('')
     try {
       const res = await signIn('credentials', { email: em, password: pw, redirect: false })
       if (res?.ok) {
-        toast.success('Welcome back!')
+        toast.success('Signed in')
         window.location.href = '/admin/dashboard'
       } else {
-        const msg = res?.error === 'CredentialsSignin'
-          ? 'Invalid email or password'
-          : (res?.error ?? 'Login failed — please try again')
-        toast.error(msg)
+        setError(res?.error === 'CredentialsSignin'
+          ? 'That email and password do not match an admin account.'
+          : (res?.error ?? 'Sign-in failed. Try again.'))
       }
+    } catch {
+      setError('Sign-in could not connect. Check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -41,206 +48,87 @@ export default function LoginPage() {
   const handleQuickLogin = () => doSignIn('admin@appliedagentic.com', 'Admin@2026!')
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <>
+    <ToastNotifier />
+    <div className="tr-admin min-h-screen grid lg:grid-cols-2" data-theme="light">
 
-      {/* ── LEFT: Animated branding panel ───────────────────────────────── */}
-      <div className="anim-gradient-bg hidden lg:flex lg:w-1/2 xl:w-[58%] relative overflow-hidden flex-col justify-center items-start px-14 xl:px-24 py-16">
-
-        {/* Blob decorations */}
-        <div
-          className="morph-blob absolute -top-32 -left-32 w-[520px] h-[520px] opacity-[0.12] pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #6366f1 0%, #ec4899 100%)' }}
-        />
-        <div
-          className="morph-blob absolute bottom-0 right-0 w-[380px] h-[380px] opacity-[0.10] pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #3b82f6 0%, #06b6d4 100%)', animationDelay: '-5s' }}
-        />
-
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.04]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-10 max-w-lg">
-          {/* Logo mark */}
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-10 shadow-2xl"
-            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
-          >
-            <Zap size={26} className="text-white" />
-          </div>
-
-          {/* Main headline with glitch effect */}
-          <h1
-            className="font-display font-bold uppercase leading-[1.05] glitch-text mb-2"
-            style={{ fontSize: 'clamp(2.6rem, 4.5vw, 4.5rem)', color: '#fff' }}
-            data-text="Applied"
-          >
-            Applied
-          </h1>
-          <h1
-            className="font-display font-bold uppercase leading-[1.05] flash-text mb-6"
-            style={{ fontSize: 'clamp(2.6rem, 4.5vw, 4.5rem)' }}
-          >
-            Agentic AI
-          </h1>
-
-          <p className="text-base xl:text-lg leading-relaxed mb-10" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '420px' }}>
-            The definitive knowledge hub for AI professionals mastering Generative and Agentic AI for organizational transformation.
+      {/* Brand panel — departure-board style, desktop only */}
+      <section className="hidden lg:flex flex-col justify-between p-14 xl:p-20" style={{ background: 'var(--board)', color: '#E6EAF0' }} aria-hidden="true">
+        <div className="flex items-center gap-3">
+          <BrandMark size={40} />
+          <span className="tr-mono" style={{ fontSize: '.72rem', letterSpacing: '.12em', color: 'var(--board-dim)' }}>CONTROL ROOM</span>
+        </div>
+        <div>
+          <p className="tr-display" style={{ fontSize: 'clamp(3.4rem, 6vw, 6rem)', color: '#fff' }}>
+            Run the<br /><span style={{ color: 'var(--board-ink)' }}>network.</span>
           </p>
-
-          {/* Feature tags */}
-          <div className="flex flex-wrap gap-3">
-            <span className="login-tag"><Brain size={12} /> Generative AI</span>
-            <span className="login-tag"><Rocket size={12} /> Agentic Systems</span>
-            <span className="login-tag"><Shield size={12} /> Enterprise Ready</span>
+          <p style={{ color: 'var(--board-dim)', maxWidth: 420, marginTop: 18, lineHeight: 1.6 }}>
+            Publish stops, lay new lines and keep every route to agentic AI on time.
+          </p>
+          <div style={{ display: 'grid', gap: 10, marginTop: 36, maxWidth: 420 }}>
+            {LINES.map((c, i) => (
+              <span key={c} style={{ height: 8, borderRadius: 4, background: c, width: `${100 - i * 14}%`, transformOrigin: 'left', animation: `tr-draw .8s ${i * 0.1}s both` }} />
+            ))}
           </div>
         </div>
+        <p className="tr-mono" style={{ fontSize: '.7rem', color: 'var(--board-dim)' }}>Applied Agentic AI © {new Date().getFullYear()}</p>
+      </section>
 
-        {/* Bottom watermark */}
-        <p className="absolute bottom-8 left-14 xl:left-24 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
-          Applied Agentic AI © {new Date().getFullYear()}
-        </p>
-      </div>
-
-      {/* ── RIGHT: Login form ────────────────────────────────────────────── */}
-      <div
-        className="flex-1 flex items-center justify-center p-6 sm:p-10"
-        style={{ background: 'var(--bg-primary)' }}
-      >
-        <div className="w-full max-w-sm">
-
-          {/* Mobile-only logo */}
-          <div className="flex flex-col items-center mb-8 lg:hidden">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-2xl"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
-            >
-              <Zap size={26} className="text-white" />
-            </div>
-            <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
-              Applied Agentic AI
-            </h1>
+      {/* Sign-in form */}
+      <section className="flex items-center justify-center" style={{ padding: 'max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px))' }}>
+        <div className="w-full" style={{ maxWidth: 400 }}>
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <BrandMark size={36} />
+            <span className="tr-display" style={{ fontSize: '1.5rem' }}>Applied Agentic</span>
           </div>
 
-          {/* Card */}
-          <div
-            className="rounded-3xl p-8 shadow-2xl"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)' }}
-          >
-            <h2 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text-primary)' }}>
-              Welcome back
-            </h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Sign in to your admin account</p>
+          <span className="tr-eyebrow">Admin access</span>
+          <h1 className="tr-display" style={{ fontSize: 'clamp(2.4rem, 10vw, 3.4rem)', margin: '6px 0 8px' }}>Sign in</h1>
+          <p style={{ color: 'var(--ink-2)', marginBottom: 24 }}>Use your admin email and password.</p>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Entire form rendered client-side only — prevents hydration mismatches
-                  caused by browser extensions (e.g. password managers) injecting elements */}
-              {mounted && (
-                <>
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@appliedagentic.com"
-                  required
-                  autoFocus
-                  className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                  style={{
-                    background: 'var(--bg-surface)',
-                    borderColor: 'var(--bg-border)',
-                    color: 'var(--text-primary)',
-                  }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                  Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all pr-10"
-                    style={{
-                      background: 'var(--bg-surface)',
-                      borderColor: 'var(--bg-border)',
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)' }}
-              >
-                {loading && <Loader2 size={16} className="animate-spin" />}
-                {loading ? 'Signing in…' : 'Sign In'}
-              </button>
-                </>
-              )}
-            </form>
-
-            {/* Quick Login — shown only when NEXT_PUBLIC_QUICK_LOGIN=true in env */}
-            {process.env.NEXT_PUBLIC_QUICK_LOGIN === 'true' && (
+          <form onSubmit={handleSubmit} className="grid gap-4" noValidate={false}>
+            {/* Rendered client-side only so password-manager extensions can't cause hydration mismatches */}
+            {mounted && (
               <>
-                <div className="flex items-center gap-3 my-5">
-                  <div className="flex-1 h-px" style={{ background: 'var(--bg-border)' }} />
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>or</span>
-                  <div className="flex-1 h-px" style={{ background: 'var(--bg-border)' }} />
+                <div className="grid gap-1.5">
+                  <label htmlFor="login-email" className="text-sm font-semibold">Email</label>
+                  <input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@appliedagentic.com" required autoFocus autoComplete="username" className="input" style={{ minHeight: 48 }} />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleQuickLogin}
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl font-semibold transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
-                  style={{
-                    background: 'rgba(108,61,255,0.1)',
-                    border: '1px solid rgba(108,61,255,0.35)',
-                    color: '#a78bfa',
-                  }}
-                >
-                  {loading ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
-                  Quick Login as Admin
+                <div className="grid gap-1.5">
+                  <label htmlFor="login-password" className="text-sm font-semibold">Password</label>
+                  <div className="relative">
+                    <input id="login-password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" required autoComplete="current-password" className="input" style={{ minHeight: 48, paddingRight: 48 }} />
+                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-1 top-1/2 -translate-y-1/2 tr-icon-btn" style={{ width: 40, height: 40, border: 0, background: 'transparent' }} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+                {error && (
+                  <p role="alert" style={{ margin: 0, padding: '10px 14px', borderRadius: 12, background: 'color-mix(in srgb, var(--l1) 10%, var(--card))', color: 'var(--danger)', fontSize: '.9rem', fontWeight: 600 }}>
+                    {error}
+                  </p>
+                )}
+                <button type="submit" disabled={loading} className="tr-btn tr-btn--primary tr-btn--block" style={{ minHeight: 50 }}>
+                  {loading ? <Loader2 size={17} className="animate-spin" /> : <LogIn size={17} />}
+                  {loading ? 'Signing in…' : 'Sign in'}
                 </button>
-
-                <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
-                  admin@appliedagentic.com · Admin@2026!
-                </p>
               </>
             )}
-          </div>
+          </form>
 
-          <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
-            Applied Agentic AI © {new Date().getFullYear()}
-          </p>
+          {/* Quick Login — shown only when NEXT_PUBLIC_QUICK_LOGIN=true in env */}
+          {process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_QUICK_LOGIN === 'true' && (
+            <div className="grid gap-2 mt-5">
+              <button type="button" onClick={handleQuickLogin} disabled={loading} className="tr-btn tr-btn--ghost tr-btn--block">
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
+                Quick sign-in as admin
+              </button>
+              <p className="tr-mono text-center" style={{ fontSize: '.72rem', color: 'var(--muted)' }}>admin@appliedagentic.com · Admin@2026!</p>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
+    </>
   )
 }

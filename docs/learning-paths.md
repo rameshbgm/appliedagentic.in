@@ -28,13 +28,13 @@ Load the intended environment explicitly. Set `LEARNING_TARGET_DATABASE` to the 
 
 ```sh
 LEARNING_TARGET_DATABASE=your_database \
-  npx dotenv -e .env.production -- node scripts/learning-paths.cjs --apply
+  npx dotenv run -q -f .env.production -- node scripts/learning-paths.cjs --apply
 
 LEARNING_TARGET_DATABASE=your_database FFMPEG_PATH=/absolute/path/to/ffmpeg \
-  npx dotenv -e .env.production -- node scripts/learning-paths.cjs --media
+  npx dotenv run -q -f .env.production -- node scripts/learning-paths.cjs --media
 
 LEARNING_TARGET_DATABASE=your_database \
-  npx dotenv -e .env.production -- node scripts/learning-paths.cjs --verify --publish
+  npx dotenv run -q -f .env.production -- node scripts/learning-paths.cjs --verify --publish
 ```
 
 `--apply` creates hidden menus/modules and draft articles in transactions. Existing matching imports are verified and skipped; conflicting slugs or altered source content cause a failure instead of an overwrite. The importer uses an existing article author and records a pre-import menu/count snapshot under ignored logs.

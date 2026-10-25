@@ -4,7 +4,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { PrismaClient } = require('@prisma/client');
+const { createPrismaClient } = require('../lib/prisma-client.cjs');
 const sharp = require('sharp');
 const { root, trackSlugs, sha, slugify, loadCurriculum, allArticles } = require('./learning-paths-plan.cjs');
 const { generateDiagrams } = require('./learning-paths-diagrams.cjs');
@@ -234,7 +234,7 @@ async function main() {
   if (args.has('--links')) await verifyLinks(tracks);
   if (args.has('--diagrams')) await generateDiagrams(tracks);
   if (![...args].some(a => ['--apply', '--media', '--verify', '--publish'].includes(a))) return;
-  const p = new PrismaClient();
+  const p = createPrismaClient();
   try {
     await assertTarget(p);
     if (args.has('--apply')) await apply(p, tracks);

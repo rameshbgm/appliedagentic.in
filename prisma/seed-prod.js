@@ -2,11 +2,11 @@
 // prisma/seed-prod.js
 // Idempotent JS seed for production: creates an admin user and site settings.
 
-const { PrismaClient } = require('@prisma/client')
+const { createPrismaClient } = require('../lib/prisma-client.cjs')
 const bcrypt = require('bcryptjs')
 
 async function main() {
-  const prisma = new PrismaClient()
+  const prisma = createPrismaClient()
   try {
     console.log('🌱 Running production JS seed...')
 
@@ -17,7 +17,7 @@ async function main() {
 
     const user = await prisma.user.upsert({
       where: { email: adminEmail },
-      update: { passwordHash },
+      update: {},
       create: {
         email: adminEmail,
         passwordHash,
@@ -33,9 +33,9 @@ async function main() {
       create: {
         id: 1,
         siteName: process.env.SITE_NAME || 'Applied Agentic AI',
-        tagline: process.env.SITE_TAGLINE || 'Applied Agentic AI',
-        metaDescription: process.env.SITE_META_DESCRIPTION || 'Applied Agentic AI site',
-        footerText: process.env.SITE_FOOTER_TEXT || '© 2026 Applied Agentic AI',
+        tagline: process.env.SITE_TAGLINE || null,
+        metaDescription: process.env.SITE_META_DESCRIPTION || 'Practical deep-dives into agentic AI, LLMs, and modern AI systems — free to read.',
+        footerText: process.env.SITE_FOOTER_TEXT || null,
       },
     })
     console.log('✅ Upserted site settings')
@@ -45,7 +45,7 @@ async function main() {
     console.error('Seed error:', err)
     process.exitCode = 1
   } finally {
-    try { await require('@prisma/client').PrismaClient.prototype.$disconnect.call(new PrismaClient()) } catch (e) {}
+    await prisma.$disconnect()
   }
 }
 

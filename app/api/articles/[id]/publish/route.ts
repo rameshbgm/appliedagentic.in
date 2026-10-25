@@ -24,11 +24,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const { action } = PublishSchema.parse(body)
+    const current = await prisma.article.findUnique({ where: { id }, select: { publishedAt: true } })
+    if (!current) return apiError('Article not found', 404)
 
     let updateData: Record<string, unknown> = {}
     switch (action) {
       case 'publish':
-        updateData = { status: ArticleStatus.PUBLISHED, publishedAt: new Date() }
+        updateData = { status: ArticleStatus.PUBLISHED, publishedAt: current.publishedAt ?? new Date() }
         break
       case 'unpublish':
         updateData = { status: ArticleStatus.DRAFT }

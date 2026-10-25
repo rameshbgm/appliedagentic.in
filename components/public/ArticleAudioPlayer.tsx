@@ -1,257 +1,112 @@
 'use client'
 // components/public/ArticleAudioPlayer.tsx
-// Fixed bottom audio player — reads all state from ArticleAudioContext.
-import { useState, useRef, useCallback } from 'react'
-import { Play, Pause, Volume2, VolumeX, X, SkipBack, SkipForward, Loader2, RotateCcw, RotateCw } from 'lucide-react'
+// Narration dock — floats above the mobile dock, reads all state from ArticleAudioContext.
+import { useRef, useState } from 'react'
+import { Loader2, Pause, Play, RotateCcw, RotateCw, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react'
 import { useArticleAudio } from './ArticleAudioContext'
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+const SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2]
 
 const fmt = (s: number) => {
-  if (!isFinite(s)) return '0:00'
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
+  if (!isFinite(s) || s < 0) return '0:00'
+  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
 
 export default function ArticleAudioPlayer() {
   const {
     playState, currentSectionIdx, progress, currentTime, duration,
-    speed, muted, visible, sections,
+    speed, muted, visible, sections, error,
     togglePlayPause, seek, setSpeed, toggleMute, goToSection, close,
   } = useArticleAudio()
-
   const barRef = useRef<HTMLDivElement>(null)
-  const dragging = useRef(false)
   const [showSpeed, setShowSpeed] = useState(false)
 
-  // Check if any section has audio
-  const hasAudio = sections.some((s) => s.audioUrl)
-  if (!visible || !hasAudio) return null
+  if (!visible || !sections.some((s) => s.audioUrl)) return null
 
-  const hasSections = sections.filter((s) => s.audioUrl).length > 1
-  const currentTitle = currentSectionIdx !== null
-    ? sections[currentSectionIdx]?.title || 'Untitled'
-    : ''
-
-  // ── Scrub helpers ──
-  const fractionFromEvent = (clientX: number) => {
-    const bar = barRef.current
-    if (!bar) return 0
-    const rect = bar.getBoundingClientRect()
-    return (clientX - rect.left) / rect.width
-  }
-
-  const seekFromClientX = (clientX: number) => {
-    seek(fractionFromEvent(clientX))
-  }
-
-  const onBarMouseDown = (e: React.MouseEvent) => {
-    dragging.current = true
-    seekFromClientX(e.clientX)
-    const onMove = (ev: MouseEvent) => seekFromClientX(ev.clientX)
-    const onUp = (ev: MouseEvent) => {
-      seekFromClientX(ev.clientX)
-      dragging.current = false
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-  }
-
-  const onBarTouchStart = (e: React.TouchEvent) => {
-    dragging.current = true
-    seekFromClientX(e.touches[0].clientX)
-    const onMove = (ev: TouchEvent) => seekFromClientX(ev.touches[0].clientX)
-    const onEnd = (ev: TouchEvent) => {
-      seekFromClientX(ev.changedTouches[0].clientX)
-      dragging.current = false
-      window.removeEventListener('touchmove', onMove)
-      window.removeEventListener('touchend', onEnd)
-    }
-    window.addEventListener('touchmove', onMove, { passive: true })
-    window.addEventListener('touchend', onEnd)
-  }
-
-  // Find if we can go prev/next (sections with audio)
-  const audioSectionIndices = sections.map((s, i) => s.audioUrl ? i : -1).filter((i) => i >= 0)
-  const currentAudioPos = currentSectionIdx !== null ? audioSectionIndices.indexOf(currentSectionIdx) : -1
-  const canGoPrev = currentAudioPos > 0
-  const canGoNext = currentAudioPos >= 0 && currentAudioPos < audioSectionIndices.length - 1
-
+  const audioIdx = sections.map((s, i) => (s.audioUrl ? i : -1)).filter((i) => i >= 0)
+  const pos = currentSectionIdx !== null ? audioIdx.indexOf(currentSectionIdx) : -1
+  const multi = audioIdx.length > 1
+  const title = currentSectionIdx !== null ? sections[currentSectionIdx]?.title || 'Narration' : 'Narration'
   const isPlaying = playState === 'playing'
   const isLoading = playState === 'loading'
 
-  const skipSeconds = (delta: number) => {
-    if (!duration || !isFinite(duration)) return
-    seek(Math.max(0, Math.min(1, (currentTime + delta) / duration)))
+  const seekFromX = (clientX: number) => {
+    const rect = barRef.current?.getBoundingClientRect()
+    if (rect) seek((clientX - rect.left) / rect.width)
+  }
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    seekFromX(e.clientX)
+  }
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) seekFromX(e.clientX)
+  }
+  const skip = (delta: number) => {
+    if (duration && isFinite(duration)) seek((currentTime + delta) / duration)
   }
 
   return (
-    <div
-      className="fixed left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-2xl rounded-xl px-3 py-2 shadow-2xl"
-      style={{ background: 'var(--bg-elevated)', border: '1px solid rgba(108,61,255,0.35)', bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}
-    >
-      {/* ── Single compact row ── */}
-      <div className="flex items-center gap-2">
-
-        {/* Prev section */}
-        {hasSections && (
-          <button
-            type="button"
-            onClick={() => goToSection(-1)}
-            disabled={!canGoPrev}
-            className="shrink-0 p-1.5 rounded-lg transition-opacity disabled:opacity-30 hover:bg-white/10"
-            style={{ color: 'var(--text-muted)' }}
-            title="Previous section"
-          >
-            <SkipBack size={13} />
-          </button>
-        )}
-
-        {/* Rewind 15s */}
-        <button
-          type="button"
-          onClick={() => skipSeconds(-15)}
-          disabled={!duration || currentTime <= 0}
-          className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-opacity hover:bg-white/10 disabled:opacity-30"
-          style={{ color: 'var(--text-muted)' }}
-          title="Rewind 15 seconds"
-        >
-          <RotateCcw size={15} />
+    <div className="tr-audio" role="region" aria-label="Audio narration">
+      {error && <p role="alert" style={{ padding: '8px 12px', margin: 0 }}>{error}</p>}
+      <div className="tr-audio__row">
+        <button type="button" className="tr-audio__play" onClick={togglePlayPause} disabled={isLoading} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          {isLoading ? <Loader2 size={18} className="animate-spin" /> : isPlaying ? <Pause size={18} /> : <Play size={18} />}
         </button>
-
-        {/* Play / Pause / Loading */}
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          disabled={isLoading}
-          title={isPlaying ? 'Pause' : 'Play'}
-          className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center disabled:opacity-60 transition-opacity hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #6C3DFF, #9B59B6)', color: '#fff', WebkitTapHighlightColor: 'transparent', boxShadow: '0 2px 8px rgba(108,61,255,0.4)' }}
-        >
-          {isLoading ? <Loader2 size={12} className="animate-spin" /> : isPlaying ? <Pause size={12} /> : <Play size={12} />}
-        </button>
-
-        {/* Skip forward 15s */}
-        <button
-          type="button"
-          onClick={() => skipSeconds(15)}
-          disabled={!duration || currentTime >= duration}
-          className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-opacity hover:bg-white/10 disabled:opacity-30"
-          style={{ color: 'var(--text-muted)' }}
-          title="Skip forward 15 seconds"
-        >
-          <RotateCw size={15} />
-        </button>
-
-        {/* Next section */}
-        {hasSections && (
-          <button
-            type="button"
-            onClick={() => goToSection(1)}
-            disabled={!canGoNext}
-            className="shrink-0 p-1.5 rounded-lg transition-opacity disabled:opacity-30 hover:bg-white/10"
-            style={{ color: 'var(--text-muted)' }}
-            title="Next section"
-          >
-            <SkipForward size={13} />
-          </button>
+        <div className="tr-audio__title">
+          <small>{multi && pos >= 0 ? `Stop ${pos + 1} of ${audioIdx.length}` : 'Now playing'}</small>
+          <b title={title}>{title}</b>
+        </div>
+        {multi && (
+          <button type="button" className="tr-audio__btn" onClick={() => goToSection(-1)} disabled={pos <= 0} aria-label="Previous section"><SkipBack size={16} /></button>
         )}
-
-        {/* Title — hidden on very small screens */}
-        {currentTitle && (
-          <span
-            className="hidden sm:block shrink-0 text-xs font-medium truncate max-w-30"
-            style={{ color: 'var(--text-secondary)' }}
-            title={currentTitle}
-          >
-            {currentTitle}
-          </span>
+        <button type="button" className="tr-audio__btn" onClick={() => skip(-15)} disabled={!duration} aria-label="Back 15 seconds"><RotateCcw size={16} /></button>
+        <button type="button" className="tr-audio__btn" onClick={() => skip(15)} disabled={!duration} aria-label="Forward 15 seconds"><RotateCw size={16} /></button>
+        {multi && (
+          <button type="button" className="tr-audio__btn" onClick={() => goToSection(1)} disabled={pos < 0 || pos >= audioIdx.length - 1} aria-label="Next section"><SkipForward size={16} /></button>
         )}
-
-        {/* Current time */}
-        <span className="shrink-0 text-xs tabular-nums" style={{ color: 'var(--text-muted)', minWidth: 32 }}>
-          {fmt(currentTime)}
-        </span>
-
-        {/* Progress bar — fills remaining space */}
+        <button type="button" className="tr-audio__btn" onClick={close} aria-label="Close player"><X size={16} /></button>
+      </div>
+      <div className="tr-audio__scrub">
+        <span>{fmt(currentTime)}</span>
         <div
           ref={barRef}
-          className="flex-1 h-7 flex items-center cursor-pointer select-none"
-          onMouseDown={onBarMouseDown}
-          onTouchStart={onBarTouchStart}
+          className="tr-audio__bar"
+          role="slider"
+          tabIndex={0}
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onKeyDown={(e) => {
+            if (['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) e.preventDefault()
+            if (e.key === 'ArrowRight') skip(5)
+            if (e.key === 'ArrowLeft') skip(-5)
+            if (e.key === 'Home') seek(0)
+            if (e.key === 'End') seek(1)
+          }}
         >
-          <div className="relative h-1.5 w-full rounded-full" style={{ background: 'rgba(108,61,255,0.15)' }}>
-            <div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #6C3DFF, #9B59B6)' }}
-            />
-            {/* Scrubber thumb */}
-            <div
-              className="absolute top-1/2 w-3.5 h-3.5 rounded-full shadow-md"
-              style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)', background: '#fff', border: '2px solid #6C3DFF', boxShadow: '0 0 6px rgba(108,61,255,0.5)' }}
-            />
+          <div>
+            <span style={{ width: `${progress}%` }} />
+            <i style={{ left: `${progress}%` }} />
           </div>
         </div>
-
-        {/* Duration */}
-        <span className="shrink-0 text-xs tabular-nums" style={{ color: 'var(--text-muted)', minWidth: 32 }}>
-          {duration ? fmt(duration) : '--:--'}
-        </span>
-
-        {/* Speed */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setShowSpeed((v) => !v)}
-            className="px-1.5 py-0.5 rounded text-xs font-semibold border hover:bg-white/10 transition-colors"
-            style={{ color: '#6C3DFF', borderColor: 'rgba(108,61,255,0.4)', minWidth: 34 }}
-            title="Playback speed"
-          >
-            {speed}×
-          </button>
+        <span>{duration ? fmt(duration) : '--:--'}</span>
+        <div className="tr-audio__speed">
+          <button type="button" onClick={() => setShowSpeed((v) => !v)} aria-expanded={showSpeed} aria-label="Playback speed">{speed}×</button>
           {showSpeed && (
-            <div
-              className="absolute bottom-full mb-1 right-0 rounded-lg border shadow-xl overflow-hidden z-50"
-              style={{ background: 'var(--bg-elevated)', borderColor: 'var(--bg-border)' }}
-            >
+            <ul>
               {SPEEDS.map((s) => (
-                <button
-                  type="button"
-                  key={s}
-                  onClick={() => { setSpeed(s); setShowSpeed(false) }}
-                  className="block w-full px-3 py-1 text-xs text-left hover:bg-white/10 transition-colors"
-                  style={{ color: s === speed ? '#6C3DFF' : 'var(--text-primary)', fontWeight: s === speed ? 700 : 400 }}
-                >
-                  {s}×
-                </button>
+                <li key={s}>
+                  <button type="button" aria-pressed={s === speed} onClick={() => { setSpeed(s); setShowSpeed(false) }}>{s}×</button>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
-
-        {/* Mute */}
-        <button
-          type="button"
-          onClick={toggleMute}
-          title={muted ? 'Unmute' : 'Mute'}
-          className="shrink-0 p-1.5 rounded-lg hover:bg-white/10"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          {muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-        </button>
-
-        {/* Close */}
-        <button
-          type="button"
-          onClick={close}
-          title="Close player"
-          className="shrink-0 p-1.5 rounded-lg hover:bg-white/10"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <X size={13} />
+        <button type="button" className="tr-audio__btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       </div>
     </div>

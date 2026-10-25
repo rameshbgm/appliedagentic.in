@@ -1,7 +1,8 @@
 'use client'
+import { Youtube } from '@/components/shared/BrandIcons'
 // components/admin/editor/EmbedModal.tsx
 import { useState } from 'react'
-import { X, Youtube } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface Props {
   onInsert: (url: string) => void
@@ -57,7 +58,7 @@ export default function EmbedModal({ onInsert, onClose }: Props) {
               onClick={() => url && onInsert(url)}
               disabled={!isValid}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-              style={{ background: '#1E293B' }}
+              style={{ background: 'var(--ink)' }}
             >
               Embed
             </button>

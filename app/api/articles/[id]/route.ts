@@ -160,7 +160,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Fetch current slug for revalidation BEFORE the transaction — avoids a
     // post-transaction query and is needed even if the slug itself isn't changing.
-    const currentSlug = (await prisma.article.findUnique({ where: { id }, select: { slug: true } }))?.slug
+    const currentArticle = await prisma.article.findUnique({ where: { id }, select: { slug: true, publishedAt: true } })
+    if (!currentArticle) return apiError('Article not found', 404)
+    const currentSlug = currentArticle.slug
 
     const article = await prisma.$transaction(async (tx) => {
       if (data.topicIds !== undefined) {
@@ -257,7 +259,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         ...(readingTime !== undefined && { readingTimeMinutes: readingTime }),
         ...(data.publishedAt !== undefined
           ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null }
-          : (data.status === ArticleStatus.PUBLISHED ? { publishedAt: new Date() } : {})
+          : (data.status === ArticleStatus.PUBLISHED && !currentArticle.publishedAt ? { publishedAt: new Date() } : {})
         ),
         ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle }),
         ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription }),

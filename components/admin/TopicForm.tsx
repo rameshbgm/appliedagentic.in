@@ -169,7 +169,7 @@ export default function TopicForm({ initialData, modules }: Props) {
           type="submit"
           disabled={loading}
           className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center gap-2"
-          style={{ background: '#1E293B' }}
+          style={{ background: 'var(--ink)' }}
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           {initialData?.id ? 'Update Topic' : 'Create Topic'}

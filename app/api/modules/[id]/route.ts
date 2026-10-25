@@ -19,7 +19,7 @@ const UpdateSchema = z.object({
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const module = await prisma.module.findUnique({
+    const moduleRecord = await prisma.module.findUnique({
       where: { id: parseInt((await params).id) },
       include: {
         topics: {
@@ -29,8 +29,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
         _count: { select: { topics: true } },
       },
     })
-    if (!module) return apiError('Module not found', 404)
-    return apiSuccess(module)
+    if (!moduleRecord) return apiError('Module not found', 404)
+    return apiSuccess(moduleRecord)
   } catch (err) {
     return apiError('Failed to fetch module', 500, err)
   }
@@ -44,11 +44,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const data = UpdateSchema.parse(body)
     if (data.name && !data.slug) data.slug = slugify(data.name)
 
-    const module = await prisma.module.update({
+    const moduleRecord = await prisma.module.update({
       where: { id: parseInt((await params).id) },
       data,
     })
-    return apiSuccess(module)
+    return apiSuccess(moduleRecord)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to update module', 500, err)

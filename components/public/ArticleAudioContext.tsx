@@ -22,6 +22,7 @@ export interface ArticleAudioContextValue {
   speed: number
   muted: boolean
   visible: boolean
+  error: string
   sections: AudioSection[]
 
   playSectionAudio: (idx: number) => void
@@ -57,7 +58,12 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
   const [duration, setDuration] = useState(0)
   const [speed, setSpeedState] = useState(1)
   const [muted, setMuted] = useState(false)
-  const [visible, setVisible] = useState(() => sections.some((s) => s.audioUrl))
+  // The dock appears once narration starts (via loadAndPlay)
+  const [visible, setVisible] = useState(false)
+  const [error, setError] = useState('')
+  const speedRef = useRef(speed)
+  const playbackRef = useRef(0)
+  speedRef.current = speed
 
   // Keep a ref to sections so callbacks don't go stale
   const sectionsRef = useRef(sections)
@@ -73,17 +79,13 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
 
     const onTimeUpdate = () => {
       setCurrentTime(audio.currentTime)
-      setProgress(isFinite(audio.duration) ? (audio.currentTime / audio.duration) * 100 : 0)
+      setProgress(isFinite(audio.duration) && audio.duration > 0 ? (audio.currentTime / audio.duration) * 100 : 0)
     }
     const onLoadedMetadata = () => {
-      setDuration(audio.duration)
+      setDuration(isFinite(audio.duration) ? audio.duration : 0)
     }
-    const onCanPlay = () => {
-      if (audio.dataset.shouldPlay === 'true') {
-        audio.dataset.shouldPlay = ''
-        audio.play().then(() => setPlayState('playing')).catch(() => setPlayState('paused'))
-      }
-    }
+    const onPlaying = () => setPlayState('playing')
+    const onPause = () => setPlayState((state) => state === 'idle' ? state : 'paused')
     const onEnded = () => {
       // Auto-advance to next section with audio
       const secs = sectionsRef.current
@@ -103,18 +105,23 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
       }
     }
     const onError = () => {
-      setPlayState('idle')
+      setPlayState('paused')
+      setError('Narration could not load. Check your connection and press Play to retry.')
     }
 
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('loadedmetadata', onLoadedMetadata)
-    audio.addEventListener('canplay', onCanPlay)
+    audio.addEventListener('playing', onPlaying)
+    audio.addEventListener('pause', onPause)
     audio.addEventListener('ended', onEnded)
     audio.addEventListener('error', onError)
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
       audio.removeEventListener('loadedmetadata', onLoadedMetadata)
-      audio.removeEventListener('canplay', onCanPlay)
+      audio.pause()
+      audio.removeAttribute('src')
+      audio.removeEventListener('playing', onPlaying)
+      audio.removeEventListener('pause', onPause)
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('error', onError)
     }
@@ -127,17 +134,24 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
     if (!audio || !section?.audioUrl) return
 
     setCurrentSectionIdx(idx)
+    currentSectionIdxRef.current = idx
     setPlayState('loading')
     setProgress(0)
     setCurrentTime(0)
     setDuration(0)
     setVisible(true)
+    setError('')
 
-    audio.dataset.shouldPlay = 'true'
+    const playback = ++playbackRef.current
     audio.src = section.audioUrl
-    audio.playbackRate = speed
+    audio.playbackRate = speedRef.current
     audio.load()
-  }, [speed])
+    audio.play().catch((err: Error) => {
+      if (playback !== playbackRef.current || err.name === 'AbortError') return
+      setPlayState('paused')
+      setError(err.name === 'NotAllowedError' ? 'Press Play to allow audio playback.' : 'Narration could not play. Press Play to retry.')
+    })
+  }, [])
 
   const playSectionAudio = useCallback((idx: number) => {
     loadAndPlay(idx)
@@ -155,10 +169,13 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
       audio.pause()
       setPlayState('paused')
     } else if (playState === 'paused') {
-      audio.play().then(() => setPlayState('playing')).catch(() => {})
+      if (audio.error && currentSectionIdx !== null) { loadAndPlay(currentSectionIdx); return }
+      setError('')
+      audio.play().catch(() => setError('Narration could not play. Press Play to retry.'))
     } else if (playState === 'idle') {
       if (currentSectionIdx !== null) {
-        audio.play().then(() => setPlayState('playing')).catch(() => {})
+        setError('')
+        audio.play().catch(() => setError('Narration could not play. Press Play to retry.'))
       } else {
         // Nothing selected yet — start from first section with audio
         const firstIdx = sectionsRef.current.findIndex((s) => s.audioUrl)
@@ -209,13 +226,17 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
   }, [loadAndPlay])
 
   const close = useCallback(() => {
+    ++playbackRef.current
     audioRef.current?.pause()
+    if (audioRef.current) { audioRef.current.removeAttribute('src'); audioRef.current.load() }
+    currentSectionIdxRef.current = null
     setVisible(false)
     setPlayState('idle')
     setCurrentSectionIdx(null)
     setProgress(0)
     setCurrentTime(0)
     setDuration(0)
+    setError('')
   }, [])
 
   const value: ArticleAudioContextValue = {
@@ -227,6 +248,7 @@ export function ArticleAudioProvider({ sections, children }: ProviderProps) {
     speed,
     muted,
     visible,
+    error,
     sections,
     playSectionAudio,
     pause,

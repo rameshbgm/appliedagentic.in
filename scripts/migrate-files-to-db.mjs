@@ -3,7 +3,7 @@
 // One-time migration: reads existing files from disk and writes their binary
 // data into the MediaAsset.data column.
 
-import { PrismaClient } from '@prisma/client'
+import { createPrismaClient } from '../lib/prisma-client.cjs'
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(__dirname, '..', 'public', 'uploads')
 
-const prisma = new PrismaClient()
+const prisma = createPrismaClient()
 
 async function main() {
   console.log('Starting file-to-DB migration...')

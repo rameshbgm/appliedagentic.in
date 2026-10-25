@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Production-only, resumable import for Modules 5-8. No source files are edited.
-// dotenv -e .env.production -- node scripts/course-content.cjs --prepare
+// dotenv run -q -f .env.production -- node scripts/course-content.cjs --prepare
 // Then --apply, followed by the application's media pipeline, then --publish.
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { PrismaClient } = require('@prisma/client');
+const { createPrismaClient } = require('../lib/prisma-client.cjs');
 const definitions = require('./course-content-data.cjs');
 const { root, sha, readModule } = require('./import-module4.cjs');
 const { normalizeText, normalizeObject } = require('./course-text.cjs');
@@ -98,7 +98,7 @@ function checkContent(module, plan) {
 }
 
 async function prepare() {
-  require('ts-node').register({ transpileOnly: true, compilerOptions: { module: 'CommonJS', moduleResolution: 'Node' } });
+  require('ts-node').register({ transpileOnly: true, compilerOptions: { module: 'Node16', moduleResolution: 'Node16' } });
   require('tsconfig-paths').register({ baseUrl: root, paths: { '@/*': ['./*'] } });
   const { runSeoOptimizer } = require('../agents/seo-optimizer/agent');
   const { runTagsGenerator } = require('../agents/tags-generator/agent');
@@ -194,7 +194,7 @@ function mediaAdapter(numbers) {
 }
 
 async function main() {
-  const p = new PrismaClient();
+  const p = createPrismaClient();
   try {
     await assertProduction(p);
     if (process.argv.includes('--normalize-existing')) {

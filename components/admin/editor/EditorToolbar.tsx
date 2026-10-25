@@ -1,4 +1,5 @@
 'use client'
+import { Youtube as YoutubeIcon } from '@/components/shared/BrandIcons'
 // components/admin/editor/EditorToolbar.tsx
 import { Editor, useEditorState } from '@tiptap/react'
 import { useRef, useState, useEffect, useCallback } from 'react'
@@ -6,7 +7,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, CheckSquare, Quote, Code2, Minus,
-  Link2, Unlink, Image as ImageIcon, Youtube as YoutubeIcon,
+  Link2, Unlink, Image as ImageIcon,
   Table as TableIcon, Undo, Redo,
   Superscript as SuperscriptIcon, Subscript as SubscriptIcon,
   Highlighter, ChevronDown, RemoveFormatting,
@@ -252,7 +253,7 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
                       type="button"
                       onClick={() => { ps.action(editor); setShowStyleMenu(false) }}
                       className="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-violet-50"
-                      style={{ color: active ? '#6C3DFF' : 'var(--text-secondary)', fontWeight: active ? 600 : 400, background: active ? 'rgba(108,61,255,0.06)' : 'transparent' }}
+                      style={{ color: active ? 'var(--l2)' : 'var(--text-secondary)', fontWeight: active ? 600 : 400, background: active ? 'color-mix(in srgb, var(--l2) 8%, transparent)' : 'transparent' }}
                     >
                       {ps.label}
                     </button>
@@ -343,7 +344,7 @@ export default function EditorToolbar({ editor, isHtmlMode = false, onToggleHtml
                       className="w-7 h-7 rounded-md hover:scale-110 transition-transform"
                       style={{
                         background: c,
-                        outline: s.currentColor === c ? '2px solid #6C3DFF' : '1px solid rgba(0,0,0,0.1)',
+                        outline: s.currentColor === c ? '2px solid var(--l2)' : '1px solid rgba(0,0,0,0.1)',
                         outlineOffset: s.currentColor === c ? '1px' : undefined,
                       }}
                     />

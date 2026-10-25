@@ -58,10 +58,10 @@ export async function POST(req: NextRequest) {
     const lastModule = await prisma.module.findFirst({ orderBy: { order: 'desc' } })
     const order = data.order ?? (lastModule?.order ?? 0) + 1
 
-    const module = await prisma.module.create({
+    const moduleRecord = await prisma.module.create({
       data: { ...data, slug, order },
     })
-    return apiSuccess(module, 201)
+    return apiSuccess(moduleRecord, 201)
   } catch (err) {
     if (err instanceof z.ZodError) return apiError(err.issues[0].message, 422)
     return apiError('Failed to create module', 500, err)

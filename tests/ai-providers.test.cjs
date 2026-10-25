@@ -6,7 +6,7 @@ const { EventEmitter } = require('node:events')
 
 require('ts-node').register({
   transpileOnly: true,
-  compilerOptions: { module: 'CommonJS', moduleResolution: 'node' },
+  compilerOptions: { module: 'Node16', moduleResolution: 'Node16' },
 })
 const resolve = Module._resolveFilename
 Module._resolveFilename = function (request, parent, ...args) {
@@ -73,6 +73,22 @@ test('Luna sends high reasoning through Responses and omits sampling parameters 
 test('Luna reports incomplete responses rather than treating truncated output as success', async () => {
   handleFetch = async () => json({ object: 'response', id: 'resp_test', status: 'incomplete', incomplete_details: { reason: 'max_output_tokens' }, output: [] })
   await assert.rejects(() => runAgent({ provider: 'openai', textModel: 'gpt-6-luna', maxTokens: 300, streaming: false }, 'Write', '', { prompt: 'Check' }), /max_output_tokens/)
+})
+
+test('configured Gemini text fallback handles OpenAI quota failures with the original instructions', async () => {
+  let geminiCalls = 0
+  handleFetch = async (url, init) => {
+    if (String(url).includes('/v1/responses')) return json({ error: { message: 'Spend limit reached', type: 'insufficient_quota', code: 'insufficient_quota' } }, 429)
+    geminiCalls++
+    const body = JSON.parse(init.body)
+    assert.match(JSON.stringify(body), /Preserve these instructions/)
+    assert(body.generationConfig.maxOutputTokens >= 4096)
+    return json({ candidates: [{ content: { role: 'model', parts: [{ text: 'Fallback OK' }] }, finishReason: 'STOP', index: 0 }], usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 3, totalTokenCount: 15 } })
+  }
+  const result = await runAgent({ provider: 'openai', textModel: 'gpt-6-luna', maxTokens: 300, streaming: false }, 'Preserve these instructions', 'Do not invent content.', { prompt: 'Check', context: 'Source text' })
+  assert.equal(result.provider, 'gemini')
+  assert.equal(result.text, 'Fallback OK')
+  assert.equal(geminiCalls, 1)
 })
 
 test('Flare uses supported image parameters and decodes base64 output', async () => {

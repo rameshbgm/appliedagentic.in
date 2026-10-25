@@ -11,6 +11,7 @@ export async function openaiTextToSpeech(text: string, selectedVoice: string): P
   if (!(OPENAI_REALTIME_VOICES as readonly string[]).includes(voice)) throw new Error('Unsupported OpenAI voice')
   const config = await getAIConfig()
   const apiKey = getOpenAIClient().apiKey
+  if (!apiKey) throw new Error('OpenAI audio requires an API key')
 
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(`wss://api.openai.com/v1/realtime?model=${encodeURIComponent(config.audioModel)}`, {

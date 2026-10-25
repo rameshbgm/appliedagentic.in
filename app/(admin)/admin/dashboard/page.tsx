@@ -73,24 +73,24 @@ export default async function DashboardPage() {
   const topArticles = raw?.topArticles ?? []
 
   const cards = [
-    { label: 'Total Articles',  value: s.totalArticles     ?? 0, iconName: 'FileText',   color: '#6C3DFF' },
-    { label: 'Published',       value: s.publishedArticles ?? 0, iconName: 'TrendingUp', color: '#2ED573' },
-    { label: 'Draft',           value: s.draftArticles     ?? 0, iconName: 'FileText',   color: '#FFA502' },
-    { label: 'Total Views',     value: s.totalViews        ?? 0, iconName: 'Eye',         color: '#FF6B6B' },
-    { label: 'Menus',           value: s.totalMenus        ?? 0, iconName: 'Menu',        color: '#10B981' },
-    { label: 'Sub-Menus',       value: s.totalSubMenus     ?? 0, iconName: 'ListTree',    color: '#3B82F6' },
-    { label: 'Media Assets',    value: s.totalMedia        ?? 0, iconName: 'Image',       color: '#FF69B4' },
-    { label: 'Modules',         value: s.totalModules      ?? 0, iconName: 'Layers',      color: '#00D4FF' },
-    { label: 'Topics',          value: s.totalTopics       ?? 0, iconName: 'BookOpen',    color: '#FFA502' },
-    { label: 'AI Requests',     value: s.aiRequests        ?? 0, iconName: 'Cpu',         color: '#A29BFE' },
-    { label: 'AI Tokens Used',  value: s.aiTokens          ?? 0, iconName: 'Cpu',         color: '#55EFC4' },
+    { label: 'Total Articles',  value: s.totalArticles     ?? 0, iconName: 'FileText',   color: 'var(--l2)' },
+    { label: 'Published',       value: s.publishedArticles ?? 0, iconName: 'TrendingUp', color: 'var(--l3)' },
+    { label: 'Draft',           value: s.draftArticles     ?? 0, iconName: 'FileText',   color: 'var(--l4)' },
+    { label: 'Total Views',     value: s.totalViews        ?? 0, iconName: 'Eye',         color: 'var(--l1)' },
+    { label: 'Menus',           value: s.totalMenus        ?? 0, iconName: 'Menu',        color: 'var(--l3)' },
+    { label: 'Sub-Menus',       value: s.totalSubMenus     ?? 0, iconName: 'ListTree',    color: 'var(--l2)' },
+    { label: 'Media Assets',    value: s.totalMedia        ?? 0, iconName: 'Image',       color: 'var(--l7)' },
+    { label: 'Modules',         value: s.totalModules      ?? 0, iconName: 'Layers',      color: 'var(--l6)' },
+    { label: 'Topics',          value: s.totalTopics       ?? 0, iconName: 'BookOpen',    color: 'var(--l4)' },
+    { label: 'AI Requests',     value: s.aiRequests        ?? 0, iconName: 'Cpu',         color: 'var(--l5)' },
+    { label: 'AI Tokens Used',  value: s.aiTokens          ?? 0, iconName: 'Cpu',         color: 'var(--l8)' },
   ]
 
   const quickActions = [
-    { href: '/admin/articles/new', label: 'New Article',  color: '#6C3DFF', icon: FileText },
-    { href: '/admin/menus/new',    label: 'New Menu',     color: '#10B981', icon: Menu },
-    { href: '/admin/submenus/new', label: 'New Sub-Menu', color: '#3B82F6', icon: ListTree },
-    { href: '/admin/media',        label: 'Upload Media', color: '#FF69B4', icon: ImageIcon },
+    { href: '/admin/articles/new', label: 'New Article',  color: 'var(--l2)', icon: FileText },
+    { href: '/admin/menus/new',    label: 'New Menu',     color: 'var(--l3)', icon: Menu },
+    { href: '/admin/submenus/new', label: 'New Sub-Menu', color: 'var(--l2)', icon: ListTree },
+    { href: '/admin/media',        label: 'Upload Media', color: 'var(--l7)', icon: ImageIcon },
   ]
 
   return (
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
         <Link
           href="/admin/articles/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: '#6C3DFF' }}
+          style={{ background: 'var(--l2)' }}
         >
           <Plus size={16} /> New Article
         </Link>
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
               key={href}
               href={href}
               className="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-all hover:scale-105"
-              style={{ borderColor: color + '40', background: color + '12', color }}
+              style={{ borderColor: `color-mix(in srgb, ${color} 40%, transparent)`, background: `color-mix(in srgb, ${color} 8%, var(--card))`, color }}
             >
               <Icon size={16} />
               {label}
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
           <h2 className="font-display font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
             Top Articles by Views
           </h2>
-          <Link href="/admin/articles" className="text-xs font-medium" style={{ color: '#6C3DFF' }}>
+          <Link href="/admin/articles" className="text-xs font-medium" style={{ color: 'var(--l2)' }}>
             View all →
           </Link>
         </div>
@@ -156,7 +156,7 @@ export default async function DashboardPage() {
             <div key={a.id} className="flex items-center gap-4">
               <span
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                style={{ background: 'rgba(108,61,255,0.2)', color: '#A29BFE' }}
+                style={{ background: 'rgba(108,61,255,0.2)', color: 'var(--l5)' }}
               >
                 {i + 1}
               </span>
@@ -185,7 +185,7 @@ export default async function DashboardPage() {
             <h2 className="font-display font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>
               Recent Articles
             </h2>
-            <Link href="/admin/articles" className="text-xs font-medium" style={{ color: '#6C3DFF' }}>
+            <Link href="/admin/articles" className="text-xs font-medium" style={{ color: 'var(--l2)' }}>
               View all →
             </Link>
           </div>

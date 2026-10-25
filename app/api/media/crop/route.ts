@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { prepareAsset } from '@/lib/storage'
 import { apiSuccess, apiError } from '@/lib/utils'
+import { readDevelopmentMedia } from '@/lib/dev-media'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -42,9 +43,14 @@ export async function POST(req: NextRequest) {
     if (!asset) return apiError('Media asset not found', 404)
     if (!asset.mimeType || !asset.url) return apiError('Asset is missing required fields', 422)
     if (!asset.mimeType.startsWith('image/')) return apiError('Only images can be cropped', 422)
-    if (!asset.data) return apiError('Asset binary data not found in database', 404)
-
-    const buffer = Buffer.from(asset.data)
+    let buffer: Buffer
+    if (asset.data) buffer = Buffer.from(asset.data)
+    else {
+      const remote = await readDevelopmentMedia(asset.url, null)
+      if (!remote) return apiError('Asset binary data not found in database', 404)
+      buffer = remote.data
+      await prisma.mediaAsset.update({ where: { id: asset.id }, data: { data: new Uint8Array(buffer) } })
+    }
 
     // Use sharp to crop (and optionally resize)
     const sharp = (await import('sharp')).default

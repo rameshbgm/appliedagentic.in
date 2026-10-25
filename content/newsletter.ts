@@ -9,5 +9,5 @@ export const newsletterContent = {
   placeholder: 'your@email.com',
   ctaLabel:    'Subscribe',
   loadingLabel:'Subscribing...',
-  successMsg:  "You're on the list! We'll notify you of new content.",
+  successMsg:  "You're subscribed. Your email has been saved.",
 }

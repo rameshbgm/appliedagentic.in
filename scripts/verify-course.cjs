@@ -3,10 +3,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { PrismaClient, Prisma } = require('@prisma/client');
+const { createPrismaClient, Prisma } = require('../lib/prisma-client.cjs');
 const { getPlan, checkContent, assertProduction, work, fields, normalizeText } = require('./course-content.cjs');
 const { checkContent: checkModule4, buildPlan: module4Plan } = require('./import-module4.cjs');
-const p = new PrismaClient();
+const p = createPrismaClient();
 const origin = process.env.COURSE_VERIFY_ORIGIN || 'https://appliedagentic.in';
 const escape = s => s.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 async function get(url, options = {}) {
