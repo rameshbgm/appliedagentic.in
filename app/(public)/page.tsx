@@ -38,7 +38,7 @@ async function getHomeData() {
     const [featured, latest, publishedCount, tags] = await Promise.all([
       prisma.article.findMany({
         where: { status: 'PUBLISHED', isFeatured: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { publishedAt: 'desc' },
         take: 6,
         select: articleSelect,
       }),
@@ -184,6 +184,7 @@ export default async function HomePage() {
                   summary={a.summary}
                   minutes={a.readingTimeMinutes}
                   views={a.viewCount}
+                  date={a.publishedAt}
                   imageUrl={a.coverImage?.url}
                   label={line ? `Line ${line.number} · ${line.title}` : 'Express'}
                   color={line?.color}

@@ -39,10 +39,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       where: { slug: id },
       select: {
         title: true,
+        status: true,
         summary: true,
         seoTitle: true,
         seoDescription: true,
         seoKeywords: true,
+        seoCanonicalUrl: true,
         ogTitle: true,
         ogDescription: true,
         twitterTitle: true,
@@ -68,6 +70,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: resolvedTitle,
       description: resolvedDescription,
       keywords,
+      alternates: { canonical: article.seoCanonicalUrl || `/articles/${id}` },
+      robots: article.status === 'PUBLISHED'
+        ? { index: true, follow: true }
+        : { index: false, follow: false },
       openGraph: { title: ogTitle, description: ogDesc, ...(coverImages ? { images: coverImages } : {}) },
       twitter: {
         card: 'summary_large_image',
@@ -107,7 +113,8 @@ export default async function ArticleDetailPage({ params }: Props) {
     article = await prisma.article.findUnique({
       where: { slug: id },
       include: {
-        coverImage: { select: { url: true } },
+        coverImage: { select: { url: true, altText: true } },
+        author: { select: { name: true } },
         articleTags: { include: { tag: { select: { id: true, name: true } } } },
         sections: { orderBy: { order: 'asc' } },
         subMenuArticles: {
@@ -148,7 +155,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   const color = line?.color ?? 'var(--l2)'
   const tags = article.articleTags.map((t) => t.tag)
 
-  // Neighbouring stops: the zone's running order, else the topic's
+  // Keep the zone's related stops; continue the journey across zones for path-only lessons.
   let order: RelatedArticle[] = []
   let related: RelatedArticle[] = []
   try {
@@ -160,6 +167,17 @@ export default async function ArticleDetailPage({ params }: Props) {
       })
       order = rows.map((r) => r.article)
       related = rows.map((r) => r.article).filter((a) => a.id !== article.id)
+      if (!article.topicArticles[0]) {
+        const pathRows = await prisma.subMenuArticle.findMany({
+          where: {
+            subMenu: { menuId: nav.subMenu.menu.id, isVisible: true },
+            article: { status: 'PUBLISHED' },
+          },
+          orderBy: [{ subMenu: { order: 'asc' } }, { orderIndex: 'asc' }, { id: 'asc' }],
+          select: { article: { select: relatedSelect } },
+        })
+        order = pathRows.map((r) => r.article)
+      }
     } else if (article.topicArticles[0]) {
       const rows = await prisma.topicArticle.findMany({
         where: { topicId: article.topicArticles[0].topicId, article: { status: 'PUBLISHED' } },
@@ -192,6 +210,21 @@ export default async function ArticleDetailPage({ params }: Props) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://appliedagentic.in'
   const articleUrl = `${siteUrl}/articles/${article.slug}`
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.seoDescription || article.summary,
+    mainEntityOfPage: article.seoCanonicalUrl || articleUrl,
+    datePublished: article.publishedAt?.toISOString(),
+    dateModified: article.updatedAt.toISOString(),
+    author: { '@type': 'Person', name: article.author.name },
+    publisher: { '@type': 'Organization', name: 'Applied Agentic AI', url: siteUrl },
+    ...(article.coverImage ? { image: new URL(article.coverImage.url, siteUrl).href } : {}),
+    ...(article.audioUrl ? { audio: { '@type': 'AudioObject', contentUrl: new URL(article.audioUrl, siteUrl).href, encodingFormat: article.audioUrl.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav', name: `${article.title}: AI-generated narration` } } : {}),
+    keywords: tags.map((tag) => tag.name),
+    inLanguage: 'en',
+  }
   const fullContent = sections.length > 0 ? sections.map((s) => s.content).join('\n') : article.content
   const audioSections = sections.some((s) => s.audioUrl)
     ? sections.map((s) => ({ id: s.id, title: s.title, audioUrl: s.audioUrl }))
@@ -204,6 +237,7 @@ export default async function ArticleDetailPage({ params }: Props) {
 
   return (
     <ArticleAudioProvider sections={audioSections}>
+      {!isDraft && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />}
       <RideProvider slug={article.slug} title={article.title} minutes={minutes}>
         <div style={{ '--c': color } as React.CSSProperties}>
           {isDraft && <div className="tr-draft">Draft preview · this article is not published</div>}
@@ -252,7 +286,7 @@ export default async function ArticleDetailPage({ params }: Props) {
             {article.coverImage && (
               <div className="tr-cover" style={{ maxWidth: 1000 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={article.coverImage.url} alt="" fetchPriority="high" />
+                <img src={article.coverImage.url} alt={article.coverImage.altText || article.title} fetchPriority="high" />
               </div>
             )}
 

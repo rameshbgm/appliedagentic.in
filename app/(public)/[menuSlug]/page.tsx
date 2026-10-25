@@ -22,7 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       select: { title: true, description: true },
     })
     if (!menu) return {}
-    return { title: menu.title, description: menu.description ?? undefined }
+    return {
+      title: menu.title,
+      description: menu.description ?? undefined,
+      alternates: { canonical: `/${menuSlug}` },
+      openGraph: { title: menu.title, description: menu.description ?? undefined, url: `/${menuSlug}`, type: 'website' },
+    }
   } catch (err) {
     logger.error('[generateMetadata /[menuSlug]]', err)
     return {}
@@ -35,6 +40,7 @@ const stopSelect = {
   slug: true,
   summary: true,
   readingTimeMinutes: true,
+  publishedAt: true,
   coverImage: { select: { url: true } },
   articleTags: { take: 3, select: { tag: { select: { name: true } } } },
 } as const
@@ -83,6 +89,7 @@ export default async function MenuPage({ params }: Props) {
     title: a.title,
     summary: a.summary,
     minutes: a.readingTimeMinutes,
+    publishedAt: a.publishedAt,
     imageUrl: a.coverImage?.url,
     tags: a.articleTags.map((t) => t.tag.name),
   })

@@ -1,6 +1,7 @@
 // components/transit/StopList.tsx
 // Articles drawn as stops along a vertical line, with journey time on the right.
 import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
 
 export interface Stop {
   id: number
@@ -8,6 +9,7 @@ export interface Stop {
   title: string
   summary?: string | null
   minutes?: number | null
+  publishedAt?: Date | string | null
   imageUrl?: string | null
   tags?: string[]
 }
@@ -35,6 +37,11 @@ export default function StopList({ stops, showThumbs = false }: Props) {
               <div className="body">
                 <h3>{s.title}</h3>
                 {s.summary && <p>{s.summary}</p>}
+                {s.publishedAt && (
+                  <span className="tr-eyebrow">
+                    <time dateTime={new Date(s.publishedAt).toISOString()}>{formatDate(s.publishedAt, 'short')}</time>
+                  </span>
+                )}
                 {(s.tags?.length || i === 0 || i === stops.length - 1) ? (
                   <span className="tags">
                     {i === 0 && stops.length > 1 && <span className="tag">Start here</span>}

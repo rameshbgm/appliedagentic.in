@@ -1,0 +1,1396 @@
+{
+  "title": "Agent Harness Engineering",
+  "slug": "agent-harness-engineering",
+  "description": "Build the runtime behind reliable AI agents: execution control, persistent state, isolated tools, scoped permissions, durable scheduling and observable recovery.",
+  "tagline": "Build the runtime behind reliable agents.",
+  "modules": [
+    {
+      "title": "Harness Foundations",
+      "slug": "harness-foundations",
+      "description": "Understand the model-runtime boundary, compare infrastructure components and implement a minimal controlled agent loop.",
+      "articles": [
+        {
+          "title": "What Is an Agent Harness?",
+          "slug": "harness-what-is-an-agent-harness",
+          "summary": "Understand how a harness controls agent execution, tools, state and permissions through a worked supplier-research loop.",
+          "seoTitle": "What Is an Agent Harness?",
+          "seoDescription": "Understand how a harness controls agent execution, tools, state and permissions through a worked supplier-research loop.",
+          "tags": [
+            "agent harness engineering",
+            "agent harness",
+            "execution loop",
+            "tool use",
+            "runtime architecture"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            },
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            }
+          ],
+          "coverConcept": "A harness validates model proposals, executes permitted tools and records state before the next reasoning step. Diagram nodes: User task, Model proposal, Policy check, Tool result, Run state.",
+          "coverAlt": "A harness validates model proposals, executes permitted tools and records state before the next reasoning step.",
+          "file": "01-what-is-an-agent-harness.md",
+          "diagram": {
+            "nodes": [
+              "User task",
+              "Model proposal",
+              "Policy check",
+              "Tool result",
+              "Run state"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "caption": "A harness validates model proposals, executes permitted tools and records state before the next reasoning step."
+          }
+        },
+        {
+          "title": "Models, Frameworks, Harnesses and Sandboxes Explained",
+          "slug": "harness-models-frameworks-harnesses-sandboxes",
+          "summary": "Separate model reasoning, framework abstractions, harness control and sandbox isolation using a concrete coding-agent architecture.",
+          "seoTitle": "Models, Frameworks, Harnesses and Sandboxes",
+          "seoDescription": "Separate model reasoning, framework abstractions, harness control and sandbox isolation using a concrete coding-agent architecture.",
+          "tags": [
+            "agent harness engineering",
+            "agent harness",
+            "frameworks",
+            "sandboxing",
+            "architecture"
+          ],
+          "sources": [
+            {
+              "title": "Docker: Engine security",
+              "url": "https://docs.docker.com/engine/security/"
+            },
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            }
+          ],
+          "coverConcept": "The harness uses a model for proposals and routes validated execution through adapters into an isolated environment. Diagram nodes: Harness, Model, Tool adapter, Sandbox.",
+          "coverAlt": "The harness uses a model for proposals and routes validated execution through adapters into an isolated environment.",
+          "file": "02-models-frameworks-harnesses-sandboxes.md",
+          "diagram": {
+            "nodes": [
+              "Harness",
+              "Model",
+              "Tool adapter",
+              "Sandbox"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "caption": "The harness uses a model for proposals and routes validated execution through adapters into an isolated environment."
+          }
+        },
+        {
+          "title": "Build a Minimal Agent Execution Loop",
+          "slug": "harness-minimal-execution-loop",
+          "summary": "Implement a bounded agent loop with structured responses, a tool registry, validation, authorization and explicit stop reasons.",
+          "seoTitle": "Build a Minimal Agent Execution Loop",
+          "seoDescription": "Implement a bounded agent loop with structured responses, a tool registry, validation, authorization and explicit stop reasons.",
+          "tags": [
+            "agent harness engineering",
+            "execution loop",
+            "tool registry",
+            "schema validation",
+            "agent runtime"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema: Object validation",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "Node.js: AbortController and AbortSignal",
+              "url": "https://nodejs.org/api/globals.html#class-abortcontroller"
+            }
+          ],
+          "coverConcept": "A minimal execution loop turns validated proposals into bounded tool observations for the next model request. Diagram nodes: Context, Model response, Validate, Execute tool, Observe.",
+          "coverAlt": "A minimal execution loop turns validated proposals into bounded tool observations for the next model request.",
+          "file": "03-minimal-execution-loop.md",
+          "diagram": {
+            "nodes": [
+              "Context",
+              "Model response",
+              "Validate",
+              "Execute tool",
+              "Observe"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "caption": "A minimal execution loop turns validated proposals into bounded tool observations for the next model request."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Execution Control",
+      "slug": "harness-execution-control",
+      "description": "Design durable run lifecycles, enforce cancellation and limits, and retry external actions without duplicating effects.",
+      "articles": [
+        {
+          "title": "Design the Agent Run Lifecycle",
+          "slug": "harness-run-lifecycle",
+          "summary": "Model queued, running, approval and terminal states with durable transitions, worker attempts and concurrency checks.",
+          "seoTitle": "Design the Agent Run Lifecycle",
+          "seoDescription": "Model queued, running, approval and terminal states with durable transitions, worker attempts and concurrency checks.",
+          "tags": [
+            "agent harness engineering",
+            "run lifecycle",
+            "state machines",
+            "worker leases",
+            "human approval"
+          ],
+          "sources": [
+            {
+              "title": "PostgreSQL: Explicit locking",
+              "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+            },
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            }
+          ],
+          "coverConcept": "A durable run can pause for approval and return to the queue before reaching a verified terminal state. Diagram nodes: Queued, Running, Await approval, Completed.",
+          "coverAlt": "A durable run can pause for approval and return to the queue before reaching a verified terminal state.",
+          "file": "04-run-lifecycle.md",
+          "diagram": {
+            "nodes": [
+              "Queued",
+              "Running",
+              "Await approval",
+              "Completed"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                1,
+                3
+              ]
+            ],
+            "caption": "A durable run can pause for approval and return to the queue before reaching a verified terminal state."
+          }
+        },
+        {
+          "title": "Implement Step Limits, Timeouts and Cancellation",
+          "slug": "harness-limits-timeouts-cancellation",
+          "summary": "Enforce step limits, propagated deadlines and durable cancellation while handling in-flight actions and uncertain side effects.",
+          "seoTitle": "Agent Limits, Timeouts and Cancellation",
+          "seoDescription": "Enforce step limits, propagated deadlines and durable cancellation while handling in-flight actions and uncertain side effects.",
+          "tags": [
+            "agent harness engineering",
+            "timeouts",
+            "cancellation",
+            "execution limits",
+            "agent reliability"
+          ],
+          "sources": [
+            {
+              "title": "Node.js: AbortController and AbortSignal",
+              "url": "https://nodejs.org/api/globals.html#class-abortcontroller"
+            },
+            {
+              "title": "Stripe: Idempotent requests",
+              "url": "https://docs.stripe.com/api/idempotent_requests"
+            }
+          ],
+          "coverConcept": "Cancellation stops future dispatch while reconciliation establishes the outcome of operations already sent. Diagram nodes: Cancel request, Durable flag, Worker check, Stop dispatch, Reconcile.",
+          "coverAlt": "Cancellation stops future dispatch while reconciliation establishes the outcome of operations already sent.",
+          "file": "05-limits-timeouts-cancellation.md",
+          "diagram": {
+            "nodes": [
+              "Cancel request",
+              "Durable flag",
+              "Worker check",
+              "Stop dispatch",
+              "Reconcile"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Cancellation stops future dispatch while reconciliation establishes the outcome of operations already sent."
+          }
+        },
+        {
+          "title": "Manage Retries Without Repeating Consequential Actions",
+          "slug": "harness-retries-idempotency",
+          "summary": "Design stable action identities, bounded retries and reconciliation for external writes whose responses may be lost.",
+          "seoTitle": "Safe Retries and Idempotent Agent Actions",
+          "seoDescription": "Design stable action identities, bounded retries and reconciliation for external writes whose responses may be lost.",
+          "tags": [
+            "agent harness engineering",
+            "idempotency",
+            "retries",
+            "action ledger",
+            "distributed systems"
+          ],
+          "sources": [
+            {
+              "title": "Stripe: Idempotent requests",
+              "url": "https://docs.stripe.com/api/idempotent_requests"
+            },
+            {
+              "title": "Amazon SQS: At-least-once delivery",
+              "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html"
+            }
+          ],
+          "coverConcept": "A persisted action identity lets recovery reconcile a lost response without inventing a second logical write. Diagram nodes: Prepare action, Provider write, Lost response, Reconcile, Confirm result.",
+          "coverAlt": "A persisted action identity lets recovery reconcile a lost response without inventing a second logical write.",
+          "file": "06-retries-idempotency.md",
+          "diagram": {
+            "nodes": [
+              "Prepare action",
+              "Provider write",
+              "Lost response",
+              "Reconcile",
+              "Confirm result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A persisted action identity lets recovery reconcile a lost response without inventing a second logical write."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Context & State Infrastructure",
+      "slug": "harness-context-state-infrastructure",
+      "description": "Assemble authorized context, compact working history and checkpoint execution for crash-safe recovery.",
+      "articles": [
+        {
+          "title": "Assemble Context at Each Execution Step",
+          "slug": "harness-context-assembly",
+          "summary": "Build context from trusted constraints, authorized evidence and current state while preserving provenance and input budgets.",
+          "seoTitle": "Assemble Context for Each Agent Step",
+          "seoDescription": "Build context from trusted constraints, authorized evidence and current state while preserving provenance and input budgets.",
+          "tags": [
+            "agent harness engineering",
+            "context engineering",
+            "provenance",
+            "authorization",
+            "token budgets"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Effective context engineering for AI agents",
+              "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+            },
+            {
+              "title": "Model Context Protocol: Security best practices",
+              "url": "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices"
+            }
+          ],
+          "coverConcept": "A context builder combines trusted constraints and selected authorized evidence within a bounded model request. Diagram nodes: Trusted inputs, Authorized evidence, Context builder, Model request.",
+          "coverAlt": "A context builder combines trusted constraints and selected authorized evidence within a bounded model request.",
+          "file": "07-context-assembly.md",
+          "diagram": {
+            "nodes": [
+              "Trusted inputs",
+              "Authorized evidence",
+              "Context builder",
+              "Model request"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "A context builder combines trusted constraints and selected authorized evidence within a bounded model request."
+          }
+        },
+        {
+          "title": "Implement Context Compaction and Persistent State",
+          "slug": "harness-compaction-persistent-state",
+          "summary": "Separate event history, structured task state and summaries to preserve uncertainty and continuity across context resets.",
+          "seoTitle": "Context Compaction and Persistent State",
+          "seoDescription": "Separate event history, structured task state and summaries to preserve uncertainty and continuity across context resets.",
+          "tags": [
+            "agent harness engineering",
+            "context compaction",
+            "persistent state",
+            "summaries",
+            "session recovery"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Effective context engineering for AI agents",
+              "url": "https://www.anthropic.com/research/effective-context-engineering-for-ai-agents"
+            },
+            {
+              "title": "Anthropic: Harness design for long-running application development",
+              "url": "https://www.anthropic.com/research/harness-design-long-running-apps"
+            }
+          ],
+          "coverConcept": "Versioned summaries compress narrative while structured state preserves authoritative execution facts. Diagram nodes: Event history, Task snapshot, Versioned summary, Next context.",
+          "coverAlt": "Versioned summaries compress narrative while structured state preserves authoritative execution facts.",
+          "file": "08-compaction-persistent-state.md",
+          "diagram": {
+            "nodes": [
+              "Event history",
+              "Task snapshot",
+              "Versioned summary",
+              "Next context"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Versioned summaries compress narrative while structured state preserves authoritative execution facts."
+          }
+        },
+        {
+          "title": "Build Checkpoints and Resume Interrupted Runs",
+          "slug": "harness-checkpoints-resume",
+          "summary": "Create crash-consistent checkpoints, verify artifacts, reconcile pending actions and prevent stale workers from committing results.",
+          "seoTitle": "Checkpoints and Resumable Agent Runs",
+          "seoDescription": "Create crash-consistent checkpoints, verify artifacts, reconcile pending actions and prevent stale workers from committing results.",
+          "tags": [
+            "agent harness engineering",
+            "checkpoints",
+            "crash recovery",
+            "fencing tokens",
+            "artifact integrity"
+          ],
+          "sources": [
+            {
+              "title": "SQLite: Atomic commit",
+              "url": "https://www.sqlite.org/atomiccommit.html"
+            },
+            {
+              "title": "PostgreSQL: Explicit locking",
+              "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+            },
+            {
+              "title": "Stripe: Idempotent requests",
+              "url": "https://docs.stripe.com/api/idempotent_requests"
+            }
+          ],
+          "coverConcept": "A replacement worker claims ownership, verifies committed artifacts and reconciles uncertain actions before resuming. Diagram nodes: Load checkpoint, Verify artifacts, Reconcile actions, New lease, Resume.",
+          "coverAlt": "A replacement worker claims ownership, verifies committed artifacts and reconciles uncertain actions before resuming.",
+          "file": "09-checkpoints-resume.md",
+          "diagram": {
+            "nodes": [
+              "Load checkpoint",
+              "Verify artifacts",
+              "Reconcile actions",
+              "New lease",
+              "Resume"
+            ],
+            "edges": [
+              [
+                3,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                4
+              ]
+            ],
+            "caption": "A replacement worker claims ownership, verifies committed artifacts and reconciles uncertain actions before resuming."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Tool Runtime & Isolation",
+      "slug": "harness-tool-runtime-isolation",
+      "description": "Build validated tool registries, isolate executable work and manage credentials through scoped runtime capabilities.",
+      "articles": [
+        {
+          "title": "Build a Tool Registry with Schema Validation",
+          "slug": "harness-tool-registry-validation",
+          "summary": "Define versioned tool contracts with bounded inputs and outputs, tenant authorization and controlled implementation dispatch.",
+          "seoTitle": "Tool Registries and Schema Validation",
+          "seoDescription": "Define versioned tool contracts with bounded inputs and outputs, tenant authorization and controlled implementation dispatch.",
+          "tags": [
+            "agent harness engineering",
+            "tool registry",
+            "json schema",
+            "tenant isolation",
+            "tool contracts"
+          ],
+          "sources": [
+            {
+              "title": "JSON Schema: Object validation",
+              "url": "https://json-schema.org/understanding-json-schema/reference/object"
+            },
+            {
+              "title": "Model Context Protocol: Security best practices",
+              "url": "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices"
+            }
+          ],
+          "coverConcept": "A controlled registry dispatches a tool only after structural validation and resource authorization succeed. Diagram nodes: Tool proposal, Schema validation, Resource policy, Implementation, Bounded result.",
+          "coverAlt": "A controlled registry dispatches a tool only after structural validation and resource authorization succeed.",
+          "file": "10-tool-registry-validation.md",
+          "diagram": {
+            "nodes": [
+              "Tool proposal",
+              "Schema validation",
+              "Resource policy",
+              "Implementation",
+              "Bounded result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A controlled registry dispatches a tool only after structural validation and resource authorization succeed."
+          }
+        },
+        {
+          "title": "Run Code and File Operations in Sandboxes",
+          "slug": "harness-code-file-sandboxing",
+          "summary": "Design isolated tool workers with restricted privileges, paths, mounts, network access and resources, then test boundary violations.",
+          "seoTitle": "Sandboxed Code and File Operations",
+          "seoDescription": "Design isolated tool workers with restricted privileges, paths, mounts, network access and resources, then test boundary violations.",
+          "tags": [
+            "agent harness engineering",
+            "sandboxing",
+            "code execution",
+            "filesystem security",
+            "resource limits"
+          ],
+          "sources": [
+            {
+              "title": "Docker: Engine security",
+              "url": "https://docs.docker.com/engine/security/"
+            },
+            {
+              "title": "OWASP: Secrets management",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+            }
+          ],
+          "coverConcept": "A constrained worker executes in its assigned workspace and exports artifacts through a separate validation boundary. Diagram nodes: Validated job, Isolated worker, Scoped workspace, Artifact checks.",
+          "coverAlt": "A constrained worker executes in its assigned workspace and exports artifacts through a separate validation boundary.",
+          "file": "11-code-file-sandboxing.md",
+          "diagram": {
+            "nodes": [
+              "Validated job",
+              "Isolated worker",
+              "Scoped workspace",
+              "Artifact checks"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "A constrained worker executes in its assigned workspace and exports artifacts through a separate validation boundary."
+          }
+        },
+        {
+          "title": "Manage Credentials and Tool Access Boundaries",
+          "slug": "harness-credentials-access-boundaries",
+          "summary": "Keep secrets outside model context, bind tool access to run identity and handle scoped credentials, revocation and secure recovery.",
+          "seoTitle": "Credentials and Tool Access Boundaries",
+          "seoDescription": "Keep secrets outside model context, bind tool access to run identity and handle scoped credentials, revocation and secure recovery.",
+          "tags": [
+            "agent harness engineering",
+            "credentials",
+            "least privilege",
+            "secret management",
+            "authorization"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: Secrets management",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+            },
+            {
+              "title": "Model Context Protocol: Security best practices",
+              "url": "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices"
+            }
+          ],
+          "coverConcept": "The runtime authorizes a resource and supplies scoped credentials directly to the adapter rather than to the model. Diagram nodes: Run identity, Resource check, Credential broker, Tool adapter, Safe result.",
+          "coverAlt": "The runtime authorizes a resource and supplies scoped credentials directly to the adapter rather than to the model.",
+          "file": "12-credentials-access-boundaries.md",
+          "diagram": {
+            "nodes": [
+              "Run identity",
+              "Resource check",
+              "Credential broker",
+              "Tool adapter",
+              "Safe result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "The runtime authorizes a resource and supplies scoped credentials directly to the adapter rather than to the model."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Permissions & Human Control",
+      "slug": "harness-permissions-human-control",
+      "description": "Enforce execution policies, bind human decisions to exact actions and implement audit trails and emergency stops.",
+      "articles": [
+        {
+          "title": "Design Policies for Tool Execution",
+          "slug": "harness-tool-execution-policies",
+          "summary": "Evaluate complete actions with deterministic allow, deny and approval policies, including destination rules and tool-composition risks.",
+          "seoTitle": "Policies for Agent Tool Execution",
+          "seoDescription": "Evaluate complete actions with deterministic allow, deny and approval policies, including destination rules and tool-composition risks.",
+          "tags": [
+            "agent harness engineering",
+            "execution policies",
+            "authorization",
+            "least privilege",
+            "policy testing"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: Authorization Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+            },
+            {
+              "title": "Model Context Protocol: Security best practices",
+              "url": "https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices"
+            }
+          ],
+          "coverConcept": "Execution policy evaluates the full action and returns an explicit allow, review or deny decision. Diagram nodes: Validated action, Policy decision, Allow, Review, Deny.",
+          "coverAlt": "Execution policy evaluates the full action and returns an explicit allow, review or deny decision.",
+          "file": "13-tool-execution-policies.md",
+          "diagram": {
+            "nodes": [
+              "Validated action",
+              "Policy decision",
+              "Allow",
+              "Review",
+              "Deny"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                1,
+                4
+              ]
+            ],
+            "caption": "Execution policy evaluates the full action and returns an explicit allow, review or deny decision."
+          }
+        },
+        {
+          "title": "Implement Approval, Denial and Escalation Flows",
+          "slug": "harness-approval-flows",
+          "summary": "Bind authenticated human review to immutable action versions and recheck artifacts, permissions and cancellation before dispatch.",
+          "seoTitle": "Approval, Denial and Escalation Flows",
+          "seoDescription": "Bind authenticated human review to immutable action versions and recheck artifacts, permissions and cancellation before dispatch.",
+          "tags": [
+            "agent harness engineering",
+            "human approval",
+            "action digests",
+            "review workflows",
+            "permissions"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: Authorization Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+            },
+            {
+              "title": "PostgreSQL: Explicit locking",
+              "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+            }
+          ],
+          "coverConcept": "Approval applies to one exact action version and must pass current runtime checks before execution. Diagram nodes: Exact action, Reviewer decision, Current checks, Dispatch.",
+          "coverAlt": "Approval applies to one exact action version and must pass current runtime checks before execution.",
+          "file": "14-approval-flows.md",
+          "diagram": {
+            "nodes": [
+              "Exact action",
+              "Reviewer decision",
+              "Current checks",
+              "Dispatch"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Approval applies to one exact action version and must pass current runtime checks before execution."
+          }
+        },
+        {
+          "title": "Add Audit Logs and Emergency Stop Controls",
+          "slug": "harness-audit-emergency-stop",
+          "summary": "Record execution decisions and uncertain effects, protect audit data and stop runs, tools or tenants without hiding in-flight work.",
+          "seoTitle": "Audit Logs and Emergency Stop Controls",
+          "seoDescription": "Record execution decisions and uncertain effects, protect audit data and stop runs, tools or tenants without hiding in-flight work.",
+          "tags": [
+            "agent harness engineering",
+            "audit logs",
+            "emergency stop",
+            "incident response",
+            "execution controls"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: Logging Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"
+            },
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "A durable stop blocks future dispatch while the action ledger supports reconciliation of in-flight effects. Diagram nodes: Stop control, Dispatch gate, Blocked work, Action ledger, Reconciliation.",
+          "coverAlt": "A durable stop blocks future dispatch while the action ledger supports reconciliation of in-flight effects.",
+          "file": "15-audit-emergency-stop.md",
+          "diagram": {
+            "nodes": [
+              "Stop control",
+              "Dispatch gate",
+              "Blocked work",
+              "Action ledger",
+              "Reconciliation"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A durable stop blocks future dispatch while the action ledger supports reconciliation of in-flight effects."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Long-Running Agents",
+      "slug": "harness-long-running-agents",
+      "description": "Decompose goals into verifiable tasks, preserve progress across sessions and recover from failed completion checks.",
+      "articles": [
+        {
+          "title": "Break Large Goals into Verifiable Tasks",
+          "slug": "harness-verifiable-tasks",
+          "summary": "Decompose large goals into bounded tasks with dependencies, acceptance evidence and controlled replanning across sessions.",
+          "seoTitle": "Break Agent Goals into Verifiable Tasks",
+          "seoDescription": "Decompose large goals into bounded tasks with dependencies, acceptance evidence and controlled replanning across sessions.",
+          "tags": [
+            "agent harness engineering",
+            "task decomposition",
+            "acceptance criteria",
+            "dependency graphs",
+            "long-running agents"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            },
+            {
+              "title": "Anthropic: Harness design for long-running application development",
+              "url": "https://www.anthropic.com/research/harness-design-long-running-apps"
+            }
+          ],
+          "coverConcept": "Requirements become dependent tasks whose completion is accepted only with current supporting evidence. Diagram nodes: Requirements, Task graph, Ready task, Evidence, Verified progress.",
+          "coverAlt": "Requirements become dependent tasks whose completion is accepted only with current supporting evidence.",
+          "file": "16-verifiable-tasks.md",
+          "diagram": {
+            "nodes": [
+              "Requirements",
+              "Task graph",
+              "Ready task",
+              "Evidence",
+              "Verified progress"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Requirements become dependent tasks whose completion is accepted only with current supporting evidence."
+          }
+        },
+        {
+          "title": "Preserve Progress Across Sessions",
+          "slug": "harness-progress-across-sessions",
+          "summary": "Create concise durable handoffs with task evidence, artifact versions and unresolved actions while respecting human workspace changes.",
+          "seoTitle": "Preserve Agent Progress Across Sessions",
+          "seoDescription": "Create concise durable handoffs with task evidence, artifact versions and unresolved actions while respecting human workspace changes.",
+          "tags": [
+            "agent harness engineering",
+            "session handoff",
+            "progress tracking",
+            "artifact versions",
+            "long-running agents"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            },
+            {
+              "title": "SQLite: Atomic commit",
+              "url": "https://www.sqlite.org/atomiccommit.html"
+            }
+          ],
+          "coverConcept": "A fresh session resumes through verified artifacts and a concise handoff linked to authoritative task state. Diagram nodes: Session one, Verified artifacts, Handoff record, Session two.",
+          "coverAlt": "A fresh session resumes through verified artifacts and a concise handoff linked to authoritative task state.",
+          "file": "17-progress-across-sessions.md",
+          "diagram": {
+            "nodes": [
+              "Session one",
+              "Verified artifacts",
+              "Handoff record",
+              "Session two"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "A fresh session resumes through verified artifacts and a concise handoff linked to authoritative task state."
+          }
+        },
+        {
+          "title": "Implement Completion Checks and Recovery Procedures",
+          "slug": "harness-completion-recovery",
+          "summary": "Verify requirements against artifacts, inspect unresolved actions and choose bounded recovery paths that preserve failure evidence.",
+          "seoTitle": "Completion Checks and Recovery Procedures",
+          "seoDescription": "Verify requirements against artifacts, inspect unresolved actions and choose bounded recovery paths that preserve failure evidence.",
+          "tags": [
+            "agent harness engineering",
+            "completion checks",
+            "recovery procedures",
+            "acceptance evidence",
+            "agent reliability"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            },
+            {
+              "title": "Stripe: Idempotent requests",
+              "url": "https://docs.stripe.com/api/idempotent_requests"
+            }
+          ],
+          "coverConcept": "Completion depends on both outcome evidence and the state of unresolved operations, with targeted recovery for failures. Diagram nodes: Requirements, Outcome checks, Unresolved actions, Recover or finish.",
+          "coverAlt": "Completion depends on both outcome evidence and the state of unresolved operations, with targeted recovery for failures.",
+          "file": "18-completion-recovery.md",
+          "diagram": {
+            "nodes": [
+              "Requirements",
+              "Outcome checks",
+              "Unresolved actions",
+              "Recover or finish"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Completion depends on both outcome evidence and the state of unresolved operations, with targeted recovery for failures."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Scheduling & Observability",
+      "slug": "harness-scheduling-observability",
+      "description": "Coordinate durable queues and worker ownership, trace execution and enforce resource budgets under concurrency.",
+      "articles": [
+        {
+          "title": "Build Queues, Workers and Concurrency Controls",
+          "slug": "harness-queues-workers-concurrency",
+          "summary": "Design durable agent queues with conditional claims, leases, redelivery handling, tenant fairness and bounded concurrency.",
+          "seoTitle": "Queues, Workers and Concurrency Controls",
+          "seoDescription": "Design durable agent queues with conditional claims, leases, redelivery handling, tenant fairness and bounded concurrency.",
+          "tags": [
+            "agent harness engineering",
+            "job queues",
+            "worker leases",
+            "concurrency",
+            "backpressure"
+          ],
+          "sources": [
+            {
+              "title": "Amazon SQS: At-least-once delivery",
+              "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html"
+            },
+            {
+              "title": "PostgreSQL: Explicit locking",
+              "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+            }
+          ],
+          "coverConcept": "Workers claim durable run ownership before execution and acknowledge queue delivery after the required commit boundary. Diagram nodes: Queue delivery, Conditional claim, Worker lease, Execute, Acknowledge.",
+          "coverAlt": "Workers claim durable run ownership before execution and acknowledge queue delivery after the required commit boundary.",
+          "file": "19-queues-workers-concurrency.md",
+          "diagram": {
+            "nodes": [
+              "Queue delivery",
+              "Conditional claim",
+              "Worker lease",
+              "Execute",
+              "Acknowledge"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Workers claim durable run ownership before execution and acknowledge queue delivery after the required commit boundary."
+          }
+        },
+        {
+          "title": "Trace Model Calls, Tool Execution and State Changes",
+          "slug": "harness-tracing-execution",
+          "summary": "Correlate runs, attempts and actions with distributed traces while separating sampled telemetry from durable audit evidence.",
+          "seoTitle": "Trace Agent Calls, Tools and State Changes",
+          "seoDescription": "Correlate runs, attempts and actions with distributed traces while separating sampled telemetry from durable audit evidence.",
+          "tags": [
+            "agent harness engineering",
+            "observability",
+            "distributed tracing",
+            "opentelemetry",
+            "agent operations"
+          ],
+          "sources": [
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            },
+            {
+              "title": "OWASP: Logging Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html"
+            }
+          ],
+          "coverConcept": "Shared run identifiers link model, tool and recovery spans into an interpretable execution view. Diagram nodes: Run ID, Model span, Tool span, Recovery span, Trace view.",
+          "coverAlt": "Shared run identifiers link model, tool and recovery spans into an interpretable execution view.",
+          "file": "20-tracing-execution.md",
+          "diagram": {
+            "nodes": [
+              "Run ID",
+              "Model span",
+              "Tool span",
+              "Recovery span",
+              "Trace view"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                3
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Shared run identifiers link model, tool and recovery spans into an interpretable execution view."
+          }
+        },
+        {
+          "title": "Enforce Token, Cost and Runtime Budgets",
+          "slug": "harness-resource-budgets",
+          "summary": "Reserve resources before concurrent dispatch, settle usage conservatively and preserve budgets across retries, cancellation and recovery.",
+          "seoTitle": "Enforce Token, Cost and Runtime Budgets",
+          "seoDescription": "Reserve resources before concurrent dispatch, settle usage conservatively and preserve budgets across retries, cancellation and recovery.",
+          "tags": [
+            "agent harness engineering",
+            "resource budgets",
+            "cost control",
+            "token accounting",
+            "concurrency"
+          ],
+          "sources": [
+            {
+              "title": "PostgreSQL: Explicit locking",
+              "url": "https://www.postgresql.org/docs/current/explicit-locking.html"
+            },
+            {
+              "title": "Node.js: AbortController and AbortSignal",
+              "url": "https://nodejs.org/api/globals.html#class-abortcontroller"
+            }
+          ],
+          "coverConcept": "Atomic reservations prevent concurrent operations from independently spending the same remaining allocation. Diagram nodes: Estimate, Atomic reservation, Execute, Settle usage, Remaining budget.",
+          "coverAlt": "Atomic reservations prevent concurrent operations from independently spending the same remaining allocation.",
+          "file": "21-resource-budgets.md",
+          "diagram": {
+            "nodes": [
+              "Estimate",
+              "Atomic reservation",
+              "Execute",
+              "Settle usage",
+              "Remaining budget"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Atomic reservations prevent concurrent operations from independently spending the same remaining allocation."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Harness Capstone",
+      "slug": "harness-capstone",
+      "description": "Build a resumable runtime, integrate approvals and traces, and compare harness versions with controlled evaluations.",
+      "articles": [
+        {
+          "title": "Build a Resumable Agent Runtime",
+          "slug": "harness-capstone-resumable-runtime",
+          "summary": "Build a durable research-agent runtime and prove recovery with crash injection, duplicate deliveries and explicit guarantee documentation.",
+          "seoTitle": "Capstone: Build a Resumable Agent Runtime",
+          "seoDescription": "Build a durable research-agent runtime and prove recovery with crash injection, duplicate deliveries and explicit guarantee documentation.",
+          "tags": [
+            "agent harness engineering",
+            "harness capstone",
+            "resumable runtime",
+            "crash testing",
+            "action ledger"
+          ],
+          "sources": [
+            {
+              "title": "SQLite: Atomic commit",
+              "url": "https://www.sqlite.org/atomiccommit.html"
+            },
+            {
+              "title": "Amazon SQS: At-least-once delivery",
+              "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/standard-queues-at-least-once-delivery.html"
+            },
+            {
+              "title": "Anthropic: Effective harnesses for long-running agents",
+              "url": "https://www.anthropic.com/research/effective-harnesses-for-long-running-agents"
+            }
+          ],
+          "coverConcept": "The capstone verifies durable execution by interrupting work at known boundaries and resuming the same logical run. Diagram nodes: Persist run, Claim worker, Execute action, Checkpoint, Resume test.",
+          "coverAlt": "The capstone verifies durable execution by interrupting work at known boundaries and resuming the same logical run.",
+          "file": "22-capstone-resumable-runtime.md",
+          "diagram": {
+            "nodes": [
+              "Persist run",
+              "Claim worker",
+              "Execute action",
+              "Checkpoint",
+              "Resume test"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "caption": "The capstone verifies durable execution by interrupting work at known boundaries and resuming the same logical run."
+          }
+        },
+        {
+          "title": "Integrate Tools, Approvals and Execution Traces",
+          "slug": "harness-capstone-integrated-controls",
+          "summary": "Connect immutable report artifacts, exact-action approvals and publication reconciliation into one observable resumable workflow.",
+          "seoTitle": "Capstone: Integrate Approvals, Tools and Traces",
+          "seoDescription": "Connect immutable report artifacts, exact-action approvals and publication reconciliation into one observable resumable workflow.",
+          "tags": [
+            "agent harness engineering",
+            "harness capstone",
+            "approval integration",
+            "publication",
+            "execution traces"
+          ],
+          "sources": [
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            },
+            {
+              "title": "Stripe: Idempotent requests",
+              "url": "https://docs.stripe.com/api/idempotent_requests"
+            },
+            {
+              "title": "OWASP: Authorization Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"
+            }
+          ],
+          "coverConcept": "An approved artifact is published under a stable action identity so lost responses can be reconciled and traced. Diagram nodes: Draft artifact, Exact approval, Publish action, Lost response, Reconcile.",
+          "coverAlt": "An approved artifact is published under a stable action identity so lost responses can be reconciled and traced.",
+          "file": "23-capstone-integrated-controls.md",
+          "diagram": {
+            "nodes": [
+              "Draft artifact",
+              "Exact approval",
+              "Publish action",
+              "Lost response",
+              "Reconcile"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "An approved artifact is published under a stable action identity so lost responses can be reconciled and traced."
+          }
+        },
+        {
+          "title": "Compare Harness Versions Using the Same Evaluation Suite",
+          "slug": "harness-capstone-compare-versions",
+          "summary": "Compare runtime versions with fixed fixtures, repeated trials and outcome, safety, recovery, latency and consumption measurements.",
+          "seoTitle": "Capstone: Compare Agent Harness Versions",
+          "seoDescription": "Compare runtime versions with fixed fixtures, repeated trials and outcome, safety, recovery, latency and consumption measurements.",
+          "tags": [
+            "agent harness engineering",
+            "harness evaluation",
+            "regression testing",
+            "controlled experiments",
+            "release gates"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            },
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "A fixed evaluation suite compares baseline and candidate trials before a release decision checks critical invariants. Diagram nodes: Fixed suite, Baseline trials, Candidate trials, Grade outcomes, Release decision.",
+          "coverAlt": "A fixed evaluation suite compares baseline and candidate trials before a release decision checks critical invariants.",
+          "file": "24-capstone-compare-versions.md",
+          "diagram": {
+            "nodes": [
+              "Fixed suite",
+              "Baseline trials",
+              "Candidate trials",
+              "Grade outcomes",
+              "Release decision"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A fixed evaluation suite compares baseline and candidate trials before a release decision checks critical invariants."
+          }
+        }
+      ]
+    }
+  ]
+}

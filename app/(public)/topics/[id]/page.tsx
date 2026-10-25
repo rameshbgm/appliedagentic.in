@@ -73,6 +73,7 @@ export default async function TopicDetailPage({ params }: Props) {
     title: a.title,
     summary: a.summary,
     minutes: a.readingTimeMinutes,
+    publishedAt: a.publishedAt,
     imageUrl: a.coverImage?.url,
     tags: a.articleTags.map((t) => t.tag.name),
   }))

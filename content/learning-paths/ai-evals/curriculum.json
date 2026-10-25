@@ -1,0 +1,1302 @@
+{
+  "title": "AI Evals",
+  "slug": "ai-evals",
+  "description": "Build repeatable evaluations for AI agents: datasets, graders, tool behavior, retrieval, security, regression testing and production quality.",
+  "tagline": "Measure what works. Understand what fails.",
+  "modules": [
+    {
+      "title": "Evaluation Foundations",
+      "slug": "evals-foundations",
+      "description": "Define tasks, trials, outcomes and success criteria before comparing AI systems.",
+      "articles": [
+        {
+          "title": "What Are AI Evals, and Why Do Agents Need Them?",
+          "slug": "evals-what-are-ai-evals",
+          "summary": "Learn how evaluation tasks, trials and graders make agent quality measurable before failures reach users.",
+          "seoTitle": "What Are AI Evals? A Practical Guide",
+          "seoDescription": "Learn how evaluation tasks, trials and graders make agent quality measurable before failures reach users.",
+          "tags": [
+            "ai evals",
+            "agent evaluation",
+            "quality assurance",
+            "success criteria"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            },
+            {
+              "title": "Python: unittest",
+              "url": "https://docs.python.org/3/library/unittest.html"
+            }
+          ],
+          "coverConcept": "An input task passes through an agent into an outcome inspected by three independent grading lenses.",
+          "coverAlt": "An input task passes through an agent into an outcome inspected by three independent grading lenses.",
+          "file": "01-evals-what-are-ai-evals.md",
+          "diagram": {
+            "nodes": [
+              "Task",
+              "Agent trial",
+              "Evidence",
+              "Grader",
+              "Verdict"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "A defined task produces a trial whose saved evidence is checked by an explicit grader."
+          }
+        },
+        {
+          "title": "Model, Application and Agent Evaluation",
+          "slug": "evals-model-application-agent-evaluation",
+          "summary": "Separate model capability, application behavior and agent execution so your evaluations diagnose the right layer.",
+          "seoTitle": "Model vs Application vs Agent Evaluation",
+          "seoDescription": "Separate model capability, application behavior and agent execution so your evaluations diagnose the right layer.",
+          "tags": [
+            "ai evals",
+            "model evaluation",
+            "application testing",
+            "agent traces"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            },
+            {
+              "title": "SWE-bench: Evaluation infrastructure",
+              "url": "https://github.com/SWE-bench/SWE-bench"
+            }
+          ],
+          "coverConcept": "Three nested evaluation boundaries surround a model, a retrieval application and an agent with action tools.",
+          "coverAlt": "Three nested evaluation boundaries surround a model, a retrieval application and an agent with action tools.",
+          "file": "02-evals-model-application-agent-evaluation.md",
+          "diagram": {
+            "nodes": [
+              "Fixed input",
+              "Model check",
+              "Application check",
+              "Agent state"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Evaluation boundaries expand from fixed model inputs through application behavior to external agent effects."
+          }
+        },
+        {
+          "title": "Define Success Before You Build",
+          "slug": "evals-define-success-before-building",
+          "summary": "Translate user goals into observable acceptance criteria, risk boundaries and release decisions before implementation begins.",
+          "seoTitle": "Define Success Before Building AI Agents",
+          "seoDescription": "Translate user goals into observable acceptance criteria, risk boundaries and release decisions before implementation begins.",
+          "tags": [
+            "success criteria",
+            "evaluation design",
+            "product requirements",
+            "risk boundaries"
+          ],
+          "sources": [
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            },
+            {
+              "title": "Python: unittest",
+              "url": "https://docs.python.org/3/library/unittest.html"
+            }
+          ],
+          "coverConcept": "A vague user goal branches into observable outcomes, prohibited actions and a documented release decision.",
+          "coverAlt": "A vague user goal branches into observable outcomes, prohibited actions and a documented release decision.",
+          "file": "03-evals-define-success-before-building.md",
+          "diagram": {
+            "nodes": [
+              "User goal",
+              "Required outcome",
+              "Forbidden action",
+              "Release rule"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "User goals become observable requirements and boundaries that jointly inform the release rule."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Evaluation Datasets",
+      "slug": "evals-datasets",
+      "description": "Build representative, versioned evaluation cases with protected holdouts and explicit coverage.",
+      "articles": [
+        {
+          "title": "Turn Real User Tasks into Evaluation Cases",
+          "slug": "evals-real-tasks-to-cases",
+          "summary": "Build useful evaluation cases from real workflows while preserving user intent, privacy and reproducible starting conditions.",
+          "seoTitle": "Turn User Tasks into AI Evaluation Cases",
+          "seoDescription": "Build useful evaluation cases from real workflows while preserving user intent, privacy and reproducible starting conditions.",
+          "tags": [
+            "evaluation datasets",
+            "task design",
+            "test fixtures",
+            "privacy"
+          ],
+          "sources": [
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            },
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            }
+          ],
+          "coverConcept": "A funnel converts varied user requests into versioned cases with fixtures, expectations and coverage labels.",
+          "coverAlt": "A funnel converts varied user requests into versioned cases with fixtures, expectations and coverage labels.",
+          "file": "04-evals-real-tasks-to-cases.md",
+          "diagram": {
+            "nodes": [
+              "User request",
+              "Synthetic fixture",
+              "Expected result",
+              "Coverage label"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ]
+            ],
+            "caption": "A real task is reconstructed as a privacy-conscious fixture with expected behavior and coverage labels."
+          }
+        },
+        {
+          "title": "Build Reference Answers, Rubrics and Edge Cases",
+          "slug": "evals-reference-answers-rubrics-edge-cases",
+          "summary": "Create reference facts and anchored rubrics that recognize valid answers while exposing difficult boundary conditions.",
+          "seoTitle": "Reference Answers, Rubrics and AI Edge Cases",
+          "seoDescription": "Create reference facts and anchored rubrics that recognize valid answers while exposing difficult boundary conditions.",
+          "tags": [
+            "rubrics",
+            "reference answers",
+            "edge cases",
+            "grading design"
+          ],
+          "sources": [
+            {
+              "title": "Python: unittest",
+              "url": "https://docs.python.org/3/library/unittest.html"
+            },
+            {
+              "title": "scikit-learn: Cohen kappa score",
+              "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html"
+            }
+          ],
+          "coverConcept": "A reference fact sheet feeds a rubric with anchored scores, beside boundary cases that test its assumptions.",
+          "coverAlt": "A reference fact sheet feeds a rubric with anchored scores, beside boundary cases that test its assumptions.",
+          "file": "05-evals-reference-answers-rubrics-edge-cases.md",
+          "diagram": {
+            "nodes": [
+              "Reference facts",
+              "Rubric anchors",
+              "Boundary cases",
+              "Reviewer labels"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Reference facts and anchored rubric levels are challenged by boundary cases before reviewed labels are accepted."
+          }
+        },
+        {
+          "title": "Manage Dataset Versions, Leakage and Coverage",
+          "slug": "evals-dataset-versions-leakage-coverage",
+          "summary": "Protect holdouts, track dataset changes and report coverage so evaluation improvements remain credible.",
+          "seoTitle": "AI Eval Dataset Versions, Leakage and Coverage",
+          "seoDescription": "Protect holdouts, track dataset changes and report coverage so evaluation improvements remain credible.",
+          "tags": [
+            "dataset versioning",
+            "data leakage",
+            "holdout sets",
+            "coverage"
+          ],
+          "sources": [
+            {
+              "title": "SWE-bench: Evaluation infrastructure",
+              "url": "https://github.com/SWE-bench/SWE-bench"
+            },
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            }
+          ],
+          "coverConcept": "Versioned dataset snapshots split by task family into development and sealed holdout collections with coverage counters.",
+          "coverAlt": "Versioned dataset snapshots split by task family into development and sealed holdout collections with coverage counters.",
+          "file": "06-evals-dataset-versions-leakage-coverage.md",
+          "diagram": {
+            "nodes": [
+              "Task families",
+              "Dataset snapshot",
+              "Development",
+              "Holdout",
+              "Coverage report"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Related task families are versioned and split into development and holdout collections with explicit coverage."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Graders & Scoring",
+      "slug": "evals-graders-scoring",
+      "description": "Design executable checks, calibrated model judges and accountable human review.",
+      "articles": [
+        {
+          "title": "Deterministic Checks and Executable Tests",
+          "slug": "evals-deterministic-checks-executable-tests",
+          "summary": "Use schema validation, state assertions and executable checks to grade observable agent behavior precisely.",
+          "seoTitle": "Deterministic Checks for AI Agent Evaluations",
+          "seoDescription": "Use schema validation, state assertions and executable checks to grade observable agent behavior precisely.",
+          "tags": [
+            "deterministic graders",
+            "schema validation",
+            "executable tests",
+            "state assertions"
+          ],
+          "sources": [
+            {
+              "title": "Python: unittest",
+              "url": "https://docs.python.org/3/library/unittest.html"
+            },
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            }
+          ],
+          "coverConcept": "An agent output splits into schema validation, fact assertions and final-state tests before a combined verdict.",
+          "coverAlt": "An agent output splits into schema validation, fact assertions and final-state tests before a combined verdict.",
+          "file": "07-evals-deterministic-checks-executable-tests.md",
+          "diagram": {
+            "nodes": [
+              "Saved evidence",
+              "Schema check",
+              "State assertions",
+              "Combined verdict"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Deterministic graders check structure and external state independently before combining mandatory results."
+          }
+        },
+        {
+          "title": "LLM-as-Judge: Rubrics, Bias and Calibration",
+          "slug": "evals-llm-judge-rubrics-bias-calibration",
+          "summary": "Calibrate language-model graders with anchored rubrics, blinded comparisons and disagreement analysis.",
+          "seoTitle": "LLM-as-Judge: Rubrics, Bias and Calibration",
+          "seoDescription": "Calibrate language-model graders with anchored rubrics, blinded comparisons and disagreement analysis.",
+          "tags": [
+            "llm as judge",
+            "grader calibration",
+            "rubrics",
+            "evaluation bias"
+          ],
+          "sources": [
+            {
+              "title": "scikit-learn: Cohen kappa score",
+              "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html"
+            },
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            }
+          ],
+          "coverConcept": "A blinded answer and evidence enter a rubric judge whose decisions are compared with human calibration labels.",
+          "coverAlt": "A blinded answer and evidence enter a rubric judge whose decisions are compared with human calibration labels.",
+          "file": "08-evals-llm-judge-rubrics-bias-calibration.md",
+          "diagram": {
+            "nodes": [
+              "Blinded answer",
+              "Evidence rubric",
+              "Model judge",
+              "Human calibration"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "caption": "A bounded model judge is calibrated against reviewed labels, with disagreements refining the rubric."
+          }
+        },
+        {
+          "title": "Combine Automated Grading with Human Review",
+          "slug": "evals-automated-grading-human-review",
+          "summary": "Design a review workflow that combines fast automated checks with targeted expert judgment and traceable adjudication.",
+          "seoTitle": "Combine AI Graders with Human Review",
+          "seoDescription": "Design a review workflow that combines fast automated checks with targeted expert judgment and traceable adjudication.",
+          "tags": [
+            "human review",
+            "grader agreement",
+            "adjudication",
+            "quality assurance"
+          ],
+          "sources": [
+            {
+              "title": "scikit-learn: Cohen kappa score",
+              "url": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cohen_kappa_score.html"
+            },
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            }
+          ],
+          "coverConcept": "Automated checks route clear cases to reports and ambiguous cases to independent reviewers and adjudication.",
+          "coverAlt": "Automated checks route clear cases to reports and ambiguous cases to independent reviewers and adjudication.",
+          "file": "09-evals-automated-grading-human-review.md",
+          "diagram": {
+            "nodes": [
+              "Automated checks",
+              "Clear results",
+              "Review sample",
+              "Adjudication",
+              "Final report"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                1,
+                4
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Automated grading is complemented by sampled review and documented adjudication before reporting."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Evaluating Agent Behavior",
+      "slug": "evals-agent-behavior",
+      "description": "Inspect outcomes, tool actions and repeated multi-step performance.",
+      "articles": [
+        {
+          "title": "Evaluate Outcomes and Execution Traces",
+          "slug": "evals-outcomes-execution-traces",
+          "summary": "Grade final outcomes and inspect execution evidence without requiring one rigid path through an agent task.",
+          "seoTitle": "Evaluate Agent Outcomes and Execution Traces",
+          "seoDescription": "Grade final outcomes and inspect execution evidence without requiring one rigid path through an agent task.",
+          "tags": [
+            "agent traces",
+            "outcome evaluation",
+            "side effects",
+            "observability"
+          ],
+          "sources": [
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            },
+            {
+              "title": "SWE-bench: Evaluation infrastructure",
+              "url": "https://github.com/SWE-bench/SWE-bench"
+            }
+          ],
+          "coverConcept": "A completed task branches into final-state validation and trace review, then rejoins at a contract verdict.",
+          "coverAlt": "A completed task branches into final-state validation and trace review, then rejoins at a contract verdict.",
+          "file": "10-evals-outcomes-execution-traces.md",
+          "diagram": {
+            "nodes": [
+              "Agent run",
+              "Final state",
+              "Action trace",
+              "Contract verdict"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Final-state checks and trace inspections jointly determine whether the task contract was satisfied."
+          }
+        },
+        {
+          "title": "Measure Tool Selection, Arguments and Side Effects",
+          "slug": "evals-tool-selection-arguments-side-effects",
+          "summary": "Evaluate whether agents choose permitted tools, construct correct arguments and avoid unintended state changes.",
+          "seoTitle": "Evaluate Agent Tools, Arguments and Side Effects",
+          "seoDescription": "Evaluate whether agents choose permitted tools, construct correct arguments and avoid unintended state changes.",
+          "tags": [
+            "tool evaluation",
+            "argument validation",
+            "side effects",
+            "authorization"
+          ],
+          "sources": [
+            {
+              "title": "Python: unittest",
+              "url": "https://docs.python.org/3/library/unittest.html"
+            },
+            {
+              "title": "OWASP: Top 10 for Large Language Model Applications",
+              "url": "https://owasp.org/projects/top-10-for-large-language-model-applications"
+            }
+          ],
+          "coverConcept": "A proposed tool call crosses selection, argument and authorization checks before a state-difference inspection.",
+          "coverAlt": "A proposed tool call crosses selection, argument and authorization checks before a state-difference inspection.",
+          "file": "11-evals-tool-selection-arguments-side-effects.md",
+          "diagram": {
+            "nodes": [
+              "Tool proposal",
+              "Argument check",
+              "Permission check",
+              "State difference"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Tool selection and semantic arguments must pass authorization before resulting changes are inspected."
+          }
+        },
+        {
+          "title": "Evaluate Multi-Step Tasks Across Repeated Runs",
+          "slug": "evals-multistep-repeated-trials",
+          "summary": "Measure stochastic agent reliability with repeated trials, task-level summaries and uncertainty-aware comparisons.",
+          "seoTitle": "Repeated Trials for Multi-Step AI Agent Evals",
+          "seoDescription": "Measure stochastic agent reliability with repeated trials, task-level summaries and uncertainty-aware comparisons.",
+          "tags": [
+            "repeated trials",
+            "agent reliability",
+            "pass rates",
+            "statistical uncertainty"
+          ],
+          "sources": [
+            {
+              "title": "SciPy: binomtest and proportion confidence intervals",
+              "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html"
+            },
+            {
+              "title": "Anthropic: Demystifying evals for AI agents",
+              "url": "https://www.anthropic.com/research/demystifying-evals-for-ai-agents"
+            }
+          ],
+          "coverConcept": "Several trials of each task feed per-task reliability estimates before a confidence-aware summary.",
+          "coverAlt": "Several trials of each task feed per-task reliability estimates before a confidence-aware summary.",
+          "file": "12-evals-multistep-repeated-trials.md",
+          "diagram": {
+            "nodes": [
+              "Task fixture",
+              "Reset trials",
+              "Per-task counts",
+              "Uncertainty report"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Repeated trials begin from reset fixtures and feed task-level reliability and uncertainty summaries."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Retrieval & Answer Quality",
+      "slug": "evals-retrieval-answer-quality",
+      "description": "Measure retrieval evidence, grounded claims, citations and appropriate abstention.",
+      "articles": [
+        {
+          "title": "Measure Retrieval Relevance and Coverage",
+          "slug": "evals-retrieval-relevance-coverage",
+          "summary": "Measure whether retrieval finds relevant evidence and covers the facts needed to answer the actual question.",
+          "seoTitle": "Measure Retrieval Relevance and Coverage",
+          "seoDescription": "Measure whether retrieval finds relevant evidence and covers the facts needed to answer the actual question.",
+          "tags": [
+            "retrieval evaluation",
+            "rag",
+            "precision",
+            "recall"
+          ],
+          "sources": [
+            {
+              "title": "Ragas: Context precision",
+              "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/"
+            },
+            {
+              "title": "Ragas: Context recall",
+              "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_recall/"
+            }
+          ],
+          "coverConcept": "A question and relevance labels compare ranked retrieved passages against required evidence to reveal missing coverage.",
+          "coverAlt": "A question and relevance labels compare ranked retrieved passages against required evidence to reveal missing coverage.",
+          "file": "13-evals-retrieval-relevance-coverage.md",
+          "diagram": {
+            "nodes": [
+              "Question",
+              "Ranked passages",
+              "Required facts",
+              "Coverage result"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Ranked retrieved passages are compared with required evidence to expose relevance and coverage gaps."
+          }
+        },
+        {
+          "title": "Evaluate Groundedness and Citation Accuracy",
+          "slug": "evals-groundedness-citation-accuracy",
+          "summary": "Check whether material claims are supported by authorized evidence and whether citations actually substantiate those claims.",
+          "seoTitle": "Evaluate Groundedness and Citation Accuracy",
+          "seoDescription": "Check whether material claims are supported by authorized evidence and whether citations actually substantiate those claims.",
+          "tags": [
+            "groundedness",
+            "citation accuracy",
+            "faithfulness",
+            "rag evaluation"
+          ],
+          "sources": [
+            {
+              "title": "Ragas: Faithfulness",
+              "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/"
+            },
+            {
+              "title": "Ragas: Context precision",
+              "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/"
+            }
+          ],
+          "coverConcept": "Answer claims connect to cited evidence passages, with unsupported claims and invalid citations marked separately.",
+          "coverAlt": "Answer claims connect to cited evidence passages, with unsupported claims and invalid citations marked separately.",
+          "file": "14-evals-groundedness-citation-accuracy.md",
+          "diagram": {
+            "nodes": [
+              "Answer claims",
+              "Cited passages",
+              "Support labels",
+              "Completeness check"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Material claims are mapped to cited evidence while completeness checks catch supported but insufficient answers."
+          }
+        },
+        {
+          "title": "Test Abstention When Evidence Is Missing",
+          "slug": "evals-abstention-missing-evidence",
+          "summary": "Evaluate when agents should answer, ask a targeted question, abstain or escalate because available evidence is insufficient.",
+          "seoTitle": "Evaluate AI Abstention and Missing Evidence",
+          "seoDescription": "Evaluate when agents should answer, ask a targeted question, abstain or escalate because available evidence is insufficient.",
+          "tags": [
+            "abstention",
+            "uncertainty",
+            "clarification",
+            "answerability"
+          ],
+          "sources": [
+            {
+              "title": "Ragas: Faithfulness",
+              "url": "https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/faithfulness/"
+            },
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            }
+          ],
+          "coverConcept": "An evidence-sufficiency decision routes a request to an answer, targeted clarification or documented escalation.",
+          "coverAlt": "An evidence-sufficiency decision routes a request to an answer, targeted clarification or documented escalation.",
+          "file": "15-evals-abstention-missing-evidence.md",
+          "diagram": {
+            "nodes": [
+              "Evidence check",
+              "Answer",
+              "Clarification",
+              "Escalation"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                3
+              ]
+            ],
+            "caption": "Evidence sufficiency determines whether the agent should answer, ask for a necessary fact or escalate."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Safety & Robustness Evals",
+      "slug": "evals-safety-robustness",
+      "description": "Test attacks, authorization boundaries and recovery in isolated environments.",
+      "articles": [
+        {
+          "title": "Build Prompt Injection Test Cases",
+          "slug": "evals-prompt-injection-test-cases",
+          "summary": "Construct controlled adversarial cases that test whether untrusted content can redirect an agent or its graders.",
+          "seoTitle": "Build Prompt Injection Evaluation Cases",
+          "seoDescription": "Construct controlled adversarial cases that test whether untrusted content can redirect an agent or its graders.",
+          "tags": [
+            "prompt injection",
+            "adversarial evaluation",
+            "trust boundaries",
+            "agent security"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: LLM Prompt Injection Prevention Cheat Sheet",
+              "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html"
+            },
+            {
+              "title": "OWASP: Top 10 for Large Language Model Applications",
+              "url": "https://owasp.org/projects/top-10-for-large-language-model-applications"
+            }
+          ],
+          "coverConcept": "Untrusted retrieved content approaches an instruction boundary while monitored tool and answer channels expose attempted redirection.",
+          "coverAlt": "Untrusted retrieved content approaches an instruction boundary while monitored tool and answer channels expose attempted redirection.",
+          "file": "16-evals-prompt-injection-test-cases.md",
+          "diagram": {
+            "nodes": [
+              "Untrusted content",
+              "Instruction boundary",
+              "Agent actions",
+              "Attack verdict"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Controlled malicious content tests whether instruction boundaries prevent attacker-directed answers or actions."
+          }
+        },
+        {
+          "title": "Test Permission Boundaries and Data Exposure",
+          "slug": "evals-permission-boundaries-data-exposure",
+          "summary": "Evaluate authorization enforcement, cross-user isolation and sensitive-data handling across answers, tools and logs.",
+          "seoTitle": "Test Agent Permissions and Data Exposure",
+          "seoDescription": "Evaluate authorization enforcement, cross-user isolation and sensitive-data handling across answers, tools and logs.",
+          "tags": [
+            "authorization testing",
+            "data exposure",
+            "least privilege",
+            "cross tenant isolation"
+          ],
+          "sources": [
+            {
+              "title": "OWASP: Top 10 for Large Language Model Applications",
+              "url": "https://owasp.org/projects/top-10-for-large-language-model-applications"
+            },
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            }
+          ],
+          "coverConcept": "Two user scopes remain separated as requests cross authorization checks before document access and output inspection.",
+          "coverAlt": "Two user scopes remain separated as requests cross authorization checks before document access and output inspection.",
+          "file": "17-evals-permission-boundaries-data-exposure.md",
+          "diagram": {
+            "nodes": [
+              "User identity",
+              "Resource scope",
+              "Access decision",
+              "Exposure checks"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Trusted identity and resource permissions govern access, followed by checks across context and output channels."
+          }
+        },
+        {
+          "title": "Evaluate Recovery from Tool and Environment Failures",
+          "slug": "evals-tool-environment-failure-recovery",
+          "summary": "Inject controlled failures to test retries, duplicate prevention, honest reporting and recovery from partial execution.",
+          "seoTitle": "Evaluate Agent Recovery from Tool Failures",
+          "seoDescription": "Inject controlled failures to test retries, duplicate prevention, honest reporting and recovery from partial execution.",
+          "tags": [
+            "fault injection",
+            "recovery testing",
+            "idempotency",
+            "partial failure"
+          ],
+          "sources": [
+            {
+              "title": "Python: unittest.mock",
+              "url": "https://docs.python.org/3/library/unittest.mock.html"
+            },
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            }
+          ],
+          "coverConcept": "A tool timeout branches into uncertain outcome inspection, safe retry or escalation before final-state reconciliation.",
+          "coverAlt": "A tool timeout branches into uncertain outcome inspection, safe retry or escalation before final-state reconciliation.",
+          "file": "18-evals-tool-environment-failure-recovery.md",
+          "diagram": {
+            "nodes": [
+              "Injected fault",
+              "Outcome inspection",
+              "Safe retry",
+              "Final reconciliation"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "A controlled fault triggers state inspection before safe retry or final outcome reconciliation."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Evaluation Infrastructure",
+      "slug": "evals-infrastructure",
+      "description": "Run reproducible comparisons, preserve evidence and gate releases with regression evaluations.",
+      "articles": [
+        {
+          "title": "Build an Evaluation Harness with Isolated Test Environments",
+          "slug": "evals-isolated-evaluation-harness",
+          "summary": "Design a runner that prepares fixtures, executes trials, grades evidence and cleans up isolated test environments.",
+          "seoTitle": "Build an Isolated AI Evaluation Harness",
+          "seoDescription": "Design a runner that prepares fixtures, executes trials, grades evidence and cleans up isolated test environments.",
+          "tags": [
+            "evaluation harness",
+            "test isolation",
+            "reproducibility",
+            "fixtures"
+          ],
+          "sources": [
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            },
+            {
+              "title": "SWE-bench: Evaluation infrastructure",
+              "url": "https://github.com/SWE-bench/SWE-bench"
+            }
+          ],
+          "coverConcept": "A case moves through isolated setup, agent execution, evidence capture, grading and guaranteed cleanup.",
+          "coverAlt": "A case moves through isolated setup, agent execution, evidence capture, grading and guaranteed cleanup.",
+          "file": "19-evals-isolated-evaluation-harness.md",
+          "diagram": {
+            "nodes": [
+              "Isolated setup",
+              "Agent execution",
+              "Evidence capture",
+              "Grading",
+              "Cleanup"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "An evaluation harness prepares isolated state, executes a trial, saves evidence, grades and cleans up."
+          }
+        },
+        {
+          "title": "Compare Models, Prompts and Agent Configurations Fairly",
+          "slug": "evals-fair-configuration-comparisons",
+          "summary": "Use paired cases, controlled conditions and transparent budgets to compare complete agent configurations fairly.",
+          "seoTitle": "Compare AI Agent Configurations Fairly",
+          "seoDescription": "Use paired cases, controlled conditions and transparent budgets to compare complete agent configurations fairly.",
+          "tags": [
+            "paired evaluation",
+            "model comparison",
+            "prompt evaluation",
+            "experimental design"
+          ],
+          "sources": [
+            {
+              "title": "SciPy: binomtest and proportion confidence intervals",
+              "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html"
+            },
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            }
+          ],
+          "coverConcept": "Two versioned candidates receive the same cases and controlled budgets, then join at a paired difference report.",
+          "coverAlt": "Two versioned candidates receive the same cases and controlled budgets, then join at a paired difference report.",
+          "file": "20-evals-fair-configuration-comparisons.md",
+          "diagram": {
+            "nodes": [
+              "Shared cases",
+              "Baseline",
+              "Candidate",
+              "Paired changes",
+              "Decision"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "Baseline and candidate configurations receive shared cases so paired gains and regressions inform a decision."
+          }
+        },
+        {
+          "title": "Add Regression Evals and Release Gates to CI",
+          "slug": "evals-regression-ci-release-gates",
+          "summary": "Integrate evaluation suites into delivery workflows with protected evidence, explicit release rules and actionable failure reports.",
+          "seoTitle": "AI Regression Evals and CI Release Gates",
+          "seoDescription": "Integrate evaluation suites into delivery workflows with protected evidence, explicit release rules and actionable failure reports.",
+          "tags": [
+            "regression evaluation",
+            "ci cd",
+            "release gates",
+            "evaluation artifacts"
+          ],
+          "sources": [
+            {
+              "title": "GitHub Actions: Workflow syntax",
+              "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+            },
+            {
+              "title": "GitHub Actions: Store and share workflow data",
+              "url": "https://docs.github.com/en/actions/tutorials/store-and-share-data"
+            }
+          ],
+          "coverConcept": "A proposed change triggers fast checks and agent regressions, stores evidence and reaches a policy-based release gate.",
+          "coverAlt": "A proposed change triggers fast checks and agent regressions, stores evidence and reaches a policy-based release gate.",
+          "file": "21-evals-regression-ci-release-gates.md",
+          "diagram": {
+            "nodes": [
+              "Code change",
+              "Regression suite",
+              "Evidence artifacts",
+              "Release gate"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "A proposed change triggers reproducible regressions whose retained evidence is assessed by explicit release rules."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Production Evals & Capstone",
+      "slug": "evals-production-capstone",
+      "description": "Learn from deployed failures and assemble a defensible release readiness report.",
+      "articles": [
+        {
+          "title": "Turn Production Failures into Regression Cases",
+          "slug": "evals-production-failures-regression-cases",
+          "summary": "Convert observed failures into privacy-conscious, reproducible tests without overfitting to one incident or losing workload context.",
+          "seoTitle": "Turn Production Failures into Regression Evals",
+          "seoDescription": "Convert observed failures into privacy-conscious, reproducible tests without overfitting to one incident or losing workload context.",
+          "tags": [
+            "production evaluation",
+            "regression cases",
+            "incident learning",
+            "trace analysis"
+          ],
+          "sources": [
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            },
+            {
+              "title": "pytest: How to use fixtures",
+              "url": "https://docs.pytest.org/en/stable/how-to/fixtures.html"
+            }
+          ],
+          "coverConcept": "A production incident passes through redaction, causal reconstruction and fixture creation into a reviewed regression case.",
+          "coverAlt": "A production incident passes through redaction, causal reconstruction and fixture creation into a reviewed regression case.",
+          "file": "22-evals-production-failures-regression-cases.md",
+          "diagram": {
+            "nodes": [
+              "Production incident",
+              "Private evidence",
+              "Synthetic fixture",
+              "Regression case"
+            ],
+            "edges": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "An observed incident is reconstructed with controlled evidence and synthetic state as a reproducible regression."
+          }
+        },
+        {
+          "title": "Interpret Quality, Cost, Latency and Uncertainty",
+          "slug": "evals-quality-cost-latency-uncertainty",
+          "summary": "Read evaluation scorecards as evidence for a product decision, including tradeoffs, failure severity and statistical limits.",
+          "seoTitle": "Interpret AI Quality, Cost, Latency and Uncertainty",
+          "seoDescription": "Read evaluation scorecards as evidence for a product decision, including tradeoffs, failure severity and statistical limits.",
+          "tags": [
+            "evaluation reporting",
+            "cost latency",
+            "uncertainty",
+            "decision making"
+          ],
+          "sources": [
+            {
+              "title": "SciPy: binomtest and proportion confidence intervals",
+              "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html"
+            },
+            {
+              "title": "OpenTelemetry: Traces",
+              "url": "https://opentelemetry.io/docs/concepts/signals/traces/"
+            }
+          ],
+          "coverConcept": "A quality scorecard combines task outcomes, cost and latency distributions, uncertainty and mandatory-boundary checks.",
+          "coverAlt": "A quality scorecard combines task outcomes, cost and latency distributions, uncertainty and mandatory-boundary checks.",
+          "file": "23-evals-quality-cost-latency-uncertainty.md",
+          "diagram": {
+            "nodes": [
+              "Task outcomes",
+              "Cost and latency",
+              "Uncertainty",
+              "Scoped decision"
+            ],
+            "edges": [
+              [
+                0,
+                3
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ],
+            "caption": "Quality outcomes, operating resources and uncertainty remain visible in a scoped product recommendation."
+          }
+        },
+        {
+          "title": "Build an Evaluation Suite and Release Readiness Report",
+          "slug": "evals-capstone-release-readiness-report",
+          "summary": "Assemble datasets, graders, isolated runs and reviewed evidence into a practical agent release assessment.",
+          "seoTitle": "AI Evals Capstone: Release Readiness Report",
+          "seoDescription": "Assemble datasets, graders, isolated runs and reviewed evidence into a practical agent release assessment.",
+          "tags": [
+            "evaluation capstone",
+            "release readiness",
+            "agent assessment",
+            "evaluation suite"
+          ],
+          "sources": [
+            {
+              "title": "NIST: AI Risk Management Framework",
+              "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+            },
+            {
+              "title": "GitHub Actions: Workflow syntax",
+              "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+            }
+          ],
+          "coverConcept": "Versioned cases, calibrated graders and isolated runs feed a reviewed scorecard and scoped release decision.",
+          "coverAlt": "Versioned cases, calibrated graders and isolated runs feed a reviewed scorecard and scoped release decision.",
+          "file": "24-evals-capstone-release-readiness-report.md",
+          "diagram": {
+            "nodes": [
+              "Versioned cases",
+              "Calibrated graders",
+              "Isolated runs",
+              "Reviewed scorecard",
+              "Readiness report"
+            ],
+            "edges": [
+              [
+                0,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                3,
+                4
+              ]
+            ],
+            "caption": "The capstone combines versioned cases and calibrated grading into reviewed evidence for a bounded release decision."
+          }
+        }
+      ]
+    }
+  ]
+}

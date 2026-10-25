@@ -19,12 +19,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { subMenuSlug } = await params
     const subMenu = await prisma.navSubMenu.findUnique({
       where: { slug: subMenuSlug },
-      select: { title: true, description: true, menu: { select: { title: true } } },
+      select: { title: true, description: true, menu: { select: { title: true, slug: true } } },
     })
     if (!subMenu) return {}
     return {
       title: `${subMenu.title} | ${subMenu.menu.title}`,
       description: subMenu.description ?? undefined,
+      alternates: { canonical: `/${subMenu.menu.slug}/${subMenuSlug}` },
+      openGraph: { title: subMenu.title, description: subMenu.description ?? undefined, url: `/${subMenu.menu.slug}/${subMenuSlug}`, type: 'website' },
     }
   } catch (err) {
     logger.error('[generateMetadata /[menuSlug]/[subMenuSlug]]', err)
@@ -52,6 +54,7 @@ export default async function SubMenuPage({ params }: Props) {
                 slug: true,
                 summary: true,
                 readingTimeMinutes: true,
+                publishedAt: true,
                 coverImage: { select: { url: true } },
                 articleTags: { take: 3, select: { tag: { select: { name: true } } } },
               },
@@ -82,6 +85,7 @@ export default async function SubMenuPage({ params }: Props) {
     title: a.title,
     summary: a.summary,
     minutes: a.readingTimeMinutes,
+    publishedAt: a.publishedAt,
     imageUrl: a.coverImage?.url,
     tags: a.articleTags.map((t) => t.tag.name),
   }))
