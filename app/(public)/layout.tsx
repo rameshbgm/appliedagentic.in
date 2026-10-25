@@ -1,8 +1,8 @@
 // app/(public)/layout.tsx
 import type { Metadata } from 'next'
-import FolioShell from '@/components/folio/FolioShell'
-import Footer from '@/components/folio/Footer'
-import Intro from '@/components/folio/Intro'
+import AuroraShell from '@/components/aurora/AuroraShell'
+import Footer from '@/components/aurora/Footer'
+import Intro from '@/components/aurora/Intro'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
@@ -24,8 +24,8 @@ export default async function PublicLayout({ children }: { children: React.React
       <ArticleLoadingProvider>
         <ToastNotifier />
         <Intro />
-        <FolioShell lines={lines} />
-        <main id="main" className="f-main">{children}</main>
+        <AuroraShell lines={lines} />
+        <main id="main" className="a-main">{children}</main>
         <Footer lines={lines} />
       </ArticleLoadingProvider>
     </ThemeProvider>

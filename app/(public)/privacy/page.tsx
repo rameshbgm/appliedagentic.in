@@ -22,17 +22,17 @@ export default function PrivacyPage() {
 
   return (
     <div>
-      <header className="f-wrap f-opener" style={{ maxWidth: 780 }}>
-        <nav className="f-crumbs" aria-label="Breadcrumb">
-          <Link href="/">Front page</Link><span aria-hidden="true">/</span><span>Legal</span>
+      <header className="a-wrap a-opener" style={{ maxWidth: 780 }}>
+        <nav className="a-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Home</Link><span aria-hidden="true">/</span><span>Legal</span>
         </nav>
-        <h1 className="f-display">Privacy Policy</h1>
-        <div className="f-opener__stats"><span className="f-tag">Last updated {lastUpdated}</span></div>
+        <h1 className="a-display">Privacy Policy</h1>
+        <div className="a-opener__stats"><span className="a-tag">Last updated {lastUpdated}</span></div>
       </header>
 
-      <div className="f-wrap f-legal">
+      <div className="a-wrap a-legal">
         <div className="notice" role="note">
-          <p className="f-kicker" style={{ color: 'var(--ink)' }}>AI-Generated Content Notice</p>
+          <p className="a-kicker" style={{ color: 'var(--ink)' }}>AI-Generated Content Notice</p>
           <p>
             This Privacy Policy, as well as much of the content on Applied Agentic AI, was created with
               assistance from artificial intelligence tools. While we have reviewed and edited this policy
@@ -357,9 +357,9 @@ export default function PrivacyPage() {
         </section>
 
         {/* Footer nav */}
-        <div className="f-ctas" style={{ paddingTop: 24, borderTop: '1px solid var(--line)' }}>
-          <Link href="/terms" className="f-btn f-btn--quiet f-btn--sm">Terms of Service</Link>
-          <Link href="/" className="f-btn f-btn--ink f-btn--sm">← Back to Home</Link>
+        <div className="a-ctas" style={{ paddingTop: 24, borderTop: '1px solid var(--line)' }}>
+          <Link href="/terms" className="a-btn a-btn--quiet a-btn--sm">Terms of Service</Link>
+          <Link href="/" className="a-btn a-btn--accent a-btn--sm">← Back to Home</Link>
         </div>
       </div>
     </div>

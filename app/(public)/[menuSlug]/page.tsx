@@ -1,12 +1,13 @@
-// app/(public)/[menuSlug]/page.tsx — a module: its chapters (sub-menus) and lessons
+// app/(public)/[menuSlug]/page.tsx — a path: its chapters as milestones on a glowing timeline
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, formatJourney, plural, toRoman } from '@/lib/catalog'
-import LessonList, { type Lesson } from '@/components/folio/LessonList'
+import { getNetwork, formatJourney, plural } from '@/lib/catalog'
+import LessonList, { type Lesson } from '@/components/aurora/LessonList'
+import Timeline from '@/components/aurora/Timeline'
 
 interface Props {
   params: Promise<{ menuSlug: string }>
@@ -80,79 +81,82 @@ export default async function MenuPage({ params }: Props) {
   const extra = menu.menuArticles.map((x) => toLesson(x.article))
   const all = [...chapters.flatMap((c) => c.lessons), ...extra]
   const minutes = all.reduce((s, l) => s + (l.minutes ?? 0), 0)
+  const two = (n: number) => String(n).padStart(2, '0')
   let counter = 1
 
   return (
     <div style={style}>
-      <header className="f-wrap f-opener">
-        <nav className="f-crumbs" aria-label="Breadcrumb">
-          <Link href="/">Front page</Link><span aria-hidden="true">/</span><Link href="/#contents">Contents</Link>
+      <header className="a-wrap a-opener">
+        <nav className="a-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/#paths">Paths</Link>
         </nav>
-        <span className="f-opener__num" aria-hidden="true">{toRoman(mod?.number ?? 1)}</span>
-        <span className="f-kicker" style={{ color: 'var(--c)' }}>Chapter {toRoman(mod?.number ?? 1)}</span>
-        <h1 className="f-display">{menu.title}</h1>
-        {menu.description && <p className="f-dek">{menu.description}</p>}
-        <div className="f-opener__stats">
-          <span className="f-tag">{plural(all.length, 'essay')}</span>
-          {chapters.length > 0 && <span className="f-tag">{plural(chapters.length, 'section')}</span>}
-          {minutes > 0 && <span className="f-tag">{formatJourney(minutes)} of reading</span>}
+        <span className="a-opener__num" aria-hidden="true">{two(mod?.number ?? 1)}</span>
+        <span className="a-kicker" style={{ color: 'var(--c)' }}>Path {two(mod?.number ?? 1)}</span>
+        <h1 className="a-display">{menu.title}</h1>
+        {menu.description && <p className="a-dek">{menu.description}</p>}
+        <div className="a-opener__stats">
+          <span className="a-tag">{plural(all.length, 'essay')}</span>
+          {chapters.length > 0 && <span className="a-tag">{plural(chapters.length, 'milestone')}</span>}
+          {minutes > 0 && <span className="a-tag">{formatJourney(minutes)} of reading</span>}
         </div>
         {all[0] && (
-          <Link href={`/articles/${all[0].slug}`} className="f-btn f-btn--ink" style={{ marginTop: 6 }}>
-            Start reading <ArrowRight size={17} />
+          <Link href={`/articles/${all[0].slug}`} className="a-btn a-btn--accent" style={{ marginTop: 6 }}>
+            Start the path <ArrowRight size={17} />
           </Link>
         )}
       </header>
 
-      <div className="f-wrap f-narrow" style={{ paddingBottom: 40 }}>
+      <div className="a-wrap a-narrow" style={{ paddingBottom: 40 }}>
         {chapters.length > 1 && (
-          <nav className="f-chapnav" aria-label="Sections in this chapter">
+          <nav className="a-chapnav" aria-label="Milestones on this path">
             {chapters.map((c, i) => (
-              <a key={c.id} href={`#section-${c.slug}`} className="f-chip"><span style={{ fontFamily: 'var(--display)', fontStyle: 'italic', color: 'var(--c)' }}>{i + 1}</span>{c.title}</a>
+              <a key={c.id} href={`#section-${c.slug}`} className="a-chip"><span style={{ fontFamily: 'var(--display)', fontStyle: 'italic', color: 'var(--c)' }}>{i + 1}</span>{c.title}</a>
             ))}
           </nav>
         )}
 
+        <Timeline>
         {chapters.map((c, i) => {
           const start = counter
           counter += c.lessons.length
           return (
-            <section key={c.id} id={`section-${c.slug}`} className="f-chapter" aria-labelledby={`chapter-title-${c.id}`}>
-              <div className="f-chapter__head">
-                <span className="f-kicker" style={{ color: 'var(--c)' }}>Section {i + 1}</span>
-                <h2 id={`chapter-title-${c.id}`} className="f-display">{c.title}</h2>
+            <section key={c.id} id={`section-${c.slug}`} className="a-milestone" aria-labelledby={`chapter-title-${c.id}`} data-reveal>
+              <div className="a-milestone__head">
+                <span className="a-kicker" style={{ color: 'var(--c)' }}>Milestone {i + 1}</span>
+                <h2 id={`chapter-title-${c.id}`} className="a-display">{c.title}</h2>
                 {c.description && <p>{c.description}</p>}
               </div>
               {c.lessons.length > 0
                 ? <LessonList lessons={c.lessons} showThumbs start={start} />
-                : <p className="f-colophon" style={{ padding: '12px 0' }}>Essays for this section are being written.</p>}
-              <Link href={`/${menu.slug}/${c.slug}`} className="f-btn f-btn--quiet f-btn--sm" style={{ marginTop: 16 }}>
-                Section page <ArrowRight size={15} />
+                : <p className="a-colophon" style={{ padding: '12px 0' }}>Essays for this section are being written.</p>}
+              <Link href={`/${menu.slug}/${c.slug}`} className="a-btn a-btn--quiet a-btn--sm" style={{ marginTop: 16 }}>
+                Open this milestone <ArrowRight size={15} />
               </Link>
             </section>
           )
         })}
 
         {extra.length > 0 && (
-          <section className="f-chapter" aria-labelledby="extra-title">
-            <div className="f-chapter__head"><h2 id="extra-title" className="f-display">{chapters.length > 0 ? 'More essays' : 'Essays'}</h2></div>
+          <section className="a-milestone" aria-labelledby="extra-title" data-reveal>
+            <div className="a-milestone__head"><h2 id="extra-title" className="a-display">{chapters.length > 0 ? 'More essays' : 'Essays'}</h2></div>
             <LessonList lessons={extra} showThumbs start={counter} />
           </section>
         )}
+        </Timeline>
 
         {all.length === 0 && (
-          <div className="f-empty">
+          <div className="a-empty">
             <h2>Being written</h2>
-            <p>Essays for this chapter are on their way. Read another chapter in the meantime.</p>
-            <Link href="/#contents" className="f-btn f-btn--ink">Back to the contents</Link>
+            <p>Essays for this path are on their way. Try another path in the meantime.</p>
+            <Link href="/#paths" className="a-btn a-btn--accent">See all paths</Link>
           </div>
         )}
 
         {next && (
-          <div className="f-nextprev">
-            <Link href={`/${next.slug}`} className="f-next" style={{ '--c': next.color, '--fg': next.fg, gridColumn: '1 / -1' } as React.CSSProperties}>
+          <div className="a-nextprev">
+            <Link href={`/${next.slug}`} className="a-next a-glass" style={{ '--c': next.color, '--fg': next.fg, gridColumn: '1 / -1' } as React.CSSProperties}>
               <div>
-                <span className="f-kicker">Next · Chapter {toRoman(next.number)}</span>
+                <span className="a-kicker">Next · Path {two(next.number)}</span>
                 <h3>{next.title}</h3>
               </div>
               <span className="go" aria-hidden="true"><ArrowRight size={22} /></span>

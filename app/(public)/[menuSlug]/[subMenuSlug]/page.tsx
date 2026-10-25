@@ -5,8 +5,8 @@ import type { Metadata } from 'next'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, formatJourney, plural, toRoman } from '@/lib/catalog'
-import LessonList from '@/components/folio/LessonList'
+import { getNetwork, formatJourney, plural } from '@/lib/catalog'
+import LessonList from '@/components/aurora/LessonList'
 
 interface Props {
   params: Promise<{ menuSlug: string; subMenuSlug: string }>
@@ -75,7 +75,7 @@ export default async function SubMenuPage({ params }: Props) {
   const prev = ci > 0 ? chapters[ci - 1] : undefined
   const next = ci >= 0 ? chapters[ci + 1] : undefined
   const style = { '--c': mod?.color ?? 'var(--accent)', '--fg': mod?.fg ?? '#fff' } as React.CSSProperties
-  const num = toRoman(mod?.number ?? 1)
+  const num = String(mod?.number ?? 1).padStart(2, '0')
 
   const lessons = subMenu.articles.map(({ article: a }) => ({
     id: a.id, slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes,
@@ -85,55 +85,56 @@ export default async function SubMenuPage({ params }: Props) {
 
   return (
     <div style={style}>
-      <header className="f-wrap f-opener">
-        <nav className="f-crumbs" aria-label="Breadcrumb">
-          <Link href="/">Front page</Link><span aria-hidden="true">/</span>
-          <Link href={`/${subMenu.menu.slug}`}>Chapter {num}</Link><span aria-hidden="true">/</span>
-          <span>Section {ci + 1}</span>
+      <header className="a-wrap a-opener">
+        <nav className="a-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Home</Link><span aria-hidden="true">/</span>
+          <Link href={`/${subMenu.menu.slug}`}>Path {num}</Link><span aria-hidden="true">/</span>
+          <span>Milestone {ci + 1}</span>
         </nav>
-        <span className="f-kicker" style={{ color: 'var(--c)' }}>Chapter {num} · {subMenu.menu.title}</span>
-        <h1 className="f-display">{subMenu.title}</h1>
-        {subMenu.description && <p className="f-dek">{subMenu.description}</p>}
-        <div className="f-opener__stats">
-          <span className="f-tag">{plural(lessons.length, 'essay')}</span>
-          {minutes > 0 && <span className="f-tag">{formatJourney(minutes)} of reading</span>}
+        <span className="a-opener__num" aria-hidden="true">{num}.{ci + 1}</span>
+        <span className="a-kicker" style={{ color: 'var(--c)' }}>Path {num} · {subMenu.menu.title}</span>
+        <h1 className="a-display">{subMenu.title}</h1>
+        {subMenu.description && <p className="a-dek">{subMenu.description}</p>}
+        <div className="a-opener__stats">
+          <span className="a-tag">{plural(lessons.length, 'essay')}</span>
+          {minutes > 0 && <span className="a-tag">{formatJourney(minutes)} of reading</span>}
         </div>
       </header>
 
-      <div className="f-wrap f-narrow" style={{ paddingBottom: 40 }}>
+      <div className="a-wrap a-narrow" style={{ paddingBottom: 40 }}>
         {chapters.length > 1 && (
-          <nav className="f-chapnav" aria-label="Sections in this chapter">
+          <nav className="a-chapnav" aria-label="Milestones on this path">
             {chapters.map((z, i) => (
-              <Link key={z.id} href={`/${subMenu.menu.slug}/${z.slug}`} className="f-chip" aria-current={z.id === subMenu.id ? 'page' : undefined}>
+              <Link key={z.id} href={`/${subMenu.menu.slug}/${z.slug}`} className="a-chip" aria-current={z.id === subMenu.id ? 'page' : undefined}>
                 <span style={{ fontFamily: 'var(--display)', fontStyle: 'italic' }}>{i + 1}</span>{z.title}
               </Link>
             ))}
           </nav>
         )}
 
-        <section className="f-chapter" aria-label="Essays in this section">
+        <section className="a-chapter" aria-label="Essays in this milestone">
           {lessons.length > 0 ? (
             <LessonList lessons={lessons} showThumbs />
           ) : (
-            <div className="f-empty">
+            <div className="a-empty">
               <h2>No essays yet</h2>
-              <p>Essays for this section are on their way.</p>
-              <Link href={`/${subMenu.menu.slug}`} className="f-btn f-btn--ink">Back to the chapter</Link>
+              <p>Essays for this milestone are on their way.</p>
+              <Link href={`/${subMenu.menu.slug}`} className="a-btn a-btn--accent">Back to the path</Link>
             </div>
           )}
         </section>
 
         {(prev || next) && (
-          <nav className="f-nextprev" aria-label="Neighbouring sections">
+          <nav className="a-nextprev" aria-label="Neighbouring milestones">
             {prev ? (
-              <Link href={`/${subMenu.menu.slug}/${prev.slug}`} className="f-next f-next--quiet f-next--prev">
+              <Link href={`/${subMenu.menu.slug}/${prev.slug}`} className="a-next a-next--quiet a-next--prev a-glass">
                 <span className="go" aria-hidden="true"><ArrowLeft size={20} /></span>
-                <div><span className="f-kicker">Previous section</span><h3>{prev.title}</h3></div>
+                <div><span className="a-kicker">Previous milestone</span><h3>{prev.title}</h3></div>
               </Link>
-            ) : <span className="f-desktop-only" />}
+            ) : <span className="a-desktop-only" />}
             {next && (
-              <Link href={`/${subMenu.menu.slug}/${next.slug}`} className="f-next">
-                <div><span className="f-kicker">Next section</span><h3>{next.title}</h3></div>
+              <Link href={`/${subMenu.menu.slug}/${next.slug}`} className="a-next a-glass">
+                <div><span className="a-kicker">Next milestone</span><h3>{next.title}</h3></div>
                 <span className="go" aria-hidden="true"><ArrowRight size={20} /></span>
               </Link>
             )}

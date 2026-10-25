@@ -1,6 +1,6 @@
 // app/(public)/library/page.tsx — the reader's own shelf (stored on their device)
 import type { Metadata } from 'next'
-import LibraryClient from '@/components/folio/LibraryClient'
+import LibraryClient from '@/components/aurora/LibraryClient'
 
 export const metadata: Metadata = {
   title: 'Your library',

@@ -49,7 +49,7 @@ export default function ConfirmDialog({
       >
         <button
           onClick={onCancel}
-          className="f-icon" style={{ position: "absolute", top: 16, right: 16 }}
+          className="a-icon" style={{ position: "absolute", top: 16, right: 16 }}
         >
           <X size={16} style={{ color: 'var(--text-muted)' }} />
         </button>
@@ -58,7 +58,7 @@ export default function ConfirmDialog({
           <AlertTriangle size={20} />
         </div>
 
-        <h3 className="f-display mb-2" style={{ fontSize: '1.7rem' }}>
+        <h3 className="a-display mb-2" style={{ fontSize: '1.7rem' }}>
           {title}
         </h3>
         <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -69,14 +69,14 @@ export default function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="f-btn f-btn--quiet f-btn--sm"
+            className="a-btn a-btn--quiet a-btn--sm"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="f-btn f-btn--sm" style={{ background: btnColors[variant], borderColor: btnColors[variant], color: '#fff' }}
+            className="a-btn a-btn--sm" style={{ background: btnColors[variant], borderColor: btnColors[variant], color: '#fff' }}
           >
             {loading ? 'Please wait...' : confirmLabel}
           </button>

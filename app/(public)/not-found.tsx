@@ -4,13 +4,13 @@ import { Search } from 'lucide-react'
 
 export default function NotFound() {
   return (
-    <div className="f-wrap f-lost">
-      <span className="f-lost__num" aria-hidden="true">404</span>
-      <h1 className="f-display">This page is missing from the book.</h1>
-      <p>It may have moved to another chapter, or the link has a typo. Search the essays or return to the contents.</p>
-      <div className="f-ctas" style={{ justifyContent: 'center' }}>
-        <Link href="/#contents" className="f-btn f-btn--ink">The contents</Link>
-        <Link href="/search" className="f-btn"><Search size={16} /> Search essays</Link>
+    <div className="a-wrap a-lost">
+      <span className="a-lost__num" aria-hidden="true">404</span>
+      <h1 className="a-display">This page drifted out of the sky.</h1>
+      <p>It may have moved to another path, or the link has a typo. Search the essays or pick a path to keep reading.</p>
+      <div className="a-ctas" style={{ justifyContent: 'center' }}>
+        <Link href="/#paths" className="a-btn a-btn--accent">See all paths</Link>
+        <Link href="/search" className="a-btn"><Search size={16} /> Search essays</Link>
       </div>
     </div>
   )

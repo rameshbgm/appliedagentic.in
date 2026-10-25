@@ -7,16 +7,16 @@ import { ArrowLeft, ArrowRight, Calendar, Clock, Eye } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { formatDate } from '@/lib/utils'
-import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, toRoman } from '@/lib/catalog'
+import { getNetwork, resolveLine, articleLineSelect, menuIdsOf } from '@/lib/catalog'
 import ArticleContent from '@/components/public/ArticleContent'
 import ArticleAudioPlayer from '@/components/public/ArticleAudioPlayer'
 import { ArticleAudioProvider } from '@/components/public/ArticleAudioContext'
-import SectionBlock from '@/components/folio/SectionBlock'
-import ListenButton from '@/components/folio/ListenButton'
-import TitleReveal from '@/components/folio/TitleReveal'
-import LessonList from '@/components/folio/LessonList'
-import AiSummaryButton from '@/components/folio/AiSummaryButton'
-import { ReaderProvider, ProgressLine, ResumeBanner, MarginToc, MarginNotes, Highlighter, ReaderToolbar, FinishCard } from '@/components/folio/Reader'
+import SectionBlock from '@/components/aurora/SectionBlock'
+import ListenButton from '@/components/aurora/ListenButton'
+import TitleReveal from '@/components/aurora/TitleReveal'
+import LessonList from '@/components/aurora/LessonList'
+import AiSummaryButton from '@/components/aurora/AiSummaryButton'
+import { ReaderProvider, ProgressLine, ResumeBanner, LearnCard, MarginToc, MarginNotes, Highlighter, Ruler, Orbit, FinishCard } from '@/components/aurora/Reader'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -199,7 +199,8 @@ export default async function ArticleDetailPage({ params }: Props) {
       ? [{ id: 0, title: article.title, audioUrl: article.audioUrl }]
       : []
   const minutes = article.readingTimeMinutes ?? 0
-  const chapterLabel = line ? `Chapter ${toRoman(line.number)}` : null
+  const chapterLabel = line ? `Path ${String(line.number).padStart(2, '0')}` : null
+  const learn = sections.filter((s) => s.title?.trim()).map((s) => ({ id: `section-${s.id}`, label: s.title }))
 
   return (
     <ArticleAudioProvider sections={audioSections}>
@@ -207,85 +208,86 @@ export default async function ArticleDetailPage({ params }: Props) {
         <div style={{ '--c': color } as React.CSSProperties}>
           <ProgressLine />
 
-          <header className="f-wrap f-art-head">
-            {isDraft && <div className="f-draft">Draft preview · this essay is not published</div>}
-            <nav className="f-crumbs" aria-label="Breadcrumb">
-              <Link href="/">Front page</Link>
+          <header className="a-wrap a-art-head">
+            {isDraft && <div className="a-draft">Draft preview · this essay is not published</div>}
+            <nav className="a-crumbs" aria-label="Breadcrumb">
+              <Link href="/">Home</Link>
               {line && (<><span aria-hidden="true">/</span><Link href={`/${line.slug}`}>{chapterLabel}</Link></>)}
               {line && zone && (<><span aria-hidden="true">/</span><Link href={`/${line.slug}/${zone.slug}`}>{zone.title}</Link></>)}
             </nav>
             {line && (
-              <span className="f-kicker" style={{ color }}>
+              <span className="a-kicker" style={{ color }}>
                 {line.title}{pos >= 0 && order.length > 1 ? ` · Essay ${pos + 1} of ${order.length}` : ''}
               </span>
             )}
-            <TitleReveal text={article.title} className="f-display" />
-            {article.summary && <p className="f-dek">{article.summary}</p>}
-            <div className="f-byline">
+            <TitleReveal text={article.title} className="a-display" />
+            {article.summary && <p className="a-dek">{article.summary}</p>}
+            <div className="a-byline">
               {minutes > 0 && <span><Clock size={14} /> {minutes} min read</span>}
               {article.publishedAt && <span><Calendar size={14} /> {formatDate(article.publishedAt)}</span>}
               <span><Eye size={14} /> {article.viewCount.toLocaleString()} readers</span>
             </div>
             {tags.length > 0 && (
-              <div className="f-tags">{tags.map((t) => <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>{t.name}</Link>)}</div>
+              <div className="a-tags">{tags.map((t) => <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>{t.name}</Link>)}</div>
             )}
-            <div className="f-ctas" style={{ justifyContent: 'center' }}>
+            <div className="a-ctas" style={{ justifyContent: 'center' }}>
               <ListenButton />
               <AiSummaryButton content={fullContent} title={article.title} />
             </div>
           </header>
 
           {article.coverImage && (
-            <div className="f-wrap">
-              <figure className="f-figure">
+            <div className="a-wrap">
+              <figure className="a-figure">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={article.coverImage.url} alt="" fetchPriority="high" />
               </figure>
             </div>
           )}
 
-          <div className="f-wrap f-reader">
-            <div className="f-reader__left"><MarginToc /></div>
+          <div className="a-wrap a-reader">
+            <div className="a-reader__left"><MarginToc /></div>
 
-            <article className="f-reader__main" data-read-root>
+            <article className="a-reader__main" data-read-root>
               <ResumeBanner />
+              <LearnCard items={learn} />
               {sections.length > 0 ? (
                 sections.map((section, idx) => (
                   <SectionBlock key={section.id} section={section} index={idx} total={sections.length} />
                 ))
               ) : article.content ? (
-                <div className="f-dropcap"><ArticleContent content={article.content} /></div>
+                <div className="a-dropcap"><ArticleContent content={article.content} /></div>
               ) : (
-                <div className="f-empty"><h2>Being written</h2><p>This essay has no text yet.</p></div>
+                <div className="a-empty"><h2>Being written</h2><p>This essay has no text yet.</p></div>
               )}
 
               <FinishCard>
-                <h2 className="f-display">{next ? 'Finished. Ready for the next one?' : 'Finished.'}</h2>
-                <p>{next ? `Next in ${zone?.title ?? 'this chapter'}: ${next.title}.` : 'You have reached the end of this section. The contents page has what comes next.'}</p>
-                <div className="f-ctas" style={{ justifyContent: 'center' }}>
+                <h2 className="a-display">{next ? <>You made it. <em>Next?</em></> : <>You made it to <em>the end</em>.</>}</h2>
+                <p>{next ? `Next in ${zone?.title ?? 'this path'}: ${next.title}.` : 'That was the last essay in this milestone. Pick another path to keep going.'}</p>
+                <div className="a-ctas" style={{ justifyContent: 'center' }}>
                   {next
-                    ? <Link href={`/articles/${next.slug}`} className="f-btn f-btn--ink">Read the next essay <ArrowRight size={17} /></Link>
-                    : <Link href="/#contents" className="f-btn f-btn--ink">Back to the contents</Link>}
-                  <Link href="/library" className="f-btn f-btn--quiet">Your library</Link>
+                    ? <Link href={`/articles/${next.slug}`} className="a-btn a-btn--accent">Read the next essay <ArrowRight size={17} /></Link>
+                    : <Link href="/#paths" className="a-btn a-btn--accent">See all paths</Link>}
+                  <Link href="/library" className="a-btn a-btn--quiet">Your library</Link>
                 </div>
               </FinishCard>
             </article>
 
-            <div className="f-reader__right"><MarginNotes /></div>
+            <div className="a-reader__right"><MarginNotes /></div>
           </div>
 
-          <div className="f-wrap f-narrow">
+          <div className="a-wrap a-narrow">
             {(prev || next) && (
-              <nav className="f-nextprev" aria-label="Previous and next essay">
+              <nav className="a-nextprev" aria-label="Previous and next essay">
                 {prev ? (
-                  <Link href={`/articles/${prev.slug}`} className="f-next f-next--quiet f-next--prev">
+                  <Link href={`/articles/${prev.slug}`} className="a-next a-next--quiet a-next--prev a-glass">
                     <span className="go" aria-hidden="true"><ArrowLeft size={20} /></span>
-                    <div><span className="f-kicker">Previous</span><h3>{prev.title}</h3></div>
+                    <div><span className="a-kicker">Previous</span><h3>{prev.title}</h3></div>
                   </Link>
-                ) : <span className="f-desktop-only" />}
+                ) : <span className="a-desktop-only" />}
                 {next && (
-                  <Link href={`/articles/${next.slug}`} className="f-next">
-                    <div><span className="f-kicker">Next</span><h3>{next.title}</h3></div>
+                  <Link href={`/articles/${next.slug}`} className="a-next a-glass">
+                    <div><span className="a-kicker">Next</span><h3>{next.title}</h3></div>
                     <span className="go" aria-hidden="true"><ArrowRight size={20} /></span>
                   </Link>
                 )}
@@ -293,10 +295,10 @@ export default async function ArticleDetailPage({ params }: Props) {
             )}
 
             {relatedCards.length > 0 && (
-              <section className="f-sec" aria-labelledby="related-title">
-                <div className="f-sec-head">
-                  <span className="f-kicker f-kicker--accent">Further reading</span>
-                  <h2 id="related-title" className="f-display">You might read next</h2>
+              <section className="a-sec" aria-labelledby="related-title">
+                <div className="a-sec-head">
+                  <span className="a-kicker a-kicker--accent">Further reading</span>
+                  <h2 id="related-title" className="a-display">You might read next</h2>
                 </div>
                 <LessonList
                   lessons={relatedCards.map((r) => ({ id: r.id, slug: r.slug, title: r.title, summary: r.summary, minutes: r.readingTimeMinutes, imageUrl: r.coverImage?.url }))}
@@ -307,7 +309,8 @@ export default async function ArticleDetailPage({ params }: Props) {
           </div>
 
           <Highlighter />
-          <ReaderToolbar listen={<ListenButton variant="toolbar" />} />
+          <Ruler />
+          <Orbit listen={<ListenButton variant="toolbar" />} />
           <ArticleAudioPlayer />
         </div>
       </ReaderProvider>

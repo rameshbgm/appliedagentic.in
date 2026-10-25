@@ -38,7 +38,7 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
 
   return (
     <header className="adm-top">
-      <button type="button" onClick={onMobileMenuToggle} className="f-icon lg:hidden" aria-label="Open menu">
+      <button type="button" onClick={onMobileMenuToggle} className="a-icon lg:hidden" aria-label="Open menu">
         <Menu size={18} />
       </button>
       <nav aria-label="Breadcrumb">
@@ -50,7 +50,7 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
           </span>
         ))}
       </nav>
-      <a href="/" target="_blank" rel="noopener noreferrer" className="f-btn f-btn--quiet f-btn--sm adm-top__site">
+      <a href="/" target="_blank" rel="noopener noreferrer" className="a-btn a-btn--quiet a-btn--sm adm-top__site">
         <ExternalLink size={14} /> <span className="hidden sm:inline">View site</span>
       </a>
     </header>

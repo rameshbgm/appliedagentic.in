@@ -89,7 +89,7 @@ export default function ArticleContent({ content, standalone }: Props) {
   }, [content])
 
   return (
-    <div ref={ref} className="f-prose" suppressHydrationWarning>
+    <div ref={ref} className="a-prose" suppressHydrationWarning>
       <MarkdownRenderer content={content} />
     </div>
   )

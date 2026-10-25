@@ -1,5 +1,5 @@
 'use client'
-// components/folio/QuickSearch.tsx
+// components/aurora/QuickSearch.tsx
 // Search dialog: modules and chapters match instantly, essays via /api/search.
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -48,9 +48,9 @@ export default function QuickSearch({ lines, onClose, onSubmit }: Props) {
     const term = q.trim().toLowerCase()
     const catalog: Hit[] = []
     for (const l of lines) {
-      if (!term || l.title.toLowerCase().includes(term)) catalog.push({ key: `l${l.id}`, href: `/${l.slug}`, label: l.title, meta: 'Module', color: l.color })
+      if (!term || l.title.toLowerCase().includes(term)) catalog.push({ key: `l${l.id}`, href: `/${l.slug}`, label: l.title, meta: 'Path', color: l.color })
       for (const z of l.zones) {
-        if (term && z.title.toLowerCase().includes(term)) catalog.push({ key: `z${z.id}`, href: `/${l.slug}/${z.slug}`, label: z.title, meta: 'Chapter', color: l.color })
+        if (term && z.title.toLowerCase().includes(term)) catalog.push({ key: `z${z.id}`, href: `/${l.slug}/${z.slug}`, label: z.title, meta: 'Milestone', color: l.color })
       }
     }
     const essays: Hit[] = articles.map((a) => ({ key: `a${a.id}`, href: `/articles/${a.slug}`, label: a.title, meta: a.readingTimeMinutes ? `${a.readingTimeMinutes} min` : 'Essay', color: 'var(--accent)' }))
@@ -70,23 +70,23 @@ export default function QuickSearch({ lines, onClose, onSubmit }: Props) {
 
   return createPortal(
     <>
-      <div className="f-scrim" onClick={onClose} />
-      <div className="f-dialog-wrap" role="dialog" aria-modal="true" aria-label="Search">
-        <div className="f-dialog f-qs">
-          <form className="f-qs__box" onSubmit={(e) => { e.preventDefault(); if (q.trim()) onSubmit(q.trim()) }}>
+      <div className="a-scrim" onClick={onClose} />
+      <div className="a-dialog-wrap" role="dialog" aria-modal="true" aria-label="Search">
+        <div className="a-dialog a-qs">
+          <form className="a-qs__box" onSubmit={(e) => { e.preventDefault(); if (q.trim()) onSubmit(q.trim()) }}>
             <Search size={20} aria-hidden="true" />
-            <label htmlFor="f-qs-input" className="sr-only">Search essays and modules</label>
-            <input id="f-qs-input" ref={inputRef} type="search" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} placeholder="What would you like to read?" autoComplete="off" />
-            <button type="button" className="f-icon" onClick={onClose} aria-label="Close search"><X size={18} /></button>
+            <label htmlFor="a-qs-input" className="sr-only">Search essays and modules</label>
+            <input id="a-qs-input" ref={inputRef} type="search" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyDown} placeholder="What would you like to read?" autoComplete="off" />
+            <button type="button" className="a-icon" onClick={onClose} aria-label="Close search"><X size={18} /></button>
           </form>
           {!q.trim() && (
-            <div className="f-qs__tags">
-              {heroContent.typewriterTopics.map((t) => <button key={t} type="button" className="f-chip" onClick={() => setQ(t)}>{t}</button>)}
+            <div className="a-qs__tags">
+              {heroContent.typewriterTopics.map((t) => <button key={t} type="button" className="a-chip" onClick={() => setQ(t)}>{t}</button>)}
             </div>
           )}
           <ul>
             {hits.map((h, i) => (
-              <li key={h.key} style={{ animation: `f-rise .35s var(--ease) both ${i * 25}ms` }}>
+              <li key={h.key} style={{ animation: `a-rise .35s var(--ease) both ${i * 25}ms` }}>
                 <Link id={`qs-${h.key}`} href={h.href} onClick={onClose} data-active={navigated && i === active} onMouseEnter={() => setActive(i)}>
                   <span className="dot" style={{ '--c': h.color } as React.CSSProperties} />
                   <span className="lbl">{h.label}</span>
@@ -98,7 +98,7 @@ export default function QuickSearch({ lines, onClose, onSubmit }: Props) {
             {!loading && q.trim().length >= 2 && hits.length === 0 && <li className="hint">Nothing matches “{q}”. Press Enter to search every essay.</li>}
           </ul>
           {q.trim() && (
-            <button type="button" className="f-btn f-btn--ink f-btn--block" style={{ marginTop: 8 }} onClick={() => onSubmit(q.trim())}>
+            <button type="button" className="a-btn a-btn--accent a-btn--block" style={{ marginTop: 8 }} onClick={() => onSubmit(q.trim())}>
               See all results for “{q.trim()}”
             </button>
           )}

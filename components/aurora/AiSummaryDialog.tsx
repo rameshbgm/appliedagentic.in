@@ -1,5 +1,5 @@
 'use client'
-// components/folio/AiSummaryDialog.tsx — bullet summary from /api/ai/summarize in a sheet
+// components/aurora/AiSummaryDialog.tsx — bullet summary from /api/ai/summarize in a sheet
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, X } from 'lucide-react'
@@ -54,22 +54,22 @@ export default function AiSummaryDialog({ open, onClose, title, subtitle, conten
   if (!open || typeof document === 'undefined') return null
   return createPortal(
     <>
-      <div className="f-scrim" onClick={onClose} />
-      <div className="f-sheet-wrap" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="f-sheet f-ai">
-          <div className="f-sheet__grab" />
-          <div className="f-sheet__head">
+      <div className="a-scrim" onClick={onClose} />
+      <div className="a-sheet-wrap" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="a-sheet a-ai">
+          <div className="a-sheet__grab" />
+          <div className="a-sheet__head">
             <div style={{ minWidth: 0 }}>
-              <span className="f-kicker f-kicker--accent">{subtitle}</span>
-              <h2 className="f-display">{title}</h2>
+              <span className="a-kicker a-kicker--accent">{subtitle}</span>
+              <h2 className="a-display">{title}</h2>
             </div>
-            <button type="button" className="f-icon" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
+            <button type="button" className="a-icon" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
           </div>
           {state === 'loading' && <div className="state"><Loader2 size={18} className="animate-spin" /> Reading it for you…</div>}
           {state === 'error' && (
             <div className="state" style={{ flexWrap: 'wrap' }}>
               <span>{error} Try again in a moment.</span>
-              <button type="button" className="f-btn f-btn--sm" onClick={load}>Retry</button>
+              <button type="button" className="a-btn a-btn--sm" onClick={load}>Retry</button>
             </div>
           )}
           {state === 'done' && (

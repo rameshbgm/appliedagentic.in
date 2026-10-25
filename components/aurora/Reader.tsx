@@ -1,17 +1,19 @@
 'use client'
-// components/folio/Reader.tsx
+// components/aurora/Reader.tsx
 // Everything that makes the essay page a reading room:
-//   ReaderProvider  progress, headings, saved position, focus mode, highlights
-//   ProgressLine    thin progress rule at the very top
+//   ReaderProvider  progress, headings, saved position, focus, ruler, highlights
+//   ProgressLine    aurora progress rule at the very top
 //   ResumeBanner    "continue where you left off"
+//   LearnCard       "What you'll learn", built from the essay's sections
 //   MarginToc       left-margin contents (desktop)
 //   MarginNotes     right-margin highlights (desktop)
 //   Highlighter     select text → highlight / copy popover
-//   ReaderToolbar   floating toolbar: contents, Aa, focus, bookmark, listen, share
-//   FinishCard      the closing ornament, marks the essay as read
+//   Ruler           a reading band that follows your eyes, the rest dimmed
+//   Orbit           radial navigator: progress orb + quick actions + sheet
+//   FinishCard      the closing card; the sky brightens when you finish
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Bookmark, BookmarkCheck, Check, Copy, Crosshair, Highlighter as HighlighterIcon, List, Share2, Type, X } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Check, ChevronDown, Copy, Crosshair, Highlighter as HighlighterIcon, Rows3, Share2, Type, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTheme } from '@/components/shared/ThemeProvider'
 import {
@@ -34,6 +36,8 @@ interface ReaderState {
   here: number
   focus: boolean
   setFocus: (v: boolean) => void
+  ruler: boolean
+  setRuler: (v: boolean) => void
   jump: (id: string) => void
   highlights: Highlight[]
 }
@@ -61,10 +65,18 @@ export function ReaderProvider({ slug, title, minutes, color, module, children }
   const [headings, setHeadings] = useState<Heading[]>([])
   const [here, setHere] = useState(-1)
   const [focus, setFocus] = useState(false)
+  const [ruler, setRuler] = useState(false)
   const [highlights, setHighlights] = useState<Highlight[]>([])
   const els = useRef<HTMLElement[]>([])
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   usePrefs() // apply the reader's saved size / spacing / width / typeface
+
+  // The sky dims while an essay is open and flares when it is finished
+  useEffect(() => {
+    document.body.classList.add('a-reading')
+    return () => document.body.classList.remove('a-reading', 'a-complete')
+  }, [])
+  useEffect(() => { document.body.classList.toggle('a-complete', progress >= 0.97) }, [progress])
 
   // Headings → contents
   const collect = useCallback(() => {
@@ -72,8 +84,8 @@ export function ReaderProvider({ slug, title, minutes, color, module, children }
     if (!root) return
     const sectionHeads = Array.from(root.querySelectorAll<HTMLElement>('[data-ride-stop]'))
     const nodes = sectionHeads.length > 1
-      ? Array.from(root.querySelectorAll<HTMLElement>('[data-ride-stop], .f-prose h2[id]'))
-      : Array.from(root.querySelectorAll<HTMLElement>('.f-prose h1[id], .f-prose h2[id]'))
+      ? Array.from(root.querySelectorAll<HTMLElement>('[data-ride-stop], .a-prose h2[id]'))
+      : Array.from(root.querySelectorAll<HTMLElement>('.a-prose h1[id], .a-prose h2[id]'))
     els.current = nodes
     setHeadings(nodes.map((el) => ({
       id: el.id,
@@ -121,14 +133,14 @@ export function ReaderProvider({ slug, title, minutes, color, module, children }
   useEffect(() => {
     const root = rootEl()
     if (!root) return
-    root.classList.toggle('f-focus', focus)
+    root.classList.toggle('a-focus', focus)
     if (!focus) { root.querySelectorAll('.is-focus').forEach((n) => n.classList.remove('is-focus')); return }
     let raf = 0
     const mark = () => {
       const line = window.innerHeight * 0.42
       let best: Element | null = null
       let dist = Infinity
-      root.querySelectorAll('.f-prose > *').forEach((n) => {
+      root.querySelectorAll('.a-prose > *').forEach((n) => {
         const b = n.getBoundingClientRect()
         const d = b.top <= line && b.bottom >= line ? 0 : Math.min(Math.abs(b.top - line), Math.abs(b.bottom - line))
         if (d < dist) { dist = d; best = n }
@@ -164,15 +176,15 @@ export function ReaderProvider({ slug, title, minutes, color, module, children }
     history.replaceState(null, '', `#${id}`)
   }, [])
 
-  const value = useMemo(() => ({ slug, title, minutes, color, module, progress, headings, here, focus, setFocus, jump, highlights }),
-    [slug, title, minutes, color, module, progress, headings, here, focus, jump, highlights])
+  const value = useMemo(() => ({ slug, title, minutes, color, module, progress, headings, here, focus, setFocus, ruler, setRuler, jump, highlights }),
+    [slug, title, minutes, color, module, progress, headings, here, focus, ruler, jump, highlights])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
-/** Wrap each saved highlight's text in <mark class="f-mark">, once, inside its block. */
+/** Wrap each saved highlight's text in <mark class="a-mark">, once, inside its block. */
 function paintHighlights(root: HTMLElement, list: Highlight[]) {
-  root.querySelectorAll('mark.f-mark').forEach((m) => {
+  root.querySelectorAll('mark.a-mark').forEach((m) => {
     if (!list.some((h) => h.id === m.getAttribute('data-id'))) {
       const parent = m.parentNode
       while (m.firstChild) parent?.insertBefore(m.firstChild, m)
@@ -180,9 +192,9 @@ function paintHighlights(root: HTMLElement, list: Highlight[]) {
       parent?.normalize()
     }
   })
-  const blocks = Array.from(root.querySelectorAll<HTMLElement>('.f-prose p, .f-prose li, .f-prose blockquote, .f-prose td'))
+  const blocks = Array.from(root.querySelectorAll<HTMLElement>('.a-prose p, .a-prose li, .a-prose blockquote, .a-prose td'))
   for (const h of list) {
-    if (root.querySelector(`mark.f-mark[data-id="${h.id}"]`)) continue
+    if (root.querySelector(`mark.a-mark[data-id="${h.id}"]`)) continue
     const block = blocks.find((b) => (b.textContent ?? '').includes(h.text))
     if (!block) continue
     const start = (block.textContent ?? '').indexOf(h.text)
@@ -204,7 +216,7 @@ function paintHighlights(root: HTMLElement, list: Highlight[]) {
       range.setStart(seg.node, seg.from)
       range.setEnd(seg.node, seg.to)
       const mark = document.createElement('mark')
-      mark.className = 'f-mark'
+      mark.className = 'a-mark'
       mark.setAttribute('data-id', h.id)
       try { range.surroundContents(mark) } catch { /* range crossed an element boundary */ }
     }
@@ -216,7 +228,7 @@ function paintHighlights(root: HTMLElement, list: Highlight[]) {
 export function ProgressLine() {
   const { progress } = useReader()
   return (
-    <div className="f-progress" role="progressbar" aria-label="Reading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+    <div className="a-progress" role="progressbar" aria-label="Reading progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
       <span style={{ '--p': progress } as React.CSSProperties} />
     </div>
   )
@@ -231,15 +243,30 @@ export function ResumeBanner() {
   }, [slug])
   if (!saved) return null
   return (
-    <div className="f-resume" role="status">
+    <div className="a-resume" role="status">
       <p>You were {Math.round(saved.pct * 100)}% of the way through.</p>
       <div style={{ display: 'flex', gap: 6 }}>
-        <button type="button" className="f-btn f-btn--accent f-btn--sm" onClick={() => { window.scrollTo({ top: saved.y, behavior: 'smooth' }); setSaved(null) }}>
+        <button type="button" className="a-btn a-btn--accent a-btn--sm" onClick={() => { window.scrollTo({ top: saved.y, behavior: 'smooth' }); setSaved(null) }}>
           Continue where I left off
         </button>
-        <button type="button" className="f-icon" onClick={() => setSaved(null)} aria-label="Dismiss"><X size={16} /></button>
+        <button type="button" className="a-icon" onClick={() => setSaved(null)} aria-label="Dismiss"><X size={16} /></button>
       </div>
     </div>
+  )
+}
+
+export function LearnCard({ items }: { items: { id: string; label: string }[] }) {
+  const { jump } = useReader()
+  if (items.length < 2) return null
+  return (
+    <details className="a-learn" open>
+      <summary>What you’ll learn <ChevronDown size={18} aria-hidden="true" /></summary>
+      <ol>
+        {items.map((it) => (
+          <li key={it.id}><a href={`#${it.id}`} onClick={(e) => { e.preventDefault(); jump(it.id) }}>{it.label}</a></li>
+        ))}
+      </ol>
+    </details>
   )
 }
 
@@ -261,10 +288,10 @@ export function MarginToc() {
   if (headings.length === 0) return null
   const left = Math.max(0, Math.round(minutes * (1 - progress)))
   return (
-    <nav className="f-margin-toc" aria-label="In this essay">
-      <span className="f-side-label">In this essay</span>
+    <nav className="a-margin-toc" aria-label="In this essay">
+      <span className="a-side-label">In this essay</span>
       <HeadingList />
-      {minutes > 0 && <p className="f-colophon" style={{ marginTop: 16, fontSize: '.86rem' }}>{progress >= 0.97 ? 'Finished.' : `About ${left} min left.`}</p>}
+      {minutes > 0 && <p className="a-colophon" style={{ marginTop: 16, fontSize: '.86rem' }}>{progress >= 0.97 ? 'Finished.' : `About ${left} min left.`}</p>}
     </nav>
   )
 }
@@ -272,15 +299,15 @@ export function MarginToc() {
 export function MarginNotes() {
   const { highlights } = useReader()
   const scrollTo = (id: string) => {
-    document.querySelector(`mark.f-mark[data-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    document.querySelector(`mark.a-mark[data-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
   return (
-    <aside className="f-notes" aria-label="Your highlights">
-      <span className="f-side-label">Your highlights</span>
+    <aside className="a-notes" aria-label="Your highlights">
+      <span className="a-side-label">Your highlights</span>
       {highlights.length === 0 ? (
-        <p className="f-colophon" style={{ margin: 0, fontSize: '.88rem' }}>Select any sentence to highlight it. Highlights stay on this device.</p>
+        <p className="a-colophon" style={{ margin: 0, fontSize: '.88rem' }}>Select any sentence to highlight it. Highlights stay on this device.</p>
       ) : highlights.map((h) => (
-        <div key={h.id} className="f-note">
+        <div key={h.id} className="a-note">
           <p onClick={() => scrollTo(h.id)}>{h.text}</p>
           <button type="button" onClick={() => removeHighlight(h.id)} aria-label="Remove highlight"><X size={14} /></button>
         </div>
@@ -326,7 +353,7 @@ export function Highlighter() {
 
   if (!pos) return null
   return createPortal(
-    <div className="f-pop" style={{ left: pos.x, top: pos.y }} role="toolbar" aria-label="Selected text" onMouseDown={(e) => e.preventDefault()}>
+    <div className="a-pop" style={{ left: pos.x, top: pos.y }} role="toolbar" aria-label="Selected text" onMouseDown={(e) => e.preventDefault()}>
       <button type="button" onClick={() => {
         addHighlight({ slug, title, text: pos.text })
         window.getSelection()?.removeAllRanges()
@@ -349,8 +376,8 @@ export function Highlighter() {
 /* ─── Reading settings (Aa) ────────────────────────────────────────────── */
 
 interface Prefs { size: number; lh: number; measure: number; font: 'serif' | 'sans' }
-const PREF_KEY = 'folio-reader'
-const DEFAULT_PREFS: Prefs = { size: 19, lh: 1.75, measure: 66, font: 'serif' }
+const PREF_KEY = 'aa-reader'
+const DEFAULT_PREFS: Prefs = { size: 19, lh: 1.72, measure: 68, font: 'sans' }
 
 function applyPrefs(p: Prefs) {
   const s = document.documentElement.style
@@ -379,60 +406,103 @@ export function usePrefs() {
   return { prefs, update }
 }
 
-function AaPanel({ extra }: { extra?: React.ReactNode }) {
+const THEMES = [
+  { id: 'dark', label: 'Night', bg: 'linear-gradient(135deg, #080C18, #1A2140)', fg: '#ECEFF7' },
+  { id: 'sepia', label: 'Dusk', bg: 'linear-gradient(135deg, #17141C, #3A2A2E)', fg: '#EFE6DA' },
+  { id: 'light', label: 'Day', bg: 'linear-gradient(135deg, #F3F6FB, #DDE7F5)', fg: '#0E1528' },
+] as const
+
+function AaPanel() {
   const { prefs, update } = usePrefs()
   const { theme, setTheme } = useTheme()
   return (
-    <div className="f-aa">
-      <div className="f-aa__row">
-        <span>Theme</span>
-        <div className="f-swatches">
-          {([['light', 'Paper', '#FAF9F6', '#1C1B1F'], ['sepia', 'Sepia', '#F4ECDC', '#33291D'], ['dark', 'Night', '#131416', '#ECE7DE']] as const).map(([id, label, bg, fg]) => (
-            <button key={id} type="button" className="f-swatch" aria-pressed={theme === id} onClick={() => setTheme(id)} style={{ background: bg, color: fg, fontFamily: 'var(--display)' }}>
-              {label}
+    <div className="a-aa">
+      <div className="a-aa__row">
+        <span>Sky</span>
+        <div className="a-swatches">
+          {THEMES.map((t) => (
+            <button key={t.id} type="button" className="a-swatch" aria-pressed={theme === t.id} onClick={() => setTheme(t.id)} style={{ background: t.bg, color: t.fg }}>
+              {t.label}
             </button>
           ))}
         </div>
       </div>
-      <div className="f-aa__row">
+      <div className="a-aa__row">
         <span>Typeface</span>
-        <div className="f-seg" role="group" aria-label="Typeface">
+        <div className="a-seg" role="group" aria-label="Typeface">
+          <button type="button" aria-pressed={prefs.font === 'sans'} onClick={() => update({ font: 'sans' })}>Hyperlegible</button>
           <button type="button" aria-pressed={prefs.font === 'serif'} onClick={() => update({ font: 'serif' })} style={{ fontFamily: 'var(--serif)' }}>Serif</button>
-          <button type="button" aria-pressed={prefs.font === 'sans'} onClick={() => update({ font: 'sans' })}>Sans</button>
         </div>
       </div>
-      <label className="f-aa__row" htmlFor="aa-size">
+      <label className="a-aa__row" htmlFor="aa-size">
         <span>Text size</span>
-        <span className="f-aa__range">
+        <span className="a-aa__range">
           <input id="aa-size" type="range" min={16} max={24} step={1} value={prefs.size} onChange={(e) => update({ size: Number(e.target.value) })} />
           <b>{prefs.size}px</b>
         </span>
       </label>
-      <label className="f-aa__row" htmlFor="aa-lh">
+      <label className="a-aa__row" htmlFor="aa-lh">
         <span>Line spacing</span>
-        <span className="f-aa__range">
+        <span className="a-aa__range">
           <input id="aa-lh" type="range" min={1.5} max={2.1} step={0.05} value={prefs.lh} onChange={(e) => update({ lh: Number(e.target.value) })} />
           <b>{prefs.lh.toFixed(2)}</b>
         </span>
       </label>
-      <label className="f-aa__row" htmlFor="aa-width">
+      <label className="a-aa__row" htmlFor="aa-width">
         <span>Column width</span>
-        <span className="f-aa__range">
+        <span className="a-aa__range">
           <input id="aa-width" type="range" min={54} max={78} step={2} value={prefs.measure} onChange={(e) => update({ measure: Number(e.target.value) })} />
           <b>{prefs.measure}ch</b>
         </span>
       </label>
-      {extra}
     </div>
   )
 }
 
-/* ─── Floating toolbar ─────────────────────────────────────────────────── */
+/* ─── Reading ruler ────────────────────────────────────────────────────── */
 
-type Panel = 'contents' | 'aa' | null
+export function Ruler() {
+  const { ruler, setRuler } = useReader()
+  const [y, setY] = useState<number | null>(null)
+  useEffect(() => {
+    if (!ruler) return
+    // Follows the mouse on desktop; on touch screens it holds steady at eye level
+    if (!window.matchMedia('(pointer: fine)').matches) { setY(null); return }
+    let raf = 0
+    const onMove = (e: PointerEvent) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setY(e.clientY)) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setRuler(false) }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('keydown', onKey); cancelAnimationFrame(raf) }
+  }, [ruler, setRuler])
+  if (!ruler) return null
+  return <div className="a-ruler" aria-hidden="true" style={y != null ? ({ '--ry': `${y}px` } as React.CSSProperties) : undefined} />
+}
 
-export function ReaderToolbar({ listen, extra }: { listen?: React.ReactNode; extra?: React.ReactNode }) {
-  const { slug, title, module, color, progress, focus, setFocus, headings } = useReader()
+/* ─── Radial navigator ─────────────────────────────────────────────────── */
+
+type Panel = 'nav' | 'aa' | null
+
+function Ring({ progress, size = 62 }: { progress: number; size?: number }) {
+  const r = size / 2 - 4
+  const C = 2 * Math.PI * r
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+      <defs>
+        <linearGradient id={`a-ring-${size}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="var(--a1)" /><stop offset="1" stopColor="var(--a2)" />
+        </linearGradient>
+      </defs>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--stroke)" strokeWidth="3" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`url(#a-ring-${size})`} strokeWidth="3" strokeLinecap="round"
+        strokeDasharray={C} strokeDashoffset={C * (1 - progress)} transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: 'stroke-dashoffset .3s linear', filter: 'drop-shadow(0 0 4px var(--a2))' }} />
+    </svg>
+  )
+}
+
+export function Orbit({ listen }: { listen?: React.ReactNode }) {
+  const { slug, title, module, color, minutes, progress, focus, setFocus, ruler, setRuler, headings } = useReader()
   const [panel, setPanel] = useState<Panel>(null)
   const [saved, setSaved] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -478,40 +548,56 @@ export function ReaderToolbar({ listen, extra }: { listen?: React.ReactNode; ext
     try { await navigator.clipboard.writeText(url); toast.success('Link copied') } catch { toast.error('Copy the address from your browser bar.') }
   }
 
-  const C = 2 * Math.PI * 10
+  const pct = Math.round(progress * 100)
+  const left = Math.max(0, Math.round(minutes * (1 - progress)))
   return (
     <>
-      <div className={`f-tools${hidden && !panel ? ' is-hidden' : ''}`} role="toolbar" aria-label="Reading tools">
-        <button type="button" className="f-tools__ring" onClick={() => setPanel('contents')} aria-haspopup="dialog" aria-label={`Contents, ${Math.round(progress * 100)}% read`}>
-          <svg viewBox="0 0 26 26" aria-hidden="true">
-            <circle cx="13" cy="13" r="10" fill="none" stroke="var(--line)" strokeWidth="3" />
-            <circle cx="13" cy="13" r="10" fill="none" stroke="var(--c, var(--accent))" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress)} transform="rotate(-90 13 13)" />
-          </svg>
-          {headings.length > 0 ? <><List size={16} aria-hidden="true" /></> : null}
-          {Math.round(progress * 100)}%
+      <div className={`a-orbit${hidden && !panel ? ' is-hidden' : ''}`} role="toolbar" aria-label="Reading tools">
+        <div className="a-orbit__quick a-glass">
+          {listen}
+          <button type="button" className="a-icon" aria-pressed={saved} onClick={onBookmark} aria-label={saved ? 'Remove bookmark' : 'Save to library'} title={saved ? 'Saved' : 'Save to library'}>
+            {saved ? <BookmarkCheck size={19} /> : <Bookmark size={19} />}
+          </button>
+          <button type="button" className="a-icon" onClick={() => setPanel('aa')} aria-label="Reading settings" title="Reading settings"><Type size={19} /></button>
+        </div>
+        <button type="button" className="a-orbit__btn" onClick={() => setPanel('nav')} aria-haspopup="dialog" aria-label={`Navigator, ${pct}% read`}>
+          <Ring progress={progress} />
+          {pct}%
         </button>
-        <span className="sep" />
-        <button type="button" className="f-icon" onClick={() => setPanel('aa')} aria-label="Reading settings" title="Reading settings"><Type size={19} /></button>
-        <button type="button" className="f-icon" aria-pressed={focus} onClick={() => setFocus(!focus)} aria-label="Focus mode" title="Focus mode"><Crosshair size={19} /></button>
-        <button type="button" className="f-icon" aria-pressed={saved} onClick={onBookmark} aria-label={saved ? 'Remove bookmark' : 'Bookmark'} title={saved ? 'Saved' : 'Save to library'}>
-          {saved ? <BookmarkCheck size={19} /> : <Bookmark size={19} />}
-        </button>
-        {listen}
-        <button type="button" className="f-icon" onClick={onShare} aria-label="Share" title="Share"><Share2 size={19} /></button>
       </div>
 
       {mounted && panel && createPortal(
         <>
-          <div className="f-scrim" onClick={() => setPanel(null)} />
-          <div className="f-sheet-wrap" role="dialog" aria-modal="true" aria-label={panel === 'aa' ? 'Reading settings' : 'Contents'}>
-            <div className="f-sheet">
-              <div className="f-sheet__grab" />
-              <div className="f-sheet__head">
-                <h2 className="f-display">{panel === 'aa' ? 'Reading settings' : 'In this essay'}</h2>
-                <button type="button" className="f-icon" onClick={() => setPanel(null)} aria-label="Close"><X size={18} /></button>
+          <div className="a-scrim" onClick={() => setPanel(null)} />
+          <div className="a-sheet-wrap" role="dialog" aria-modal="true" aria-label={panel === 'aa' ? 'Reading settings' : 'Navigator'}>
+            <div className="a-sheet">
+              <div className="a-sheet__grab" />
+              <div className="a-sheet__head">
+                <h2 className="a-display">{panel === 'aa' ? 'Reading settings' : 'Navigator'}</h2>
+                <button type="button" className="a-icon" onClick={() => setPanel(null)} aria-label="Close"><X size={18} /></button>
               </div>
-              {panel === 'aa' ? <AaPanel extra={extra} /> : (
-                <div className="f-margin-toc"><HeadingList onPick={() => setPanel(null)} /></div>
+              {panel === 'aa' ? <AaPanel /> : (
+                <div className="a-nav-sheet">
+                  <div className="a-nav-sheet__status">
+                    <Ring progress={progress} size={64} />
+                    <div>
+                      <b>{pct}%</b>
+                      <small>{progress >= 0.97 ? 'Finished. Well read.' : minutes > 0 ? `About ${left} min left` : 'Keep going'}</small>
+                    </div>
+                  </div>
+                  <div className="a-nav-sheet__actions">
+                    <button type="button" className="a-action" aria-pressed={ruler} onClick={() => { setRuler(!ruler); setPanel(null) }}><Rows3 size={20} />Ruler</button>
+                    <button type="button" className="a-action" aria-pressed={focus} onClick={() => { setFocus(!focus); setPanel(null) }}><Crosshair size={20} />Focus</button>
+                    <button type="button" className="a-action" onClick={() => setPanel('aa')}><Type size={20} />Text</button>
+                    <button type="button" className="a-action" onClick={onShare}><Share2 size={20} />Share</button>
+                  </div>
+                  {headings.length > 0 && (
+                    <div className="a-margin-toc">
+                      <span className="a-side-label">In this essay</span>
+                      <HeadingList onPick={() => setPanel(null)} />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -533,8 +619,8 @@ export function FinishCard({ children }: { children: React.ReactNode }) {
     saveProgress({ slug, title, pct: 1, y: Math.round(window.scrollY), color, module })
   }, [progress, done, slug, title, color, module])
   return (
-    <section className="f-fin" aria-label="End of essay">
-      <span className="f-fin__mark" aria-hidden="true">{done ? <Check size={34} /> : '❦'}</span>
+    <section className="a-fin" aria-label="End of essay">
+      <span className="a-fin__mark" aria-hidden="true">{done ? <Check size={30} /> : '✦'}</span>
       {children}
     </section>
   )

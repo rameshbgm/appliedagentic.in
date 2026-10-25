@@ -2,7 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
-import LessonList from '@/components/folio/LessonList'
+import LessonList from '@/components/aurora/LessonList'
 import { formatJourney, plural } from '@/lib/catalog'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -76,22 +76,22 @@ export default async function TopicDetailPage({ params }: Props) {
 
   return (
     <div style={{ '--c': color } as React.CSSProperties}>
-      <header className="f-wrap f-opener">
-        <nav className="f-crumbs" aria-label="Breadcrumb">
-          <Link href="/">Front page</Link><span aria-hidden="true">/</span>
+      <header className="a-wrap a-opener">
+        <nav className="a-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Home</Link><span aria-hidden="true">/</span>
           {topic.module && (<><span>{topic.module.name}</span><span aria-hidden="true">/</span></>)}
           <span>Topic</span>
         </nav>
-        <h1 className="f-display">{topic.name}</h1>
-        {topic.description && <p className="f-dek">{topic.description}</p>}
-        <div className="f-opener__stats">
-          <span className="f-tag">{plural(lessons.length, 'essay')}</span>
-          {minutes > 0 && <span className="f-tag">{formatJourney(minutes)} of reading</span>}
+        <h1 className="a-display">{topic.name}</h1>
+        {topic.description && <p className="a-dek">{topic.description}</p>}
+        <div className="a-opener__stats">
+          <span className="a-tag">{plural(lessons.length, 'essay')}</span>
+          {minutes > 0 && <span className="a-tag">{formatJourney(minutes)} of reading</span>}
         </div>
       </header>
-      <div className="f-wrap f-narrow" style={{ paddingBottom: 40 }}>
+      <div className="a-wrap a-narrow" style={{ paddingBottom: 40 }}>
         {lessons.length > 0 ? <LessonList lessons={lessons} showThumbs /> : (
-          <div className="f-empty"><h2>No essays yet</h2><p>Essays for this topic are on their way.</p><Link href="/" className="f-btn f-btn--ink">Front page</Link></div>
+          <div className="a-empty"><h2>No essays yet</h2><p>Essays for this topic are on their way.</p><Link href="/" className="a-btn a-btn--accent">Home</Link></div>
         )}
       </div>
     </div>

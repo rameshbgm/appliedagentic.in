@@ -33,7 +33,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
           <span className="adm-side__mono" aria-hidden="true">A</span>
           {!small && <div><b>Applied Agentic</b><small>Editor&apos;s desk</small></div>}
           {isDrawer && (
-            <button type="button" onClick={onMobileClose} className="f-icon" style={{ marginLeft: 'auto' }} aria-label="Close menu"><X size={18} /></button>
+            <button type="button" onClick={onMobileClose} className="a-icon" style={{ marginLeft: 'auto' }} aria-label="Close menu"><X size={18} /></button>
           )}
         </div>
         <nav>
@@ -71,8 +71,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: Props) {
       <div className="hidden lg:flex h-screen sticky top-0">{inner(false)}</div>
       {mobileOpen && (
         <>
-          <div className="f-scrim lg:hidden" onClick={onMobileClose} />
-          <div className="fixed inset-y-0 left-0 z-[61] flex lg:hidden" style={{ animation: 'f-drawer-in .45s var(--ease)' }}>{inner(true)}</div>
+          <div className="a-scrim lg:hidden" onClick={onMobileClose} />
+          <div className="fixed inset-y-0 left-0 z-[61] flex lg:hidden" style={{ animation: 'a-drawer-in .45s var(--ease)' }}>{inner(true)}</div>
         </>
       )}
     </>

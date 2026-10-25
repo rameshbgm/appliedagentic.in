@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss'
 
-// Folio — Tailwind maps onto the CSS tokens in styles/globals.css,
+// Aurora — Tailwind maps onto the CSS tokens in styles/globals.css,
 // so utility classes follow light/dark automatically.
 const config: Config = {
   content: [
@@ -23,10 +23,10 @@ const config: Config = {
         'ink-2': 'var(--ink-2)',
         muted: 'var(--muted)',
         rule: 'var(--line)',
-        notice: 'var(--hl)',
+        notice: 'var(--a4)',
         primary: 'var(--ink)',
         secondary: 'var(--ink-2)',
-        gold: 'var(--hl)',
+        gold: 'var(--a4)',
         surface: 'var(--surface)',
         elevated: 'var(--paper-2)',
         border: 'var(--line)',
@@ -53,10 +53,11 @@ const config: Config = {
       },
       fontFamily: {
         display: ['var(--display)'],
-        body: ['var(--body)'],
+        body: ['var(--ui)'],
+        serif: ['var(--serif)'],
         code: ['var(--mono)'],
         mono: ['var(--mono)'],
-        sans: ['var(--body)'],
+        sans: ['var(--ui)'],
       },
     },
   },

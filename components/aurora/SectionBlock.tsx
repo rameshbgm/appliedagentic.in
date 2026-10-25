@@ -1,5 +1,5 @@
 'use client'
-// components/folio/SectionBlock.tsx
+// components/aurora/SectionBlock.tsx
 // One ArticleSection, set like a chapter section: "§ 2" numeral, title,
 // collapse, narration and AI summary.
 import { useState } from 'react'
@@ -31,33 +31,33 @@ export default function SectionBlock({ section, index, total }: { section: Secti
   }
 
   return (
-    <section className={`f-section${index === 0 ? ' is-first' : ''}`} id={`section-${index + 1}`} aria-labelledby={hasTitle ? `section-${section.id}` : undefined}>
+    <section className={`a-section${index === 0 ? ' is-first' : ''}`} id={`section-${index + 1}`} aria-labelledby={hasTitle ? `section-${section.id}` : undefined}>
       {hasTitle && (
-        <div className="f-section__head" id={`section-${section.id}`} data-ride-stop={section.title}>
-          <button type="button" className="f-section__toggle" aria-expanded={!collapsed} aria-controls={`section-body-${section.id}`} onClick={() => setCollapsed((c) => !c)}>
-            <span className="f-section__num" aria-hidden="true">§ {index + 1}</span>
-            <span className="f-section__title">{section.title}</span>
+        <div className="a-section__head" id={`section-${section.id}`} data-ride-stop={section.title}>
+          <button type="button" className="a-section__toggle" aria-expanded={!collapsed} aria-controls={`section-body-${section.id}`} onClick={() => setCollapsed((c) => !c)}>
+            <span className="a-section__num" aria-hidden="true">§ {index + 1}</span>
+            <span className="a-section__title">{section.title}</span>
           </button>
-          <span className="f-section__tools">
+          <span className="a-section__tools">
             {featureFlags.aiSummary && total > 1 && (
-              <button type="button" className="f-icon" onClick={() => setSummaryOpen(true)} aria-label="Summarise this section" title="Summarise this section"><Sparkles size={17} /></button>
+              <button type="button" className="a-icon" onClick={() => setSummaryOpen(true)} aria-label="Summarise this section" title="Summarise this section"><Sparkles size={17} /></button>
             )}
             {section.audioUrl && (
-              <button type="button" className="f-icon" data-playing={playState === 'playing' ? 'true' : undefined} onClick={onAudio} aria-label={playState === 'playing' ? 'Pause section audio' : 'Play section audio'}>
+              <button type="button" className="a-icon" data-playing={playState === 'playing' ? 'true' : undefined} onClick={onAudio} aria-label={playState === 'playing' ? 'Pause section audio' : 'Play section audio'}>
                 {playState === 'loading' && <Loader2 size={17} className="animate-spin" />}
                 {playState === 'idle' && <Volume2 size={17} />}
                 {playState === 'playing' && <Pause size={17} />}
                 {playState === 'paused' && <Play size={17} />}
               </button>
             )}
-            <button type="button" className="f-icon" onClick={() => setCollapsed((c) => !c)} aria-label={collapsed ? 'Expand section' : 'Collapse section'}>
+            <button type="button" className="a-icon" onClick={() => setCollapsed((c) => !c)} aria-label={collapsed ? 'Expand section' : 'Collapse section'}>
               <ChevronDown size={18} style={{ transform: collapsed ? 'rotate(-90deg)' : undefined, transition: 'transform .35s var(--ease)' }} />
             </button>
           </span>
         </div>
       )}
       {section.content && (
-        <div id={`section-body-${section.id}`} className="f-section__body" hidden={collapsed}>
+        <div id={`section-body-${section.id}`} className="a-section__body" hidden={collapsed}>
           <ArticleContent content={section.content} standalone />
         </div>
       )}

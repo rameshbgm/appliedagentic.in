@@ -1,7 +1,7 @@
 // app/(public)/loading.tsx — shown while a public page streams in
 export default function Loading() {
   return (
-    <div className="f-wrap f-narrow" aria-busy="true" aria-label="Loading" style={{ paddingBlock: 48, display: 'grid', gap: 18, justifyItems: 'center' }}>
+    <div className="a-wrap a-narrow" aria-busy="true" aria-label="Loading" style={{ paddingBlock: 48, display: 'grid', gap: 18, justifyItems: 'center' }}>
       <div className="skeleton" style={{ height: 14, width: 140 }} />
       <div className="skeleton" style={{ height: 52, width: 'min(560px, 90%)' }} />
       <div className="skeleton" style={{ height: 20, width: 'min(420px, 80%)' }} />

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, Search, X } from 'lucide-react'
-import LessonList, { type Lesson } from '@/components/folio/LessonList'
+import LessonList, { type Lesson } from '@/components/aurora/LessonList'
 import { heroContent } from '@/content/home'
 
 interface Props {
@@ -67,10 +67,10 @@ export default function SearchPageClient({ initialQuery }: Props) {
 
   return (
     <div>
-      <header className="f-wrap f-narrow f-opener" style={{ paddingBottom: 10 }}>
-        <span className="f-kicker f-kicker--accent">The archive</span>
-        <h1 className="f-display">Search the essays</h1>
-        <form className="f-searchbox" role="search" onSubmit={(e) => { e.preventDefault(); run(query) }} style={{ width: '100%' }}>
+      <header className="a-wrap a-narrow a-opener" style={{ paddingBottom: 10 }}>
+        <span className="a-kicker a-kicker--accent">The archive</span>
+        <h1 className="a-display">Search the essays</h1>
+        <form className="a-searchbox" role="search" onSubmit={(e) => { e.preventDefault(); run(query) }} style={{ width: '100%' }}>
           <Search size={22} aria-hidden="true" />
           <label htmlFor="search-page-input" className="sr-only">Search essays</label>
           <input
@@ -83,26 +83,26 @@ export default function SearchPageClient({ initialQuery }: Props) {
             autoComplete="off"
           />
           {query && (
-            <button type="button" className="f-icon" onClick={() => { setQuery(''); inputRef.current?.focus() }} aria-label="Clear search"><X size={18} /></button>
+            <button type="button" className="a-icon" onClick={() => { setQuery(''); inputRef.current?.focus() }} aria-label="Clear search"><X size={18} /></button>
           )}
         </form>
       </header>
 
-      <div className="f-wrap f-narrow" style={{ paddingBottom: 48 }}>
-        {loading && <p className="f-results-meta"><Loader2 size={15} className="animate-spin" /> Looking through the shelves…</p>}
-        {error && <p className="f-results-meta" style={{ color: 'var(--danger)' }}>{error}</p>}
+      <div className="a-wrap a-narrow" style={{ paddingBottom: 48 }}>
+        {loading && <p className="a-results-meta"><Loader2 size={15} className="animate-spin" /> Looking through the shelves…</p>}
+        {error && <p className="a-results-meta" style={{ color: 'var(--danger)' }}>{error}</p>}
         {!loading && !error && searched && (
-          <p className="f-results-meta" aria-live="polite">
+          <p className="a-results-meta" aria-live="polite">
             {total === 0 ? `Nothing matches “${searched}”.` : `${total} ${total === 1 ? 'essay mentions' : 'essays mention'} “${searched}”.`}
           </p>
         )}
         {results.length > 0 && <LessonList lessons={results} />}
         {!loading && (!searched || total === 0) && (
           <section aria-labelledby="suggest-title" style={{ paddingTop: 28 }}>
-            <h2 id="suggest-title" className="f-kicker" style={{ margin: '0 0 12px' }}>{searched ? 'Try one of these instead' : 'Readers often look for'}</h2>
+            <h2 id="suggest-title" className="a-kicker" style={{ margin: '0 0 12px' }}>{searched ? 'Try one of these instead' : 'Readers often look for'}</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {heroContent.typewriterTopics.map((t) => (
-                <button key={t} type="button" className="f-chip" onClick={() => setQuery(t)}>{t}</button>
+                <button key={t} type="button" className="a-chip" onClick={() => setQuery(t)}>{t}</button>
               ))}
             </div>
           </section>

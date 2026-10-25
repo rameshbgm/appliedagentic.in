@@ -1,5 +1,5 @@
 'use client'
-// components/folio/AiSummaryButton.tsx — "Summarise" under the title (only when the AI flag is on)
+// components/aurora/AiSummaryButton.tsx — "Summarise" under the title (only when the AI flag is on)
 import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import AiSummaryDialog from './AiSummaryDialog'
@@ -10,7 +10,7 @@ export default function AiSummaryButton({ content, title }: { content: string; t
   if (!featureFlags.aiSummary) return null
   return (
     <>
-      <button type="button" className="f-btn f-btn--quiet f-btn--sm" onClick={() => setOpen(true)}><Sparkles size={16} /> Summarise</button>
+      <button type="button" className="a-btn a-btn--quiet a-btn--sm" onClick={() => setOpen(true)}><Sparkles size={16} /> Summarise</button>
       <AiSummaryDialog open={open} onClose={() => setOpen(false)} title={title} subtitle="Essay summary" content={content} type="article" />
     </>
   )

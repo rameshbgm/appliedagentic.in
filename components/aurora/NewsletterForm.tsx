@@ -1,5 +1,5 @@
 'use client'
-// components/folio/NewsletterForm.tsx
+// components/aurora/NewsletterForm.tsx
 import { useState } from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 import { newsletterContent } from '@/content/newsletter'
@@ -19,13 +19,13 @@ export default function NewsletterForm({ id = 'letter' }: { id?: string }) {
   }
 
   if (status === 'success') {
-    return <p className="f-ok" role="status"><Check size={18} /> {newsletterContent.successMsg}</p>
+    return <p className="a-ok" role="status"><Check size={18} /> {newsletterContent.successMsg}</p>
   }
   return (
     <form onSubmit={onSubmit}>
       <label htmlFor={id} className="sr-only">Email address</label>
-      <input id={id} className="f-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={newsletterContent.placeholder} autoComplete="email" />
-      <button type="submit" className="f-btn f-btn--ink" disabled={status === 'loading'}>
+      <input id={id} className="a-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={newsletterContent.placeholder} autoComplete="email" />
+      <button type="submit" className="a-btn a-btn--accent" disabled={status === 'loading'}>
         {status === 'loading' ? newsletterContent.loadingLabel : <>{newsletterContent.ctaLabel} <ArrowRight size={16} /></>}
       </button>
     </form>

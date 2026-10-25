@@ -50,10 +50,10 @@ export default function StatsCard({ label, value, iconName, color, suffix = '', 
       style={{ borderRadius: 18 }}
     >
       <div>
-        <p className="f-kicker mb-1">
+        <p className="a-kicker mb-1">
           {label}
         </p>
-        <p className="f-display" style={{ fontSize: '2.4rem', fontVariantNumeric: 'tabular-nums' }}>
+        <p className="a-display" style={{ fontSize: '2.4rem', fontVariantNumeric: 'tabular-nums' }}>
           {count.toLocaleString()}{suffix}
         </p>
         {change !== undefined && (

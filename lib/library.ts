@@ -32,12 +32,12 @@ export interface Highlight {
 }
 
 const KEYS = {
-  progress: 'folio-progress',
-  bookmarks: 'folio-bookmarks',
-  highlights: 'folio-highlights',
+  progress: 'aa-progress',
+  bookmarks: 'aa-bookmarks',
+  highlights: 'aa-highlights',
 } as const
 
-export const LIBRARY_EVENT = 'folio-library'
+export const LIBRARY_EVENT = 'aa-library'
 
 function read<T>(key: string, fallback: T): T {
   try {
