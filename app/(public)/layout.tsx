@@ -1,9 +1,8 @@
 // app/(public)/layout.tsx
 import type { Metadata } from 'next'
-import PulseShell from '@/components/pulse/PulseShell'
-import Footer from '@/components/pulse/Footer'
-import Splash from '@/components/pulse/Splash'
-import Effects from '@/components/pulse/Effects'
+import FolioShell from '@/components/folio/FolioShell'
+import Footer from '@/components/folio/Footer'
+import Intro from '@/components/folio/Intro'
 import { ThemeProvider } from '@/components/shared/ThemeProvider'
 import ToastNotifier from '@/components/shared/ToastNotifier'
 import { ArticleLoadingProvider } from '@/components/shared/ArticleLoadingContext'
@@ -20,17 +19,13 @@ export const metadata: Metadata = {
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const lines = toShellLines(await getNetwork())
-
   return (
     <ThemeProvider>
       <ArticleLoadingProvider>
         <ToastNotifier />
-        <Splash />
-        <Effects />
-        <PulseShell lines={lines} />
-        <main id="main" className="p-main">
-          {children}
-        </main>
+        <Intro />
+        <FolioShell lines={lines} />
+        <main id="main" className="f-main">{children}</main>
         <Footer lines={lines} />
       </ArticleLoadingProvider>
     </ThemeProvider>

@@ -1,20 +1,17 @@
 import type React from 'react'
 // lib/catalog.ts
-// Agentic Pulse data helpers: every visible NavMenu is a colour-blocked module,
-// every NavSubMenu a chapter, every article a lesson. Colours come from position.
+// Catalog data helpers: every visible NavMenu is a module, every NavSubMenu a
+// chapter, every article a lesson. Module colours come from menu position.
 import { cache } from 'react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-/** Block colour + readable text colour pairs, cycled by module position. */
-export const PALETTE = [
-  { color: 'var(--cobalt)', fg: 'var(--on-dark)' },
-  { color: 'var(--tomato)', fg: 'var(--on-dark)' },
-  { color: 'var(--sun)', fg: 'var(--on-light)' },
-  { color: 'var(--mint)', fg: 'var(--on-light)' },
-  { color: 'var(--violet)', fg: 'var(--on-dark)' },
-  { color: 'var(--pink)', fg: 'var(--on-light)' },
-] as const
+/** Module colour + readable text colour pairs. Each design defines --m1…--m8 and
+ *  --on-m1…--on-m8 in styles/globals.css; modules cycle through them by position. */
+export const PALETTE = Array.from({ length: 8 }, (_, i) => ({
+  color: `var(--m${i + 1})`,
+  fg: `var(--on-m${i + 1})`,
+}))
 
 export function swatch(index: number) {
   const i = ((index % PALETTE.length) + PALETTE.length) % PALETTE.length
@@ -171,4 +168,13 @@ export const articleLineSelect = {
 
 export function menuIdsOf(a: { subMenuArticles?: { subMenu: { menuId: number } }[]; menuArticles?: { menuId: number }[] }): number[] {
   return [...(a.subMenuArticles ?? []).map((s) => s.subMenu.menuId), ...(a.menuArticles ?? []).map((m) => m.menuId)]
+}
+
+/** Roman numerals for module numbering (1 → I, 8 → VIII). */
+export function toRoman(n: number): string {
+  const map: [number, string][] = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
+  let out = ''
+  let v = Math.max(1, Math.floor(n))
+  for (const [k, r] of map) while (v >= k) { out += r; v -= k }
+  return out
 }

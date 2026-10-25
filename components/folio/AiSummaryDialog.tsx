@@ -1,6 +1,5 @@
 'use client'
-// components/pulse/AiSummaryDialog.tsx
-// Fetches bullet-point summaries from /api/ai/summarize and shows them in a sheet.
+// components/folio/AiSummaryDialog.tsx — bullet summary from /api/ai/summarize in a sheet
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, X } from 'lucide-react'
@@ -14,10 +13,8 @@ interface Props {
   type: 'article' | 'section'
 }
 
-type State = 'idle' | 'loading' | 'done' | 'error'
-
 export default function AiSummaryDialog({ open, onClose, title, subtitle, content, type }: Props) {
-  const [state, setState] = useState<State>('idle')
+  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [bullets, setBullets] = useState<string[]>([])
   const [error, setError] = useState('')
   const loadedFor = useRef<string | null>(null)
@@ -55,34 +52,34 @@ export default function AiSummaryDialog({ open, onClose, title, subtitle, conten
   }, [open, onClose])
 
   if (!open || typeof document === 'undefined') return null
-
   return createPortal(
-    <div className="p-overlay" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="p-sheet p-ai">
-        <div className="p-sheet__grab" />
-        <div className="p-ai__head">
-          <div style={{ minWidth: 0 }}>
-            <span className="p-label">{subtitle}</span>
-            <h2>{title}</h2>
+    <>
+      <div className="f-scrim" onClick={onClose} />
+      <div className="f-sheet-wrap" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="f-sheet f-ai">
+          <div className="f-sheet__grab" />
+          <div className="f-sheet__head">
+            <div style={{ minWidth: 0 }}>
+              <span className="f-kicker f-kicker--accent">{subtitle}</span>
+              <h2 className="f-display">{title}</h2>
+            </div>
+            <button type="button" className="f-icon" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
           </div>
-          <button type="button" className="p-round p-round--sm" onClick={onClose} aria-label="Close summary"><X size={18} /></button>
+          {state === 'loading' && <div className="state"><Loader2 size={18} className="animate-spin" /> Reading it for you…</div>}
+          {state === 'error' && (
+            <div className="state" style={{ flexWrap: 'wrap' }}>
+              <span>{error} Try again in a moment.</span>
+              <button type="button" className="f-btn f-btn--sm" onClick={load}>Retry</button>
+            </div>
+          )}
+          {state === 'done' && (
+            <ol>
+              {bullets.map((b, i) => <li key={`${i}-${b.slice(0, 12)}`} style={{ animationDelay: `${i * 60}ms` }}><b>{i + 1}</b><span>{b}</span></li>)}
+            </ol>
+          )}
         </div>
-        {state === 'loading' && <div className="state"><Loader2 size={18} className="animate-spin" /> Summarising this stop…</div>}
-        {state === 'error' && (
-          <div className="state" style={{ flexWrap: 'wrap' }}>
-            <span>{error} Try again in a moment.</span>
-            <button type="button" className="p-btn p-btn--sm" onClick={load}>Retry</button>
-          </div>
-        )}
-        {state === 'done' && (
-          <ol>
-            {bullets.map((b, i) => (
-              <li key={`${i}-${b.slice(0, 12)}`} style={{ animationDelay: `${i * 50}ms` }}><b>{i + 1}</b><span>{b}</span></li>
-            ))}
-          </ol>
-        )}
       </div>
-    </div>,
+    </>,
     document.body,
   )
 }

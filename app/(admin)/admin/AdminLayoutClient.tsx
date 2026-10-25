@@ -9,7 +9,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
-    <div className="p-admin flex h-screen overflow-hidden" data-theme="light">
+    <div className="adm flex h-screen overflow-hidden" data-theme="light">
       <ToastNotifier />
       <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">

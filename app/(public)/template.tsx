@@ -1,6 +1,6 @@
 // app/(public)/template.tsx
-// Templates re-mount on every navigation, so each page enters with a short
-// rise-and-focus transition (disabled for reduced motion in globals.css).
+// Re-mounts on every navigation, so each page settles in with a soft fade.
+// fill-mode "backwards" leaves no transform behind, keeping fixed UI anchored.
 export default function Template({ children }: { children: React.ReactNode }) {
-  return <div className="p-page">{children}</div>
+  return <div className="f-page">{children}</div>
 }

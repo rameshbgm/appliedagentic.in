@@ -5,8 +5,8 @@ import type { Metadata } from 'next'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, formatJourney, plural } from '@/lib/catalog'
-import LessonList from '@/components/pulse/LessonList'
+import { getNetwork, formatJourney, plural, toRoman } from '@/lib/catalog'
+import LessonList from '@/components/folio/LessonList'
 
 interface Props {
   params: Promise<{ menuSlug: string; subMenuSlug: string }>
@@ -74,8 +74,8 @@ export default async function SubMenuPage({ params }: Props) {
   const ci = chapters.findIndex((z) => z.id === subMenu.id)
   const prev = ci > 0 ? chapters[ci - 1] : undefined
   const next = ci >= 0 ? chapters[ci + 1] : undefined
-  const style = { '--c': mod?.color ?? 'var(--cobalt)', '--fg': mod?.fg ?? 'var(--on-dark)' } as React.CSSProperties
-  const num = String(mod?.number ?? 1).padStart(2, '0')
+  const style = { '--c': mod?.color ?? 'var(--accent)', '--fg': mod?.fg ?? '#fff' } as React.CSSProperties
+  const num = toRoman(mod?.number ?? 1)
 
   const lessons = subMenu.articles.map(({ article: a }) => ({
     id: a.id, slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes,
@@ -85,59 +85,56 @@ export default async function SubMenuPage({ params }: Props) {
 
   return (
     <div style={style}>
-      <header className="p-cover p-cover--soft">
-        <span className="p-cover__ghost" aria-hidden="true">{String(ci + 1).padStart(2, '0')}</span>
-        <div className="p-wrap p-cover__inner">
-          <nav className="p-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link><span aria-hidden="true">/</span>
-            <Link href={`/${subMenu.menu.slug}`}>Module {num}</Link><span aria-hidden="true">/</span>
-            <span>Chapter {String(ci + 1).padStart(2, '0')}</span>
-          </nav>
-          <span className="p-label" style={{ color: 'var(--ink-2)' }}>{subMenu.menu.title}</span>
-          <h1 className="p-display">{subMenu.title}</h1>
-          {subMenu.description && <p style={{ color: 'var(--ink-2)' }}>{subMenu.description}</p>}
-          <div className="p-cover__stats">
-            <span>{plural(lessons.length, 'lesson')}</span>
-            {minutes > 0 && <span>{formatJourney(minutes)}</span>}
-          </div>
+      <header className="f-wrap f-opener">
+        <nav className="f-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Front page</Link><span aria-hidden="true">/</span>
+          <Link href={`/${subMenu.menu.slug}`}>Chapter {num}</Link><span aria-hidden="true">/</span>
+          <span>Section {ci + 1}</span>
+        </nav>
+        <span className="f-kicker" style={{ color: 'var(--c)' }}>Chapter {num} · {subMenu.menu.title}</span>
+        <h1 className="f-display">{subMenu.title}</h1>
+        {subMenu.description && <p className="f-dek">{subMenu.description}</p>}
+        <div className="f-opener__stats">
+          <span className="f-tag">{plural(lessons.length, 'essay')}</span>
+          {minutes > 0 && <span className="f-tag">{formatJourney(minutes)} of reading</span>}
         </div>
       </header>
 
-      <div className="p-wrap" style={{ paddingBottom: 40 }}>
+      <div className="f-wrap f-narrow" style={{ paddingBottom: 40 }}>
         {chapters.length > 1 && (
-          <nav className="p-chips" aria-label="Chapters in this module">
+          <nav className="f-chapnav" aria-label="Sections in this chapter">
             {chapters.map((z, i) => (
-              <Link key={z.id} href={`/${subMenu.menu.slug}/${z.slug}`} className="p-chip" aria-current={z.id === subMenu.id ? 'page' : undefined}>
-                <span style={{ opacity: .55 }}>{String(i + 1).padStart(2, '0')}</span>{z.title}
+              <Link key={z.id} href={`/${subMenu.menu.slug}/${z.slug}`} className="f-chip" aria-current={z.id === subMenu.id ? 'page' : undefined}>
+                <span style={{ fontFamily: 'var(--display)', fontStyle: 'italic' }}>{i + 1}</span>{z.title}
               </Link>
             ))}
           </nav>
         )}
 
-        <section className="p-chapter" aria-label="Lessons in this chapter">
+        <section className="f-chapter" aria-label="Essays in this section">
           {lessons.length > 0 ? (
             <LessonList lessons={lessons} showThumbs />
           ) : (
-            <div className="p-empty">
-              <h2>No lessons yet</h2>
-              <p>Lessons for this chapter are on their way.</p>
-              <Link href={`/${subMenu.menu.slug}`} className="p-btn p-btn--fill">Back to the module</Link>
+            <div className="f-empty">
+              <h2>No essays yet</h2>
+              <p>Essays for this section are on their way.</p>
+              <Link href={`/${subMenu.menu.slug}`} className="f-btn f-btn--ink">Back to the chapter</Link>
             </div>
           )}
         </section>
 
         {(prev || next) && (
-          <nav className="p-nextprev" aria-label="Neighbouring chapters">
+          <nav className="f-nextprev" aria-label="Neighbouring sections">
             {prev ? (
-              <Link href={`/${subMenu.menu.slug}/${prev.slug}`} className="p-next p-next--soft p-next--prev">
-                <span className="p-next__go" aria-hidden="true"><ArrowLeft size={22} /></span>
-                <div><span className="p-label">Previous chapter</span><h3>{prev.title}</h3></div>
+              <Link href={`/${subMenu.menu.slug}/${prev.slug}`} className="f-next f-next--quiet f-next--prev">
+                <span className="go" aria-hidden="true"><ArrowLeft size={20} /></span>
+                <div><span className="f-kicker">Previous section</span><h3>{prev.title}</h3></div>
               </Link>
-            ) : <span className="p-desktop-only" />}
+            ) : <span className="f-desktop-only" />}
             {next && (
-              <Link href={`/${subMenu.menu.slug}/${next.slug}`} className="p-next">
-                <div><span className="p-label">Next chapter</span><h3>{next.title}</h3></div>
-                <span className="p-next__go" aria-hidden="true"><ArrowRight size={22} /></span>
+              <Link href={`/${subMenu.menu.slug}/${next.slug}`} className="f-next">
+                <div><span className="f-kicker">Next section</span><h3>{next.title}</h3></div>
+                <span className="go" aria-hidden="true"><ArrowRight size={20} /></span>
               </Link>
             )}
           </nav>

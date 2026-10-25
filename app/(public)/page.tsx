@@ -1,15 +1,17 @@
-// app/(public)/page.tsx — home
+// app/(public)/page.tsx — the front page
 import Link from 'next/link'
 import fs from 'fs'
 import path from 'path'
 import type { Metadata } from 'next'
-import { ArrowRight, Presentation } from 'lucide-react'
+import { ArrowRight, Clock, Plus } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
-import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, swatch, formatJourney, plural } from '@/lib/catalog'
-import StoryStrip, { type Story } from '@/components/pulse/StoryStrip'
-import Tile from '@/components/pulse/Tile'
-import NewsletterForm from '@/components/pulse/NewsletterForm'
+import { formatDate } from '@/lib/utils'
+import { getNetwork, resolveLine, articleLineSelect, menuIdsOf, formatJourney, plural, swatch, toRoman } from '@/lib/catalog'
+import TitleReveal from '@/components/folio/TitleReveal'
+import ContinueShelf from '@/components/folio/ContinueShelf'
+import ReadMark from '@/components/folio/ReadMark'
+import NewsletterForm from '@/components/folio/NewsletterForm'
 import { heroContent } from '@/content/home'
 import { newsletterContent } from '@/content/newsletter'
 
@@ -20,235 +22,269 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-const articleSelect = {
-  id: true,
-  title: true,
-  slug: true,
-  summary: true,
-  readingTimeMinutes: true,
-  viewCount: true,
+const cardSelect = {
+  id: true, title: true, slug: true, summary: true, readingTimeMinutes: true, viewCount: true, publishedAt: true,
   coverImage: { select: { url: true } },
-  articleTags: { take: 2, select: { tag: { select: { name: true } } } },
   ...articleLineSelect,
 } as const
 
-async function getHomeData() {
+const published = { article: { status: 'PUBLISHED' as const } }
+const rowSelect = { article: { select: { id: true, title: true, slug: true, readingTimeMinutes: true } } } as const
+
+async function getFrontPage() {
   try {
-    const [featured, latest, popular, publishedCount, tags] = await Promise.all([
-      prisma.article.findMany({ where: { status: 'PUBLISHED', isFeatured: true }, orderBy: { createdAt: 'desc' }, take: 5, select: articleSelect }),
-      prisma.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }], take: 8, select: articleSelect }),
-      prisma.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: { viewCount: 'desc' }, take: 5, select: articleSelect }),
+    const [featured, popular, latest, count, tags, contents] = await Promise.all([
+      prisma.article.findFirst({ where: { status: 'PUBLISHED', isFeatured: true }, orderBy: { createdAt: 'desc' }, select: cardSelect }),
+      prisma.article.findFirst({ where: { status: 'PUBLISHED' }, orderBy: { viewCount: 'desc' }, select: cardSelect }),
+      prisma.article.findMany({ where: { status: 'PUBLISHED' }, orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }], take: 6, select: cardSelect }),
       prisma.article.count({ where: { status: 'PUBLISHED' } }),
       prisma.tag.findMany({
         where: { articleTags: { some: { article: { status: 'PUBLISHED' } } } },
-        orderBy: { articleTags: { _count: 'desc' } },
-        take: 14,
+        orderBy: { name: 'asc' },
         select: { id: true, name: true, _count: { select: { articleTags: true } } },
       }),
+      prisma.navMenu.findMany({
+        where: { isVisible: true },
+        orderBy: { order: 'asc' },
+        select: {
+          id: true,
+          subMenus: {
+            where: { isVisible: true },
+            orderBy: { order: 'asc' },
+            select: { id: true, title: true, slug: true, articles: { where: published, orderBy: { orderIndex: 'asc' }, select: rowSelect } },
+          },
+          menuArticles: { where: published, orderBy: { orderIndex: 'asc' }, select: rowSelect },
+        },
+      }),
     ])
-    return { featured, latest, popular, publishedCount, tags }
+    return { featured: featured ?? popular, latest, count, tags, contents }
   } catch (err) {
-    logger.error('[GET /] DB error loading homepage data', err)
-    return { featured: [], latest: [], popular: [], publishedCount: 0, tags: [] }
+    logger.error('[GET /] DB error loading front page', err)
+    return { featured: null, latest: [], count: 0, tags: [], contents: [] }
   }
 }
 
-function getStaticFiles() {
+function getPlates() {
   try {
-    const publicDir = path.join(process.cwd(), 'public')
-    return fs
-      .readdirSync(publicDir)
-      .filter((f) => f.endsWith('.html') || f.endsWith('.htm'))
-      .map((f) => {
-        let title = f.replace(/\.(html|htm)$/, '').replace(/[-_]/g, ' ')
-        let description: string | null = null
-        try {
-          const html = fs.readFileSync(path.join(publicDir, f), 'utf8')
-          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
-          if (titleMatch) title = titleMatch[1].trim()
-          const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
-            ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
-          if (descMatch) description = descMatch[1].trim()
-        } catch {
-          // fall back to the file name
-        }
-        return { file: f, title, description, href: `/${f}` }
-      })
+    const dir = path.join(process.cwd(), 'public')
+    return fs.readdirSync(dir).filter((f) => /\.html?$/.test(f)).map((f) => {
+      let title = f.replace(/\.(html|htm)$/, '').replace(/[-_]/g, ' ')
+      let description: string | null = null
+      try {
+        const html = fs.readFileSync(path.join(dir, f), 'utf8')
+        const t = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+        if (t) title = t[1].trim()
+        const d = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i) ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)
+        if (d) description = d[1].trim()
+      } catch { /* fall back to the file name */ }
+      return { file: f, title, description, href: `/${f}` }
+    })
   } catch {
     return []
   }
 }
 
-export default async function HomePage() {
-  const [modules, { featured, latest, popular, publishedCount, tags }] = await Promise.all([getNetwork(), getHomeData()])
-  const decks = getStaticFiles()
+export default async function FrontPage() {
+  const [modules, { featured, latest, count, tags, contents }] = await Promise.all([getNetwork(), getFrontPage()])
+  const plates = getPlates()
   const moduleOf = (a: Parameters<typeof menuIdsOf>[0]) => resolveLine(modules, menuIdsOf(a))
-
-  const stories: Story[] = latest.map((a, i) => {
-    const m = moduleOf(a)
-    const sw = m ? { color: m.color, fg: m.fg } : swatch(i)
-    return { slug: a.slug, title: a.title, summary: a.summary, minutes: a.readingTimeMinutes, label: m ? `Module ${String(m.number).padStart(2, '0')}` : 'New', ...sw }
-  })
-  const picks = (featured.length >= 3 ? featured : popular).slice(0, 5)
-  const topics = tags.length > 0 ? tags.map((t) => ({ name: t.name, count: t._count.articleTags })) : heroContent.typewriterTopics.map((name) => ({ name, count: 0 }))
   const totalMinutes = modules.reduce((s, m) => s + m.minutes, 0)
   const first = modules[0]
+  const featMod = featured ? moduleOf(featured) : null
+  const index = Object.entries(
+    tags.reduce<Record<string, typeof tags>>((acc, t) => {
+      const k = t.name.charAt(0).toUpperCase()
+      ;(acc[/[A-Z]/.test(k) ? k : '#'] ??= []).push(t)
+      return acc
+    }, {}),
+  ).sort(([a], [b]) => a.localeCompare(b))
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="p-wrap p-hero" aria-labelledby="home-title">
-        <svg className="p-sticker" viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="58" />
-          <path id="sticker-path" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" fill="none" />
-          <text><textPath href="#sticker-path">{modules.length} modules · {publishedCount} lessons · free ·</textPath></text>
-        </svg>
-        <h1 id="home-title" className="p-display p-mega" aria-label="Agents that act">
-          <span>Agents</span><span>that</span><span>act.</span>
-        </h1>
-        <div className="p-hero__row">
-          <p className="p-lede">{heroContent.subheadline}</p>
-          <div className="p-ctas">
-            {first && (
-              <Link href={`/${first.slug}`} className="p-btn p-btn--fill">
-                Start module 01 <ArrowRight size={18} />
-              </Link>
-            )}
-            <a href="#fresh" className="p-btn">Fresh reads</a>
-          </div>
+      {/* ── Masthead hero ─────────────────────────────────────────── */}
+      <section className="f-wrap f-hero" aria-labelledby="front-title">
+        <div className="f-hero__issue">
+          <span className="f-kicker">{today}</span>
+          <span className="f-kicker">{plural(modules.length, 'module')}</span>
+          <span className="f-kicker">{plural(count, 'essay')}</span>
+          {totalMinutes > 0 && <span className="f-kicker">{Math.round(totalMinutes / 60)} hours of reading</span>}
         </div>
-        <div className="p-stats">
-          <div><b>{modules.length}</b><span>Modules</span></div>
-          <div><b>{publishedCount}</b><span>Lessons</span></div>
-          {totalMinutes > 0 && <div><b>{Math.round(totalMinutes / 60)}h</b><span>Of reading</span></div>}
-          <div><b>Free</b><span>Always</span></div>
+        <TitleReveal text="Learn agentic AI the way you read a good book." highlight="good book" className="f-display" />
+        <div className="f-hero__foot">
+          <p className="f-dek">{heroContent.subheadline} Free, structured, and written to be read slowly.</p>
+          <div className="f-ctas">
+            {first && <Link href={`/${first.slug}`} className="f-btn f-btn--ink">Begin with chapter I <ArrowRight size={17} /></Link>}
+            <a href="#contents" className="f-btn">Browse the contents</a>
+          </div>
         </div>
       </section>
 
-      {/* ── Topic ticker ─────────────────────────────────────────── */}
-      <div className="p-marquee-clip">
-        <div className="p-marquee">
-          <div className="p-marquee__track">
-            {[0, 1].map((copy) => (
-              <span key={copy} style={{ display: 'flex' }} aria-hidden={copy === 1 ? true : undefined}>
-                {topics.map((t) => (
-                  <Link key={`${copy}-${t.name}`} href={`/search?q=${encodeURIComponent(t.name)}`} tabIndex={copy === 1 ? -1 : undefined}>{t.name}</Link>
-                ))}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
+      <ContinueShelf />
 
-      {/* ── Fresh reads (stories) ────────────────────────────────── */}
-      {stories.length > 0 && (
-        <section id="fresh" className="p-wrap p-sec" aria-labelledby="fresh-title" style={{ scrollMarginTop: 'calc(var(--top-h) + 10px)' }}>
-          <div className="p-sec-head">
-            <h2 id="fresh-title" className="p-display">Fresh reads</h2>
-            <p>The newest lessons, one swipe at a time. Tap a card to start reading.</p>
+      {/* ── Featured essay ────────────────────────────────────────── */}
+      {featured && (
+        <section className="f-wrap f-sec" aria-labelledby="feature-title">
+          <div className="f-sec-head">
+            <span className="f-kicker f-kicker--accent">The essay to read first</span>
           </div>
-          <StoryStrip stories={stories} />
+          <Link href={`/articles/${featured.slug}`} className="f-spread" style={{ '--c': featMod?.color ?? 'var(--accent)', '--fg': featMod?.fg ?? '#fff' } as React.CSSProperties} data-reveal>
+            <div className="f-spread__cover">
+              {featured.coverImage?.url
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={featured.coverImage.url} alt="" loading="lazy" />
+                : <><span className="pat" aria-hidden="true" /><span className="big" aria-hidden="true">{featMod ? toRoman(featMod.number) : '§'}</span></>}
+            </div>
+            <div className="f-spread__text">
+              {featMod && <span className="f-kicker" style={{ color: 'var(--c)' }}>Chapter {toRoman(featMod.number)} · {featMod.title}</span>}
+              <h3 id="feature-title">{featured.title}</h3>
+              {featured.summary && <p>{featured.summary}</p>}
+              <span className="f-meta">
+                {featured.readingTimeMinutes ? <span><Clock size={14} /> {featured.readingTimeMinutes} min read</span> : null}
+                {featured.viewCount > 0 && <span>{featured.viewCount.toLocaleString()} readers</span>}
+                <ReadMark slug={featured.slug} />
+              </span>
+            </div>
+          </Link>
         </section>
       )}
 
-      {/* ── Course modules (stacked cards) ───────────────────────── */}
-      <section className="p-wrap p-sec" aria-labelledby="course-title">
-        <div className="p-sec-head">
-          <h2 id="course-title" className="p-display">The course</h2>
-          <p>Modules in order. Each one builds on the last, so start at 01 if you are new.</p>
+      {/* ── Contents ──────────────────────────────────────────────── */}
+      <section id="contents" className="f-wrap f-sec" aria-labelledby="contents-title" style={{ scrollMarginTop: 'calc(var(--top-h) + 12px)' }}>
+        <div className="f-sec-head">
+          <span className="f-kicker f-kicker--accent">The course</span>
+          <h2 id="contents-title" className="f-display">Contents</h2>
+          <p>Each module is a chapter. Open one to see its sections and essays, or read straight through from the beginning.</p>
         </div>
         {modules.length > 0 ? (
-          <div className="p-stack">
-            {modules.map((m, i) => (
-              <Link key={m.id} href={`/${m.slug}`} className="p-mod" style={{ '--c': m.color, '--fg': m.fg, '--i': i } as React.CSSProperties}>
-                <div className="p-mod__row">
-                  <span className="p-num">{String(m.number).padStart(2, '0')}</span>
-                  <span className="p-mod__go" aria-hidden="true"><ArrowRight size={24} /></span>
-                </div>
-                <h3>{m.title}</h3>
-                {m.description && <p>{m.description}</p>}
-                <div className="p-mod__meta">
-                  <span>{plural(m.stops, 'lesson')}</span>
-                  {m.zones.length > 0 && <span>{plural(m.zones.length, 'chapter')}</span>}
-                  {m.minutes > 0 && <span>{formatJourney(m.minutes)}</span>}
-                </div>
-              </Link>
-            ))}
-          </div>
+          <ol className="f-toc">
+            {modules.map((m, i) => {
+              const data = contents.find((c) => c.id === m.id)
+              return (
+                <li key={m.id} style={{ '--c': m.color } as React.CSSProperties} data-reveal>
+                  <details open={i === 0}>
+                    <summary>
+                      <span className="roman">{toRoman(m.number)}.</span>
+                      <span className="ttl">{m.title}</span>
+                      <span className="mins">{m.minutes > 0 ? formatJourney(m.minutes) : plural(m.stops, 'essay')} <Plus size={16} aria-hidden="true" /></span>
+                    </summary>
+                    <div className="f-toc__body">
+                      {m.description && <p>{m.description}</p>}
+                      {data?.subMenus.map((z) => (
+                        <div key={z.id} className="f-toc__chap">
+                          <h4 className="f-kicker">{z.title}</h4>
+                          <ol className="f-rows">
+                            {z.articles.map(({ article: a }, k) => (
+                              <li key={a.id}>
+                                <Link href={`/articles/${a.slug}`}>
+                                  <span className="n">{k + 1}</span>
+                                  <span className="t"><b>{a.title}</b><i aria-hidden="true" /></span>
+                                  <span className="m"><ReadMark slug={a.slug} />{a.readingTimeMinutes ? `${a.readingTimeMinutes} min` : ''}</span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ))}
+                      {data && data.menuArticles.length > 0 && (
+                        <ol className="f-rows">
+                          {data.menuArticles.map(({ article: a }, k) => (
+                            <li key={a.id}>
+                              <Link href={`/articles/${a.slug}`}>
+                                <span className="n">{k + 1}</span>
+                                <span className="t"><b>{a.title}</b><i aria-hidden="true" /></span>
+                                <span className="m">{a.readingTimeMinutes ? `${a.readingTimeMinutes} min` : ''}</span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                      <div className="f-toc__actions">
+                        <Link href={`/${m.slug}`} className="f-btn f-btn--quiet f-btn--sm">Open chapter {toRoman(m.number)} <ArrowRight size={15} /></Link>
+                      </div>
+                    </div>
+                  </details>
+                </li>
+              )
+            })}
+          </ol>
         ) : (
-          <div className="p-empty"><h3>Modules coming soon</h3><p>The first modules are being written. Check back shortly.</p></div>
+          <div className="f-empty"><h3>The first chapters are being written</h3><p>Check back soon.</p></div>
         )}
       </section>
 
-      {/* ── Picks (bento) ────────────────────────────────────────── */}
-      {picks.length > 0 && (
-        <section className="p-wrap p-sec" aria-labelledby="picks-title">
-          <div className="p-sec-head">
-            <h2 id="picks-title" className="p-display">{featured.length >= 3 ? 'Editor’s picks' : 'Most read'}</h2>
-            <p>The lessons readers come back to most.</p>
+      {/* ── Recently added ────────────────────────────────────────── */}
+      {latest.length > 0 && (
+        <section className="f-wrap f-sec" aria-labelledby="latest-title">
+          <div className="f-sec-head f-sec-head--row">
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span className="f-kicker f-kicker--accent">New on the shelf</span>
+              <h2 id="latest-title" className="f-display">Recently added</h2>
+            </div>
+            <Link href="/search" className="f-btn f-btn--quiet f-btn--sm">All essays <ArrowRight size={15} /></Link>
           </div>
-          <div className="p-bento">
-            {picks.map((a, i) => {
+          <ol className="f-lessons">
+            {latest.map((a) => {
               const m = moduleOf(a)
               return (
-                <Tile
-                  key={a.id}
-                  variant={i === 0 ? 'big' : 'plain'}
-                  slug={a.slug}
-                  title={a.title}
-                  summary={a.summary}
-                  minutes={a.readingTimeMinutes}
-                  imageUrl={a.coverImage?.url}
-                  tags={a.articleTags.map((t) => t.tag.name)}
-                  label={m ? `Module ${String(m.number).padStart(2, '0')} · ${m.title}` : 'Featured'}
-                  color={m?.color}
-                  fg={m?.fg}
-                />
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Topic cloud ──────────────────────────────────────────── */}
-      {tags.length > 0 && (
-        <section className="p-wrap p-sec" aria-labelledby="topics-title">
-          <div className="p-sec-head">
-            <h2 id="topics-title" className="p-display">Jump to a topic</h2>
-          </div>
-          <div className="p-cloud" data-reveal>
-            {tags.map((t, i) => {
-              const sw = swatch(i)
-              return (
-                <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`} style={{ '--c': sw.color, '--fg': sw.fg } as React.CSSProperties}>
-                  {t.name}<small>{t._count.articleTags}</small>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Slide decks ──────────────────────────────────────────── */}
-      {decks.length > 0 && (
-        <section className="p-wrap p-sec" aria-labelledby="decks-title">
-          <div className="p-sec-head">
-            <h2 id="decks-title" className="p-display">Slide decks</h2>
-            <p>Visual walkthroughs you can flick through in a few minutes. They open in a new tab.</p>
-          </div>
-          <div className="p-decks">
-            {decks.map((d, i) => {
-              const sw = swatch(i + 2)
-              return (
-                <a key={d.file} href={d.href} target="_blank" rel="noopener noreferrer" className="p-deck" style={{ '--c': sw.color, '--fg': sw.fg } as React.CSSProperties}>
-                  <span className="pg" /><span className="pg" />
-                  <span className="pg top">
-                    <span className="p-label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Presentation size={16} /> Deck</span>
-                    <span style={{ display: 'grid', gap: 6 }}>
-                      <h3>{d.title}</h3>
-                      {d.description && <p>{d.description}</p>}
+                <li key={a.id} data-reveal style={{ '--c': m?.color } as React.CSSProperties}>
+                  <Link href={`/articles/${a.slug}`}>
+                    <span className="n" aria-hidden="true">{m ? toRoman(m.number) : '§'}</span>
+                    <h3>{a.title}</h3>
+                    {a.summary && <p>{a.summary}</p>}
+                    <span className="row">
+                      {a.publishedAt && <span>{formatDate(a.publishedAt)}</span>}
+                      {a.readingTimeMinutes ? <span>{a.readingTimeMinutes} min read</span> : null}
+                      <ReadMark slug={a.slug} />
                     </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      )}
+
+      {/* ── Index of topics ───────────────────────────────────────── */}
+      {index.length > 0 && (
+        <section className="f-wrap f-sec" aria-labelledby="index-title">
+          <div className="f-sec-head">
+            <span className="f-kicker f-kicker--accent">Back of the book</span>
+            <h2 id="index-title" className="f-display">Index</h2>
+            <p>Every topic covered, A to Z. The number shows how many essays discuss it.</p>
+          </div>
+          <div className="f-index" data-reveal>
+            {index.map(([letter, items]) => (
+              <section key={letter}>
+                <h4>{letter}</h4>
+                {items.map((t) => (
+                  <Link key={t.id} href={`/search?q=${encodeURIComponent(t.name)}`}>{t.name}<span>{t._count.articleTags}</span></Link>
+                ))}
+              </section>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Plates (slide decks) ──────────────────────────────────── */}
+      {plates.length > 0 && (
+        <section className="f-wrap f-sec" aria-labelledby="plates-title">
+          <div className="f-sec-head">
+            <span className="f-kicker f-kicker--accent">Illustrated plates</span>
+            <h2 id="plates-title" className="f-display">Slide decks</h2>
+            <p>Visual companions to the essays. They open in a new tab.</p>
+          </div>
+          <div className="f-plates">
+            {plates.map((p, i) => {
+              const sw = swatch(i + 1)
+              return (
+                <a key={p.file} href={p.href} target="_blank" rel="noopener noreferrer" className="f-plate" style={{ '--c': sw.color, '--fg': sw.fg } as React.CSSProperties} data-reveal>
+                  <span className="f-plate__art" aria-hidden="true">{toRoman(i + 1)}</span>
+                  <span style={{ minWidth: 0 }}>
+                    <h3>{p.title}</h3>
+                    {p.description && <p>{p.description}</p>}
                   </span>
+                  <ArrowRight size={18} aria-hidden="true" />
                 </a>
               )
             })}
@@ -256,11 +292,14 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Newsletter ───────────────────────────────────────────── */}
-      <section className="p-wrap p-news" aria-labelledby="news-title">
-        <h2 id="news-title" className="p-display">Get the <em>next</em> one.</h2>
-        <p>{newsletterContent.subheadline}</p>
-        <NewsletterForm />
+      {/* ── The letter ────────────────────────────────────────────── */}
+      <section className="f-wrap" aria-labelledby="letter-title">
+        <div className="f-letter" data-reveal>
+          <span className="f-kicker f-kicker--accent">The letter</span>
+          <h2 id="letter-title" className="f-display">One new essay, <em>delivered</em>.</h2>
+          <p>{newsletterContent.subheadline}</p>
+          <NewsletterForm />
+        </div>
       </section>
     </>
   )

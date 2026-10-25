@@ -35,21 +35,21 @@ export default function ConfirmDialog({
   }
 
   const btnColors = {
-    danger: 'var(--tomato)',
+    danger: 'var(--danger)',
     warning: 'var(--warning)',
-    info: 'var(--cobalt)',
+    info: 'var(--accent)',
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
       <div
-        className="relative w-full max-w-md rounded-[28px] p-6 shadow-2xl"
+        className="relative w-full max-w-md rounded-[22px] p-6 shadow-2xl"
         style={{ background: 'var(--card)', border: '1px solid var(--rule)' }}
       >
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 p-round p-round--sm"
+          className="f-icon" style={{ position: "absolute", top: 16, right: 16 }}
         >
           <X size={16} style={{ color: 'var(--text-muted)' }} />
         </button>
@@ -58,7 +58,7 @@ export default function ConfirmDialog({
           <AlertTriangle size={20} />
         </div>
 
-        <h3 className="p-display mb-2" style={{ fontSize: '1.9rem' }}>
+        <h3 className="f-display mb-2" style={{ fontSize: '1.7rem' }}>
           {title}
         </h3>
         <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -69,14 +69,14 @@ export default function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="p-btn p-btn--sm p-btn--soft"
+            className="f-btn f-btn--quiet f-btn--sm"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="p-btn p-btn--sm" style={{ background: btnColors[variant], borderColor: btnColors[variant], color: '#fff', '--sweep': 'var(--ink)', '--sweep-fg': 'var(--bg)' } as React.CSSProperties}
+            className="f-btn f-btn--sm" style={{ background: btnColors[variant], borderColor: btnColors[variant], color: '#fff' }}
           >
             {loading ? 'Please wait...' : confirmLabel}
           </button>

@@ -8,15 +8,15 @@ const labels: Record<string, string> = {
   dashboard: 'Dashboard',
   modules: 'Modules',
   topics: 'Topics',
-  articles: 'Articles',
+  articles: 'Essays',
   media: 'Media',
   settings: 'Settings',
   analytics: 'Analytics',
   new: 'New',
   edit: 'Edit',
   login: 'Login',
-  menus: 'Modules',
-  submenus: 'Chapters',
+  menus: 'Chapters',
+  submenus: 'Sections',
 }
 
 interface Props {
@@ -37,8 +37,8 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
   })
 
   return (
-    <header className="p-admin-top">
-      <button type="button" onClick={onMobileMenuToggle} className="p-round p-round--sm lg:hidden" aria-label="Open menu">
+    <header className="adm-top">
+      <button type="button" onClick={onMobileMenuToggle} className="f-icon lg:hidden" aria-label="Open menu">
         <Menu size={18} />
       </button>
       <nav aria-label="Breadcrumb">
@@ -50,7 +50,7 @@ export default function AdminHeader({ onMobileMenuToggle }: Props) {
           </span>
         ))}
       </nav>
-      <a href="/" target="_blank" rel="noopener noreferrer" className="p-btn p-btn--sm p-btn--soft p-admin-top__site">
+      <a href="/" target="_blank" rel="noopener noreferrer" className="f-btn f-btn--quiet f-btn--sm adm-top__site">
         <ExternalLink size={14} /> <span className="hidden sm:inline">View site</span>
       </a>
     </header>

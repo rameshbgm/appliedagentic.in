@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss'
 
-// Agentic Pulse — Tailwind maps onto the CSS tokens in styles/globals.css,
+// Folio — Tailwind maps onto the CSS tokens in styles/globals.css,
 // so utility classes follow light/dark automatically.
 const config: Config = {
   content: [
@@ -15,26 +15,20 @@ const config: Config = {
         xs: '375px',
       },
       colors: {
-        cobalt: 'var(--cobalt)',
-        tomato: 'var(--tomato)',
-        sun: 'var(--sun)',
-        mint: 'var(--mint)',
-        violet: 'var(--violet)',
-        pink: 'var(--pink)',
-        paper: 'var(--bg)',
-        'paper-2': 'var(--bg-2)',
+        accent: 'var(--accent)',
+        paper: 'var(--paper)',
+        'paper-2': 'var(--paper-2)',
         card: 'var(--surface)',
         ink: 'var(--ink)',
         'ink-2': 'var(--ink-2)',
         muted: 'var(--muted)',
         rule: 'var(--line)',
-        notice: 'var(--sun)',
+        notice: 'var(--hl)',
         primary: 'var(--ink)',
         secondary: 'var(--ink-2)',
-        accent: 'var(--tomato)',
-        gold: 'var(--sun)',
+        gold: 'var(--hl)',
         surface: 'var(--surface)',
-        elevated: 'var(--bg-2)',
+        elevated: 'var(--paper-2)',
         border: 'var(--line)',
         line: {
           1: 'var(--l1)',

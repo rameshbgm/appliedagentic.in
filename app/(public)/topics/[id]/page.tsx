@@ -2,7 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 import { notFound } from 'next/navigation'
-import LessonList from '@/components/pulse/LessonList'
+import LessonList from '@/components/folio/LessonList'
 import { formatJourney, plural } from '@/lib/catalog'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -72,37 +72,27 @@ export default async function TopicDetailPage({ params }: Props) {
     imageUrl: a.coverImage?.url, tags: a.articleTags.map((t) => t.tag.name),
   }))
   const minutes = lessons.reduce((s, a) => s + (a.minutes ?? 0), 0)
-  const color = topic.module?.color ?? topic.color ?? 'var(--violet)'
+  const color = topic.module?.color ?? topic.color ?? 'var(--accent)'
 
   return (
-    <div style={{ '--c': color, '--fg': 'var(--on-dark)' } as React.CSSProperties}>
-      <header className="p-cover p-cover--soft">
-        <div className="p-wrap p-cover__inner">
-          <nav className="p-crumbs" aria-label="Breadcrumb">
-            <Link href="/">Home</Link><span aria-hidden="true">/</span>
-            {topic.module && (<><span>{topic.module.name}</span><span aria-hidden="true">/</span></>)}
-            <span>Topic</span>
-          </nav>
-          <h1 className="p-display">{topic.name}</h1>
-          {topic.description && <p style={{ color: 'var(--ink-2)' }}>{topic.description}</p>}
-          <div className="p-cover__stats">
-            <span>{plural(lessons.length, 'lesson')}</span>
-            {minutes > 0 && <span>{formatJourney(minutes)}</span>}
-          </div>
+    <div style={{ '--c': color } as React.CSSProperties}>
+      <header className="f-wrap f-opener">
+        <nav className="f-crumbs" aria-label="Breadcrumb">
+          <Link href="/">Front page</Link><span aria-hidden="true">/</span>
+          {topic.module && (<><span>{topic.module.name}</span><span aria-hidden="true">/</span></>)}
+          <span>Topic</span>
+        </nav>
+        <h1 className="f-display">{topic.name}</h1>
+        {topic.description && <p className="f-dek">{topic.description}</p>}
+        <div className="f-opener__stats">
+          <span className="f-tag">{plural(lessons.length, 'essay')}</span>
+          {minutes > 0 && <span className="f-tag">{formatJourney(minutes)} of reading</span>}
         </div>
       </header>
-      <div className="p-wrap" style={{ paddingBottom: 40 }}>
-        <section className="p-chapter" aria-label="Lessons in this topic">
-          {lessons.length > 0 ? (
-            <LessonList lessons={lessons} showThumbs />
-          ) : (
-            <div className="p-empty">
-              <h2>No lessons yet</h2>
-              <p>Lessons for this topic are on their way.</p>
-              <Link href="/" className="p-btn p-btn--fill">Back home</Link>
-            </div>
-          )}
-        </section>
+      <div className="f-wrap f-narrow" style={{ paddingBottom: 40 }}>
+        {lessons.length > 0 ? <LessonList lessons={lessons} showThumbs /> : (
+          <div className="f-empty"><h2>No essays yet</h2><p>Essays for this topic are on their way.</p><Link href="/" className="f-btn f-btn--ink">Front page</Link></div>
+        )}
       </div>
     </div>
   )

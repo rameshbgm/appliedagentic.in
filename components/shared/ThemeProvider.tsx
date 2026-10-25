@@ -1,10 +1,10 @@
 'use client'
 // components/shared/ThemeProvider.tsx
-// Light / dark theme. With no saved choice the site follows the OS setting
+// Light / dark / sepia theme. With no saved choice the site follows the OS setting
 // (CSS handles that via prefers-color-scheme); a saved choice sets data-theme.
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-type Theme = 'dark' | 'light'
+type Theme = 'dark' | 'light' | 'sepia'
 
 const ThemeContext = createContext<{
   theme: Theme
@@ -18,7 +18,7 @@ const ThemeContext = createContext<{
 
 function readTheme(): Theme {
   const attr = document.documentElement.getAttribute('data-theme')
-  if (attr === 'dark' || attr === 'light') return attr
+  if (attr === 'dark' || attr === 'light' || attr === 'sepia') return attr
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 

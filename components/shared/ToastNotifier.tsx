@@ -5,17 +5,18 @@ import { Toaster } from 'sonner'
 export default function ToastNotifier() {
   return (
     <Toaster
-      position="top-center"
-      offset={78}
+      position="bottom-center"
+      offset={90}
       toastOptions={{
         style: {
           background: 'var(--ink)',
-          color: 'var(--bg)',
+          color: 'var(--paper)',
           border: '0',
           borderRadius: '999px',
-          fontFamily: 'var(--body)',
-          fontWeight: 700,
+          fontFamily: 'var(--ui)',
+          fontWeight: 600,
           fontSize: '14px',
+          justifyContent: 'center',
         },
       }}
     />

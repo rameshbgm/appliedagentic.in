@@ -15,7 +15,6 @@ const SECONDS = 8
 export default function PublicError({ error, reset }: ErrorProps) {
   const router = useRouter()
   const [left, setLeft] = useState(SECONDS)
-
   useEffect(() => { console.warn('[PublicError boundary]', error.message, error.digest) }, [error])
   useEffect(() => {
     if (left <= 0) { router.replace('/'); return }
@@ -24,19 +23,17 @@ export default function PublicError({ error, reset }: ErrorProps) {
   }, [left, router])
 
   return (
-    <div className="p-wrap p-lost">
-      <span className="p-lost__code" aria-hidden="true"><span>5</span><span>0</span><span>0</span></span>
-      <h1 className="p-display">Something broke.</h1>
+    <div className="f-wrap f-lost">
+      <span className="f-lost__num" aria-hidden="true" style={{ fontSize: "clamp(3.6rem, 18vw, 8rem)" }}>Erratum</span>
+      <h1 className="f-display">This page could not be printed.</h1>
       <p>
-        This page could not load. Try again, or we will take you home in {left}s.
-        {error.digest && <> Reference code: <code>{error.digest}</code></>}
+        Something went wrong while loading it. Try again, or we will take you to the front page in {left}s.
+        {error.digest && <> Reference: <code>{error.digest}</code></>}
       </p>
-      <div className="p-lost__bar" aria-hidden="true"><span style={{ width: `${((SECONDS - left) / SECONDS) * 100}%` }} /></div>
-      <div className="p-ctas">
-        <button type="button" className="p-btn p-btn--fill" onClick={() => { setLeft(SECONDS); reset() }}>
-          <RotateCcw size={17} /> Try again
-        </button>
-        <Link href="/" className="p-btn">Go home</Link>
+      <div className="f-lost__bar" aria-hidden="true"><span style={{ width: `${((SECONDS - left) / SECONDS) * 100}%` }} /></div>
+      <div className="f-ctas" style={{ justifyContent: 'center' }}>
+        <button type="button" className="f-btn f-btn--ink" onClick={() => { setLeft(SECONDS); reset() }}><RotateCcw size={16} /> Try again</button>
+        <Link href="/" className="f-btn">Front page</Link>
       </div>
     </div>
   )

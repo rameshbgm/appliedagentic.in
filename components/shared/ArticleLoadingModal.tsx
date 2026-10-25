@@ -1,14 +1,9 @@
 'use client'
-// components/shared/ArticleLoadingModal.tsx
-// Route-change indicator: four colour bars racing across the top of the screen.
-interface Props {
-  completing: boolean
-}
-
-export default function ArticleLoadingModal({ completing }: Props) {
+// components/shared/ArticleLoadingModal.tsx — a hairline progress rule while a page loads
+export default function ArticleLoadingModal({ completing }: { completing: boolean }) {
   return (
-    <div className={`p-loading${completing ? ' done' : ''}`} role="status" aria-label="Loading page">
-      <i /><i /><i /><i />
+    <div className={`f-loading${completing ? ' done' : ''}`} role="status" aria-label="Loading page">
+      <span />
     </div>
   )
 }

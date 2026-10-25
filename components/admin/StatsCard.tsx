@@ -43,19 +43,17 @@ function useCountUp(target: number, duration = 1200) {
 export default function StatsCard({ label, value, iconName, color, suffix = '', change }: StatsCardProps) {
   const count = useCountUp(value)
   const Icon = ICON_MAP[iconName] ?? FileText
-  // Light swatches (sun, mint, pink) need dark icons to stay readable
-  const onLight = /--(l3|l4|l6|l7|sun|mint|pink)\b/.test(color)
 
   return (
     <div
       className="card p-5 flex items-start justify-between gap-4"
-      style={{ borderTop: `6px solid ${color}`, borderRadius: 24 }}
+      style={{ borderRadius: 18 }}
     >
       <div>
-        <p className="p-label mb-1" style={{ color: 'var(--muted)' }}>
+        <p className="f-kicker mb-1">
           {label}
         </p>
-        <p className="p-display" style={{ fontSize: '2.6rem', fontVariationSettings: '"wdth" 90', fontVariantNumeric: 'tabular-nums' }}>
+        <p className="f-display" style={{ fontSize: '2.4rem', fontVariantNumeric: 'tabular-nums' }}>
           {count.toLocaleString()}{suffix}
         </p>
         {change !== undefined && (
@@ -65,10 +63,10 @@ export default function StatsCard({ label, value, iconName, color, suffix = '', 
         )}
       </div>
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-        style={{ background: color, transform: 'rotate(-6deg)' }}
+        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+        style={{ background: `color-mix(in srgb, ${color} 14%, transparent)` }}
       >
-        <Icon size={22} style={{ color: onLight ? 'var(--on-light)' : '#fff' }} />
+        <Icon size={20} style={{ color }} />
       </div>
     </div>
   )
